@@ -37,6 +37,27 @@
   .ph { background: repeating-linear-gradient(135deg, #e6d8c2 0 12px, #ddccb2 12px 24px); color: #5a4a33; }
   .no-scrollbar { scrollbar-width: none; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
+  /* hero: rings ripple out from behind the logo, grow and fade — three of them, evenly staggered */
+  .pulse-ring { position: absolute; inset: 0; border-radius: 9999px; border: 1.5px solid #dcc6a4; opacity: 0; transform: scale(.68); animation: ring-pulse 7.5s cubic-bezier(.2, .6, .35, 1) infinite; }
+  .pulse-ring:nth-child(2) { animation-delay: -2.5s; }
+  .pulse-ring:nth-child(3) { animation-delay: -5s; }
+  @keyframes ring-pulse {
+    0%   { transform: scale(.68); opacity: 0; }
+    15%  { opacity: 1; }
+    100% { transform: scale(1.06); opacity: 0; }
+  }
+  /* hero logo: the curtains breathe — drawn slightly aside and swaying at the hem, hinged at the rod */
+  .curtain { transform-box: fill-box; animation: curtain-l 6s ease-in-out infinite; }
+  .curtain-l { transform-origin: left top; }
+  .curtain-r { transform-origin: right top; animation-name: curtain-r; animation-delay: -.6s; }
+  @keyframes curtain-l { 0%, 100% { transform: none; } 50% { transform: skewX(-1.2deg) scaleX(.965); } }
+  @keyframes curtain-r { 0%, 100% { transform: none; } 50% { transform: skewX(1.2deg) scaleX(.965); } }
+  @media (prefers-reduced-motion: reduce) {
+    .curtain { animation: none; }
+    .pulse-ring { animation: none; opacity: 1; transform: none; border-width: 1px; }
+    .pulse-ring:nth-child(2) { inset: 7%; }
+    .pulse-ring:nth-child(3) { display: none; }
+  }
 </style>
 <style type="text/tailwindcss">
   /* Surfaces: light by default; add .on-dark to deep/teal/night containers */
@@ -200,9 +221,10 @@
 
     <div class="relative order-1 lg:order-2">
       <div class="relative mx-auto aspect-square w-full max-w-[340px] lg:max-w-[560px]">
-        <div class="absolute inset-0 rounded-full border border-[#e4d2b6]" aria-hidden="true"></div>
-        <div class="absolute inset-[7%] rounded-full border border-[#ead9bf]" aria-hidden="true"></div>
-        <svg class="absolute inset-[16%] h-[68%] w-[68%]" role="img" aria-label="Morpheus Színműhely logó"><use href="#morpheus-logo"/></svg>
+        <div class="pulse-ring" aria-hidden="true"></div>
+        <div class="pulse-ring" aria-hidden="true"></div>
+        <div class="pulse-ring" aria-hidden="true"></div>
+        <svg class="absolute inset-[16%] h-[68%] w-[68%]" viewBox="0 0 200 200" role="img" aria-label="Morpheus Színműhely logó"><circle cx="100" cy="100" r="97" fill="url(#lg4-ring)"/><circle cx="100" cy="100" r="87" fill="#f7f1e8"/><g transform="translate(100 100) scale(0.952) translate(-100 -100)"><circle cx="100" cy="100" r="84" fill="url(#lg4-m)"/><g clip-path="url(#lg4-disc)"><path d="M52 22L100 64L148 22L148 -10L52 -10Z" fill="url(#lg4-stage)"/><g class="curtain curtain-l"><path fill="url(#lg4-f0)" d="M52 22C50 60 47 100 44 128C42 148 38 168 34 190L22.9 190C27.1 168 33.4 148 32.1 128C38.9 100 40 60 42.3 21.5Z"/><path fill="url(#lg4-f1)" d="M42.3 21.5C40 60 38.9 100 32.1 128C33.4 148 27.1 168 22.9 190L11.8 190C16.1 168 18.3 148 24.2 128C24.1 100 30 60 32.7 21Z"/><path fill="url(#lg4-f2)" d="M32.7 21C30 60 24.1 100 24.2 128C18.3 148 16.1 168 11.8 190L0.7 190C5.2 168 11.9 148 10.9 128C18.2 100 20 60 23 20.5Z"/><path fill="url(#lg4-f3)" d="M23 20.5C20 60 18.2 100 10.9 128C11.9 148 5.2 168 0.7 190L-10.5 190C-5.7 168 -3.2 148 3 128C3.4 100 10 60 13.3 20Z"/><path fill="url(#lg4-f4)" d="M13.3 20C10 60 3.4 100 3 128C-3.2 148 -5.7 168 -10.5 190L-21.6 190C-16.6 168 -9.6 148 -10.2 128C-2.5 100 0 60 3.7 19.5Z"/><path fill="url(#lg4-f5)" d="M3.7 19.5C0 60 -2.5 100 -10.2 128C-9.6 148 -16.6 168 -21.6 190L-47.7 190C-42.6 168 -37.5 148 -34.5 128C-30 100 -25 60 -21 19Z"/><path fill="url(#lg4-sh)" d="M-40 -10L52 22C50 60 47 100 44 128C42 148 38 168 34 190L-40 210Z"/></g><g class="curtain curtain-r"><path fill="url(#lg4-f0)" d="M148 22C150 60 153 100 156 128C158 148 162 168 166 190L177.1 190C172.9 168 166.6 148 167.9 128C161.1 100 160 60 157.7 21.5Z"/><path fill="url(#lg4-f1)" d="M157.7 21.5C160 60 161.1 100 167.9 128C166.6 148 172.9 168 177.1 190L188.2 190C183.9 168 181.7 148 175.8 128C175.9 100 170 60 167.3 21Z"/><path fill="url(#lg4-f2)" d="M167.3 21C170 60 175.9 100 175.8 128C181.7 148 183.9 168 188.2 190L199.3 190C194.8 168 188.1 148 189.1 128C181.8 100 180 60 177 20.5Z"/><path fill="url(#lg4-f3)" d="M177 20.5C180 60 181.8 100 189.1 128C188.1 148 194.8 168 199.3 190L210.5 190C205.7 168 203.2 148 197 128C196.6 100 190 60 186.7 20Z"/><path fill="url(#lg4-f4)" d="M186.7 20C190 60 196.6 100 197 128C203.2 148 205.7 168 210.5 190L221.6 190C216.6 168 209.6 148 210.2 128C202.5 100 200 60 196.3 19.5Z"/><path fill="url(#lg4-f5)" d="M196.3 19.5C200 60 202.5 100 210.2 128C209.6 148 216.6 168 221.6 190L247.7 190C242.6 168 237.5 148 234.5 128C230 100 225 60 221 19Z"/><path fill="url(#lg4-sh)" d="M240 -10L148 22C150 60 153 100 156 128C158 148 162 168 166 190L240 210Z"/></g><path fill="url(#lg4-stage2)" transform="translate(100 186.8) scale(0.84) translate(-100 -186.8)" d="M50.8 57.4C51.1 59.5 51.6 66 52.4 69.9C53.1 73.9 54.2 77.7 55.2 81C56.3 84.2 58 87.9 58.5 89.3C59.7 88.6 63.4 85.5 65.6 84.7C67.8 83.9 69.6 84 71.8 84.3C73.9 84.6 77.3 86.1 78.4 86.5C76.6 87.1 70.3 89.1 67.4 90.4C64.4 91.7 62.6 93 60.8 94.2C58.9 95.4 57.1 96.9 56.3 97.5C55.4 99.3 52.7 104.8 50.8 108.5C49 112.2 46.2 117.7 45.3 119.5C46.2 119.4 48.9 118.9 50.8 118.4C52.7 118 55.4 116.6 56.8 116.9C58.1 117.2 58.5 118.5 59 120.2C59.4 121.9 59.2 125 59.4 127.3C59.6 129.5 60.2 132.4 60.3 133.4C61.7 132.5 66 130.1 68.5 127.7C70.9 125.3 74 120.5 75.1 119.1C74.9 120.6 75 125.2 74 128.4C73 131.5 70.8 135 69.1 137.8C67.5 140.7 64.9 144.3 64.1 145.6C64 146.5 63.1 149.6 63.6 151.5C64.1 153.4 65.6 155.6 66.9 157C68.3 158.4 71 159.4 71.8 159.9L67.4 162.5C68.7 164.6 72.5 170.6 75.1 174.7C77.7 178.7 81.5 184.8 82.8 186.8L117 186.8C118.3 184.7 122.2 178 124.7 174C127.2 170 130.6 164.8 131.8 163L129.5 159.9C130.5 158.9 133.7 155.9 135.3 153.7C136.9 151.5 138.2 149.2 139 146.7C139.9 144.2 140.1 140 140.4 138.7C139.5 138.7 137 138.1 135.3 138.7C133.6 139.3 131.8 140.6 130.2 142.2C128.6 143.9 126.5 147.6 125.8 148.6C126 147.1 126 142.2 126.9 139.4C127.8 136.6 129.7 133.6 131.3 131.7C133 129.7 135.2 128.6 136.8 127.7C138.5 126.8 140.5 126.6 141.2 126.4C141.2 125.8 140.5 123.9 140.8 122.8C141 121.8 141.6 120.7 142.8 120.2C144 119.7 146.3 119.9 147.8 119.8C149.4 119.6 151.5 119.6 152.3 119.5C151.5 118.1 149.5 113.9 147.8 110.7C146.2 107.5 143.3 102.1 142.3 100.4C140.5 99.3 134.8 96.2 131.3 93.7C127.8 91.2 123 86.8 121.4 85.4C122.9 85.1 127.3 82.9 130.2 83.6C133.1 84.3 137.6 88.4 139 89.3C139.7 87.9 141.6 84.2 142.8 81C144 77.7 145.1 73.9 146.1 69.9C147.1 66 148.5 59.5 149 57.4Q100 78.1 50.8 57.4Z"/></g></g></svg>
         <img src="images/laughing-faces.webp" alt="Nevető hallgatók egy próbán" width="1000" height="563" class="absolute -right-[2%] -top-[6%] h-[38%] w-[38%] rounded-full border-[6px] border-paper object-cover shadow-[0_22px_44px_-20px_rgba(11,58,63,0.5)] lg:border-8">
         <img src="images/on-stage.webp" alt="Jelenet egy Morpheus-előadásból" width="274" height="274" class="absolute bottom-[6%] right-[4%] h-[29%] w-[29%] rounded-full border-[5px] border-paper object-cover shadow-[0_22px_44px_-20px_rgba(11,58,63,0.5)] lg:border-[7px]">
       </div>
@@ -215,17 +237,8 @@
     </div>
   </section>
 
-  <!-- QUICK FACTS -->
-  <section aria-label="Röviden" class="mx-auto max-w-[1440px] px-5 lg:px-20">
-    <div class="grid border-y border-line lg:grid-cols-3">
-      <div class="flex flex-col gap-1.5 border-b border-line py-5 lg:border-b-0 lg:border-r lg:py-7 lg:pr-8"><span class="text-xs font-bold uppercase tracking-[0.16em] text-teal lg:text-[13px]">Kezdő kurzus</span><span class="text-base lg:text-lg">Heti 1×2 óra, 20 alkalom + vizsgaelőadás</span></div>
-      <div class="flex flex-col gap-1.5 border-b border-line py-5 lg:border-b-0 lg:border-r lg:px-8 lg:py-7"><span class="text-xs font-bold uppercase tracking-[0.16em] text-teal lg:text-[13px]">Nyitott Műhely</span><span class="text-base lg:text-lg">Minden szombat 14:00–16:00, kötöttség nélkül</span></div>
-      <div class="flex flex-col gap-1.5 py-5 lg:py-7 lg:pl-8"><span class="text-xs font-bold uppercase tracking-[0.16em] text-teal lg:text-[13px]">Helyszín</span><span class="text-base lg:text-lg">1027 Budapest, Frankel Leó út 6.</span></div>
-    </div>
-  </section>
-
   <!-- QUESTIONS -->
-  <section class="on-dark relative mt-16 overflow-hidden bg-deep text-cream lg:mt-[120px]">
+  <section class="on-dark relative mt-6 overflow-hidden bg-deep text-cream lg:mt-12">
     <div class="sun absolute -right-28 -top-32 h-64 w-64 rounded-full opacity-90 lg:-right-44 lg:-top-56 lg:h-[520px] lg:w-[520px]" aria-hidden="true"></div>
     <div class="relative mx-auto flex max-w-[1440px] flex-col gap-9 px-5 py-16 lg:gap-16 lg:px-20 lg:py-28">
       <div class="flex max-w-[760px] flex-col gap-4 pr-14 lg:gap-5 lg:pr-0">
