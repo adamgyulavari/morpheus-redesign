@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "title": "Céges csapatépítő — Morpheus Színműhely",
+    "description": "Játékos, élményalapú színházi csapatépítő programok cégeknek: Civil Beugró, zenés est, kincskereső, vacsoraszínház."
+  },
+  "hero": {
+    "heading": "Céges csapat­építők",
+    "lead": "Ha csapatépítés, akkor is Morpheus! A játékos, élményalapú csapatépítő programjaink erősítik a csapatkohéziót, segítik az onboarding folyamatokat és növelik a munkavállalói lojalitást.",
+    "primaryCta": {
+      "label": "Ajánlatot kérek",
+      "href": "#ajanlat"
+    },
+    "secondaryCta": {
+      "label": "Programjaink",
+      "href": "#programok"
+    },
+    "image": {
+      "src": "/images/csapatepito-csoport.webp",
+      "alt": "Nevető kollégák egy csapatépítő játék közben",
+      "width": 800,
+      "height": 460
+    }
+  },
+  "programmes": {
+    "eyebrow": "Választható programok",
+    "heading": "Négy formátum, a ti csapatotokra szabva.",
+    "durationLabel": "Időkeret:",
+    "venueLabel": "Helyszín:"
+  },
+  "tailored": {
+    "eyebrow": "Személyre szabva",
+    "heading": "Csapatépítőinket személyre szabjuk!",
+    "text": "Csapatépítő programjaink előtt a megrendelővel személyesen egyeztetünk arról, milyen típusú csapatépítőt képzel el, és mik az esemény kijelölt céljai.",
+    "goals": [
+      "kommunikáció fejlesztése",
+      "szórakozás",
+      "önismeret-építés",
+      "a kollégák közötti emberi kapcsolatok elmélyítése a játékok által"
+    ],
+    "image": {
+      "src": "/images/csapatepito-szinpad.webp",
+      "alt": "Színházi gyakorlat a színpadon",
+      "width": 2048,
+      "height": 2560
+    }
+  },
+  "form": {
+    "title": "Csapatépítő árajánlatkérés",
+    "required": "A *-gal jelölt mezők kitöltése kötelező.",
+    "fields": {
+      "company": "Cég neve *",
+      "lastName": "Vezetéknév *",
+      "firstName": "Keresztnév *",
+      "email": "E-mail cím *",
+      "phone": "Telefonszám *",
+      "message": "Kérdés, megjegyzés"
+    },
+    "messagePlaceholder": "Pl. létszám, időpont, helyszín, milyen program érdekel",
+    "error": "Kérjük, töltsd ki a kötelező mezőket.",
+    "submit": "Ajánlatot kérek",
+    "note": "A küldés gombra kattintva a levelezőprogramod nyílik meg a kitöltött adatokkal — a levelet onnan tudod elküldeni nekünk.",
+    "recipient": "morpheus.szinmuhely@gmail.com",
+    "subject": "Csapatépítő árajánlatkérés – {company}"
+  }
+}

@@ -1,0 +1,135 @@
+{
+  "name": "Morpheus Színműhely",
+  "tagline": "Színház · Önismeret · Közösség",
+  "copyright": "© 2026 Morpheus Színműhely",
+  "nav": [
+    {
+      "label": "Rólunk",
+      "href": "/rolunk"
+    },
+    {
+      "label": "Képzések",
+      "href": "/kepzesek",
+      "match": [
+        "/kezdo-kurzus",
+        "/szakmai-kurzus"
+      ]
+    },
+    {
+      "label": "Nyitott alkalmak",
+      "href": "/nyitott-alkalmak"
+    },
+    {
+      "label": "Előadások",
+      "href": "/repertoar",
+      "match": [
+        "/kozelgo-eloadasok"
+      ]
+    },
+    {
+      "label": "Csapatépítő",
+      "href": "/csapatepito"
+    },
+    {
+      "label": "Kapcsolat",
+      "href": "/kapcsolat"
+    }
+  ],
+  "headerCta": {
+    "label": "Jelentkezem",
+    "href": "/kezdo-kurzus"
+  },
+  "footerColumns": [
+    {
+      "title": "Képzések",
+      "links": [
+        {
+          "label": "Kezdő kurzus",
+          "href": "/kezdo-kurzus"
+        },
+        {
+          "label": "Szakmai kurzus",
+          "href": "/szakmai-kurzus"
+        },
+        {
+          "label": "Oktatóink",
+          "href": "https://morpheus-szinmuhely.hu/oktatok/"
+        }
+      ]
+    },
+    {
+      "title": "Nyitott alkalmak",
+      "links": [
+        {
+          "label": "Nyitott Műhely",
+          "href": "/nyitott-alkalmak"
+        },
+        {
+          "label": "Workshop, tábor",
+          "href": "/nyitott-alkalmak#workshopok"
+        },
+        {
+          "label": "Céges csapatépítő",
+          "href": "/csapatepito"
+        }
+      ]
+    },
+    {
+      "title": "Előadások",
+      "links": [
+        {
+          "label": "Közelgő előadások",
+          "href": "/kozelgo-eloadasok"
+        },
+        {
+          "label": "Repertoár",
+          "href": "/repertoar"
+        },
+        {
+          "label": "Rólunk",
+          "href": "/rolunk"
+        }
+      ]
+    },
+    {
+      "title": "Kövess minket",
+      "links": [
+        {
+          "label": "Facebook",
+          "href": "https://www.facebook.com/profile.php?id=61553500586744"
+        },
+        {
+          "label": "Kapcsolat",
+          "href": "/kapcsolat"
+        }
+      ]
+    }
+  ],
+  "privacy": {
+    "label": "Adatvédelmi tájékoztató",
+    "href": "https://morpheus-szinmuhely.hu/adatkezelesi-tajekoztato/"
+  },
+  "contact": {
+    "email": "morpheus.szinmuhely@gmail.com",
+    "address": "1027 Budapest, Frankel Leó út 6.",
+    "primaryPersonId": "nagy-fruzsina-lilla"
+  },
+  "social": {
+    "facebook": "https://www.facebook.com/profile.php?id=61553500586744"
+  },
+  "urls": {
+    "signup": "https://morpheus-szinmuhely.hu/hirek-jelentkezes/",
+    "upcomingShows": "/kozelgo-eloadasok",
+    "instructors": "https://morpheus-szinmuhely.hu/oktatok/",
+    "workshopCamp": "/nyitott-alkalmak#workshopok"
+  },
+  "video": {
+    "youtubeId": "SR8yBRM7ZzE",
+    "title": "Morpheus Showreel"
+  },
+  "map": {
+    "embedUrl": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2694.810454541479!2d19.03508547642782!3d47.513082471181384!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4741dc0369ce396b%3A0x8c466f3e1e229012!2sBudapest%2C%20Frankel%20Le%C3%B3%20%C3%BAt%206%2C%201027!5e0!3m2!1shu!2shu!4v1780554471105!5m2!1shu!2shu",
+    "directionsUrl": "https://maps.google.com/?q=1027+Budapest,+Frankel+Le%C3%B3+%C3%BAt+6.",
+    "title": "Térkép: 1027 Budapest, Frankel Leó út 6."
+  }
+}

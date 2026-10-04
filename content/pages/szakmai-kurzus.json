@@ -1,0 +1,130 @@
+{
+  "meta": {
+    "title": "Szakmai kurzus — Morpheus Színműhely",
+    "description": "Szakmai színházi kurzus haladóknak Budapesten: heti 1×3 óra, 6–8 hónap, felvételi meghallgatással, vizsgaelőadással."
+  },
+  "courseId": "szakmai",
+  "hero": {
+    "heading": "Szakmai kurzus",
+    "lead": "Ha már jártál színházi képzésen és szeretnél egy olyan közösséghez tartozni, ahol folyamatosan tudsz új dolgokat tanulni és fejlődni, akkor szakmai kurzusunkat Neked találták ki!",
+    "facts": [
+      {
+        "label": "Ritmus",
+        "value": "heti 1 × 3 óra"
+      },
+      {
+        "label": "Hossz",
+        "value": "6–8 hónap (előrehaladástól függően)"
+      },
+      {
+        "label": "Helyszín",
+        "value": "1027 Budapest, Frankel Leó út 6."
+      },
+      {
+        "label": "Díj",
+        "value": "{lowestPrice}"
+      }
+    ],
+    "primaryCtaLabel": "Jelentkezem",
+    "secondaryCta": {
+      "label": "Induló kurzusok",
+      "href": "#indulo"
+    },
+    "image": {
+      "src": "/images/szakmai-kurzus-5.webp",
+      "alt": "Hallgatók meghajlása egy vizsgaelőadás végén",
+      "width": 800,
+      "height": 533
+    }
+  },
+  "starts": {
+    "eyebrow": "Jelentkezés",
+    "heading": "Induló szakmai kurzusok",
+    "ctaLabel": "Jelentkezem",
+    "empty": {
+      "text": "Hamarosan új csoportokat indítunk. Kérdésed van? Írj vagy hívj bátran!",
+      "link": {
+        "label": "Kapcsolat",
+        "href": "/kapcsolat"
+      }
+    },
+    "rolling": {
+      "nextIntakeLabel": "Következő induló szakmai kurzus",
+      "text": "A szakmai kurzusainkra a jelentkezés folyamatos, indulásuk a jelentkezők létszámától függ. Amennyiben nem látsz feltüntetve információt a következő kurzus indulásáról, e-mailben tudsz érdeklődni [itt]. Ha pedig már biztos vagy a jelentkezésedben, kérjük töltsd ki jelentkezési lapunkat!",
+      "note": "Szeretnénk felhívni a jelentkezők figyelmét, hogy amennyiben szakmai kurzusunkat választják, úgy a kurzus kezdetét egy felvételi meghallgatás előzi meg, ahol felmérjük a leendő hallgatók eddigi színházi ismereteit.",
+      "inquiry": {
+        "label": "Érdeklődöm",
+        "href": "mailto:morpheus.szinmuhely@gmail.com"
+      }
+    }
+  },
+  "benefits": {
+    "eyebrow": "Mire jó ez?",
+    "heading": "Amit a kurzus *ad neked.*",
+    "text": "Szakmai kurzusunk lehetőséget ad egy saját személyiségünktől teljesen különböző karakter bőrébe bújni, de pont a különbségek által közelebb kerülni önmagunkhoz, fejleszteni önismeretünket. Sokrétű tanrendünknek köszönhetően hallgatóink egyszerre tudnak fejlődni beszédtechnika, színpadi mozgás, improvizáció és színészmesterség terén is."
+  },
+  "curriculum": {
+    "eyebrow": "6–8 hónap",
+    "heading": "Mit fogsz tanulni?",
+    "items": [
+      "Csoportos és egyéni játékok által, az improvizáció és a drámai helyzetek gyakorlása",
+      "Szituációs feladatok segítségével modellezzük a mindennapokban előforduló élethelyzeteket, és az arra adott érzelmi, illetve tudatos válaszokat",
+      "A kurzus során oktatóink kiválasztják azt a világirodalmi karaktert, amely az adott hallgató személyiségének tökéletes ellentéte. A karakterrel páros vagy többszereplős jelenet keretein belül kezdünk foglalkozni.",
+      "Természetesen a jelenet abból a drámából kerül ki, amiből az oktatók korábban a karaktert magát is választották.",
+      "Beszédtechnika tanáraink kiscsoportos foglalkozások keretein belül foglalkoznak az esetleges beszédhibákkal és fejlesztik a hallgatók kommunikációs képességét.",
+      "Színpadi mozgás keretein belül hallgatóink megtanulják tudatosan használni a saját testüket a jelenetekben és elsajátítják, hogyan lehet karaktereket ábrázolni pusztán mozdulatokkal.",
+      "A kurzus végén az elkészült jeleneteket egybefűzve egy olyan színházi performansz jön létre, melyet vizsgaelőadásként elő is adnak hallgatóink profi színházi körülmények között."
+    ],
+    "image": {
+      "src": "/images/szakmai-kurzus-3.webp",
+      "alt": "Oktató és hallgatók jelenetpróbán",
+      "width": 800,
+      "height": 600
+    }
+  },
+  "why": [
+    {
+      "eyebrow": "Miért a Morpheus?",
+      "heading": "Biztonságos közeg, jókedvű tanulás.",
+      "text": "Fiatal, haladó gondolkodású oktatóink minden héten azon vannak, hogy hallgatóink felszabadultan és jókedvvel sajátítsák el a színház különböző területeinek tudását. Támogatásukkal biztonságos környezetben próbálhatod ki magad számodra új helyzetekben."
+    }
+  ],
+  "after": {
+    "eyebrow": "A vizsga után",
+    "heading": "Mi lesz a vizsga után?",
+    "paragraphs": [
+      "Szakmai csoportunk vizsgája után lehetőség van a folytatásra.",
+      "Vizsgát tett hallgatóink egy következő kurzus keretében a megszerzett tudást hasznosítva saját darabot írnak vagy raknak össze rögzített improvizáció felhasználásával. A szakmai kurzusok zárása ezután következik a harmadik, lezáró tanfolyamon: ez egy klasszikus színpadi darab színrevitele, teljes hosszában.",
+      "A Morpheus Színműhely mindkét esetben lehetőséget biztosít arra, hogy az elkészült darabokat hallgatóink a kurzus befejezése után is játszani tudják."
+    ],
+    "image": {
+      "src": "/images/szakmai-kurzus-2.webp",
+      "alt": "Oktató egy szakmai kurzus óráján",
+      "width": 800,
+      "height": 533
+    }
+  },
+  "reviews": {
+    "eyebrow": "Hallgatóink mondták",
+    "heading": "Így látják a *Morpheust.*",
+    "intro": "Cetlik a próbaterem faláról: hallgatóink saját szavaival arról, mit jelent nekik a heti alkalom."
+  },
+  "prices": {
+    "eyebrow": "Képzési költségek",
+    "heading": "A kurzus díja",
+    "ctaLabel": "Jelentkezem"
+  },
+  "cta": {
+    "eyebrow": "Oktatóink",
+    "heading": "Profi színészek *kísérnek végig.*",
+    "text": "Ismerd meg oktatóinkat, akik minden héten azon vannak, hogy hallgatóink felszabadultan és jókedvvel tanuljanak.",
+    "primary": {
+      "label": "Ismerd meg oktatóinkat",
+      "href": "https://morpheus-szinmuhely.hu/oktatok/"
+    },
+    "secondary": {
+      "label": "Kapcsolat",
+      "href": "/kapcsolat"
+    }
+  }
+}

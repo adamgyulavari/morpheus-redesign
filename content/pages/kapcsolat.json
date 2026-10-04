@@ -1,0 +1,34 @@
+{
+  "meta": {
+    "title": "Kapcsolat — Morpheus Színműhely",
+    "description": "Morpheus Színműhely — Nagy Fruzsina Lilla: +36 30 463 9129, e-mail: morpheus.szinmuhely@gmail.com. 1027 Budapest, Frankel Leó út 6."
+  },
+  "hero": {
+    "heading": "Kapcsolat",
+    "lead": "Kérdésed van a képzésekkel, a Nyitott Műhellyel vagy egy csapatépítővel kapcsolatban? Írj vagy hívj bátran!",
+    "image": {
+      "src": "/images/szakmai-kurzus-1.webp",
+      "alt": "A próbaterem a Frankel Leó úton",
+      "width": 800,
+      "height": 533
+    }
+  },
+  "email": {
+    "eyebrow": "E-mail",
+    "heading": "Írj nekünk"
+  },
+  "location": {
+    "eyebrow": "Helyszín",
+    "heading": "Az oktatás helyszíne",
+    "addressLines": [
+      "1027 Budapest,",
+      "Frankel Leó út 6."
+    ],
+    "text": "Itt tartjuk a kezdő kurzusokat és a szombati Nyitott Műhelyt is.",
+    "directionsLabel": "Útvonaltervezés"
+  },
+  "social": {
+    "heading": "Kövess minket, és nézz be a próbák mögé.",
+    "label": "Facebook"
+  }
+}

@@ -1,0 +1,281 @@
+@import 'tailwindcss';
+
+/* Design tokens — same names as the inline tailwind.config of the static pages, so every
+   utility (bg-teal, text-rust-dark, font-display …) keeps its name. */
+@theme {
+  --color-cream: #f7f1e8;
+  --color-paper: #fffaf2;
+  --color-sand: #efe5d6;
+  --color-line: #e4d8c6;
+  --color-ink: #10292c;
+  --color-ink2: #33494c;
+  --color-muted: #4d6366;
+  --color-teal: #0f5f63;
+  --color-deep: #0b3a3f;
+  --color-deep2: #0f4a4f;
+  --color-night: #081f22;
+  --color-gold: #f9c86a;
+  --color-rust: #c24e2c;
+  --color-rust-dark: #b8472a; /* hover/text on light surfaces, passes AA with cream */
+  --color-mist: #c6d6d3;
+}
+
+/* Fonts come from next/font (self-hosted) as CSS variables set on <html>; `inline` makes the
+   utilities reference those variables directly. */
+@theme inline {
+  --font-sans: var(--font-figtree), 'Segoe UI', system-ui, sans-serif;
+  --font-display: var(--font-instrument-serif), 'Times New Roman', serif;
+}
+
+@layer base {
+  /* Surfaces: light by default; .on-dark on deep/teal/night containers */
+  :root {
+    --link-hover: var(--color-rust-dark);
+    --focus: var(--color-teal);
+  }
+  .on-dark {
+    --link-hover: var(--color-gold);
+    --focus: var(--color-gold);
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+  }
+  /* Tailwind v4's preflight no longer gives buttons a pointer cursor */
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  /* Buttons: .btn + one size (.btn-md 48px / .btn-lg 56px) + one fill */
+  .btn {
+    @apply relative isolate inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-full px-6 font-bold whitespace-nowrap transition-colors duration-200;
+  }
+  .btn > svg {
+    @apply h-[18px] w-[18px] shrink-0 transition-transform duration-200;
+  }
+  .btn:hover > svg {
+    @apply translate-x-1;
+  }
+  .btn-md {
+    @apply h-12 text-[15px];
+  }
+  .btn-lg {
+    @apply h-14 text-base lg:px-7 lg:text-[17px];
+  }
+  /* Every fill: a rust-dark "curtain" sweeps across on hover (below), text turns cream */
+  .btn-primary {
+    @apply bg-teal text-cream;
+  }
+  .btn-outline {
+    @apply border-[1.5px] border-teal text-teal hover:border-rust-dark hover:text-cream;
+  }
+  .btn-gold {
+    @apply bg-gold text-deep hover:text-cream;
+  }
+  .btn-cream {
+    @apply bg-cream text-deep hover:text-cream;
+  }
+  .btn-outline-cream {
+    @apply border-[1.5px] border-cream text-cream hover:border-rust-dark;
+  }
+
+  /* Round icon button (menu toggle, carousel arrows, dialog close) */
+  .btn-icon {
+    @apply relative isolate inline-flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-[1.5px] border-teal text-teal transition-colors duration-200 hover:border-rust-dark hover:text-cream disabled:pointer-events-none disabled:opacity-35;
+  }
+
+  /* Curtain: an angled panel sweeps in from the left on hover, slowing to a stop,
+     and on leave draws back to the left */
+  .btn::before,
+  .btn-icon::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: 0 -0.5rem;
+    background: var(--color-rust-dark);
+    transform: skewX(-14deg) scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.5s cubic-bezier(0.08, 0.9, 0.2, 1);
+  }
+  .btn:hover::before,
+  .btn:focus-visible::before,
+  .btn-icon:hover::before,
+  .btn-icon:focus-visible::before {
+    transform: skewX(-14deg) scaleX(1);
+  }
+  .btn:focus-visible,
+  .btn-icon:focus-visible {
+    @apply text-cream;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .btn::before,
+    .btn-icon::before {
+      transform: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .btn:hover::before,
+    .btn:focus-visible::before,
+    .btn-icon:hover::before,
+    .btn-icon:focus-visible::before {
+      transform: none;
+      opacity: 1;
+    }
+  }
+
+  /* Inline link: always underlined (2px, same as nav); colour warms on hover */
+  .link {
+    @apply underline decoration-2 underline-offset-4;
+    transition: color 0.2s;
+  }
+  .link:hover,
+  a:hover .link {
+    color: var(--link-hover);
+  }
+
+  /* Arrow link: .link + trailing arrow that nudges on hover */
+  .link-arrow {
+    @apply inline-flex min-h-[44px] items-center gap-2 font-semibold;
+  }
+  .link-arrow > svg {
+    @apply h-[18px] w-[18px] shrink-0 transition-transform duration-200;
+  }
+  .link-arrow:hover > svg,
+  a:hover .link-arrow > svg {
+    @apply translate-x-1;
+  }
+
+  /* Nav link: no underline at rest; one grows in from the left on hover */
+  .link-nav {
+    background: linear-gradient(currentColor, currentColor) left bottom / 0 2px no-repeat;
+    padding-bottom: 2px;
+    transition:
+      color 0.2s,
+      background-size 0.3s ease;
+  }
+  .link-nav:hover,
+  a:hover .link-nav {
+    color: var(--link-hover);
+    background-size: 100% 2px;
+  }
+  .link-nav[aria-current='page'],
+  a[aria-current='page'] .link-nav {
+    @apply text-teal;
+    background-size: 100% 2px;
+  }
+
+  /* Form fields */
+  .field {
+    @apply w-full rounded-xl border-[1.5px] border-[#cdbda3] bg-paper px-4 py-3 text-base text-ink transition-colors placeholder:text-muted hover:border-teal focus:border-teal;
+  }
+  .field-label {
+    @apply flex flex-col gap-1.5 text-sm font-semibold;
+  }
+
+  /* Filter chip (toggle button, aria-pressed) */
+  .chip {
+    @apply inline-flex min-h-[48px] shrink-0 items-center gap-2.5 rounded-full border-[1.5px] border-[#cdbda3] px-5 text-[15px] font-semibold whitespace-nowrap transition-colors duration-200 hover:border-rust-dark hover:text-rust-dark;
+  }
+  .chip[aria-pressed='true'] {
+    @apply border-teal bg-teal text-cream;
+  }
+}
+
+/* Sunset gradient from the logo */
+.sun {
+  background: linear-gradient(180deg, #ffd27a 0%, #f39a3d 50%, #e0603a 100%);
+}
+/* Striped placeholder for photos we don't have yet (review portraits, instructor avatars) */
+.ph {
+  background: repeating-linear-gradient(135deg, #e6d8c2 0 12px, #ddccb2 12px 24px);
+  color: #5a4a33;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Home hero: rings ripple out from behind the logo, grow and fade — three, evenly staggered */
+.pulse-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1.5px solid #dcc6a4;
+  opacity: 0;
+  transform: scale(0.68);
+  animation: ring-pulse 7.5s cubic-bezier(0.2, 0.6, 0.35, 1) infinite;
+}
+.pulse-ring:nth-child(2) {
+  animation-delay: -2.5s;
+}
+.pulse-ring:nth-child(3) {
+  animation-delay: -5s;
+}
+@keyframes ring-pulse {
+  0% {
+    transform: scale(0.68);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.06);
+    opacity: 0;
+  }
+}
+
+/* Home hero logo: the curtains breathe — drawn slightly aside and swaying at the hem, hinged at the rod */
+.curtain {
+  transform-box: fill-box;
+  animation: curtain-l 6s ease-in-out infinite;
+}
+.curtain-l {
+  transform-origin: left top;
+}
+.curtain-r {
+  transform-origin: right top;
+  animation-name: curtain-r;
+  animation-delay: -0.6s;
+}
+@keyframes curtain-l {
+  0%,
+  100% {
+    transform: none;
+  }
+  50% {
+    transform: skewX(-1.2deg) scaleX(0.965);
+  }
+}
+@keyframes curtain-r {
+  0%,
+  100% {
+    transform: none;
+  }
+  50% {
+    transform: skewX(1.2deg) scaleX(0.965);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .curtain {
+    animation: none;
+  }
+  .pulse-ring {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    border-width: 1px;
+  }
+  .pulse-ring:nth-child(2) {
+    inset: 7%;
+  }
+  .pulse-ring:nth-child(3) {
+    display: none;
+  }
+}

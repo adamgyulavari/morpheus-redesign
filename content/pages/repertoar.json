@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "title": "Repertoár — Morpheus Színműhely",
+    "description": "A Morpheus Színműhely társulati előadásai és hallgatóink saját alkotásai."
+  },
+  "hero": {
+    "heading": "Repertoár",
+    "lead": "Társulatunk előadásai és hallgatóink saját alkotásai — Molnártól és Shakespeare-től a krimin át a zenés estig.",
+    "image": {
+      "src": "/images/meghajlas-szinpadon.webp",
+      "alt": "Meghajlás a színpadon egy előadás végén",
+      "width": 1984,
+      "height": 1000
+    }
+  },
+  "upcoming": {
+    "eyebrow": "Műsoron",
+    "text": "{count} előadás a következő hetekben",
+    "link": {
+      "label": "Közelgő előadások",
+      "href": "/kozelgo-eloadasok"
+    }
+  },
+  "filter": {
+    "label": "Szűrés",
+    "all": "Mind",
+    "company": "Társulati előadások",
+    "students": "Hallgatói előadások"
+  },
+  "groups": {
+    "company": {
+      "eyebrow": "A társulat",
+      "heading": "Társulati előadások",
+      "intro": "Oktatóink és hallgatóink közös produkciói, rendezett, bemutatott darabok."
+    },
+    "students": {
+      "eyebrow": "Hallgatóink",
+      "heading": "Hallgatóink saját alkotásai",
+      "intro": "Ezeket az előadásokat hallgatóink hozták létre, és ők viszik színpadra."
+    }
+  },
+  "labels": {
+    "onStage": "Műsoron",
+    "nextShow": "Következő előadás",
+    "more": "Bővebben"
+  },
+  "cta": {
+    "eyebrow": "Színpadra állnál?",
+    "heading": "A következő szereposztásban *te is ott lehetsz.*",
+    "text": "A kezdő kurzus vizsgaelőadással zárul, igazi színházi körülmények között.",
+    "primary": {
+      "label": "Megnézem a kezdő kurzust",
+      "href": "/kezdo-kurzus"
+    },
+    "secondary": {
+      "label": "Közelgő előadások",
+      "href": "/kozelgo-eloadasok"
+    }
+  }
+}

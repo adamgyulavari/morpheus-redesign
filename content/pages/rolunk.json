@@ -1,0 +1,86 @@
+{
+  "meta": {
+    "title": "Rólunk — Morpheus Színműhely",
+    "description": "A Morpheus Színműhely 2023-ban alakult amatőr színjátszó társulat és felnőtt színészképzésekkel foglalkozó színházi egyesület."
+  },
+  "hero": {
+    "heading": "Rólunk",
+    "lead": "A Morpheus Színműhely 2023 októberében alakult amatőr színjátszó társulat, illetve felnőtt színészképzésekkel foglalkozó színházi egyesület.",
+    "primaryCta": {
+      "label": "Képzéseink",
+      "href": "/kezdo-kurzus"
+    },
+    "secondaryCta": {
+      "label": "Előadásaink",
+      "href": "/repertoar"
+    },
+    "image": {
+      "src": "/images/laughing-faces.webp",
+      "alt": "Nevető hallgatók egy próbán",
+      "width": 1000,
+      "height": 563
+    }
+  },
+  "goal": {
+    "eyebrow": "A színműhely célja",
+    "heading": "Élmény, kikapcsolódás, *fejlődés.*",
+    "text": "A színműhely célja az, hogy a mindennapokban a civil szférában mozgó embereknek élményt, kikapcsolódást nyújtson, képességet fejlesszen."
+  },
+  "name": {
+    "eyebrow": "A nevünk",
+    "heading": "Morpheus *az álmok királya.*",
+    "text": "A római, illetve görög mitológiában az álmok istene. Névválasztásunk nem véletlen, a színház is egy olyan tér, ahol az álmaink valósággá válnak, hiszen akárcsak álmainkban, itt sincs korlát vagy akadály, amely kreatív gondolataink útjába állna."
+  },
+  "mission": {
+    "eyebrow": "Küldetésünk",
+    "heading": "A színház olyan, mint az élet.",
+    "quote": "„…és az élet is bizonyos értelemben színház.”",
+    "paragraphs": [
+      "Emiatt a gondolat miatt hisszük, hogy a színházi felnőttképzés mindenkinek adhat olyat, ami a mindennapi működésben hasznosítható. Sokszínű képzéseinkkel, személyre szabottan igyekszünk segíteni abban, hogy mindenki megtalálja a számára fontos szegmensét a színháznak, amivel fejlődni tud.",
+      "A Morpheus Színműhely amatőr színjátszó társulatként is funkcionál, hiszen legtehetségesebb hallgatóinknak színházi próbafolyamat keretében teljes darabok színpadra állítására, azoknak több helyszínen való játszására is van lehetőségük."
+    ],
+    "image": {
+      "src": "/images/szinhazi-kepzes-2.webp",
+      "alt": "Két szereplő jelenete a színpadon",
+      "width": 1000,
+      "height": 563
+    }
+  },
+  "next": {
+    "eyebrow": "Ismerj meg minket",
+    "heading": "Hol kezdenéd?",
+    "cards": [
+      {
+        "eyebrow": "Képzések",
+        "title": "Kezdő kurzus",
+        "href": "/kezdo-kurzus",
+        "text": "20 alkalom improvizáció, karakterformálás, beszédtechnika és monológ-munka, vizsgaelőadással."
+      },
+      {
+        "eyebrow": "Nyitott alkalmak",
+        "title": "Nyitott Műhely",
+        "href": "/nyitott-alkalmak",
+        "text": "Minden szombaton, kötöttség nélkül — próbáld ki magad biztonságos közegben."
+      },
+      {
+        "eyebrow": "Társulat",
+        "title": "Repertoár",
+        "href": "/repertoar",
+        "text": "Társulatunk előadásai és hallgatóink saját alkotásai."
+      }
+    ]
+  },
+  "cta": {
+    "eyebrow": "Oktatóink",
+    "heading": "Profi színészek *kísérnek végig.*",
+    "text": "Ismerd meg oktatóinkat, akik minden héten azon vannak, hogy hallgatóink felszabadultan és jókedvvel tanuljanak.",
+    "primary": {
+      "label": "Ismerd meg oktatóinkat",
+      "href": "https://morpheus-szinmuhely.hu/oktatok/"
+    },
+    "secondary": {
+      "label": "Kapcsolat",
+      "href": "/kapcsolat"
+    }
+  }
+}

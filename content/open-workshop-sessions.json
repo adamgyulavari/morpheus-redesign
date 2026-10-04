@@ -1,0 +1,56 @@
+[
+  {
+    "id": "2026-10-10",
+    "date": "2026-10-10",
+    "startTime": "14:00",
+    "endTime": "16:00",
+    "price": 5000,
+    "bookingUrl": "https://morpheus-szinmuhely.hu/nyitott-muhely/",
+    "bookingDeadline": "2026-10-08"
+  },
+  {
+    "id": "2026-10-17",
+    "date": "2026-10-17",
+    "startTime": "14:00",
+    "endTime": "16:00",
+    "price": 5000,
+    "bookingUrl": "https://morpheus-szinmuhely.hu/nyitott-muhely/",
+    "bookingDeadline": "2026-10-15"
+  },
+  {
+    "id": "2026-10-24",
+    "date": "2026-10-24",
+    "startTime": "14:00",
+    "endTime": "16:00",
+    "price": 5000,
+    "bookingUrl": "https://morpheus-szinmuhely.hu/nyitott-muhely/",
+    "bookingDeadline": "2026-10-22"
+  },
+  {
+    "id": "2026-10-31",
+    "date": "2026-10-31",
+    "startTime": "14:00",
+    "endTime": "16:00",
+    "price": 5000,
+    "bookingUrl": "https://morpheus-szinmuhely.hu/nyitott-muhely/",
+    "bookingDeadline": "2026-10-29"
+  },
+  {
+    "id": "2026-11-07",
+    "date": "2026-11-07",
+    "startTime": "14:00",
+    "endTime": "16:00",
+    "price": 5000,
+    "bookingUrl": "https://morpheus-szinmuhely.hu/nyitott-muhely/",
+    "bookingDeadline": "2026-11-05"
+  },
+  {
+    "id": "2026-11-14",
+    "date": "2026-11-14",
+    "startTime": "14:00",
+    "endTime": "16:00",
+    "price": 5000,
+    "bookingUrl": "https://morpheus-szinmuhely.hu/nyitott-muhely/",
+    "bookingDeadline": "2026-11-12"
+  }
+]

@@ -1,0 +1,41 @@
+[
+  {
+    "id": "civil-beugro",
+    "name": "Civil Beugró",
+    "duration": "90–120 perc",
+    "venue": "irodai környezet (mozgatható asztalokkal és székekkel), étterem",
+    "description": [
+      "A játékosok csapatokat alkotnak, és bemelegítő feladatok után a népszerű „Beugró” című improvizációs műsor játékaira építve különböző csoportfeladatokat kell megoldaniuk, illetve más csoportok számára feladatokat adni, a játékmesterek támogatásával."
+    ]
+  },
+  {
+    "id": "mate-peter-cserhati-zsuzsa-zenes-est",
+    "name": "Máté Péter – Cserháti Zsuzsa zenés est",
+    "duration": "45–90 perc",
+    "venue": "jó akusztikájú irodai környezet, rendezvényterem, étterem",
+    "description": [
+      "Máté Péter és Cserháti Zsuzsa életének bemutatása a legszebb dalaikon keresztül, a zenei élményt dramatizált átkötő jelenetek teszik teljessé."
+    ]
+  },
+  {
+    "id": "kincskereso-csapatepito",
+    "name": "Kincskereső csapatépítő",
+    "duration": "120–180 perc",
+    "venue": "irodai vagy szabadtéri környezet",
+    "description": [
+      "A résztvevők drámás játékokat játszanak kisebb csoportokra bontva, különböző állomásokon. Ezeket egy kerettörténet fogja össze. Például kalózok vagyunk, akiknek el kell jutniuk a Kincses-szigetre, hogy megszerezzék az Örök Élet Vizét. Csapatostul útnak indulnak, minden csapat más állomáson kezd, majd térkép alapján haladnak. Minden állomáson játékos küldetés várja őket. (Pl. az egyik állomáson — ami egy falucska, ahol kikötöttek — összetűzésbe keverednek a kikötőmesterrel, és a zsebszöveg játékkal kell kidumálniuk magukat.)",
+      "Ennél a formátumnál beleférnek, és szeretik is a résztvevők, ha az általános sorverseny-játékok is megjelennek. (Például a résztvevőknek a kocsma helyszínen pingponglabdával kell műanyag poharakba beletalálniuk.)",
+      "Ahogy haladnak előre, úgy kell jelenetet készíteniük, amit a legvégén egymásnak kell megmutatniuk. A győztes csapat, aki a legtöbb pontot szerezte, kapja meg a végén a kupát, amiben az Örök Élet Vize van."
+    ]
+  },
+  {
+    "id": "vacsoraszinhaz",
+    "name": "Vacsoraszínház",
+    "duration": "120–150 perc",
+    "venue": "elsősorban étterem, vagy catering fogadására képes irodai környezet",
+    "description": [
+      "Egy színházi előadást láthatnak majd, amihez ún. drámás munkaformákkal tarkított közös játékot kínálunk. Ezt az adott vállalat, közösség igényeire szabjuk előzetes egyeztetések mentén. Figyelembe vesszük a csoport létszámát, csoportdinamikai sajátosságait, illetve az alkalom sajátosságait (pl. ünnepi céges rendezvény, „adóév-búcsúztató”, pártolói tagság bővítése stb.). A történetünk adott, a megoldás lehetősége a vacsora közönségének kezében rejlik.",
+      "Kiemelt partnereinkkel (Púder Bárszínház, Grund Café, Vakvarjú Étterem) kész ajánlattal is tudunk készülni, fontosabb azonban, hogy az előzetes igényfelmérés mentén a teljes esemény leszervezését is tudjuk biztosítani a megrendelő által választott helyszínen."
+    ]
+  }
+]

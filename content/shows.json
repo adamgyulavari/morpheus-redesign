@@ -1,0 +1,60 @@
+[
+  {
+    "id": "kaprazat-2026-10-03",
+    "productionId": "kaprazat",
+    "date": "2026-10-03",
+    "time": "18:00",
+    "venueId": "frankel",
+    "ticketUrl": "https://www.tixa.hu/kaprazat-hallgatoi-eloadas-20261003"
+  },
+  {
+    "id": "8-32-2026-10-21",
+    "productionId": "8-32",
+    "date": "2026-10-21",
+    "time": "19:00",
+    "venueId": "frankel",
+    "label": "Nyilvános főpróba",
+    "registrationUrl": "https://forms.gle/BiHXAPCCzR7jAZSp9",
+    "info": [
+      "Az előadás hossza kb. 90 perc, szünet nélkül.",
+      "Kapunyitás: 18.45",
+      "Tájékoztatjuk a tisztelt közönséget, hogy az előadás megkezdése után a későket nem áll módunkban beengedni a nézőtérre.",
+      "Az előadás megtekintését 12 éves kor felett ajánljuk!",
+      "A főpróbára a belépés ingyenes, de regisztrációhoz kötött!",
+      "Tájékoztatjuk kedves nézőinket továbbá, hogy az előadáson a nézőszám korlátozott: maximum 30 fő."
+    ]
+  },
+  {
+    "id": "bernarda-alba-haza-2026-10-25",
+    "productionId": "bernarda-alba-haza",
+    "date": "2026-10-25",
+    "time": "18:00",
+    "venueId": "frankel",
+    "ticketUrl": "https://www.tixa.hu/federico-garcia-lorca-bernarda-alba-haza-20261025"
+  },
+  {
+    "id": "a-premier-2026-10-27",
+    "productionId": "a-premier",
+    "date": "2026-10-27",
+    "time": "19:00",
+    "venueId": "frankel",
+    "label": "Nyilvános főpróba",
+    "registrationUrl": "https://forms.gle/aP7FRakHMFyxkrYf8",
+    "info": [
+      "Az előadás hossza kb. 90 perc, szünet nélkül.",
+      "Kapunyitás: 18.45",
+      "Tájékoztatjuk a tisztelt közönséget, hogy az előadás megkezdése után a későket nem áll módunkban beengedni a nézőtérre.",
+      "Az előadás megtekintését 12 éves kor felett ajánljuk!",
+      "A főpróbára a belépés ingyenes, de regisztrációhoz kötött!",
+      "Tájékoztatjuk kedves nézőinket továbbá, hogy az előadáson a nézőszám korlátozott: maximum 35 fő."
+    ]
+  },
+  {
+    "id": "az-ordog-2026-10-28",
+    "productionId": "az-ordog",
+    "date": "2026-10-28",
+    "time": "19:00",
+    "venueId": "hanko-gyomro",
+    "ticketUrl": "https://www.tixa.hu/molnar-ferenc-az-ordog-20261028"
+  }
+]

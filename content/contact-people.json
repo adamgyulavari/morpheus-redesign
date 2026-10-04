@@ -1,0 +1,20 @@
+[
+  {
+    "id": "nagy-fruzsina-lilla",
+    "name": "Nagy Fruzsina Lilla",
+    "role": "Elnök",
+    "phone": "+36304639129",
+    "photo": {
+      "src": "/images/nagy-fruzsina-lilla.jpg",
+      "alt": "Nagy Fruzsina Lilla",
+      "width": 550,
+      "height": 550
+    }
+  },
+  {
+    "id": "komenda-roland",
+    "name": "Komenda Roland",
+    "role": "Produkciós menedzser",
+    "phone": "+36209560560"
+  }
+]

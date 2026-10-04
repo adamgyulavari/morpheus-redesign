@@ -1,0 +1,44 @@
+[
+  {
+    "id": "szinhazi-mozgas-szigethy-norbert",
+    "kind": "Workshop",
+    "title": "Színházi mozgás workshop",
+    "subtitle": "Szigethy Norberttel",
+    "startDate": "2026-10-22",
+    "endDate": "2026-10-25",
+    "startTime": "10:00",
+    "endTime": "17:00",
+    "intro": "A Morpheus Színműhely színházi mozgás workshopot hirdet!",
+    "summary": "A workshop témája a semmiből valami létrehozása, a magunk eszközeivel. Klasszikus szövegre épülő jelenetek készítésével figyeljük meg, hogyan lehet ugyanazon szöveg akár dráma, musical vagy vígjáték táptalaja is.",
+    "leader": {
+      "name": "Szigethy Norbert",
+      "bio": [
+        "Szigethy Norbert (1998-) táncművész, koreográfus.",
+        "Alapképzését a Magyar Táncművészeti Egyetem koreográfus (Bozsik Yvette) szakán végezte, mesterdiplomáját a Károli Gáspár Református Egyetemen szerezte színháztudomány szakon.",
+        "Jelenleg a Kecskeméti Katona József Nemzeti Színház tagja, a Kecskemét City Balett táncművésze."
+      ]
+    },
+    "closing": "Kóstolj bele Te is a színház világába!",
+    "signupUrl": "https://forms.gle/zQTYpEGUzRtkybxk9",
+    "image": {
+      "src": "/images/workshop-szigethy-2.webp",
+      "alt": "Szigethy Norbert a színpadon — „A workshop témája a semmiből valami létrehozása, a magunk eszközeivel.”",
+      "width": 800,
+      "height": 640
+    },
+    "gallery": [
+      {
+        "src": "/images/workshop-szigethy-3.webp",
+        "alt": "Szigethy Norbert — „Nem hiszek az egymástól elkülönülő műfajokban, mert a színház mindent magába olvaszt.”",
+        "width": 800,
+        "height": 640
+      },
+      {
+        "src": "/images/workshop-szigethy-4.webp",
+        "alt": "Jelenet — „A színház alapvetése a ritmus.”",
+        "width": 800,
+        "height": 640
+      }
+    ]
+  }
+]

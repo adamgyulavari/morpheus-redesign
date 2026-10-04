@@ -1,0 +1,77 @@
+import { useId } from 'react';
+
+/**
+ * The Morpheus logo (source: logo-source/logo-almost-final.svg, 575×575).
+ * A server component: `useId` gives every instance its own gradient/clip ids, so the logo can
+ * appear several times on a page (header, hero, footer) without the definitions colliding.
+ * `animated` turns on the breathing curtains used in the home hero (keyframes in globals.css).
+ */
+export default function Logo({
+  className,
+  title = 'Morpheus Színműhely logó',
+  animated = false,
+}: {
+  className?: string;
+  /** Accessible name; pass null when the logo is decorative next to the visible name. */
+  title?: string | null;
+  animated?: boolean;
+}) {
+  const id = `logo${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+  const curtain = animated ? 'curtain ' : '';
+  return (
+    <svg
+      viewBox="0 0 575 575"
+      className={className}
+      role={title ? 'img' : undefined}
+      aria-label={title ?? undefined}
+      aria-hidden={title ? undefined : true}
+      focusable="false"
+    >
+      <defs>
+        <clipPath id={`${id}-disc`}>
+          <circle cx="287.5" cy="287.5" r="229.908" />
+        </clipPath>
+        <linearGradient id={`${id}-paint0`} x1="8.625" y1="8.625" x2="8.625" y2="566.375" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#1F8A8A" /><stop offset="1" stopColor="#0C4F53" /></linearGradient>
+        <linearGradient id={`${id}-paint1`} x1="13.8" y1="57.592" x2="13.8" y2="517.408" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#00696A" /><stop offset="1" stopColor="#0B4046" /></linearGradient>
+        <linearGradient id={`${id}-paint2`} x1="13.8" y1="57.592" x2="13.8" y2="517.408" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#D0602A" /><stop offset="0.3" stopColor="#F8AE50" /><stop offset="0.7" stopColor="#F39A3D" /><stop offset="1" stopColor="#E57A34" /></linearGradient>
+        <linearGradient id={`${id}-paint3`} x1="13.8" y1="74.014" x2="13.8" y2="492.775" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#78DCD2" stopOpacity="0.2" /><stop offset="0.45" stopColor="#78DCD2" stopOpacity="0.07" /><stop offset="1" stopColor="#78DCD2" stopOpacity="0" /></linearGradient>
+        <linearGradient id={`${id}-paint4`} x1="13.8" y1="74.014" x2="13.8" y2="492.775" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#78DCD2" stopOpacity="0.1" /><stop offset="0.45" stopColor="#78DCD2" stopOpacity="0.035" /><stop offset="1" stopColor="#78DCD2" stopOpacity="0" /></linearGradient>
+        <linearGradient id={`${id}-paint5`} x1="67.9159" y1="72.6455" x2="144.734" y2="74.2559" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#B55014" /><stop offset="0.55" stopColor="#EB884D" /><stop offset="1" stopColor="#C45716" /></linearGradient>
+        <linearGradient id={`${id}-paint6`} x1="38.6273" y1="71.277" x2="119.141" y2="72.9649" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#CE700D" /><stop offset="0.55" stopColor="#F5AC5F" /><stop offset="1" stopColor="#DF790E" /></linearGradient>
+        <linearGradient id={`${id}-paint7`} x1="9.3387" y1="69.9085" x2="93.8122" y2="71.6794" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#A44B1A" /><stop offset="0.55" stopColor="#E17D47" /><stop offset="1" stopColor="#B2511D" /></linearGradient>
+        <linearGradient id={`${id}-paint8`} x1="-20.214" y1="68.54" x2="68.2195" y2="70.3939" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#C7660F" /><stop offset="0.55" stopColor="#F3A35B" /><stop offset="1" stopColor="#D86F10" /></linearGradient>
+        <linearGradient id={`${id}-paint9`} x1="8.0894" y1="41.17" x2="8.0894" y2="533.83" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#6B200C" stopOpacity="0.35" /><stop offset="0.3" stopColor="#6B200C" stopOpacity="0" /><stop offset="0.75" stopColor="#6B200C" stopOpacity="0.1" /><stop offset="1" stopColor="#6B200C" stopOpacity="0.45" /></linearGradient>
+        <linearGradient id={`${id}-paint10`} x1="430.233" y1="72.6455" x2="507.05" y2="71.0351" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#B55014" /><stop offset="0.55" stopColor="#EB884D" /><stop offset="1" stopColor="#C45716" /></linearGradient>
+        <linearGradient id={`${id}-paint11`} x1="455.824" y1="71.277" x2="536.337" y2="69.5891" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#CE700D" /><stop offset="0.55" stopColor="#F5AC5F" /><stop offset="1" stopColor="#DF790E" /></linearGradient>
+        <linearGradient id={`${id}-paint12`} x1="481.151" y1="69.9085" x2="565.624" y2="68.1376" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#A44B1A" /><stop offset="0.55" stopColor="#E17D47" /><stop offset="1" stopColor="#B2511D" /></linearGradient>
+        <linearGradient id={`${id}-paint13`} x1="506.742" y1="68.54" x2="595.175" y2="66.6861" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#C7660F" /><stop offset="0.55" stopColor="#F3A35B" /><stop offset="1" stopColor="#D86F10" /></linearGradient>
+        <linearGradient id={`${id}-paint14`} x1="38.6946" y1="41.17" x2="38.6946" y2="533.83" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#6B200C" stopOpacity="0.35" /><stop offset="0.3" stopColor="#6B200C" stopOpacity="0" /><stop offset="0.75" stopColor="#6B200C" stopOpacity="0.1" /><stop offset="1" stopColor="#6B200C" stopOpacity="0.45" /></linearGradient>
+        <linearGradient id={`${id}-paint15`} x1="87.7174" y1="64.9879" x2="87.7174" y2="542.693" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#D0602A" /><stop offset="0.3" stopColor="#F8AE50" /><stop offset="0.7" stopColor="#F39A3D" /><stop offset="1" stopColor="#E57A34" /></linearGradient>
+      </defs>
+      <path d="M287.5 566.375C441.518 566.375 566.375 441.518 566.375 287.5C566.375 133.482 441.518 8.625 287.5 8.625C133.482 8.625 8.625 133.482 8.625 287.5C8.625 441.518 133.482 566.375 287.5 566.375Z" fill={`url(#${id}-paint0)`} />
+      <path d="M287.5 537.625C425.64 537.625 537.625 425.64 537.625 287.5C537.625 149.36 425.64 37.375 287.5 37.375C149.36 37.375 37.375 149.36 37.375 287.5C37.375 425.64 149.36 537.625 287.5 537.625Z" fill="#F7F1E8" />
+      <path d="M287.5 517.408C414.475 517.408 517.408 414.475 517.408 287.5C517.408 160.525 414.475 57.592 287.5 57.592C160.525 57.592 57.592 160.525 57.592 287.5C57.592 414.475 160.525 517.408 287.5 517.408Z" fill={`url(#${id}-paint1)`} />
+      <g clipPath={`url(#${id}-disc)`}>
+        <path d="M156.124 74.014L287.5 188.968L418.876 74.014V-13.57H156.124V74.014Z" fill={`url(#${id}-paint2)`} />
+        {/* stage lights along the legs of the M */}
+        <path d="M144.629 74.014H156.124L287.5 188.968L712.83 561.2H41.17L144.629 74.014Z" fill={`url(#${id}-paint3)`} />
+        <path d="M430.371 74.014H418.876L287.5 188.968L-137.83 561.2H533.83L430.371 74.014Z" fill={`url(#${id}-paint4)`} />
+        <g className={`${curtain}curtain-l`}>
+          <path d="M144.739 74.014C137.276 178.02 127.058 287.5 117.529 364.136C111.1 418.876 99.3883 473.616 87.5622 533.83H58.2478C70.6021 473.616 88.3875 418.876 86.1019 364.136C105.667 287.5 110.867 178.02 119.15 72.6455L144.739 74.014Z" fill={`url(#${id}-paint5)`} />
+          <path d="M119.148 72.6455C110.864 178.02 105.664 287.5 86.0991 364.136C88.3848 418.876 70.5992 473.616 58.2449 533.83H28.9304C41.5488 473.616 48.5065 418.876 65.2356 364.136C66.5781 287.5 84.4548 178.02 93.8232 71.277L119.148 72.6455Z" fill={`url(#${id}-paint6)`} />
+          <path d="M93.8207 71.277C84.4523 178.02 66.5755 287.5 65.233 364.136C48.5038 418.876 41.5461 473.616 28.9277 533.83H-0.386969C12.7597 473.616 31.6017 418.876 30.1083 364.136C50.9939 287.5 58.0427 178.02 68.2321 69.9085L93.8207 71.277Z" fill={`url(#${id}-paint7)`} />
+          <path d="M68.2297 69.9085C58.0403 178.02 50.9914 287.5 30.1057 364.136C31.5991 418.876 12.7571 473.616 -0.389633 533.83H-29.9685C-16.0295 473.616 -8.27948 418.876 9.24209 364.136C11.9051 287.5 31.6306 178.02 42.641 68.54L68.2297 69.9085Z" fill={`url(#${id}-paint8)`} />
+          <path d="M-96.4061 -13.57L144.737 74.014C137.274 178.02 127.056 287.5 117.526 364.136C111.096 418.876 99.3837 473.616 87.5569 533.83L-109.031 588.57L-96.4061 -13.57Z" fill={`url(#${id}-paint9)`} />
+        </g>
+        <g className={`${curtain}curtain-r`}>
+          <path d="M430.261 74.014C437.724 178.02 447.942 287.5 457.471 364.136C463.9 418.876 475.612 473.616 487.438 533.83H516.752C504.398 473.616 486.612 418.876 488.898 364.136C469.333 287.5 464.133 178.02 455.85 72.6455L430.261 74.014Z" fill={`url(#${id}-paint10)`} />
+          <path d="M455.852 72.6455C464.136 178.02 469.336 287.5 488.901 364.136C486.615 418.876 504.401 473.616 516.755 533.83H546.07C533.451 473.616 526.494 418.876 509.764 364.136C508.422 287.5 490.545 178.02 481.177 71.277L455.852 72.6455Z" fill={`url(#${id}-paint11)`} />
+          <path d="M481.179 71.277C490.548 178.02 508.424 287.5 509.767 364.136C526.496 418.876 533.454 473.616 546.072 533.83H575.387C562.24 473.616 543.398 418.876 544.892 364.136C524.006 287.5 516.957 178.02 506.768 69.9085L481.179 71.277Z" fill={`url(#${id}-paint12)`} />
+          <path d="M506.77 69.9085C516.96 178.02 524.009 287.5 544.894 364.136C543.401 418.876 562.243 473.616 575.39 533.83H604.968C591.029 473.616 583.279 418.876 565.758 364.136C563.095 287.5 543.369 178.02 532.359 68.54L506.77 69.9085Z" fill={`url(#${id}-paint13)`} />
+          <path d="M671.406 -13.57L430.263 74.014C437.726 178.02 447.944 287.5 457.474 364.136C463.904 418.876 475.616 473.616 487.443 533.83L684.031 588.57L671.406 -13.57Z" fill={`url(#${id}-paint14)`} />
+        </g>
+        <path d="M286.016 294C228.723 277 178.623 241.5 178.623 241.5C178.623 241.5 181.306 275.736 187.093 321C198.378 316.167 209.696 311.7 226.626 322.5C203.398 323.5 200.818 324.5 188.533 332C190.235 344.698 181.732 361.333 183.784 375.5C184.123 377.835 194.748 377.67 195.102 380C196.078 386.418 197.116 392.795 198.237 399C223.529 394.5 231.271 392.5 247.788 375.5C242.11 409.5 221.98 413 202.882 420C206 461 231.562 438.5 240.5 467C250.262 498.127 238.558 531.031 251.401 537.5C303.017 563.5 294.13 543.756 322.115 537.5C335.535 534.5 320.5 507 331 467C340 437.5 366.5 460.5 368.908 420C359 415 335.793 409.5 318.244 424.5C325.264 404.5 355.762 397.5 373.705 399C376 389.5 375 386 376.903 379.5C377.342 378 387.87 378 388.215 375C389.885 360.5 381 340.5 383.648 332C360.859 330.5 353.084 329.5 345.858 318.5C358.762 321 359.827 326 384.927 321C390.058 275.738 393.345 241.5 393.345 241.5C393.345 241.5 346.407 275.5 286.016 294Z" fill={`url(#${id}-paint15)`} />
+      </g>
+    </svg>
+  );
+}

@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Céges csapatépítő — Morpheus Színműhely</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="description" content="Játékos, élményalapú színházi csapatépítő programok cégeknek: Civil Beugró, zenés est, kincskereső, vacsoraszínház.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          cream: '#f7f1e8', paper: '#fffaf2', sand: '#efe5d6', line: '#e4d8c6',
+          ink: '#10292c', ink2: '#33494c', muted: '#4d6366',
+          teal: '#0f5f63', deep: '#0b3a3f', deep2: '#0f4a4f', night: '#081f22',
+          gold: '#f9c86a',
+          rust: { DEFAULT: '#c24e2c', dark: '#b8472a' }, // rust-dark: hover/text on light, passes AA with cream
+          mist: '#c6d6d3'
+        },
+        fontFamily: {
+          display: ['"Instrument Serif"', '"Times New Roman"', 'serif'],
+          sans: ['Figtree', '"Segoe UI"', 'system-ui', 'sans-serif']
+        }
+      }
+    }
+  }
+</script>
+<style>
+  /* sunset gradient from the logo */
+  .sun { background: linear-gradient(180deg, #ffd27a 0%, #f39a3d 50%, #e0603a 100%); }
+  /* striped image placeholder — delete once real photos are in */
+  .ph { background: repeating-linear-gradient(135deg, #e6d8c2 0 12px, #ddccb2 12px 24px); color: #5a4a33; }
+  .no-scrollbar { scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+</style>
+<style type="text/tailwindcss">
+  /* Surfaces: light by default; add .on-dark to deep/teal/night containers */
+  @layer base {
+    :root { --link-hover: theme('colors.rust.dark'); --focus: theme('colors.teal'); }
+    .on-dark { --link-hover: theme('colors.gold'); --focus: theme('colors.gold'); }
+    :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+  }
+  @layer components {
+    /* Buttons: .btn + one size (.btn-md 48px / .btn-lg 56px) + one fill */
+    .btn { @apply relative isolate inline-flex items-center justify-center gap-2.5 overflow-hidden whitespace-nowrap rounded-full px-6 font-bold transition-colors duration-200; }
+    .btn > svg { @apply h-[18px] w-[18px] shrink-0 transition-transform duration-200; }
+    .btn:hover > svg { @apply translate-x-1; }
+    .btn-md { @apply h-12 text-[15px]; }
+    .btn-lg { @apply h-14 text-base lg:px-7 lg:text-[17px]; }
+    /* Every fill: a rust-dark "curtain" sweeps across on hover (see below), text turns cream */
+    .btn-primary { @apply bg-teal text-cream; }                                                   /* light surface */
+    .btn-outline { @apply border-[1.5px] border-teal text-teal hover:border-rust-dark hover:text-cream; }  /* light surface */
+    .btn-gold    { @apply bg-gold text-deep hover:text-cream; }                                    /* dark surface, main CTA */
+    .btn-cream   { @apply bg-cream text-deep hover:text-cream; }                                   /* dark surface, next to gold */
+    .btn-outline-cream { @apply border-[1.5px] border-cream text-cream hover:border-rust-dark; }   /* dark surface, secondary */
+
+    /* Round icon button (menu toggle, carousel arrows) */
+    .btn-icon { @apply relative isolate inline-flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-[1.5px] border-teal text-teal transition-colors duration-200 hover:border-rust-dark hover:text-cream disabled:pointer-events-none disabled:opacity-35; }
+
+    /* Curtain: an angled panel sweeps in from the left on hover, slowing to a stop,
+       and on leave draws back to the left */
+    .btn::before, .btn-icon::before {
+      content: ""; position: absolute; z-index: -1; inset: 0 -0.5rem;
+      background: theme('colors.rust.dark');
+      transform: skewX(-14deg) scaleX(0); transform-origin: left center;
+      transition: transform .5s cubic-bezier(.08, .9, .2, 1);
+    }
+    .btn:hover::before, .btn:focus-visible::before,
+    .btn-icon:hover::before, .btn-icon:focus-visible::before {
+      transform: skewX(-14deg) scaleX(1);
+    }
+    .btn:focus-visible, .btn-icon:focus-visible { @apply text-cream; }
+    @media (prefers-reduced-motion: reduce) {
+      .btn::before, .btn-icon::before { transform: none; opacity: 0; transition: opacity .2s; }
+      .btn:hover::before, .btn:focus-visible::before,
+      .btn-icon:hover::before, .btn-icon:focus-visible::before { transform: none; opacity: 1; }
+    }
+
+    /* Inline link: always underlined (2px, same as nav); colour warms on hover */
+    .link { @apply underline decoration-2 underline-offset-4; transition: color .2s; }
+    .link:hover, a:hover .link { color: var(--link-hover); }
+
+    /* Arrow link: .link + trailing arrow that nudges on hover */
+    .link-arrow { @apply inline-flex min-h-[44px] items-center gap-2 font-semibold; }
+    .link-arrow > svg { @apply h-[18px] w-[18px] shrink-0 transition-transform duration-200; }
+    .link-arrow:hover > svg, a:hover .link-arrow > svg { @apply translate-x-1; }
+
+    /* Nav link: no underline at rest; one grows in from the left on hover */
+    .link-nav { background: linear-gradient(currentColor, currentColor) left bottom / 0 2px no-repeat; padding-bottom: 2px; transition: color .2s, background-size .3s ease; }
+    .link-nav:hover, a:hover .link-nav { color: var(--link-hover); background-size: 100% 2px; }
+    .link-nav[aria-current="page"], a[aria-current="page"] .link-nav { @apply text-teal; background-size: 100% 2px; }
+
+    /* Form fields */
+    .field { @apply w-full rounded-xl border-[1.5px] border-[#cdbda3] bg-paper px-4 py-3 text-base text-ink transition-colors placeholder:text-muted hover:border-teal focus:border-teal; }
+    .field-label { @apply flex flex-col gap-1.5 text-sm font-semibold; }
+
+    /* Filter chip (toggle button, aria-pressed) */
+    .chip { @apply inline-flex min-h-[48px] shrink-0 items-center gap-2.5 whitespace-nowrap rounded-full border-[1.5px] border-[#cdbda3] px-5 text-[15px] font-semibold transition-colors duration-200 hover:border-rust-dark hover:text-rust-dark; }
+    .chip[aria-pressed="true"] { @apply border-teal bg-teal text-cream; }
+  }
+</style>
+</head>
+<body class="bg-cream font-sans text-ink antialiased">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs><clipPath id="lg4-disc"><circle cx="100" cy="100" r="84"/></clipPath>
+<linearGradient id="lg4-stage" x1="0" y1="16" x2="0" y2="184" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#d0602a"/><stop offset="0.3" stop-color="#f8ae50"/><stop offset="0.7" stop-color="#f39a3d"/><stop offset="1" stop-color="#e57a34"/></linearGradient>
+<linearGradient id="lg4-stage2" x1="0" y1="-16.5" x2="0" y2="183.5" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#d0602a"/><stop offset="0.3" stop-color="#f8ae50"/><stop offset="0.7" stop-color="#f39a3d"/><stop offset="1" stop-color="#e57a34"/></linearGradient>
+<linearGradient id="lg4-m" x1="0" y1="16" x2="0" y2="184" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#17807f"/><stop offset="1" stop-color="#0b4046"/></linearGradient>
+<linearGradient id="lg4-mask" x1="0" y1="57" x2="0" y2="187" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#f3e4c8"/></linearGradient>
+<linearGradient id="lg4-f0" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b55014"/><stop offset="0.55" stop-color="#eb884d"/><stop offset="1" stop-color="#c45716"/></linearGradient>
+<linearGradient id="lg4-f1" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ce700d"/><stop offset="0.55" stop-color="#f5ac5f"/><stop offset="1" stop-color="#df790e"/></linearGradient>
+<linearGradient id="lg4-f2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#a44b1a"/><stop offset="0.55" stop-color="#e17d47"/><stop offset="1" stop-color="#b2511d"/></linearGradient>
+<linearGradient id="lg4-f3" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c7660f"/><stop offset="0.55" stop-color="#f3a35b"/><stop offset="1" stop-color="#d86f10"/></linearGradient>
+<linearGradient id="lg4-f4" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#99441d"/><stop offset="0.55" stop-color="#db713f"/><stop offset="1" stop-color="#a54a1f"/></linearGradient>
+<linearGradient id="lg4-f5" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b55a14"/><stop offset="0.55" stop-color="#eb924d"/><stop offset="1" stop-color="#c46216"/></linearGradient>
+<linearGradient id="lg4-sh" x1="0" y1="10" x2="0" y2="190" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#6b200c" stop-opacity="0.35"/><stop offset="0.3" stop-color="#6b200c" stop-opacity="0"/><stop offset="0.75" stop-color="#6b200c" stop-opacity="0.1"/><stop offset="1" stop-color="#6b200c" stop-opacity="0.45"/></linearGradient>
+<linearGradient id="lg4-ring" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f8a8a"/><stop offset="1" stop-color="#0c4f53"/></linearGradient></defs>
+  <symbol id="morpheus-logo" viewBox="0 0 200 200"><circle cx="100" cy="100" r="97" fill="url(#lg4-ring)"/>
+<circle cx="100" cy="100" r="87" fill="#f7f1e8"/>
+<g transform="translate(100 100) scale(0.952) translate(-100 -100)">
+<circle cx="100" cy="100" r="84" fill="url(#lg4-m)"/>
+<g clip-path="url(#lg4-disc)">
+<path d="M52 22L100 64L148 22L148 -10L52 -10Z" fill="url(#lg4-stage)"/>
+<g class="curtains-open" transform="translate(-47.7 -10) skewX(-1.2) scale(.965 1) translate(47.7 10)"><path fill="url(#lg4-f0)" d="M52 22C50 60 47 100 44 128C42 148 38 168 34 190L22.9 190C27.1 168 33.4 148 32.1 128C38.9 100 40 60 42.3 21.5Z"/>
+<path fill="url(#lg4-f1)" d="M42.3 21.5C40 60 38.9 100 32.1 128C33.4 148 27.1 168 22.9 190L11.8 190C16.1 168 18.3 148 24.2 128C24.1 100 30 60 32.7 21Z"/>
+<path fill="url(#lg4-f2)" d="M32.7 21C30 60 24.1 100 24.2 128C18.3 148 16.1 168 11.8 190L0.7 190C5.2 168 11.9 148 10.9 128C18.2 100 20 60 23 20.5Z"/>
+<path fill="url(#lg4-f3)" d="M23 20.5C20 60 18.2 100 10.9 128C11.9 148 5.2 168 0.7 190L-10.5 190C-5.7 168 -3.2 148 3 128C3.4 100 10 60 13.3 20Z"/>
+<path fill="url(#lg4-f4)" d="M13.3 20C10 60 3.4 100 3 128C-3.2 148 -5.7 168 -10.5 190L-21.6 190C-16.6 168 -9.6 148 -10.2 128C-2.5 100 0 60 3.7 19.5Z"/>
+<path fill="url(#lg4-f5)" d="M3.7 19.5C0 60 -2.5 100 -10.2 128C-9.6 148 -16.6 168 -21.6 190L-47.7 190C-42.6 168 -37.5 148 -34.5 128C-30 100 -25 60 -21 19Z"/>
+<path fill="url(#lg4-sh)" d="M-40 -10L52 22C50 60 47 100 44 128C42 148 38 168 34 190L-40 210Z"/></g>
+<g transform="translate(247.7 -10) skewX(1.2) scale(.965 1) translate(-247.7 10)"><path fill="url(#lg4-f0)" d="M148 22C150 60 153 100 156 128C158 148 162 168 166 190L177.1 190C172.9 168 166.6 148 167.9 128C161.1 100 160 60 157.7 21.5Z"/>
+<path fill="url(#lg4-f1)" d="M157.7 21.5C160 60 161.1 100 167.9 128C166.6 148 172.9 168 177.1 190L188.2 190C183.9 168 181.7 148 175.8 128C175.9 100 170 60 167.3 21Z"/>
+<path fill="url(#lg4-f2)" d="M167.3 21C170 60 175.9 100 175.8 128C181.7 148 183.9 168 188.2 190L199.3 190C194.8 168 188.1 148 189.1 128C181.8 100 180 60 177 20.5Z"/>
+<path fill="url(#lg4-f3)" d="M177 20.5C180 60 181.8 100 189.1 128C188.1 148 194.8 168 199.3 190L210.5 190C205.7 168 203.2 148 197 128C196.6 100 190 60 186.7 20Z"/>
+<path fill="url(#lg4-f4)" d="M186.7 20C190 60 196.6 100 197 128C203.2 148 205.7 168 210.5 190L221.6 190C216.6 168 209.6 148 210.2 128C202.5 100 200 60 196.3 19.5Z"/>
+<path fill="url(#lg4-f5)" d="M196.3 19.5C200 60 202.5 100 210.2 128C209.6 148 216.6 168 221.6 190L247.7 190C242.6 168 237.5 148 234.5 128C230 100 225 60 221 19Z"/>
+<path fill="url(#lg4-sh)" d="M240 -10L148 22C150 60 153 100 156 128C158 148 162 168 166 190L240 210Z"/></g>
+<path fill="url(#lg4-stage2)" transform="translate(100 186.8) scale(0.84) translate(-100 -186.8)" d="M50.8 57.4C51.1 59.5 51.6 66 52.4 69.9C53.1 73.9 54.2 77.7 55.2 81C56.3 84.2 58 87.9 58.5 89.3C59.7 88.6 63.4 85.5 65.6 84.7C67.8 83.9 69.6 84 71.8 84.3C73.9 84.6 77.3 86.1 78.4 86.5C76.6 87.1 70.3 89.1 67.4 90.4C64.4 91.7 62.6 93 60.8 94.2C58.9 95.4 57.1 96.9 56.3 97.5C55.4 99.3 52.7 104.8 50.8 108.5C49 112.2 46.2 117.7 45.3 119.5C46.2 119.4 48.9 118.9 50.8 118.4C52.7 118 55.4 116.6 56.8 116.9C58.1 117.2 58.5 118.5 59 120.2C59.4 121.9 59.2 125 59.4 127.3C59.6 129.5 60.2 132.4 60.3 133.4C61.7 132.5 66 130.1 68.5 127.7C70.9 125.3 74 120.5 75.1 119.1C74.9 120.6 75 125.2 74 128.4C73 131.5 70.8 135 69.1 137.8C67.5 140.7 64.9 144.3 64.1 145.6C64 146.5 63.1 149.6 63.6 151.5C64.1 153.4 65.6 155.6 66.9 157C68.3 158.4 71 159.4 71.8 159.9L67.4 162.5C68.7 164.6 72.5 170.6 75.1 174.7C77.7 178.7 81.5 184.8 82.8 186.8L117 186.8C118.3 184.7 122.2 178 124.7 174C127.2 170 130.6 164.8 131.8 163L129.5 159.9C130.5 158.9 133.7 155.9 135.3 153.7C136.9 151.5 138.2 149.2 139 146.7C139.9 144.2 140.1 140 140.4 138.7C139.5 138.7 137 138.1 135.3 138.7C133.6 139.3 131.8 140.6 130.2 142.2C128.6 143.9 126.5 147.6 125.8 148.6C126 147.1 126 142.2 126.9 139.4C127.8 136.6 129.7 133.6 131.3 131.7C133 129.7 135.2 128.6 136.8 127.7C138.5 126.8 140.5 126.6 141.2 126.4C141.2 125.8 140.5 123.9 140.8 122.8C141 121.8 141.6 120.7 142.8 120.2C144 119.7 146.3 119.9 147.8 119.8C149.4 119.6 151.5 119.6 152.3 119.5C151.5 118.1 149.5 113.9 147.8 110.7C146.2 107.5 143.3 102.1 142.3 100.4C140.5 99.3 134.8 96.2 131.3 93.7C127.8 91.2 123 86.8 121.4 85.4C122.9 85.1 127.3 82.9 130.2 83.6C133.1 84.3 137.6 88.4 139 89.3C139.7 87.9 141.6 84.2 142.8 81C144 77.7 145.1 73.9 146.1 69.9C147.1 66 148.5 59.5 149 57.4Q100 78.1 50.8 57.4Z"/>
+</g>
+</g></symbol>
+</svg>
+
+<header class="sticky top-0 z-40 border-b border-line bg-cream/95 backdrop-blur">
+  <div class="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between px-5 lg:h-24 lg:px-20">
+    <a href="index.html" class="flex items-center gap-3">
+      <svg class="h-11 w-11 lg:h-16 lg:w-16" role="img" aria-label="Morpheus Színműhely logó"><use href="#morpheus-logo"/></svg>
+      <span class="flex flex-col gap-1 lg:gap-1.5">
+        <span class="font-display text-2xl leading-none lg:text-[34px]">Morpheus</span>
+        <span class="text-[10px] font-bold uppercase leading-none tracking-[0.3em] text-teal lg:text-xs">Színműhely</span>
+      </span>
+    </a>
+    <div class="hidden items-center gap-12 xl:flex">
+      <nav aria-label="Főmenü" class="flex items-center gap-8 whitespace-nowrap text-[17px] font-medium">
+        <a href="rolunk.html" class="link-nav">Rólunk</a>
+        <a href="kezdo-kurzus.html" class="link-nav">Képzések</a>
+        <a href="nyitott-muhely.html" class="link-nav">Nyitott alkalmak</a>
+        <a href="repertoar.html" class="link-nav">Előadások</a>
+        <a href="csapatepito.html" aria-current="page" class="link-nav">Csapatépítő</a>
+        <a href="kapcsolat.html" class="link-nav">Kapcsolat</a>
+      </nav>
+      <a href="kezdo-kurzus.html" class="btn btn-md btn-primary">Jelentkezem</a>
+    </div>
+    <button id="menu-btn" type="button" aria-label="Menü megnyitása" aria-expanded="false" aria-controls="mobile-menu" class="btn-icon xl:hidden">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 8h16M4 16h16"/></svg>
+    </button>
+  </div>
+  <nav id="mobile-menu" aria-label="Főmenü" class="hidden border-t border-line bg-cream px-5 pb-6 lg:px-20 xl:hidden">
+      <a href="rolunk.html" class="flex min-h-[48px] items-center border-b border-line text-lg font-medium"><span class="link-nav">Rólunk</span></a>
+      <a href="kezdo-kurzus.html" class="flex min-h-[48px] items-center border-b border-line text-lg font-medium"><span class="link-nav">Képzések</span></a>
+      <a href="nyitott-muhely.html" class="flex min-h-[48px] items-center border-b border-line text-lg font-medium"><span class="link-nav">Nyitott alkalmak</span></a>
+      <a href="repertoar.html" class="flex min-h-[48px] items-center border-b border-line text-lg font-medium"><span class="link-nav">Előadások</span></a>
+      <a href="csapatepito.html" aria-current="page" class="flex min-h-[48px] items-center border-b border-line text-lg font-medium"><span class="link-nav">Csapatépítő</span></a>
+      <a href="kapcsolat.html" class="flex min-h-[48px] items-center border-b border-line text-lg font-medium"><span class="link-nav">Kapcsolat</span></a>
+      <a href="kezdo-kurzus.html" class="btn btn-lg btn-primary mt-5 w-full">Jelentkezem</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- HERO -->
+  <section class="relative mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)] items-center gap-12 overflow-hidden px-5 pt-8 lg:grid-cols-[7fr_5fr] lg:gap-16 lg:overflow-visible lg:px-20 lg:pt-16">
+    <div class="sun absolute -right-24 -top-28 h-48 w-48 rounded-full lg:hidden" aria-hidden="true"></div>
+    <div class="relative flex flex-col gap-5 lg:gap-7">
+      <nav aria-label="Morzsamenü" class="flex flex-wrap gap-2.5 text-[13px] text-muted lg:text-sm"><a href="index.html" class="link">Főoldal</a><span aria-hidden="true">/</span><span class="font-semibold text-ink">Céges csapatépítő</span></nav>
+      <h1 class="font-display text-[64px] leading-[0.95] lg:text-[128px] lg:leading-[0.9] lg:tracking-[-0.01em]">Céges csapat&shy;építők</h1>
+      <p class="text-[17px] leading-relaxed text-ink2 lg:text-xl lg:max-w-[620px]">Ha csapatépítés, akkor is Morpheus! A játékos, élményalapú csapatépítő programjaink erősítik a csapatkohéziót, segítik az onboarding folyamatokat és növelik a munkavállalói lojalitást.</p>
+      <div class="flex flex-col gap-3 sm:flex-row">
+        <a href="#ajanlat" class="btn btn-lg btn-primary">Ajánlatot kérek<svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a href="#programok" class="btn btn-lg btn-outline">Programjaink</a>
+      </div>
+    </div>
+    <div class="relative h-[260px] sm:h-[340px] lg:h-[440px]">
+      <div class="sun absolute -right-5 top-0 hidden h-[300px] w-[300px] rounded-full lg:block" aria-hidden="true"></div>
+      <img src="../../public/images/csapatepito-csoport.webp" alt="Nevető kollégák egy csapatépítő játék közben" width="800" height="460" class="absolute bottom-0 left-0 h-full w-full -rotate-[1.5deg] rounded-[22px] border-8 border-paper bg-deep object-cover shadow-[0_24px_48px_-24px_rgba(11,58,63,0.55)] lg:h-[340px] lg:w-[92%] lg:-rotate-[2.5deg]">
+    </div>
+  </section>
+
+  <!-- PROGRAMS -->
+  <section id="programok" class="mx-auto flex max-w-[1440px] scroll-mt-28 flex-col gap-7 px-5 pt-16 lg:gap-12 lg:px-20 lg:pt-[120px]">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
+      <div class="flex flex-col gap-3.5 lg:gap-5">
+        <span class="text-xs font-bold uppercase tracking-[0.22em] text-teal lg:text-[13px]">Választható programok</span>
+        <h2 class="font-display text-[42px] leading-[1.02] lg:text-[68px] lg:leading-none">Négy formátum, a ti csapatotokra szabva.</h2>
+      </div>
+      
+    </div>
+    <div class="flex flex-col border-b border-line">
+      <article class="grid gap-4 border-t border-line py-7 lg:grid-cols-[80px_5fr_7fr] lg:gap-10 lg:py-10">
+        <span class="font-display text-[44px] leading-none text-rust lg:text-[64px]">01</span>
+        <div class="flex flex-col gap-4">
+          <h3 class="font-display text-[34px] leading-none lg:text-[44px]">Civil Beugró</h3>
+          <dl class="flex flex-col gap-2 text-[15px]">
+            <div class="flex gap-2"><dt class="text-muted">Időkeret:</dt><dd class="font-semibold">90–120 perc</dd></div>
+            <div class="flex gap-2"><dt class="shrink-0 text-muted">Helyszín:</dt><dd class="font-semibold">irodai környezet (mozgatható asztalokkal és székekkel), étterem</dd></div>
+          </dl>
+        </div>
+        <div class="flex flex-col gap-3 text-[15.5px] leading-relaxed text-ink2 lg:text-lg"><p>A játékosok csapatokat alkotnak, és bemelegítő feladatok után a népszerű „Beugró” című improvizációs műsor játékaira építve különböző csoportfeladatokat kell megoldaniuk, illetve más csoportok számára feladatokat adni, a játékmesterek támogatásával.</p></div>
+      </article>
+      <article class="grid gap-4 border-t border-line py-7 lg:grid-cols-[80px_5fr_7fr] lg:gap-10 lg:py-10">
+        <span class="font-display text-[44px] leading-none text-rust lg:text-[64px]">02</span>
+        <div class="flex flex-col gap-4">
+          <h3 class="font-display text-[34px] leading-none lg:text-[44px]">Máté Péter – Cserháti Zsuzsa zenés est</h3>
+          <dl class="flex flex-col gap-2 text-[15px]">
+            <div class="flex gap-2"><dt class="text-muted">Időkeret:</dt><dd class="font-semibold">45–90 perc</dd></div>
+            <div class="flex gap-2"><dt class="shrink-0 text-muted">Helyszín:</dt><dd class="font-semibold">jó akusztikájú irodai környezet, rendezvényterem, étterem</dd></div>
+          </dl>
+        </div>
+        <div class="flex flex-col gap-3 text-[15.5px] leading-relaxed text-ink2 lg:text-lg"><p>Máté Péter és Cserháti Zsuzsa életének bemutatása a legszebb dalaikon keresztül, a zenei élményt dramatizált átkötő jelenetek teszik teljessé.</p></div>
+      </article>
+      <article class="grid gap-4 border-t border-line py-7 lg:grid-cols-[80px_5fr_7fr] lg:gap-10 lg:py-10">
+        <span class="font-display text-[44px] leading-none text-rust lg:text-[64px]">03</span>
+        <div class="flex flex-col gap-4">
+          <h3 class="font-display text-[34px] leading-none lg:text-[44px]">Kincskereső csapatépítő</h3>
+          <dl class="flex flex-col gap-2 text-[15px]">
+            <div class="flex gap-2"><dt class="text-muted">Időkeret:</dt><dd class="font-semibold">120–180 perc</dd></div>
+            <div class="flex gap-2"><dt class="shrink-0 text-muted">Helyszín:</dt><dd class="font-semibold">irodai vagy szabadtéri környezet</dd></div>
+          </dl>
+        </div>
+        <div class="flex flex-col gap-3 text-[15.5px] leading-relaxed text-ink2 lg:text-lg"><p>A résztvevők drámás játékokat játszanak kisebb csoportokra bontva, különböző állomásokon. Ezeket egy kerettörténet fogja össze. Például kalózok vagyunk, akiknek el kell jutniuk a Kincses-szigetre, hogy megszerezzék az Örök Élet Vizét. Csapatostul útnak indulnak, minden csapat más állomáson kezd, majd térkép alapján haladnak. Minden állomáson játékos küldetés várja őket. (Pl. az egyik állomáson — ami egy falucska, ahol kikötöttek — összetűzésbe keverednek a kikötőmesterrel, és a zsebszöveg játékkal kell kidumálniuk magukat.)</p><p>Ennél a formátumnál beleférnek, és szeretik is a résztvevők, ha az általános sorverseny-játékok is megjelennek. (Például a résztvevőknek a kocsma helyszínen pingponglabdával kell műanyag poharakba beletalálniuk.)</p><p>Ahogy haladnak előre, úgy kell jelenetet készíteniük, amit a legvégén egymásnak kell megmutatniuk. A győztes csapat, aki a legtöbb pontot szerezte, kapja meg a végén a kupát, amiben az Örök Élet Vize van.</p></div>
+      </article>
+      <article class="grid gap-4 border-t border-line py-7 lg:grid-cols-[80px_5fr_7fr] lg:gap-10 lg:py-10">
+        <span class="font-display text-[44px] leading-none text-rust lg:text-[64px]">04</span>
+        <div class="flex flex-col gap-4">
+          <h3 class="font-display text-[34px] leading-none lg:text-[44px]">Vacsoraszínház</h3>
+          <dl class="flex flex-col gap-2 text-[15px]">
+            <div class="flex gap-2"><dt class="text-muted">Időkeret:</dt><dd class="font-semibold">120–150 perc</dd></div>
+            <div class="flex gap-2"><dt class="shrink-0 text-muted">Helyszín:</dt><dd class="font-semibold">elsősorban étterem, vagy catering fogadására képes irodai környezet</dd></div>
+          </dl>
+        </div>
+        <div class="flex flex-col gap-3 text-[15.5px] leading-relaxed text-ink2 lg:text-lg"><p>Egy színházi előadást láthatnak majd, amihez ún. drámás munkaformákkal tarkított közös játékot kínálunk. Ezt az adott vállalat, közösség igényeire szabjuk előzetes egyeztetések mentén. Figyelembe vesszük a csoport létszámát, csoportdinamikai sajátosságait, illetve az alkalom sajátosságait (pl. ünnepi céges rendezvény, „adóév-búcsúztató”, pártolói tagság bővítése stb.). A történetünk adott, a megoldás lehetősége a vacsora közönségének kezében rejlik.</p><p>Kiemelt partnereinkkel (Púder Bárszínház, Grund Café, Vakvarjú Étterem) kész ajánlattal is tudunk készülni, fontosabb azonban, hogy az előzetes igényfelmérés mentén a teljes esemény leszervezését is tudjuk biztosítani a megrendelő által választott helyszínen.</p></div>
+      </article>
+    </div>
+  </section>
+
+  <!-- TAILORED + FORM -->
+  <section id="ajanlat" class="mx-auto grid max-w-[1440px] scroll-mt-28 gap-8 px-5 pt-16 lg:grid-cols-[5fr_7fr] lg:gap-16 lg:px-20 lg:pt-[120px]">
+    <div class="flex flex-col gap-6 lg:gap-8">
+      <div class="flex flex-col gap-3.5 lg:gap-5">
+        <span class="text-xs font-bold uppercase tracking-[0.22em] text-teal lg:text-[13px]">Személyre szabva</span>
+        <h2 class="font-display text-[42px] leading-[1.02] lg:text-[68px] lg:leading-none">Csapatépítőinket személyre szabjuk!</h2>
+      </div>
+      <p class="text-[15.5px] leading-relaxed text-ink2 lg:text-lg">Csapatépítő programjaink előtt a megrendelővel személyesen egyeztetünk arról, milyen típusú csapatépítőt képzel el, és mik az esemény kijelölt céljai.</p>
+      <ul class="flex flex-col border-b border-line">
+        <li class="flex items-start gap-3 border-t border-line py-3.5"><span class="mt-0.5 text-teal"><svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="leading-snug">kommunikáció fejlesztése</span></li><li class="flex items-start gap-3 border-t border-line py-3.5"><span class="mt-0.5 text-teal"><svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="leading-snug">szórakozás</span></li><li class="flex items-start gap-3 border-t border-line py-3.5"><span class="mt-0.5 text-teal"><svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="leading-snug">önismeret-építés</span></li><li class="flex items-start gap-3 border-t border-line py-3.5"><span class="mt-0.5 text-teal"><svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="leading-snug">a kollégák közötti emberi kapcsolatok elmélyítése a játékok által</span></li>
+      </ul>
+      <img src="../../public/images/csapatepito-szinpad.webp" alt="Színházi gyakorlat a színpadon" width="2048" height="2560" loading="lazy" class="hidden aspect-[4/3] w-full rounded-3xl bg-deep object-cover lg:block">
+    </div>
+      <form id="quote-form" class="flex flex-col gap-4 rounded-3xl border border-line bg-paper p-6 lg:gap-5 lg:p-10" novalidate>
+        <h3 class="font-display text-[32px] leading-none lg:text-[40px]">Csapatépítő árajánlatkérés</h3>
+        <p class="text-sm text-muted">A *-gal jelölt mezők kitöltése kötelező.</p>
+        <label class="field-label">Cég neve *<input class="field" name="ceg" required autocomplete="organization"></label>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="field-label">Vezetéknév *<input class="field" name="vezeteknev" required autocomplete="family-name"></label>
+          <label class="field-label">Keresztnév *<input class="field" name="keresztnev" required autocomplete="given-name"></label>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="field-label">E-mail cím *<input class="field" type="email" name="email" required autocomplete="email"></label>
+          <label class="field-label">Telefonszám *<input class="field" type="tel" name="telefon" required autocomplete="tel"></label>
+        </div>
+        <label class="field-label">Kérdés, megjegyzés<textarea class="field min-h-[140px]" name="megjegyzes" rows="5" placeholder="Pl. létszám, időpont, helyszín, milyen program érdekel"></textarea></label>
+        <p data-error class="text-sm font-semibold text-rust-dark" hidden>Kérjük, töltsd ki a kötelező mezőket.</p>
+        <button type="submit" class="btn btn-lg btn-primary self-stretch sm:self-start">Ajánlatot kérek<svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        <p class="text-xs leading-relaxed text-muted">A küldés gombra kattintva a levelezőprogramod nyílik meg a kitöltött adatokkal — a levelet onnan tudod elküldeni nekünk.</p>
+      </form>
+  </section>
+
+</main>
+
+<footer class="on-dark bg-night text-mist">
+  <div class="mx-auto flex max-w-[1440px] flex-col gap-10 px-5 pb-8 pt-12 lg:gap-14 lg:px-20 lg:pb-12 lg:pt-[72px]">
+    <div class="grid gap-10 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr]">
+      <div class="flex items-start gap-3.5">
+        <svg class="h-14 w-14 shrink-0 lg:h-16 lg:w-16" role="img" aria-label="Morpheus Színműhely logó"><use href="#morpheus-logo"/></svg>
+        <div class="flex flex-col gap-2 pt-1.5">
+          <span class="font-display text-[26px] leading-none text-cream lg:text-[30px]">Morpheus Színműhely</span>
+          <span class="text-[15px]">Színház · Önismeret · Közösség</span>
+        </div>
+      </div>
+      <nav aria-label="Képzések" class="flex flex-col gap-3 text-[15px]">
+        <span class="text-xs font-bold uppercase tracking-[0.18em] text-gold">Képzések</span>
+        <a href="kezdo-kurzus.html" class="link-nav self-start">Kezdő kurzus</a>
+        <a href="https://morpheus-szinmuhely.hu/szakmai-kurzus/" class="link-nav self-start">Szakmai kurzus</a>
+        <a href="https://morpheus-szinmuhely.hu/oktatok/" class="link-nav self-start">Oktatóink</a>
+      </nav>
+      <nav aria-label="Nyitott alkalmak" class="flex flex-col gap-3 text-[15px]">
+        <span class="text-xs font-bold uppercase tracking-[0.18em] text-gold">Nyitott alkalmak</span>
+        <a href="nyitott-muhely.html" class="link-nav self-start">Nyitott Műhely</a>
+        <a href="https://morpheus-szinmuhely.hu/workshop-tabor/" class="link-nav self-start">Workshop, tábor</a>
+        <a href="csapatepito.html" class="link-nav self-start">Céges csapatépítő</a>
+      </nav>
+      <nav aria-label="Előadások" class="flex flex-col gap-3 text-[15px]">
+        <span class="text-xs font-bold uppercase tracking-[0.18em] text-gold">Előadások</span>
+        <a href="https://morpheus-szinmuhely.hu/kozelgo-eloadasok-2/" class="link-nav self-start">Közelgő előadások</a>
+        <a href="repertoar.html" class="link-nav self-start">Repertoár</a>
+        <a href="rolunk.html" class="link-nav self-start">Rólunk</a>
+      </nav>
+      <nav aria-label="Kövess minket" class="flex flex-col gap-3 text-[15px]">
+        <span class="text-xs font-bold uppercase tracking-[0.18em] text-gold">Kövess minket</span>
+        <a href="https://www.facebook.com/profile.php?id=61553500586744" class="link-nav self-start">Facebook</a>
+        <a href="kapcsolat.html" class="link-nav self-start">Kapcsolat</a>
+      </nav>
+    </div>
+    <div class="flex flex-col gap-2.5 border-t border-[#1d3d40] pt-7 text-sm sm:flex-row sm:justify-between">
+      <span>© 2026 Morpheus Színműhely</span>
+      <a href="https://morpheus-szinmuhely.hu/adatkezelesi-tajekoztato/" class="link self-start">Adatvédelmi tájékoztató</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // mobile menu
+  const menuBtn = document.getElementById('menu-btn');
+  const menu = document.getElementById('mobile-menu');
+  menuBtn.addEventListener('click', () => {
+    const open = menu.classList.toggle('hidden') === false;
+    menuBtn.setAttribute('aria-expanded', open);
+    menuBtn.setAttribute('aria-label', open ? 'Menü bezárása' : 'Menü megnyitása');
+  });
+
+  // Quote request: no backend on this static page, so a filled-in e-mail is opened instead
+  const form = document.getElementById('quote-form');
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const err = form.querySelector('[data-error]');
+    if (!form.checkValidity()) { err.hidden = false; form.querySelector(':invalid').focus(); return; }
+    err.hidden = true;
+    const f = Object.fromEntries(new FormData(form));
+    const body = [`Cég neve: ${f.ceg}`, `Kapcsolattartó: ${f.vezeteknev} ${f.keresztnev}`, `E-mail: ${f.email}`, `Telefon: ${f.telefon}`, '', f.megjegyzes || ''].join('\n');
+    location.href = 'mailto:morpheus.szinmuhely@gmail.com?subject=' + encodeURIComponent('Csapatépítő árajánlatkérés – ' + f.ceg) + '&body=' + encodeURIComponent(body);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+{
+  "meta": {
+    "title": "Morpheus Színműhely — színház, önismeret, közösség",
+    "description": "Színházi képzések kezdőknek és haladóknak Budapesten. Kezdő kurzus, szakmai kurzus, Nyitott Műhely és előadások."
+  },
+  "hero": {
+    "keywords": [
+      "Színház",
+      "Önismeret",
+      "Közösség"
+    ],
+    "heading": "Itt *(szín)*játszva tanul az ember.",
+    "lead": "Színházi képzéseinken nem csak a kiállásod fejlődik: részt vehetsz egy igazi színházi alkotófolyamatban, a ráhangoló játékoktól egészen a vizsgaelőadásig.",
+    "primaryCta": {
+      "label": "Megnézem a kezdő kurzust",
+      "href": "/kezdo-kurzus"
+    },
+    "secondaryCta": {
+      "label": "Kipróbálom a Nyitott Műhelyt",
+      "href": "/nyitott-alkalmak"
+    },
+    "imageLarge": {
+      "src": "/images/laughing-faces.webp",
+      "alt": "Nevető hallgatók egy próbán",
+      "width": 1000,
+      "height": 563
+    },
+    "imageSmall": {
+      "src": "/images/on-stage.webp",
+      "alt": "Jelenet egy Morpheus-előadásból",
+      "width": 274,
+      "height": 274
+    },
+    "nextShowLabel": "Következő előadás"
+  },
+  "questions": {
+    "eyebrow": "Neked szól, ha…",
+    "heading": "…igaz rád bármelyik a következőkből?",
+    "items": [
+      {
+        "title": "A kulisszák mögé vágysz",
+        "text": "Érdekel a színház világa, és mindig is vágytál arra, hogy betekintést nyerj a színfalak mögé."
+      },
+      {
+        "title": "Közösséget keresel",
+        "text": "Ahol szabadjára engedheted a kreativitásodat, új dolgokat próbálhatsz ki, és egy csapat részeként valami értékeset alkotsz."
+      },
+      {
+        "title": "Lámpalázas vagy",
+        "text": "Ideges leszel, ha sok ember előtt kell beszélned, vagy zavar egy beszédhibád — és szeretnél magabiztosabb, határozottabb lenni."
+      },
+      {
+        "title": "Érdekel az önismeret",
+        "text": "Szívesen megismernéd az emberi lelket és működést színpadi példákon keresztül."
+      }
+    ],
+    "closing": "Ha igen, *köztünk a helyed!*",
+    "cta": {
+      "label": "Megnézem, milyen a képzés",
+      "href": "/kezdo-kurzus"
+    }
+  },
+  "offerings": {
+    "eyebrow": "Képzések és alkalmak",
+    "heading": "Válaszd ki, hogyan kezdenéd.",
+    "instructorsLink": {
+      "label": "Ismerd meg oktatóinkat",
+      "href": "https://morpheus-szinmuhely.hu/oktatok/"
+    },
+    "cards": [
+      {
+        "courseId": "kezdo"
+      },
+      {
+        "courseId": "szakmai"
+      },
+      {
+        "badge": "Kötöttség nélkül",
+        "title": "Nyitott Műhely",
+        "text": "Próbáld ki magad biztonságos közegben, hosszú elköteleződés nélkül. Előzetes online foglalással.",
+        "facts": [
+          {
+            "label": "Mikor",
+            "value": "minden szombat"
+          },
+          {
+            "label": "Idő",
+            "value": "14:00–16:00"
+          },
+          {
+            "label": "Díj",
+            "value": "5 000 Ft / alkalom"
+          }
+        ],
+        "cta": {
+          "label": "Helyet foglalok",
+          "href": "/nyitott-alkalmak#idopontok"
+        }
+      },
+      {
+        "badge": "Cégeknek",
+        "title": "Céges csapatépítő",
+        "text": "Színházi játékok és improvizáció csapatoknak. Workshopokat és táborokat is szervezünk.",
+        "facts": [
+          {
+            "label": "Időpont",
+            "value": "egyeztetés szerint"
+          },
+          {
+            "label": "Díj",
+            "value": "egyedi ajánlat"
+          },
+          {
+            "label": "Továbbiak",
+            "value": "workshop, tábor",
+            "href": "/nyitott-alkalmak#workshopok"
+          }
+        ],
+        "cta": {
+          "label": "Ajánlatot kérek",
+          "href": "/csapatepito#ajanlat"
+        }
+      }
+    ]
+  },
+  "mood": {
+    "eyebrow": "Hangulat",
+    "heading": "Érdekel, milyen nálunk a hangulat?",
+    "text": "Ráhangoló játékok, improvizáció, karakterformálás, színpadi beszéd és mozgás — nézz be egy alkalmunkra.",
+    "facebookLink": {
+      "label": "További hangulatvideók a Facebookon",
+      "href": "https://www.facebook.com/profile.php?id=61553500586744"
+    }
+  },
+  "reviews": {
+    "eyebrow": "Hallgatóink mondták",
+    "heading": "Így látják a *Morpheust.*",
+    "intro": "Cetlik a próbaterem faláról: hallgatóink saját szavaival arról, mit jelent nekik a heti alkalom."
+  },
+  "shows": {
+    "eyebrow": "Színpadon",
+    "heading": "Közelgő előadások",
+    "allLink": {
+      "label": "Teljes repertoár",
+      "href": "/repertoar"
+    },
+    "ticketLabel": "Jegyek",
+    "empty": "Hamarosan új előadásokkal jelentkezünk.",
+    "upcomingLink": {
+      "label": "Összes közelgő előadás",
+      "href": "/kozelgo-eloadasok"
+    },
+    "registrationLabel": "Regisztráció",
+    "aboutLabel": "Az előadásról",
+    "infoLabel": "Tudnivalók"
+  },
+  "contact": {
+    "eyebrow": "Kapcsolat",
+    "heading": "Kérdésed van? Írj vagy hívj bátran!",
+    "cta": {
+      "label": "Jelentkezem a kezdő kurzusra",
+      "href": "/kezdo-kurzus"
+    },
+    "personLabel": "Kapcsolattartó"
+  },
+  "bottomImage": {
+    "src": "/images/full-width-bottom.webp",
+    "alt": "Hallgatók körben ülve a próbateremben",
+    "width": 800,
+    "height": 450
+  }
+}
