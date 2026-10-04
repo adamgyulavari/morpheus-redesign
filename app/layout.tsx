@@ -2,9 +2,6 @@ import type { Metadata } from 'next';
 import { Figtree, Instrument_Serif } from 'next/font/google';
 import type { ReactNode } from 'react';
 
-import SiteFooter from '@/components/SiteFooter';
-import SiteHeader from '@/components/SiteHeader';
-
 import './globals.css';
 
 // next/font downloads the fonts at build time and serves them from this site (no request to
@@ -26,11 +23,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="hu" className={`${figtree.variable} ${instrumentSerif.variable}`}>
-      <body className="bg-cream font-sans text-ink antialiased">
-        <SiteHeader />
-        <main>{children}</main>
-        <SiteFooter />
-      </body>
+      <body className="bg-cream font-sans text-ink antialiased">{children}</body>
     </html>
   );
 }

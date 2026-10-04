@@ -76,7 +76,7 @@
     "text": "Ismerd meg oktatóinkat, akik minden héten azon vannak, hogy hallgatóink felszabadultan és jókedvvel tanuljanak.",
     "primary": {
       "label": "Ismerd meg oktatóinkat",
-      "href": "https://morpheus-szinmuhely.hu/oktatok/"
+      "href": "/oktatok"
     },
     "secondary": {
       "label": "Kapcsolat",

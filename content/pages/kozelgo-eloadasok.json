@@ -36,5 +36,9 @@
       "label": "Teljes repertoár",
       "href": "/repertoar"
     }
+  },
+  "allTicketsLink": {
+    "label": "Összes jegyünk a Tixán",
+    "href": "https://www.tixa.hu/morpheus-szinmuhely"
   }
 }

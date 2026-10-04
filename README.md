@@ -17,7 +17,10 @@ versions. The current logo source is `logo-source/logo-almost-final.svg`.
 ## Structure
 
 ```
-app/                     routes — one folder per page, server components
+app/                     routes, server components
+  (site)/                regular pages — share header + footer (app/(site)/layout.tsx)
+  (bio)/bio/             link-in-bio page with its own minimal layout
+  (site)/repertoar/[slug]/  production detail pages, generated for productions with `detailPage: true`
   kozelgo-eloadasok/     all upcoming shows by month, with ticket/registration and details popup
   kepzesek/              course overview (side-by-side comparison) — where the "Képzések" nav item lands
   kezdo-kurzus/, szakmai-kurzus/  both render components/CoursePageView.tsx (shared course template)
@@ -56,7 +59,7 @@ Client components receive plain data as props; they never import `lib/data.ts`.
 
 | file | collection | used on |
 |---|---|---|
-| `productions.json` | Production (title, genre, byline, description, credits, cast, poster) | /repertoar, homepage via shows |
+| `productions.json` | Production (title, genre, byline, summary, longDescription, credits, cast, poster; optional highlights, audienceQuotes, videoUrl, gallery). `detailPage: true` → own page at /repertoar/[slug]/, otherwise "Bővebben" opens a popup | /repertoar, /repertoar/[slug], shows |
 | `shows.json` | Show → `productionId`, `venueId`, date, time, `ticketUrl` or `registrationUrl`, optional `label` and audience `info` | /kozelgo-eloadasok, homepage rows + hero card, /repertoar banner/badges/next-show |
 | `venues.json` | Venue | shows |
 | `reviews.json` | Review | homepage + /kezdo-kurzus (same slider) |
@@ -65,7 +68,8 @@ Client components receive plain data as props; they never import `lib/data.ts`.
 | `workshops.json` | Workshop / camp (dates, daily hours, leader, signup form, images); upcoming ones are featured, finished ones move to "Korábbi workshopok" | /nyitott-alkalmak |
 | `team-building-programmes.json` | TeamBuildingProgramme | /csapatepito |
 | `contact-people.json` | ContactPerson | /kapcsolat, homepage contact card |
-| `instructors.json` | Instructor (empty for now) | homepage avatar stack |
+| `instructors.json` | Instructor (name, role, bio, photo, order) | /oktatok, /rolunk, homepage avatar stack |
+| `legal/*.md` | legal documents, verbatim (read by `getLegalPage(slug)`) | /adatkezelesi-tajekoztato |
 | `site-settings.json` | nav, footer, contact, social, external URLs, video, map | everywhere |
 | `pages/*.json` | one-off texts per page + `<title>`/description | each page |
 

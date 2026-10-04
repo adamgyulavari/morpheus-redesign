@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { Fragment } from 'react';
 
 import { showDateLine } from '@/lib/dates';
@@ -102,33 +103,43 @@ export default function ProductionCard({
       </div>
 
       <div className={`col-span-2 flex flex-col gap-4 xl:col-span-1 xl:row-start-2 xl:px-[60px] xl:pb-11 xl:pt-5 ${textCol}`}>
-        <ProductionDetails summary={p.summary} label={labels.more} titleId={titleId}>
-          <div className="flex items-end gap-4 pr-12 lg:gap-5">
-            <Image
-              src={p.poster.src}
-              alt=""
-              width={p.poster.width}
-              height={p.poster.height}
-              sizes="80px"
-              className="h-28 w-20 shrink-0 rounded-[10px] bg-deep object-cover shadow-[0_10px_20px_-12px_rgba(11,58,63,0.6)]"
-            />
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-teal lg:text-xs">
-                {[p.genre, p.byline].filter(Boolean).join(' · ')}
-              </span>
-              <h2 id={titleId} className="font-display text-[34px] leading-none lg:text-[44px]">
-                {p.title}
-              </h2>
+        {p.detailPage ? (
+          // productions with their own page link there; the others open the popup
+          <p className="text-[15.5px] leading-relaxed text-ink2 xl:text-lg xl:leading-[28px]">
+            {p.summary}{' '}
+            <Link href={`/repertoar/${p.slug}`} className="link font-bold text-teal">
+              {labels.more}
+            </Link>
+          </p>
+        ) : (
+          <ProductionDetails summary={p.summary} label={labels.more} titleId={titleId}>
+            <div className="flex items-end gap-4 pr-12 lg:gap-5">
+              <Image
+                src={p.poster.src}
+                alt=""
+                width={p.poster.width}
+                height={p.poster.height}
+                sizes="80px"
+                className="h-28 w-20 shrink-0 rounded-[10px] bg-deep object-cover shadow-[0_10px_20px_-12px_rgba(11,58,63,0.6)]"
+              />
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-teal lg:text-xs">
+                  {[p.genre, p.byline].filter(Boolean).join(' · ')}
+                </span>
+                <h2 id={titleId} className="font-display text-[34px] leading-none lg:text-[44px]">
+                  {p.title}
+                </h2>
+              </div>
             </div>
-          </div>
-          <div className="flex flex-col gap-3.5 border-t border-line pt-5 text-[15.5px] leading-relaxed text-ink2 lg:text-[17px]">
-            {p.description.map((para, i) => (
-              <p key={i}>
-                <Lines text={para} />
-              </p>
-            ))}
-          </div>
-        </ProductionDetails>
+            <div className="flex flex-col gap-3.5 border-t border-line pt-5 text-[15.5px] leading-relaxed text-ink2 lg:text-[17px]">
+              {p.longDescription.map((para, i) => (
+                <p key={i}>
+                  <Lines text={para} />
+                </p>
+              ))}
+            </div>
+          </ProductionDetails>
+        )}
 
         {p.credits.length > 0 && (
           <div className="flex flex-wrap gap-x-7 gap-y-1.5 text-sm xl:text-[15px]">

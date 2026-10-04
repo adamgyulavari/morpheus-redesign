@@ -34,7 +34,23 @@ export type Production = {
   /** Shown next to the genre and under the title in show rows — the author, or e.g. "Hallgatói előadás". */
   byline: string;
   summary: string;
-  description: Paragraph[];
+  /** Detail page: one-line hook under the title, and a heading above the description. */
+  tagline?: string;
+  descriptionHeading?: string;
+  /** Detail page hero background; falls back to the first gallery photo, then the poster. */
+  heroImage?: ImageRef;
+  /** Muted looping background video for the detail page hero (heroImage is its still frame). */
+  heroVideo?: string;
+  /** Has its own page at /repertoar/[slug]/; otherwise "Bővebben" opens a popup with longDescription. */
+  detailPage?: boolean;
+  longDescription: Paragraph[];
+  /** The "why come" points. */
+  highlights?: { title: string; text: string }[];
+  audienceQuotes?: { text: string; author?: string }[];
+  videoUrl?: string;
+  /** Self-hosted personal invitation (e.g. the director's recommendation), square, with sound. */
+  inviteVideo?: { src: string; title: string; poster: ImageRef };
+  gallery?: ImageRef[];
   credits: Credit[];
   castLabel: string;
   cast: CastEntry[];
@@ -73,7 +89,7 @@ export type Review = {
   photo?: ImageRef;
 };
 
-export type Instructor = { id: string; name: string; role?: string; bio?: Paragraph[]; photo?: ImageRef };
+export type Instructor = { id: string; name: string; role: string; bio: Paragraph[]; photo: ImageRef; order: number };
 
 export type ContactPerson = { id: string; name: string; role: string; phone: string; photo?: ImageRef };
 
@@ -158,8 +174,9 @@ export type SiteSettings = {
   footerColumns: { title: string; links: Link[] }[];
   privacy: Link;
   contact: { email: string; address: string; primaryPersonId: string };
-  social: { facebook: string };
-  urls: { signup: string; upcomingShows: string; instructors: string; workshopCamp: string };
+  social: { facebook: string; instagram: string };
+  bioLinks: Link[];
+  urls: { signup: string; upcomingShows: string; instructors: string; workshopCamp: string; tickets: string };
   video: { youtubeId: string; title: string };
   map: { embedUrl: string; directionsUrl: string; title: string };
 };
@@ -290,9 +307,37 @@ export type RepertoirePage = {
   hero: Hero & { image: ImageRef };
   /** Banner pointing to /kozelgo-eloadasok; "{count}" is the number of upcoming shows. */
   upcoming: { eyebrow: string; text: string; link: Link };
+  detail: ProductionPage;
   filter: { label: string; all: string; company: string; students: string };
   groups: Record<ProductionGroup, Section & { intro: string }>;
   labels: { onStage: string; nextShow: string; more: string };
+  cta: CtaBand;
+};
+
+export type InstructorsPage = { meta: PageMeta; hero: Hero & { image: ImageRef }; moreLabel: string; cta: CtaBand };
+
+export type BioPage = { meta: PageMeta; nextShowLabel: string; contactLabel: string };
+
+export type ProductionPage = {
+  backLink: Link;
+  upcomingLink: Link;
+  labels: {
+    nextShow: string;
+    ticket: string;
+    registration: string;
+    highlights: string;
+    cast: string;
+    quotes: string;
+    video: string;
+    gallery: string;
+    dates: string;
+    noDates: string;
+    about: string;
+    ctaDates: string;
+    ctaBook: string;
+    ctaConvinced: string;
+    invite: string;
+  };
   cta: CtaBand;
 };
 
@@ -300,6 +345,7 @@ export type UpcomingShowsPage = {
   meta: PageMeta;
   hero: Hero & { image: ImageRef };
   labels: { ticket: string; registration: string; about: string; info: string };
+  allTicketsLink: Link;
   empty: string;
   repertoireLink: Link;
   cta: CtaBand;
@@ -342,6 +388,8 @@ export type PageContentMap = {
   'szakmai-kurzus': CoursePage;
   'nyitott-alkalmak': OpenWorkshopPage;
   repertoar: RepertoirePage;
+  oktatok: InstructorsPage;
+  bio: BioPage;
   'kozelgo-eloadasok': UpcomingShowsPage;
   csapatepito: TeamBuildingPage;
   kapcsolat: ContactPage;

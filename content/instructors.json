@@ -1,1 +1,130 @@
-[]
+[
+  {
+    "id": "csikasz-agnes",
+    "name": "Csikász Ágnes",
+    "role": "Színészmesterség oktató",
+    "bio": [
+      "2017-ben végeztem a Pesti Magyar Színiakadémián, majd 2020-ban diplomáztam a Színház-és Filmművészeti Egyetemen drámainstruktorként. Színésznőként dolgoztam a Proton Színházban, a Pesti Magyar Színházban, majd az Orlai Produkciós Irodánál és a Kerekasztal Színháznál.",
+      "Az egyetem után a Magyar Kanizsai Udvari Kamaraszínházhoz szerződtem, ahol három évet töltöttem. Színházi nevelési szakemberként először a Martonvásári MASZK egyesületben dolgoztam, majd csatlakoztam a MUS-E Magyarország egyesülethez. 3 évet töltöttem a Budapest Musical Iskolában és az Orlai Produkciós Iroda közösségi programjain dolgoztam.",
+      "Jelenleg televíziós műsorszerkesztéssel foglalkozom."
+    ],
+    "photo": {
+      "src": "/images/oktato-csikasz-agnes.webp",
+      "alt": "Csikász Ágnes",
+      "width": 720,
+      "height": 720
+    },
+    "order": 1
+  },
+  {
+    "id": "boros-adam",
+    "name": "Boros Ádám",
+    "role": "Színészmesterség oktató/tréner",
+    "bio": [
+      "2003 óta vagyok aktív a színészi pályán szabadúszóként, sok helyről volt lehetőségem tapasztalatot szerezni, de legotthonosabban a ”független” színházi szférában mozgok, legerősebb kapcsolataim ide fűznek, itt tapasztalom azt a progressziót, konstruktivitást, ami motivál, és ezt az energiát bármely színházi munkába igyekszem is belefektetni.",
+      "A színházi nevelés, a pedagógiai célzatú, vitára, játékra épülő dramatikus formák elkötelezett híve vagyok, ennek jegyében elvégeztem Kaposi László 120 órás drámapedagógiai tanfolyamát, felvételt nyertem a Kerekasztal Színház ösztöndíjprogramjába, valamint elvégeztem az SZFE színházi nevelés szakát.",
+      "2019-ben a Piros Orr Bohócdoktorok Alapítvány felvett soraiba, ami új tanulási terület lett életemben, a bohócot mint komplex karaktert teljesen újraértelmezve.",
+      "Vonz a fizikai színház, a báb-és tárgyanimáció, minden ami alkotóként és/vagy nézőként kibillent, asszociációra ösztönöz. Szeretem az (ön)iróniát, a humorforrásom főként ez, de nehezen viselem a környezetemben a legkisebb igazságtalanságot is."
+    ],
+    "photo": {
+      "src": "/images/oktato-boros-adam.webp",
+      "alt": "Boros Ádám",
+      "width": 720,
+      "height": 720
+    },
+    "order": 2
+  },
+  {
+    "id": "nagy-fruzsina-lilla",
+    "name": "Nagy Fruzsina Lilla",
+    "role": "Morpheus Színműhely elnök / Színészmesterség oktató",
+    "bio": [
+      "1995-ben születtem Nyíregyházán. Gyerekkoromtól szerepeltem előadásokban a nyíregyházi Mandala Dalszínházban, ahol zenés és prózai szerepekben is csiszolhattam a tudásomat. 2017-ben végeztem a Pesti Magyar Színiakadémián prózai színészként, Gémes Antos és Király Attila osztályában, ezt követően 2021-ig voltam az egri Gárdonyi Géza Színház társulati tagja.",
+      "2021-ben költöztem vissza Budapestre, és azóta a független színészi munkák mellett drámapedagógiai képzéssel és felnőtt színjátszó csoportokkal is foglalkozom. Első ízben vizsgaelőadásokat, majd teljes amatőr előadásokat rendeztem és rendezek mind a mai napig a tehetséges amatőr színjátszóknak.",
+      "2023 nyarán fogant meg bennem először a gondolat egy saját színjátszó egyesület létrehozására. Az elsődleges célom az volt, hogy egy olyan erős szakmai alapokon nyugvó műhelyet hozzunk létre, ahol drámapedagógiában jártas, komoly tapasztalattal rendelkező oktatók, és fejlődni vágyó, a színházi világra kíváncsi emberek találkozni tudjanak biztonságos és jókedvű környezetben. Olyan helyet szerettünk volna teremteni, ahol emberközpontú oktatás folyik és amely élményt és kikapcsolódást nyújt a hallgatóknak, de ugyanakkor olyan hasznos tudást is ad a kezükbe kommunikációról, emberismeretről, kreativitásról, amelyet a hétköznapok során is hasznosítani tudnak.",
+      "Úgy hiszem 2023 októberében sikerült megalapítani ezt a helyet: ez lett a Morpheus Színműhely."
+    ],
+    "photo": {
+      "src": "/images/nagy-fruzsina-lilla.jpg",
+      "alt": "Nagy Fruzsina Lilla",
+      "width": 550,
+      "height": 550
+    },
+    "order": 3
+  },
+  {
+    "id": "toth-szilvia-lilla",
+    "name": "Tóth Szilvia Lilla",
+    "role": "Színészmesterség oktató",
+    "bio": [
+      "1992-ben születtem Szegeden. 2015-ben végeztem a Marosvásárhelyi Művészeti Egyetem színművész BA szakán, drámapedagógus modullal kiegészítve, majd 2017-ben a színművész MA szakot is kiváló minősítéssel végeztem el. Pályakezdőként a nyíregyházi Móricz Zsigmond Színházban voltam társulati tag, ahol a TÁMOP program keretein belül tartottam színjátszást, beszédtechnika órát és különböző kreativitást fejlesztő órákat az ottani hátrányos helyzetű iskolákban.",
+      "2019 szeptemberében kezdtem el színjátszást és színháztörténetet tanítani Budapesten az Egressy Béni Református Művészeti Szakgimnáziumban (ahol jelenleg is dolgozom), mellette a Magyar Táncművészeti Egyetemen tanítok klasszikus balett tagozaton drámajátékot, és én magam is végzős egyetemista vagyok a Budapesti Metropolitan Egyetemen Művészetmenedzsment MA szakán.",
+      "Ezek mellett szabadúszó színészként, többek között a Karinthy Színházban is játszom, több magyar sorozatban is szerepeltem már, illetve rendszeresen szinkronizálok is."
+    ],
+    "photo": {
+      "src": "/images/oktato-toth-szilvia-lilla.webp",
+      "alt": "Tóth Szilvia Lilla",
+      "width": 720,
+      "height": 720
+    },
+    "order": 4
+  },
+  {
+    "id": "laszlo-g-attila",
+    "name": "László G. Attila",
+    "role": "Színészmesterség",
+    "bio": [
+      "Lassan két évtizedes szakmai tapasztalattal rendelkező színész és színészmesterség tanár vagyok. Diplomámat a Színház- és Filmművészeti Egyetemen szereztem, ahol olyan neves mesterek kezei alatt tanulhattam, mint Zsámbéki Gábor, Zsótér Sándor és Bodó Viktor.",
+      "Színházi pályafutásomat a Nemzeti Színházban kezdtem, ahol számos klasszikus és kortárs darabban léptem színpadra. Később olyan független és magánszínházaknál is dolgoztam, mint a Terminal Workhouse, Spirit Színház, Zichy Szín-Műhely és a Gózon Gyula Színház, ahol folyamatosan új műfajokban és karakterekben próbálhattam ki magam.",
+      "A színház mellett a filmes világban is aktív vagyok: szerepeltem több magyar nagyjátékfilmben és népszerű televíziós sorozatokban, többek között az Utolsó idők, Tóth János, Drága örökösök, A Tanár és Mi kis falunk című produkciókban.",
+      "Oktatóként a fiatal generáció fejlesztését is szívügyemnek tekintem. 2016 óta tanítok színészmesterséget és drámát, jelenleg az Egressy Béni Református Szakgimnázium tanszékvezetőjeként segítem a tehetséges diákokat, emellett a Morpheus Színműhely tanáraként is dolgozom. Büszke vagyok arra, hogy tanítványaim közül többen is sikeresen felvételiztek neves színészképző intézményekbe, köztük a Színház- és Filmművészeti Egyetemre és a Kaposvári Egyetemre.",
+      "Művészi pályámat folyamatosan új kihívások és alkotói projektek kísérik, többek között angol nyelvű színpadi és zenei előadások formájában. Egyedi koncert-színházi előadásaim, mint a Sliders vagy a ReAdy, a költészet és a zene különleges fúzióját hozzák létre.",
+      "Elhivatottan hiszek a művészet erejében, legyen szó a színpadi játék szenvedélyéről, az oktatás inspiráló világáról vagy az önálló alkotói munkáról.",
+      "Youtube-csatorna: Attila.G.László\nInstagram: attila_g_laszlo"
+    ],
+    "photo": {
+      "src": "/images/oktato-laszlo-g-attila.jpg",
+      "alt": "László G. Attila",
+      "width": 500,
+      "height": 500
+    },
+    "order": 5
+  },
+  {
+    "id": "torocsik-tamas",
+    "name": "Törőcsik Tamás",
+    "role": "Beszédtechnika oktató",
+    "bio": [
+      "Törőcsik Tamás vagyok, sok éves színészi tapasztalattal rendelkező logopédus, beszédtechnika tanár.",
+      "Gyermekkorom óta érdekelt a művészet, a színház világa. Dráma tagozatos gimnáziumba jártam, majd a Shakespeare Színművészeti Akadémián folytattam tanulmányaimat. Több magyarországi színházban volt szerencsém felállni a világot jelentő deszkákra, majd Németországban is kipróbálhattam magam több színházi turné keretében is.",
+      "Felnőtt fejjel újra iskolapadba ültem, és az ELTE Bárczi Gusztáv Gyógypedagógia Karán szereztem logopédus-szurdopedagógus diplomát.",
+      "Hosszú évek óta foglalkozom gyerekekkel/felnőttekkel, táboroztatok, tanítok, valamint drámatáborokat, programokat vezetek. 5 éve vagyok a Nemes Nagy Ágnes Művészeti Szakgimnázium beszédtechnika tanára, ahol a fiatal generációnak igyekszem átadni a tudásom legjavát. Büszke vagyok a tanítványaimra, akik évek óta Kazinczy-éremmel térnek haza a Szép magyar beszéd verseny döntőjéről. Beszédtechnika tantárgy mellett tanítok színészmesterséget, vers- és prózamondás tantárgyat, valamint szinkront is. Emellett a Bátor Tábor Alapítványnál élményterápiás foglalkozásokat tartok krónikusan beteg gyermekeknek, akik a különböző programok során leküzdik a határaikat, így javul az énképük, nő az önbizalmuk és nagyobb eséllyel küzdenek meg a betegségükkel. Emellett nyaranta még gyermekotthonban élő gyerekeket is táboroztatok a Világszép Alapítványnál, egyéni figyelemmel segítve a nehéz sorsú gyerekeket.",
+      "Logopédusként, beszédtechnika tanárként az önkifejezést, a színpadi beszéd fejlesztését, a magabiztos kommunikáció kialakítását, az önfeledt játékot, illetve a humort tartom a legfontosabbnak."
+    ],
+    "photo": {
+      "src": "/images/oktato-torocsik-tamas.webp",
+      "alt": "Törőcsik Tamás",
+      "width": 1536,
+      "height": 1536
+    },
+    "order": 6
+  },
+  {
+    "id": "nemeth-boglarka",
+    "name": "Németh Boglárka",
+    "role": "Színpadi mozgás oktató",
+    "bio": [
+      "A táncművészeti szakközépiskola kortárs,modern táncos szak elvégzése után külföldön turnéztam kisebb musical előadásban, majd óceánjáró hajókon kezdtem el igazán a táncos pályámat.",
+      "13 éve kezdtem a színházi tánckarban majd lettem asszisztens tánckarvezető, tánckarvezető és ma már segítek betanítani illetve színpadra vinni a műsorokat.",
+      "Az évek során több helyen is tanítottam, oktattam kicsiket és nagyokat egyaránt.A tánc mellett a jóga és pilatesz vonalát is képviselem és tanítom.",
+      "Nagyon szeretek az alkotói folyamatban részt venni, segíteni a színpadi mozgásban és kihozni másokból a legjobbat, hogy még természetesebben érezzék magukat a szerepükben."
+    ],
+    "photo": {
+      "src": "/images/oktato-nemeth-boglarka.jpg",
+      "alt": "Németh Boglárka",
+      "width": 600,
+      "height": 600
+    },
+    "order": 7
+  }
+]

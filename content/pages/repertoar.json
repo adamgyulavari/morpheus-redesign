@@ -56,5 +56,45 @@
       "label": "Közelgő előadások",
       "href": "/kozelgo-eloadasok"
     }
+  },
+  "detail": {
+    "backLink": {
+      "label": "Vissza a repertoárhoz",
+      "href": "/repertoar"
+    },
+    "labels": {
+      "nextShow": "Következő előadás",
+      "ticket": "Jegyek",
+      "registration": "Regisztráció",
+      "highlights": "Még mindig bizonytalan vagy?",
+      "cast": "Szereposztás",
+      "quotes": "Így látják a darabot nézőink…",
+      "video": "Érezd meg az előadás különleges hangulatát!",
+      "gallery": "Képek az előadásból:",
+      "dates": "Vedd meg a jegyed!",
+      "noDates": "Jelenleg nincs meghirdetett előadás.",
+      "ctaDates": "Megnézem az időpontokat",
+      "ctaBook": "Ez érdekel, lefoglalom a helyem",
+      "ctaConvinced": "Meggyőztetek, lássam az időpontokat!",
+      "about": "Az előadásról",
+      "invite": "Hadd hívjunk meg személyesen!"
+    },
+    "cta": {
+      "eyebrow": "Színpadra állnál?",
+      "heading": "A következő szereposztásban *te is ott lehetsz.*",
+      "text": "A kezdő kurzus vizsgaelőadással zárul, igazi színházi körülmények között.",
+      "primary": {
+        "label": "Megnézem a kezdő kurzust",
+        "href": "/kezdo-kurzus"
+      },
+      "secondary": {
+        "label": "Közelgő előadások",
+        "href": "/kozelgo-eloadasok"
+      }
+    },
+    "upcomingLink": {
+      "label": "Közelgő előadások",
+      "href": "/kozelgo-eloadasok"
+    }
   }
 }

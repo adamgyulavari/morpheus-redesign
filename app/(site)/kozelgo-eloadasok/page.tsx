@@ -16,7 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function UpcomingShowsPage() {
-  const [{ hero, labels, empty, repertoireLink, cta }, shows] = await Promise.all([
+  const [{ hero, labels, empty, repertoireLink, allTicketsLink, cta }, shows] = await Promise.all([
     getPageContent('kozelgo-eloadasok'),
     getUpcomingShows(),
   ]);
@@ -56,7 +56,10 @@ export default async function UpcomingShowsPage() {
             </div>
           </div>
         ))}
-        <ArrowLink link={repertoireLink} className="self-start" />
+        <div className="flex flex-col gap-1 sm:flex-row sm:gap-10">
+          <ArrowLink link={allTicketsLink} className="self-start" />
+          <ArrowLink link={repertoireLink} className="self-start" />
+        </div>
       </section>
 
       <CtaBand {...cta} />

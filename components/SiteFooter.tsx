@@ -2,9 +2,10 @@ import { getSiteSettings } from '@/lib/data';
 
 import Logo from './Logo';
 import SmartLink from './SmartLink';
+import SocialLinks from './SocialLinks';
 
 export default async function SiteFooter() {
-  const { name, tagline, copyright, footerColumns, privacy } = await getSiteSettings();
+  const { name, tagline, copyright, footerColumns, privacy, social } = await getSiteSettings();
   return (
     <footer className="on-dark bg-night text-mist">
       <div className="mx-auto flex max-w-[1440px] flex-col gap-10 px-5 pb-8 pt-12 lg:gap-14 lg:px-20 lg:pb-12 lg:pt-[72px]">
@@ -24,6 +25,7 @@ export default async function SiteFooter() {
                   {link.label}
                 </SmartLink>
               ))}
+              {col.title === 'Kövess minket' && <SocialLinks {...social} className="mt-1 text-mist" />}
             </nav>
           ))}
         </div>

@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
+import Link from 'next/link';
 
 import Emph from '@/components/Emph';
 import { ArrowRight } from '@/components/icons';
 import SmartLink from '@/components/SmartLink';
-import { CtaBand, Eyebrow, HeroButtons, PageHero, SectionHeading } from '@/components/ui';
-import { getPageContent } from '@/lib/data';
+import { ButtonLink, Eyebrow, HeroButtons, PageHero, SectionHeading } from '@/components/ui';
+import { getInstructors, getPageContent } from '@/lib/data';
 
 export async function generateMetadata(): Promise<Metadata> {
   const { meta } = await getPageContent('rolunk');
@@ -13,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AboutPage() {
-  const { hero, goal, name, mission, next, cta } = await getPageContent('rolunk');
+  const [{ hero, goal, name, mission, next, cta }, instructors] = await Promise.all([getPageContent('rolunk'), getInstructors()]);
   return (
     <>
       <PageHero heading={hero.heading} lead={hero.lead} image={hero.image} layout={{ size: 'md', tilt: -2.5, position: 'top', sun: 'top-right' }}>
@@ -93,7 +94,29 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <CtaBand {...cta} />
+      {/* INSTRUCTORS */}
+      <section className="mx-auto flex max-w-[1440px] flex-col gap-8 px-5 pb-16 pt-16 lg:gap-12 lg:px-20 lg:pb-[120px] lg:pt-[120px]">
+        <SectionHeading eyebrow={cta.eyebrow} heading={cta.heading} aside={<p className="text-[15.5px] leading-relaxed text-ink2 lg:max-w-[440px] lg:text-lg">{cta.text}</p>} />
+        <ul className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-4 lg:grid-cols-7">
+          {instructors.map((ins) => (
+            <li key={ins.id}>
+              <Link href={cta.primary.href} className="group flex flex-col items-center gap-3 text-center">
+                <Image
+                  src={ins.photo.src}
+                  alt=""
+                  width={160}
+                  height={160}
+                  className="aspect-square w-full max-w-[150px] rounded-full border-[3px] border-paper bg-sand object-cover shadow-[0_12px_24px_-16px_rgba(11,58,63,0.6)] transition-transform group-hover:scale-[1.03]"
+                />
+                <span className="font-semibold leading-tight">
+                  <span className="link-nav">{ins.name}</span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <ButtonLink link={cta.primary} variant="primary" arrow className="self-stretch sm:self-start" />
+      </section>
     </>
   );
 }

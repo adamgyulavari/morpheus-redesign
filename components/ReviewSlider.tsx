@@ -7,12 +7,12 @@
  * Client component: scroll position, resize and the open popup are all browser state.
  */
 import Image from 'next/image';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 
 import type { Review } from '@/lib/types';
 
 import Dialog from './Dialog';
-import { ArrowLeft } from './icons';
+import { SliderControls, useSnapSlider } from './SnapSlider';
 import { PlaceholderAvatar } from './ui';
 
 /** Note colour, tilt and tape cycle by position (presentation only, not content). */
@@ -58,55 +58,8 @@ function Caption({ review, nameId }: { review: Review; nameId?: string }) {
 }
 
 export default function ReviewSlider({ reviews }: { reviews: Review[] }) {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [pages, setPages] = useState(1);
-  const [perView, setPerView] = useState(1);
-  const [current, setCurrent] = useState(0);
+  const { trackRef, pages, current, go } = useSnapSlider();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-
-  const slides = () => Array.from(trackRef.current?.querySelectorAll<HTMLElement>('[data-slide]') ?? []);
-  const step = () => {
-    const [a, b] = slides();
-    return a && b ? b.offsetLeft - a.offsetLeft : 1;
-  };
-
-  const sync = useCallback(() => {
-    const track = trackRef.current;
-    if (!track) return;
-    const atEnd = track.scrollLeft >= track.scrollWidth - track.clientWidth - 4;
-    setCurrent(atEnd ? pages - 1 : Math.min(pages - 1, Math.round(track.scrollLeft / step() / perView)));
-  }, [pages, perView]);
-
-  // How many cards fit → how many dots. Recalculated on resize.
-  useEffect(() => {
-    const layout = () => {
-      const track = trackRef.current;
-      if (!track) return;
-      const pv = Math.max(1, Math.round((track.clientWidth + 8) / step()));
-      setPerView(pv);
-      setPages(Math.ceil(slides().length / pv));
-    };
-    layout();
-    window.addEventListener('resize', layout);
-    return () => window.removeEventListener('resize', layout);
-  }, []);
-
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
-    const onScroll = () => requestAnimationFrame(sync);
-    sync();
-    track.addEventListener('scroll', onScroll, { passive: true });
-    return () => track.removeEventListener('scroll', onScroll);
-  }, [sync]);
-
-  const go = (page: number) => {
-    const p = Math.max(0, Math.min(pages - 1, page));
-    const all = slides();
-    const target = all[Math.min(p * perView, all.length - 1)];
-    const first = all[0];
-    if (target && first) trackRef.current?.scrollTo({ left: target.offsetLeft - first.offsetLeft });
-  };
 
   const open = openIndex === null ? null : reviews[openIndex];
 
@@ -137,44 +90,7 @@ export default function ReviewSlider({ reviews }: { reviews: Review[] }) {
         ))}
       </div>
 
-      <div className="flex items-center justify-center gap-5 pt-2">
-        <button
-          type="button"
-          aria-label="Előző vélemények"
-          className="btn-icon hidden lg:inline-flex"
-          disabled={current === 0}
-          onClick={() => go(current - 1)}
-        >
-          <ArrowLeft />
-        </button>
-        <div className="flex items-center">
-          {Array.from({ length: pages }, (_, i) => (
-            <button
-              key={i}
-              type="button"
-              className="flex h-11 w-8 items-center justify-center"
-              aria-label={`${i + 1}. oldal`}
-              aria-current={i === current}
-              onClick={() => go(i)}
-            >
-              <span
-                className={`block h-2.5 rounded-full transition-all duration-300 ${i === current ? 'w-[30px] bg-teal' : 'w-2.5 bg-[#c9b89c]'}`}
-              />
-            </button>
-          ))}
-        </div>
-        <button
-          type="button"
-          aria-label="Következő vélemények"
-          className="btn-icon hidden lg:inline-flex"
-          disabled={current === pages - 1}
-          onClick={() => go(current + 1)}
-        >
-          <span className="rotate-180">
-            <ArrowLeft />
-          </span>
-        </button>
-      </div>
+      <SliderControls pages={pages} current={current} go={go} prevLabel="Előző vélemények" nextLabel="Következő vélemények" />
 
       <Dialog
         open={open != null}

@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { Fragment } from 'react';
 
 import { showDateLine } from '@/lib/dates';
@@ -25,6 +26,14 @@ export default function ShowDetails({
 }) {
   const p = show.production;
   const titleId = `show-${show.id}-title`;
+  // productions with their own page link there; the others open the popup
+  if (p.detailPage) {
+    return (
+      <Link href={`/repertoar/${p.slug}`} className="link mt-1 self-start text-sm font-bold text-teal lg:text-base">
+        {labels.about}
+      </Link>
+    );
+  }
   return (
     <DetailsDialog label={labels.about} titleId={titleId} buttonClassName="link mt-1 self-start text-sm font-bold text-teal lg:text-base">
       <div className="flex items-end gap-4 pr-12 lg:gap-5">
@@ -47,7 +56,7 @@ export default function ShowDetails({
         </div>
       </div>
       <div className="flex flex-col gap-3.5 border-t border-line pt-5 text-[15.5px] leading-relaxed text-ink2 lg:text-[17px]">
-        {p.description.map((para, k) => (
+        {p.longDescription.map((para, k) => (
           <p key={k}>
             <Lines text={para} />
           </p>

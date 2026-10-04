@@ -131,10 +131,6 @@
     @apply underline decoration-2 underline-offset-4;
     transition: color 0.2s;
   }
-  .link:hover,
-  a:hover .link {
-    color: var(--link-hover);
-  }
 
   /* Arrow link: .link + trailing arrow that nudges on hover */
   .link-arrow {
@@ -156,16 +152,6 @@
       color 0.2s,
       background-size 0.3s ease;
   }
-  .link-nav:hover,
-  a:hover .link-nav {
-    color: var(--link-hover);
-    background-size: 100% 2px;
-  }
-  .link-nav[aria-current='page'],
-  a[aria-current='page'] .link-nav {
-    @apply text-teal;
-    background-size: 100% 2px;
-  }
 
   /* Form fields */
   .field {
@@ -182,6 +168,26 @@
   .chip[aria-pressed='true'] {
     @apply border-teal bg-teal text-cream;
   }
+}
+
+/*
+ * Link hover + current-page states live OUTSIDE @layer on purpose: in Tailwind v4 the utilities
+ * layer always beats the components layer, so a colour utility on the link (text-teal, text-mist…)
+ * would otherwise block the hover colour. Unlayered rules win over every layer.
+ */
+.link:hover,
+a:hover .link {
+  color: var(--link-hover);
+}
+.link-nav:hover,
+a:hover .link-nav {
+  color: var(--link-hover);
+  background-size: 100% 2px;
+}
+.link-nav[aria-current='page'],
+a[aria-current='page'] .link-nav {
+  color: var(--color-teal);
+  background-size: 100% 2px;
 }
 
 /* Sunset gradient from the logo */

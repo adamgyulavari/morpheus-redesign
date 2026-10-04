@@ -15,6 +15,8 @@ import 'server-only';
 import contactPeopleJson from '@/content/contact-people.json';
 import coursesJson from '@/content/courses.json';
 import instructorsJson from '@/content/instructors.json';
+import bioPageJson from '@/content/pages/bio.json';
+import instructorsPageJson from '@/content/pages/oktatok.json';
 import openWorkshopSessionsJson from '@/content/open-workshop-sessions.json';
 import homeJson from '@/content/pages/home.json';
 import aboutJson from '@/content/pages/rolunk.json';
@@ -75,6 +77,8 @@ const pages: PageContentMap = {
   'szakmai-kurzus': advancedCoursePageJson as PageContentMap['szakmai-kurzus'],
   'nyitott-alkalmak': openWorkshopPageJson as PageContentMap['nyitott-alkalmak'],
   repertoar: repertoirePageJson as PageContentMap['repertoar'],
+  oktatok: instructorsPageJson as PageContentMap['oktatok'],
+  bio: bioPageJson as PageContentMap['bio'],
   'kozelgo-eloadasok': upcomingShowsPageJson as PageContentMap['kozelgo-eloadasok'],
   csapatepito: teamBuildingPageJson as PageContentMap['csapatepito'],
   kapcsolat: contactPageJson as PageContentMap['kapcsolat'],
@@ -105,8 +109,19 @@ export async function getProductions(group?: ProductionGroup): Promise<Productio
   return group ? productions.filter((p) => p.group === group) : productions;
 }
 
-export async function getProduction(id: string): Promise<Production> {
-  return byId(productions, id, 'production');
+/** A production by slug, or undefined. */
+export async function getProduction(slug: string): Promise<Production | undefined> {
+  return productions.find((p) => p.slug === slug);
+}
+
+/** Productions that have their own page (statically generated under /repertoar/[slug]/). */
+export async function getProductionsWithDetailPage(): Promise<Production[]> {
+  return productions.filter((p) => p.detailPage);
+}
+
+/** Upcoming shows of one production, soonest first. */
+export async function getShowsForProduction(productionId: string): Promise<ShowWithRelations[]> {
+  return (await getUpcomingShows()).filter((s) => s.productionId === productionId);
 }
 
 /** Shows from today on (Budapest time), soonest first, joined with their production and venue. */
@@ -135,7 +150,7 @@ export async function getReviews(): Promise<Review[]> {
 }
 
 export async function getInstructors(): Promise<Instructor[]> {
-  return instructors;
+  return [...instructors].sort((a, b) => a.order - b.order);
 }
 
 export async function getContactPeople(): Promise<ContactPerson[]> {
@@ -177,6 +192,17 @@ export async function getPastWorkshops(limit?: number): Promise<Workshop[]> {
   const today = todayInBudapest();
   const past = workshops.filter((w) => w.endDate < today).sort((a, b) => b.startDate.localeCompare(a.startDate));
   return limit === undefined ? past : past.slice(0, limit);
+}
+
+/**
+ * A legal document stored as Markdown in content/legal/<slug>.md (copied verbatim from the old site).
+ * Read from disk at build time — this module only ever runs on the server.
+ */
+export async function getLegalPage(slug: string): Promise<{ markdown: string }> {
+  const { readFile } = await import('node:fs/promises');
+  const path = await import('node:path');
+  if (!/^[a-z0-9-]+$/.test(slug)) throw new Error(`Invalid legal page "${slug}"`);
+  return { markdown: await readFile(path.join(process.cwd(), 'content', 'legal', `${slug}.md`), 'utf-8') };
 }
 
 export async function getTeamBuildingProgrammes(): Promise<TeamBuildingProgramme[]> {
