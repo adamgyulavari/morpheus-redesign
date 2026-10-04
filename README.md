@@ -91,6 +91,19 @@ paragraph is a line break. Dates are Budapest calendar dates (`YYYY-MM-DD`).
 5. The quote form: turn `submitQuoteRequest` in `lib/quote-request.ts` into a Server Action that
    stores/e-mails the request.
 
+## Deploying to GitHub Pages
+
+`.github/workflows/pages.yml` builds a fully static export and publishes it to GitHub Pages on every
+push to `main`, on demand (Actions → *Deploy to GitHub Pages* → *Run workflow*), and every night at
+00:15 Budapest time. One-time setup: repo **Settings → Pages → Build and deployment → Source:
+GitHub Actions**.
+
+The static build is switched on by `GITHUB_PAGES=true` (see `next.config.ts`); locally:
+`npm run build:pages` writes it to `out/`. Differences from the server build: no ISR (the nightly
+rebuild drops past dates instead), no redirects (the old `/nyitott-muhely` URL simply 404s there),
+and images are served unoptimised via `lib/image-loader.ts`, which adds the `/<repo>` base path.
+With a custom domain the base path becomes empty automatically.
+
 ## Caching & dates
 
 Pages are prerendered at build time (static). Pages with dated content (`/`, `/kozelgo-eloadasok`, `/kepzesek`, `/kezdo-kurzus`,
