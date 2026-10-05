@@ -1,13 +1,13 @@
 import Link from 'next/link';
 
-import { getSiteSettings } from '@/lib/data';
+import { getSiteSettings, getUi } from '@/lib/data';
 
 import Logo from './Logo';
 import MobileMenu from './MobileMenu';
 import NavLink from './NavLink';
 
 export default async function SiteHeader() {
-  const { nav, headerCta } = await getSiteSettings();
+  const [{ nav, headerCta }, ui] = await Promise.all([getSiteSettings(), getUi()]);
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-cream/95 backdrop-blur">
       <div className="relative mx-auto flex h-[72px] max-w-[1440px] items-center justify-between px-5 lg:h-24 lg:px-20">
@@ -19,7 +19,7 @@ export default async function SiteHeader() {
           </span>
         </Link>
         <div className="hidden items-center gap-12 xl:flex">
-          <nav aria-label="Főmenü" className="flex items-center gap-8 whitespace-nowrap text-[17px] font-medium">
+          <nav aria-label={ui.common.mainNav} className="flex items-center gap-8 whitespace-nowrap text-[17px] font-medium">
             {nav.map((item) => (
               <NavLink key={item.href} href={item.href} match={item.match} className="link-nav">
                 {item.label}

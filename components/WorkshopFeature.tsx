@@ -1,19 +1,20 @@
 import Image from 'next/image';
 
 import { dateRange, weekdayRange } from '@/lib/dates';
-import type { OpenWorkshopPage, Workshop } from '@/lib/types';
+import type { UiStrings, Workshop } from '@/lib/types';
 
 import DetailsDialog from './DetailsDialog';
 import { ArrowRight } from './icons';
 import { Eyebrow } from './ui';
 
 /** An upcoming workshop/camp as a highlighted dark band, with the full details in a popup. */
-export default function WorkshopFeature({ workshop: w, copy }: { workshop: Workshop; copy: OpenWorkshopPage['workshops'] }) {
+export default function WorkshopFeature({ workshop: w, ui }: { workshop: Workshop; ui: UiStrings }) {
+  const copy = ui.workshops;
   const titleId = `workshop-${w.id}-title`;
   const facts = [
-    [copy.dateLabel, `${dateRange(w.startDate, w.endDate)} (${weekdayRange(w.startDate, w.endDate)})`],
-    [copy.timeLabel, `${w.startTime}–${w.endTime}`],
-    ...(w.leader ? [[copy.leaderLabel, w.leader.name]] : []),
+    [copy.date, `${dateRange(w.startDate, w.endDate)} (${weekdayRange(w.startDate, w.endDate)})`],
+    [copy.time, `${w.startTime}–${w.endTime}`],
+    ...(w.leader ? [[copy.leader, w.leader.name]] : []),
   ];
   return (
     <article className="on-dark relative grid overflow-hidden rounded-[26px] bg-deep text-cream lg:grid-cols-[5fr_7fr] lg:rounded-[32px]">
@@ -49,10 +50,10 @@ export default function WorkshopFeature({ workshop: w, copy }: { workshop: Works
         </dl>
         <div className="relative flex flex-col gap-3 sm:flex-row">
           <a href={w.signupUrl} className="btn btn-lg btn-gold">
-            {copy.signupLabel}
+            {ui.common.signup}
             <ArrowRight />
           </a>
-          <DetailsDialog label={copy.moreLabel} titleId={titleId} buttonClassName="btn btn-lg btn-outline-cream">
+          <DetailsDialog label={ui.common.more} titleId={titleId} buttonClassName="btn btn-lg btn-outline-cream">
             <div className="flex flex-col gap-2 pr-12">
               <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-teal lg:text-xs">
                 {w.kind} · {dateRange(w.startDate, w.endDate)}
@@ -66,8 +67,8 @@ export default function WorkshopFeature({ workshop: w, copy }: { workshop: Works
               {w.intro && <p className="font-semibold text-ink">{w.intro}</p>}
               <p>{w.summary}</p>
               <p>
-                <span className="font-semibold text-ink">{copy.dateLabel}:</span> {dateRange(w.startDate, w.endDate)} ({weekdayRange(w.startDate, w.endDate)}),{' '}
-                {copy.timeLabel.toLowerCase()} {w.startTime}–{w.endTime}
+                <span className="font-semibold text-ink">{copy.date}:</span> {dateRange(w.startDate, w.endDate)} ({weekdayRange(w.startDate, w.endDate)}),{' '}
+                {copy.time.toLowerCase()} {w.startTime}–{w.endTime}
               </p>
             </div>
             {w.leader && (
@@ -89,7 +90,7 @@ export default function WorkshopFeature({ workshop: w, copy }: { workshop: Works
             )}
             {w.closing && <p className="font-display text-[26px] italic leading-tight text-deep lg:text-[30px]">{w.closing}</p>}
             <a href={w.signupUrl} className="btn btn-lg btn-primary self-start">
-              {copy.signupLabel}
+              {ui.common.signup}
               <ArrowRight />
             </a>
           </DetailsDialog>

@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import type { CSSProperties, ReactNode } from 'react';
 
-import type { Fact, ImageRef, Link } from '@/lib/types';
+import type { HeroButton, HeroImageLayout, ImageRef, Link } from '@/lib/types';
 
 import Emph from './Emph';
 import { ArrowRight } from './icons';
@@ -86,8 +86,8 @@ export function ArrowLink({ link, className = '' }: { link: Link; className?: st
   );
 }
 
-/** Two-column label/value facts under a hero lead. */
-export function Facts({ facts }: { facts: Fact[] }) {
+/** Two-column label/value facts under a hero lead (values already resolved). */
+export function Facts({ facts }: { facts: { label: string; value: string }[] }) {
   return (
     <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:max-w-[640px]">
       {facts.map((f) => (
@@ -100,32 +100,9 @@ export function Facts({ facts }: { facts: Fact[] }) {
   );
 }
 
-/** How the hero photo sits next to the text. Presentation only — chosen per page in code. */
-export type HeroImageLayout = {
-  /** landscape: sm / md / lg; portrait: a tall card */
-  shape?: 'landscape' | 'portrait';
-  size?: 'sm' | 'md' | 'lg';
-  /** degrees, negative = counter-clockwise; phones use 60% of it */
-  tilt?: number;
-  /**
-   * bottom: the photo sits at the bottom of a 440px area (heroes with long text);
-   * top: the photo starts at the top and the area is only as tall as the photo (short heroes);
-   * middle: a taller photo centred on the sun
-   */
-  position?: 'top' | 'middle' | 'bottom';
-  /** where the sun sits behind the photo on desktop */
-  sun?: 'top-right' | 'top-left' | 'bottom-left';
-};
-
-/**
- * The sun sits in the same spot on every hero. Set to null to let each page choose via
- * `layout.sun` again (the per-page option is kept for now).
- */
-const FIXED_SUN: HeroImageLayout['sun'] | null = 'top-right';
-
 /**
  * Photo size/placement per position, and the height of the photo area that goes with it. All
- * arrangements keep clear of the top-right corner so the sun stays visible (≥ ⅓ of it). Top-placed
+ * arrangements keep clear of the top-right corner, where the sun sits on every hero, so it stays visible (≥ ⅓ of it). Top-placed
  * photos are a bit smaller, so short heroes stay short.
  */
 const PHOTO: Record<'top' | 'middle' | 'bottom', Record<string, { photo: string; area: string }>> = {
@@ -150,17 +127,12 @@ const PHOTO: Record<'top' | 'middle' | 'bottom', Record<string, { photo: string;
     portrait: { photo: 'lg:-top-10 lg:left-auto lg:right-[150px] lg:h-[380px] lg:w-[272px]', area: 'lg:h-[340px]' },
   },
 };
-const SUN: Record<NonNullable<HeroImageLayout['sun']>, string> = {
-  'top-right': 'lg:-right-5 lg:top-0 lg:h-[300px] lg:w-[300px]',
-  'top-left': 'lg:-left-6 lg:-top-2 lg:h-[240px] lg:w-[240px]',
-  'bottom-left': 'lg:-bottom-4 lg:-left-6 lg:h-[260px] lg:w-[260px]',
-};
 
 /**
  * The one hero used by every inner page: title, lead, optional content above the title (`top`,
  * e.g. the course switcher) and below the lead (`children`: facts, buttons, filter chips), and a
  * tilted photo with the sun behind it. The text column, spacing and type sizes are identical on
- * every page; only the photo arrangement varies via `layout`.
+ * every page; only the photo arrangement varies via `layout`. `className` carries the block spacing.
  */
 export function PageHero({
   top,
@@ -168,6 +140,7 @@ export function PageHero({
   lead,
   image,
   layout = {},
+  className = '',
   children,
 }: {
   /** Optional element above the title, e.g. the course switcher. */
@@ -176,14 +149,14 @@ export function PageHero({
   lead: string;
   image: ImageRef;
   layout?: HeroImageLayout;
+  className?: string;
   children?: ReactNode;
 }) {
   const { shape = 'landscape', size = 'md', tilt = -2.5, position = 'bottom' } = layout;
-  const sun = FIXED_SUN ?? layout.sun ?? 'top-right';
   const placement = PHOTO[position][shape === 'portrait' ? 'portrait' : `landscape-${size}`]!;
   const photo = placement.photo;
   return (
-    <section className="relative mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)] items-start gap-12 overflow-hidden px-5 pt-8 lg:grid-cols-[7fr_5fr] lg:gap-16 lg:overflow-visible lg:px-20 lg:pt-16">
+    <section className={`relative mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)] items-start gap-12 overflow-hidden px-5 pt-8 lg:grid-cols-[7fr_5fr] lg:gap-16 lg:overflow-visible lg:px-20 lg:pt-16 ${className}`}>
       <div className="sun absolute -right-24 -top-28 h-48 w-48 rounded-full lg:hidden" aria-hidden="true" />
       <div className="relative flex flex-col gap-5 lg:gap-7">
         {top}
@@ -192,7 +165,7 @@ export function PageHero({
         {children}
       </div>
       <div className={`relative ${placement.area} ${shape === 'portrait' ? 'h-[360px]' : 'h-[260px] sm:h-[340px]'}`}>
-        <div className={`sun absolute hidden rounded-full lg:block ${SUN[sun]}`} data-hero-sun aria-hidden="true" />
+        <div className="sun absolute hidden rounded-full lg:-right-5 lg:top-0 lg:block lg:h-[300px] lg:w-[300px]" data-hero-sun aria-hidden="true" />
         <Image
           src={image.src}
           alt={image.alt}
@@ -211,32 +184,35 @@ export function PageHero({
   );
 }
 
-/** Two hero buttons: primary (with arrow) + outline. */
-export function HeroButtons({ primary, secondary }: { primary: Link; secondary: Link }) {
+/** Hero buttons: primary ones get the arrow. */
+export function HeroButtons({ buttons }: { buttons: HeroButton[] }) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row">
-      <ButtonLink link={primary} variant="primary" arrow />
-      <ButtonLink link={secondary} variant="outline" />
+    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+      {buttons.map((b) => (
+        <ButtonLink key={b.href} link={b} variant={b.variant ?? 'primary'} arrow={(b.variant ?? 'primary') === 'primary'} />
+      ))}
     </div>
   );
 }
 
-/** Dark rounded call-to-action band that closes most pages. */
+/** Dark rounded call-to-action band that closes most pages. `className` carries the block spacing. */
 export function CtaBand({
   eyebrow,
   heading,
   text,
   primary,
   secondary,
+  className = '',
 }: {
   eyebrow: string;
   heading: string;
   text: string;
   primary: Link;
   secondary: Link;
+  className?: string;
 }) {
   return (
-    <section className="mx-3 mb-16 mt-16 lg:mx-auto lg:mb-[120px] lg:mt-[120px] lg:max-w-[1440px] lg:px-20">
+    <section className={`mx-3 lg:mx-auto lg:max-w-[1440px] lg:px-20 ${className}`}>
       <div className="on-dark relative grid items-center gap-5 overflow-hidden rounded-[26px] bg-deep px-6 py-10 text-cream lg:grid-cols-[7fr_5fr] lg:gap-16 lg:rounded-[32px] lg:px-20 lg:py-[72px]">
         <div
           className="sun absolute -right-24 -top-24 h-52 w-52 rounded-full opacity-85 lg:-bottom-56 lg:-right-32 lg:top-auto lg:h-[440px] lg:w-[440px]"

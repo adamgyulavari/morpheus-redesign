@@ -1,30 +1,37 @@
 {
+  "path": "/oktatok",
+  "title": "Oktatóink",
   "meta": {
     "title": "Oktatóink — Morpheus Színműhely",
     "description": "A Morpheus Színműhely oktatói: színészmesterség, beszédtechnika és színpadi mozgás."
   },
-  "hero": {
-    "heading": "Oktatóink",
-    "lead": "Ismerd meg oktatóinkat, akik minden héten azon vannak, hogy hallgatóink felszabadultan és jókedvvel tanuljanak.",
-    "image": {
-      "src": "/images/szakmai-kurzus-3.webp",
-      "alt": "Oktató és hallgatók jelenetpróbán",
-      "width": 800,
-      "height": 600
-    }
-  },
-  "moreLabel": "Tovább olvasom",
-  "cta": {
-    "eyebrow": "Még nem döntöttél?",
-    "heading": "Próbáld ki előbb *egy szombaton.*",
-    "text": "A Nyitott Műhelyre kötöttség nélkül, alkalmanként csatlakozhatsz.",
-    "primary": {
-      "label": "Nyitott Műhely",
-      "href": "/nyitott-alkalmak"
+  "layout": "site",
+  "blocks": [
+    {
+      "blockType": "pageHero",
+      "heading": "Oktatóink",
+      "lead": "Ismerd meg oktatóinkat, akik minden héten azon vannak, hogy hallgatóink felszabadultan és jókedvvel tanuljanak.",
+      "image": {
+        "src": "/images/szakmai-kurzus-3.webp",
+        "alt": "Oktató és hallgatók jelenetpróbán",
+        "width": 800,
+        "height": 600
+      },
+      "layout": {
+        "size": "sm",
+        "tilt": 2,
+        "position": "top"
+      }
     },
-    "secondary": {
-      "label": "Kérdésem van",
-      "href": "/kapcsolat"
+    {
+      "blockType": "instructorGrid",
+      "spacing": {
+        "top": "md"
+      }
+    },
+    {
+      "blockType": "ctaBand",
+      "ctaBand": "probald-ki-egy-szombaton"
     }
-  }
+  ]
 }

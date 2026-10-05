@@ -1,143 +1,166 @@
 {
+  "path": "/kezdo-kurzus",
+  "title": "Kezdő kurzus",
   "meta": {
     "title": "Kezdő kurzus — Morpheus Színműhely",
     "description": "Kezdő színházi kurzus felnőtteknek Budapesten: heti 1×2 óra, 20 alkalom, vizsgaelőadással."
   },
-  "courseId": "kezdo",
-  "hero": {
-    "heading": "Kezdő kurzus",
-    "lead": "Ha még nem találkoztál hasonló felnőtt képzéssel, de érdekel a színház világa, és szívesen belekóstolnál annak működésébe, akkor itt a helyed!",
-    "facts": [
-      {
-        "label": "Ritmus",
-        "value": "heti 1 × 2 óra"
-      },
-      {
-        "label": "Hossz",
-        "value": "20 alkalom + 2 opcionális"
-      },
-      {
-        "label": "Helyszín",
-        "value": "1027 Budapest, Frankel Leó út 6."
-      },
-      {
-        "label": "Díj",
-        "value": "{lowestPrice}"
-      }
-    ],
-    "primaryCtaLabel": "Jelentkezem",
-    "secondaryCta": {
-      "label": "Induló csoportok",
-      "href": "#indulo"
-    },
-    "image": {
-      "src": "/images/szinhazi-kepzes-5.webp",
-      "alt": "Hallgatói jelenet a színpadon",
-      "width": 1000,
-      "height": 563
-    }
-  },
-  "starts": {
-    "eyebrow": "Induló kezdő kurzusok",
-    "heading": "Válassz időpontot.",
-    "intro": "Mindhárom csoport heti egy alkalommal, két órában találkozik, összesen 20 alkalommal.",
-    "ctaLabel": "Jelentkezem",
-    "empty": {
-      "text": "Hamarosan új csoportokat indítunk. Kérdésed van? Írj vagy hívj bátran!",
-      "link": {
-        "label": "Kapcsolat",
-        "href": "/kapcsolat"
-      }
-    }
-  },
-  "benefits": {
-    "eyebrow": "Mire jó ez?",
-    "heading": "Amit a kurzus *ad neked.*",
-    "items": [
-      "A kreatív energiáid felszabadításával átélheted a színjátszás és az alkotás örömét",
-      "Profi színészek irányítása alatt biztonságosan kipróbálhatod magad különböző helyzetekben",
-      "Fejlődni fog a magabiztosságod és a kommunikációd",
-      "Jobban fogod érteni önmagad és mások működését"
-    ]
-  },
-  "curriculum": {
-    "eyebrow": "A 20 alkalom",
-    "heading": "Mit fogsz tanulni?",
-    "items": [
-      "Csoportos és egyéni játékok által, az improvizáció és a drámai helyzetek gyakorlása",
-      "Szituációs feladatok segítségével modellezzük a mindennapokban előforduló élethelyzeteket, és az arra adott érzelmi, illetve tudatos válaszokat",
-      "Egy én-monológ megírását kérjük első feladatként majd tőled, melyből tanáraid és csoporttársaid jobban megismerhetik, ki vagy te, és mi mozgat téged",
-      "Drámapedagógusaink egy olyan monológot választanak neked a világirodalom klasszikusai közül, ami jól passzol a személyiségedhez",
-      "Montágh Imre beszédtechnika-gyakorlataival kialakíthatod a magabiztosabb kommunikációt"
-    ],
-    "bonus": {
-      "eyebrow": "Grátisz + 2 alkalom",
-      "heading": "Főpróba és vizsgaelőadás",
-      "text": "A kurzus alatt elsajátított monológokat egymásra fűzve jön létre a „vizsgaelőadás”, amit nézők előtt (meghívott család, barátok, ismerősök) adunk elő, profi színházi körülmények között. A két alkalom grátisz és opcionális: ha nem kívánsz színpadra állni, nem kötelező igénybe venni."
-    },
-    "image": {
-      "src": "/images/szinhazi-kepzes-4.webp",
-      "alt": "Hallgatók egy próbán a kezdő kurzuson",
-      "width": 1000,
-      "height": 1387
-    }
-  },
-  "why": [
+  "layout": "site",
+  "blocks": [
     {
-      "eyebrow": "Miért a Morpheus?",
-      "heading": "Biztonságos közeg, jókedvű tanulás.",
-      "text": "Fiatal, haladó gondolkodású oktatóink minden héten azon vannak, hogy hallgatóink felszabadultan és jókedvvel sajátítsák el a színház különböző területeinek tudását. Támogatásukkal biztonságos környezetben próbálhatod ki magad számodra új helyzetekben."
+      "blockType": "pageHero",
+      "heading": "Kezdő kurzus",
+      "lead": "Ha még nem találkoztál hasonló felnőtt képzéssel, de érdekel a színház világa, és szívesen belekóstolnál annak működésébe, akkor itt a helyed!",
+      "image": {
+        "src": "/images/szinhazi-kepzes-5.webp",
+        "alt": "Hallgatói jelenet a színpadon",
+        "width": 1000,
+        "height": 563
+      },
+      "layout": {
+        "size": "lg",
+        "tilt": -1.5,
+        "position": "bottom"
+      },
+      "switcher": {
+        "label": "Képzéseink",
+        "pages": [
+          {
+            "path": "/kezdo-kurzus"
+          },
+          {
+            "path": "/szakmai-kurzus"
+          }
+        ]
+      },
+      "facts": [
+        {
+          "label": "Ritmus",
+          "value": "heti 1 × 2 óra"
+        },
+        {
+          "label": "Hossz",
+          "value": "20 alkalom + 2 opcionális"
+        },
+        {
+          "label": "Helyszín",
+          "value": "1027 Budapest, Frankel Leó út 6."
+        },
+        {
+          "label": "Díj",
+          "coursePrice": "kezdo"
+        }
+      ],
+      "buttons": [
+        {
+          "label": "Jelentkezem",
+          "href": "https://morpheus-szinmuhely.hu/hirek-jelentkezes/",
+          "variant": "primary"
+        },
+        {
+          "label": "Induló csoportok",
+          "href": "#indulo",
+          "variant": "outline"
+        }
+      ]
     },
     {
-      "eyebrow": "Még sosem csináltál ilyet?",
-      "quote": "„Színház az egész világ, és színész benne minden férfi és nő.”",
-      "quoteSource": "— Shakespeare",
-      "text": "A színészmesterség alapjai elsősorban a mindennapi szituációk és az ezekre adott különböző reakciók, ezekkel nap mint nap mindenki szembesül. A színház a való élet leképezése, egy tükörtartás a mindennapi életnek — az alapok elsajátításához semmilyen extra képességre nincs szükség."
-    }
-  ],
-  "after": {
-    "eyebrow": "Mi lesz a kezdő kurzus után?",
-    "heading": "Innen indul az utad.",
-    "steps": [
-      {
-        "kicker": "20 + 2 alkalom",
-        "title": "Kezdő kurzus",
-        "text": "Játékok, improvizáció, monológ-munka és beszédtechnika — a végén vizsgaelőadással."
-      },
-      {
-        "kicker": "Ha kedvet kaptál",
-        "title": "Szakmai csoport",
-        "text": "Részletesebben foglalkozunk improvizációval, különféle színészi munkamódszerekkel, mozgással, hanggal és beszédgyakorlatokkal, majd ezek segítségével különböző jeleneteket építünk fel."
-      },
-      {
-        "kicker": "A legjobbaknak",
-        "title": "Társulat",
-        "text": "A szakmai csoport legjobb tanulói zárt társulatban, 6–9 hónapos felkészülési folyamat után, hivatásos színészekkel együtt játszhatnak több száz fős nagyközönség előtt egy teljes színházi előadást."
-      }
-    ]
-  },
-  "reviews": {
-    "eyebrow": "Hallgatóink mondták",
-    "heading": "Így látják a *Morpheust.*",
-    "intro": "Cetlik a próbaterem faláról: hallgatóink saját szavaival arról, mit jelent nekik a heti alkalom."
-  },
-  "prices": {
-    "eyebrow": "Képzési költségek",
-    "heading": "A 20 + 2 alkalom díja",
-    "intro": "A részvételi díjat egyben vagy részletekben is kiegyenlítheted.",
-    "ctaLabel": "Jelentkezem"
-  },
-  "cta": {
-    "eyebrow": "Még nem döntöttél?",
-    "heading": "Próbáld ki előbb *egy szombaton.*",
-    "text": "A Nyitott Műhelyre kötöttség nélkül, alkalmanként csatlakozhatsz.",
-    "primary": {
-      "label": "Nyitott Műhely",
-      "href": "/nyitott-alkalmak"
+      "blockType": "courseStarts",
+      "anchor": "indulo",
+      "eyebrow": "Induló kezdő kurzusok",
+      "heading": "Válassz időpontot.",
+      "course": "kezdo",
+      "intro": "Mindhárom csoport heti egy alkalommal, két órában találkozik, összesen 20 alkalommal."
     },
-    "secondary": {
-      "label": "Kérdésem van",
-      "href": "/kapcsolat"
+    {
+      "blockType": "benefits",
+      "eyebrow": "Mire jó ez?",
+      "heading": "Amit a kurzus *ad neked.*",
+      "items": [
+        "A kreatív energiáid felszabadításával átélheted a színjátszás és az alkotás örömét",
+        "Profi színészek irányítása alatt biztonságosan kipróbálhatod magad különböző helyzetekben",
+        "Fejlődni fog a magabiztosságod és a kommunikációd",
+        "Jobban fogod érteni önmagad és mások működését"
+      ]
+    },
+    {
+      "blockType": "curriculum",
+      "eyebrow": "A 20 alkalom",
+      "heading": "Mit fogsz tanulni?",
+      "items": [
+        "Csoportos és egyéni játékok által, az improvizáció és a drámai helyzetek gyakorlása",
+        "Szituációs feladatok segítségével modellezzük a mindennapokban előforduló élethelyzeteket, és az arra adott érzelmi, illetve tudatos válaszokat",
+        "Egy én-monológ megírását kérjük első feladatként majd tőled, melyből tanáraid és csoporttársaid jobban megismerhetik, ki vagy te, és mi mozgat téged",
+        "Drámapedagógusaink egy olyan monológot választanak neked a világirodalom klasszikusai közül, ami jól passzol a személyiségedhez",
+        "Montágh Imre beszédtechnika-gyakorlataival kialakíthatod a magabiztosabb kommunikációt"
+      ],
+      "bonus": {
+        "eyebrow": "Grátisz + 2 alkalom",
+        "heading": "Főpróba és vizsgaelőadás",
+        "text": "A kurzus alatt elsajátított monológokat egymásra fűzve jön létre a „vizsgaelőadás”, amit nézők előtt (meghívott család, barátok, ismerősök) adunk elő, profi színházi körülmények között. A két alkalom grátisz és opcionális: ha nem kívánsz színpadra állni, nem kötelező igénybe venni."
+      },
+      "image": {
+        "src": "/images/szinhazi-kepzes-4.webp",
+        "alt": "Hallgatók egy próbán a kezdő kurzuson",
+        "width": 1000,
+        "height": 1387
+      }
+    },
+    {
+      "blockType": "featureCards",
+      "cards": [
+        {
+          "eyebrow": "Miért a Morpheus?",
+          "heading": "Biztonságos közeg, jókedvű tanulás.",
+          "text": "Fiatal, haladó gondolkodású oktatóink minden héten azon vannak, hogy hallgatóink felszabadultan és jókedvvel sajátítsák el a színház különböző területeinek tudását. Támogatásukkal biztonságos környezetben próbálhatod ki magad számodra új helyzetekben."
+        },
+        {
+          "eyebrow": "Még sosem csináltál ilyet?",
+          "quote": "„Színház az egész világ, és színész benne minden férfi és nő.”",
+          "quoteSource": "— Shakespeare",
+          "text": "A színészmesterség alapjai elsősorban a mindennapi szituációk és az ezekre adott különböző reakciók, ezekkel nap mint nap mindenki szembesül. A színház a való élet leképezése, egy tükörtartás a mindennapi életnek — az alapok elsajátításához semmilyen extra képességre nincs szükség."
+        }
+      ]
+    },
+    {
+      "blockType": "path",
+      "eyebrow": "Mi lesz a kezdő kurzus után?",
+      "heading": "Innen indul az utad.",
+      "steps": [
+        {
+          "kicker": "20 + 2 alkalom",
+          "title": "Kezdő kurzus",
+          "text": "Játékok, improvizáció, monológ-munka és beszédtechnika — a végén vizsgaelőadással."
+        },
+        {
+          "kicker": "Ha kedvet kaptál",
+          "title": "Szakmai csoport",
+          "text": "Részletesebben foglalkozunk improvizációval, különféle színészi munkamódszerekkel, mozgással, hanggal és beszédgyakorlatokkal, majd ezek segítségével különböző jeleneteket építünk fel."
+        },
+        {
+          "kicker": "A legjobbaknak",
+          "title": "Társulat",
+          "text": "A szakmai csoport legjobb tanulói zárt társulatban, 6–9 hónapos felkészülési folyamat után, hivatásos színészekkel együtt játszhatnak több száz fős nagyközönség előtt egy teljes színházi előadást."
+        }
+      ]
+    },
+    {
+      "blockType": "reviews",
+      "eyebrow": "Hallgatóink mondták",
+      "heading": "Így látják a *Morpheust.*",
+      "intro": "Cetlik a próbaterem faláról: hallgatóink saját szavaival arról, mit jelent nekik a heti alkalom."
+    },
+    {
+      "blockType": "coursePrices",
+      "anchor": "dijak",
+      "eyebrow": "Képzési költségek",
+      "heading": "A 20 + 2 alkalom díja",
+      "course": "kezdo",
+      "intro": "A részvételi díjat egyben vagy részletekben is kiegyenlítheted."
+    },
+    {
+      "blockType": "ctaBand",
+      "ctaBand": "probald-ki-egy-szombaton"
     }
-  }
+  ]
 }

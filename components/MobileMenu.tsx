@@ -11,11 +11,13 @@ import type { Link, NavItem } from '@/lib/types';
 
 import { MenuIcon } from './icons';
 import NavLink from './NavLink';
+import { useUi } from './UiStrings';
 
 export default function MobileMenu({ nav, cta }: { nav: NavItem[]; cta: Link }) {
   const [open, setOpen] = useState(false);
   const menuId = useId();
   const pathname = usePathname();
+  const ui = useUi();
 
   // Close the menu after navigating to another page.
   useEffect(() => setOpen(false), [pathname]);
@@ -25,7 +27,7 @@ export default function MobileMenu({ nav, cta }: { nav: NavItem[]; cta: Link }) 
       <button
         type="button"
         className="btn-icon xl:hidden"
-        aria-label={open ? 'Menü bezárása' : 'Menü megnyitása'}
+        aria-label={open ? ui.common.closeMenu : ui.common.openMenu}
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpen((o) => !o)}
@@ -34,7 +36,7 @@ export default function MobileMenu({ nav, cta }: { nav: NavItem[]; cta: Link }) 
       </button>
       <nav
         id={menuId}
-        aria-label="Főmenü"
+        aria-label={ui.common.mainNav}
         hidden={!open}
         className="absolute inset-x-0 top-full border-t border-line bg-cream px-5 pb-6 lg:px-20 xl:hidden"
       >

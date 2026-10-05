@@ -3,22 +3,12 @@ import Link from 'next/link';
 import { Fragment } from 'react';
 
 import { showDateLine } from '@/lib/dates';
-import type { Production, RepertoirePage, ShowWithRelations } from '@/lib/types';
+import type { Production, ShowWithRelations } from '@/lib/types';
 
 import { ArrowRight } from './icons';
+import Lines from './Lines';
 import ProductionDetails from './ProductionDetails';
 import SmartLink from './SmartLink';
-
-/** Paragraph text where "\n" marks a line break (short-line stanzas). */
-function Lines({ text }: { text: string }) {
-  const lines = text.split('\n');
-  return lines.map((line, i) => (
-    <Fragment key={i}>
-      {line}
-      {i < lines.length - 1 && <br />}
-    </Fragment>
-  ));
-}
 
 function OnStageBadge({ label, desktop }: { label: string; desktop: boolean }) {
   return desktop ? (
@@ -48,7 +38,7 @@ export default function ProductionCard({
   production: Production;
   nextShow?: ShowWithRelations;
   posterFirst: boolean;
-  labels: RepertoirePage['labels'];
+  labels: { onStage: string; nextShow: string; more: string };
   upcomingShowsUrl: string;
 }) {
   const posterCol = posterFirst ? 'xl:col-start-1' : 'xl:col-start-2';

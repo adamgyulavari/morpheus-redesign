@@ -25,7 +25,7 @@ export default async function SiteFooter() {
                   {link.label}
                 </SmartLink>
               ))}
-              {col.title === 'Kövess minket' && <SocialLinks {...social} className="mt-1 text-mist" />}
+              {col.social && <SocialLinks {...social} className="mt-1 text-mist" />}
             </nav>
           ))}
         </div>

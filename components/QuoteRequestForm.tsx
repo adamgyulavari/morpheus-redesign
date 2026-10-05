@@ -3,17 +3,19 @@
 /**
  * Team-building quote request form. Client component for the validation message and the submit
  * handler; the actual "sending" is isolated in lib/quote-request.ts so it can become a Server Action.
+ * Its texts come from the UI dictionary (ui.quoteForm).
  */
 import { useState, type FormEvent } from 'react';
 
 import { fill } from '@/lib/format';
 import { submitQuoteRequest, type QuoteRequest } from '@/lib/quote-request';
-import type { QuoteFormContent } from '@/lib/types';
 
 import { ArrowRight } from './icons';
+import { useUi } from './UiStrings';
 
-export default function QuoteRequestForm({ content }: { content: QuoteFormContent }) {
+export default function QuoteRequestForm({ recipient }: { recipient: string }) {
   const [showError, setShowError] = useState(false);
+  const content = useUi().quoteForm;
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -35,8 +37,9 @@ export default function QuoteRequestForm({ content }: { content: QuoteFormConten
       message: get('message'),
     };
     const result = submitQuoteRequest(data, {
-      recipient: content.recipient,
+      recipient,
       subject: fill(content.subject, { company: data.company }),
+      labels: content.mail,
     });
     window.location.href = result.href;
   }

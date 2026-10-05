@@ -1,125 +1,131 @@
 {
+  "path": "/nyitott-alkalmak",
+  "title": "Nyitott alkalmak",
   "meta": {
     "title": "Nyitott alkalmak — Morpheus Színműhely",
     "description": "Nyitott színházi alkalmak Budapesten kötöttség nélkül: Nyitott Műhely minden szombaton 14–16 óra között (5 000 Ft / alkalom), workshopok és táborok."
   },
-  "hero": {
-    "heading": "Nyitott alkalmak",
-    "lead": "Kötöttség nélküli színházi alkalmak: minden szombaton Nyitott Műhely, időről időre workshopok és táborok.",
-    "primaryCta": {
-      "label": "Helyet foglalok",
-      "href": "#idopontok"
+  "layout": "site",
+  "blocks": [
+    {
+      "blockType": "pageHero",
+      "heading": "Nyitott alkalmak",
+      "lead": "Kötöttség nélküli színházi alkalmak: minden szombaton Nyitott Műhely, időről időre workshopok és táborok.",
+      "image": {
+        "src": "/images/full-width-bottom.webp",
+        "alt": "Hallgatók körben ülve a próbateremben",
+        "width": 800,
+        "height": 450
+      },
+      "layout": {
+        "size": "sm",
+        "tilt": -3,
+        "position": "bottom"
+      },
+      "buttons": [
+        {
+          "label": "Helyet foglalok",
+          "href": "#idopontok",
+          "variant": "primary"
+        },
+        {
+          "label": "Workshop",
+          "href": "#workshopok",
+          "variant": "outline",
+          "showIf": "upcomingWorkshops"
+        },
+        {
+          "label": "Hogyan működik?",
+          "href": "#hogyan",
+          "variant": "outline"
+        }
+      ]
     },
-    "workshopCta": {
-      "label": "Workshop",
-      "href": "#workshopok"
+    {
+      "blockType": "upcomingWorkshops",
+      "anchor": "workshopok"
     },
-    "secondaryCta": {
-      "label": "Hogyan működik?",
-      "href": "#hogyan"
+    {
+      "blockType": "textSplit",
+      "eyebrow": "Minden szombaton",
+      "heading": "Nyitott Műhely",
+      "size": "xl",
+      "text": "A Morpheus Színműhely minden héten szombaton nyitott alkalmat hirdet, melyhez szabadon csatlakozhatsz, amikor csak kedved tartja és amikor időd engedi!",
+      "facts": [
+        {
+          "label": "Időpont",
+          "value": "Minden szombat 14:00–16:00"
+        },
+        {
+          "label": "Díj",
+          "value": "5 000 Ft / alkalom"
+        },
+        {
+          "label": "Helyszín",
+          "value": "1027 Budapest, Frankel Leó út 6."
+        },
+        {
+          "label": "Jelentkezés",
+          "value": "az előtte lévő csütörtök éjfélig"
+        }
+      ]
     },
-    "image": {
-      "src": "/images/full-width-bottom.webp",
-      "alt": "Hallgatók körben ülve a próbateremben",
-      "width": 800,
-      "height": 450
+    {
+      "blockType": "checklist",
+      "eyebrow": "Neked szól, ha…",
+      "heading": "Rád is igazak az alábbiak?",
+      "closing": "Akkor a legjobb helyen vagy!",
+      "items": [
+        "Mindig is vonzott a színház világa? Új hobbit keresel?",
+        "Szeretnél részt venni színházi kurzuson, de nincs elég szabadidőd, hogy hosszú távra elköteleződj?",
+        "Kipróbálnád magad biztonságos környezetben, profi színészek támogatásával?",
+        "Szeretnél felszabadultan játszani?",
+        "Szeretnéd magad mögött hagyni a hétköznapi gondokat, és csak jól érezni magad?"
+      ]
+    },
+    {
+      "blockType": "steps",
+      "anchor": "hogyan",
+      "eyebrow": "Jelentkezés",
+      "heading": "Ez érdekel, hogyan tudok jelentkezni?",
+      "steps": [
+        {
+          "title": "Foglalj csütörtök estig",
+          "text": "Keresd ki az időpontok között azt a szombatot, amikor szeretnél jönni, és kattints a „Foglalok” gombra. A jelentkezést mindig az adott alkalom előtti csütörtök éjfélkor zárjuk."
+        },
+        {
+          "title": "Add meg adataidat",
+          "text": "Egy információkérő adatlap fog felugrani, amelynek kitöltése után készen is vagy! Ezután hamarosan e-mailben felvesszük veled a kapcsolatot."
+        },
+        {
+          "title": "Utalj előző nap éjfélig",
+          "text": "A részvételi díj 5 000 Ft / alkalom, melyet előreutalással kérünk. A díjbekérőt a szombati játékot megelőző nap éjfélig lehet kiegyenlíteni, hogy oktatóinknak pontos létszám álljon rendelkezésére."
+        },
+        {
+          "title": "Gyere és játssz!",
+          "text": "Ezután nincs más dolgod, mint eljönni játszani a megadott időpontban: 1027 Budapest, Frankel Leó út 6."
+        }
+      ]
+    },
+    {
+      "blockType": "openWorkshopSessions",
+      "anchor": "idopontok",
+      "eyebrow": "Időpontok",
+      "heading": "Következő alkalmak",
+      "intro": "Minden szombaton 14:00–16:00. A foglalás az előtte lévő csütörtök éjfélig lehetséges.",
+      "title": "Nyitott Műhely",
+      "limit": 6
+    },
+    {
+      "blockType": "pastWorkshops",
+      "anchor": "workshopok",
+      "eyebrow": "Workshopok, táborok",
+      "heading": "Korábbi workshopok",
+      "limit": 6
+    },
+    {
+      "blockType": "ctaBand",
+      "ctaBand": "kezdo-kurzus"
     }
-  },
-  "workshops": {
-    "eyebrow": "Workshop",
-    "dateLabel": "Időpont",
-    "timeLabel": "Minden nap",
-    "leaderLabel": "Kurzusvezető",
-    "signupLabel": "Jelentkezem",
-    "moreLabel": "Bővebben",
-    "leaderHeading": "A kurzusvezetőről",
-    "pastEyebrow": "Workshopok, táborok",
-    "pastHeading": "Korábbi workshopok",
-    "empty": "Hamarosan új workshoppal jelentkezünk.",
-    "emptyLink": {
-      "label": "Kövess minket a Facebookon",
-      "href": "https://www.facebook.com/profile.php?id=61553500586744"
-    }
-  },
-  "openWorkshop": {
-    "eyebrow": "Minden szombaton",
-    "heading": "Nyitott Műhely",
-    "lead": "A Morpheus Színműhely minden héten szombaton nyitott alkalmat hirdet, melyhez szabadon csatlakozhatsz, amikor csak kedved tartja és amikor időd engedi!",
-    "facts": [
-      {
-        "label": "Időpont",
-        "value": "Minden szombat 14:00–16:00"
-      },
-      {
-        "label": "Díj",
-        "value": "5 000 Ft / alkalom"
-      },
-      {
-        "label": "Helyszín",
-        "value": "1027 Budapest, Frankel Leó út 6."
-      },
-      {
-        "label": "Jelentkezés",
-        "value": "az előtte lévő csütörtök éjfélig"
-      }
-    ]
-  },
-  "forYou": {
-    "eyebrow": "Neked szól, ha…",
-    "heading": "Rád is igazak az alábbiak?",
-    "closing": "Akkor a legjobb helyen vagy!",
-    "items": [
-      "Mindig is vonzott a színház világa? Új hobbit keresel?",
-      "Szeretnél részt venni színházi kurzuson, de nincs elég szabadidőd, hogy hosszú távra elköteleződj?",
-      "Kipróbálnád magad biztonságos környezetben, profi színészek támogatásával?",
-      "Szeretnél felszabadultan játszani?",
-      "Szeretnéd magad mögött hagyni a hétköznapi gondokat, és csak jól érezni magad?"
-    ]
-  },
-  "how": {
-    "eyebrow": "Jelentkezés",
-    "heading": "Ez érdekel, hogyan tudok jelentkezni?",
-    "steps": [
-      {
-        "title": "Foglalj csütörtök estig",
-        "text": "Keresd ki az időpontok között azt a szombatot, amikor szeretnél jönni, és kattints a „Foglalok” gombra. A jelentkezést mindig az adott alkalom előtti csütörtök éjfélkor zárjuk."
-      },
-      {
-        "title": "Add meg adataidat",
-        "text": "Egy információkérő adatlap fog felugrani, amelynek kitöltése után készen is vagy! Ezután hamarosan e-mailben felvesszük veled a kapcsolatot."
-      },
-      {
-        "title": "Utalj előző nap éjfélig",
-        "text": "A részvételi díj 5 000 Ft / alkalom, melyet előreutalással kérünk. A díjbekérőt a szombati játékot megelőző nap éjfélig lehet kiegyenlíteni, hogy oktatóinknak pontos létszám álljon rendelkezésére."
-      },
-      {
-        "title": "Gyere és játssz!",
-        "text": "Ezután nincs más dolgod, mint eljönni játszani a megadott időpontban: 1027 Budapest, Frankel Leó út 6."
-      }
-    ]
-  },
-  "sessions": {
-    "eyebrow": "Időpontok",
-    "heading": "Következő alkalmak",
-    "intro": "Minden szombaton 14:00–16:00. A foglalás az előtte lévő csütörtök éjfélig lehetséges.",
-    "title": "Nyitott Műhely",
-    "bookLabel": "Foglalok",
-    "closedLabel": "Lezárult",
-    "openText": "Foglalás {deadline}, csütörtök éjfélig",
-    "closedText": "A foglalás erre az alkalomra lezárult",
-    "empty": "Hamarosan új időpontokkal jelentkezünk."
-  },
-  "cta": {
-    "eyebrow": "Hosszabb távra is kipróbálnád?",
-    "heading": "Jöhet a *kezdő kurzus.*",
-    "text": "20 alkalom, heti két óra — a végén vizsgaelőadással, igazi színházi körülmények között.",
-    "primary": {
-      "label": "Megnézem a kezdő kurzust",
-      "href": "/kezdo-kurzus"
-    },
-    "secondary": {
-      "label": "Kérdésem van",
-      "href": "/kapcsolat"
-    }
-  }
+  ]
 }

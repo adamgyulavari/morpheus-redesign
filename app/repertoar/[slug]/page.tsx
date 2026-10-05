@@ -6,14 +6,21 @@ import { Fragment } from 'react';
 
 import Gallery from '@/components/Gallery';
 import { ArrowLeft, ArrowRight } from '@/components/icons';
+import Lines from '@/components/Lines';
 import ShowRow from '@/components/ShowRow';
+import SiteLayout from '@/components/layouts/SiteLayout';
 import { CtaBand, Eyebrow, SectionHeading } from '@/components/ui';
 import VideoEmbed from '@/components/VideoEmbed';
-import { getPageContent, getProduction, getProductionsWithDetailPage, getShowsForProduction } from '@/lib/data';
+import { getCtaBand, getProduction, getProductionsWithDetailPage, getShowsForProduction, getSiteSettings, getUi } from '@/lib/data';
 import { dayOfMonth, monthLong, weekday } from '@/lib/dates';
+import { fill } from '@/lib/format';
 
-// Only productions with `detailPage: true` get a page; every one is generated at build time
-// (required for the static export), and any other slug is a 404.
+/**
+ * The production page template (not a block page: its layout follows the production record).
+ * Only productions with `detailPage: true` get a page; every one is generated at build time
+ * (required for the static export), and any other slug is a 404. Its labels come from the UI
+ * dictionary (ui.production), the closing CTA band from site settings.
+ */
 export const dynamicParams = false;
 export const revalidate = 86400;
 
@@ -26,9 +33,9 @@ type Props = { params: Promise<{ slug: string }> };
 const firstSentence = (text: string) => (text.match(/^.*?[.!?…](?=\s|$)/)?.[0] ?? text).trim();
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const p = await getProduction((await params).slug);
+  const [p, settings] = await Promise.all([getProduction((await params).slug), getSiteSettings()]);
   if (!p) return {};
-  const title = `${p.title} — Morpheus Színműhely`;
+  const title = `${p.title} — ${settings.name}`;
   const description = firstSentence(p.longDescription[0] ?? p.summary);
   return { title, description, openGraph: { title, description, images: [{ url: p.poster.src, width: p.poster.width, height: p.poster.height, alt: p.poster.alt }] } };
 }
@@ -48,23 +55,15 @@ function DatesCta({ label, dark = false }: { label: string; dark?: boolean }) {
 
 const youtubeId = (url: string) => url.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/)?.[1];
 
-/** Paragraph text where "\n" marks a line break. */
-const Lines = ({ text }: { text: string }) =>
-  text.split('\n').map((line, i, all) => (
-    <Fragment key={i}>
-      {line}
-      {i < all.length - 1 && <br />}
-    </Fragment>
-  ));
-
 export default async function ProductionPage({ params }: Props) {
   const p = await getProduction((await params).slug);
   if (!p?.detailPage) notFound();
-  const [{ detail }, shows] = await Promise.all([getPageContent('repertoar'), getShowsForProduction(p.id)]);
-  const { labels } = detail;
+  const [ui, settings, shows] = await Promise.all([getUi(), getSiteSettings(), getShowsForProduction(p.id)]);
+  const cta = await getCtaBand(settings.productionPage.ctaBand);
+  const labels = ui.production;
   const next = shows[0];
   const action = (s: (typeof shows)[number]) =>
-    s.ticketUrl ? { label: labels.ticket, href: s.ticketUrl } : s.registrationUrl ? { label: labels.registration, href: s.registrationUrl } : undefined;
+    s.ticketUrl ? { label: ui.shows.ticket, href: s.ticketUrl } : s.registrationUrl ? { label: ui.shows.registration, href: s.registrationUrl } : undefined;
   const nextAction = next && action(next);
   const video = p.videoUrl && youtubeId(p.videoUrl);
   const named = p.cast.some((c) => c.role);
@@ -81,7 +80,7 @@ export default async function ProductionPage({ params }: Props) {
   const bgIsPoster = bg === p.poster;
 
   return (
-    <>
+    <SiteLayout>
       {/* HERO — full-bleed image (or the poster, blurred) under a dark veil, with the next-date card */}
       <section className="on-dark relative isolate overflow-hidden bg-night text-cream">
         <Image
@@ -125,7 +124,7 @@ export default async function ProductionPage({ params }: Props) {
           </div>
           {next ? (
             <div className="flex flex-col gap-4 rounded-3xl bg-paper p-6 text-ink shadow-[0_30px_60px_-30px_rgba(0,0,0,0.6)] lg:p-8">
-              <span className="text-xs font-bold uppercase tracking-[0.16em] text-rust-dark">{labels.nextShow}</span>
+              <span className="text-xs font-bold uppercase tracking-[0.16em] text-rust-dark">{ui.shows.nextShow}</span>
               <div className="flex items-center gap-4">
                 <span className="font-display text-[64px] leading-none text-rust">{dayOfMonth(next.date)}</span>
                 <span className="flex flex-col leading-tight">
@@ -150,10 +149,10 @@ export default async function ProductionPage({ params }: Props) {
             </div>
           ) : (
             <div className="flex flex-col gap-4 rounded-3xl border border-cream/25 bg-night/40 p-6 backdrop-blur-sm lg:p-8">
-              <span className="text-xs font-bold uppercase tracking-[0.16em] text-gold">{labels.nextShow}</span>
+              <span className="text-xs font-bold uppercase tracking-[0.16em] text-gold">{ui.shows.nextShow}</span>
               <p className="text-lg leading-snug">{labels.noDates}</p>
-              <Link href={detail.upcomingLink.href} className="btn btn-md btn-outline-cream self-start">
-                {detail.upcomingLink.label}
+              <Link href={settings.urls.upcomingShows} className="btn btn-md btn-outline-cream self-start">
+                {labels.upcomingLink}
                 <ArrowRight />
               </Link>
             </div>
@@ -306,7 +305,7 @@ export default async function ProductionPage({ params }: Props) {
       {p.gallery && p.gallery.length > 0 && (
         <section className="mx-auto flex max-w-[1440px] flex-col gap-8 px-5 pt-16 lg:gap-12 lg:px-20 lg:pt-[120px]">
           <h2 className="font-display text-[40px] leading-none lg:text-[64px]">{labels.gallery}</h2>
-          <Gallery images={p.gallery} label={`${p.title} — képek`} />
+          <Gallery images={p.gallery} label={fill(labels.galleryLabel, { title: p.title })} />
           {shows.length > 0 && <DatesCta label={labels.ctaConvinced} />}
         </section>
       )}
@@ -319,17 +318,17 @@ export default async function ProductionPage({ params }: Props) {
         ) : (
           <div className="flex flex-col">
             {shows.map((show, i) => (
-              <ShowRow key={show.id} show={show} ticketLabel={labels.ticket} registrationLabel={labels.registration} last={i === shows.length - 1} />
+              <ShowRow key={show.id} show={show} ticketLabel={ui.shows.ticket} registrationLabel={ui.shows.registration} last={i === shows.length - 1} />
             ))}
           </div>
         )}
-        <Link href={detail.backLink.href} className="link link-arrow self-start text-base text-teal lg:text-[17px]">
+        <Link href={settings.urls.repertoire} className="link link-arrow self-start text-base text-teal lg:text-[17px]">
           <ArrowLeft className="h-[18px] w-[18px]" />
-          {detail.backLink.label}
+          {labels.backLink}
         </Link>
       </section>
 
-      <CtaBand {...detail.cta} />
-    </>
+      <CtaBand {...cta} className="my-16 lg:my-[120px]" />
+    </SiteLayout>
   );
 }

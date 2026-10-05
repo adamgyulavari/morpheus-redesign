@@ -8,6 +8,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 
 import { CloseIcon } from './icons';
+import { useUi } from './UiStrings';
 
 export default function Dialog({
   open,
@@ -25,6 +26,7 @@ export default function Dialog({
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const ui = useUi();
 
   useEffect(() => {
     const dialog = ref.current;
@@ -44,7 +46,7 @@ export default function Dialog({
       }}
     >
       {open && children}
-      <button type="button" aria-label="Bezárás" className={`btn-icon absolute right-3 top-3 h-10 w-10 ${closeClassName}`} onClick={onClose}>
+      <button type="button" aria-label={ui.common.close} className={`btn-icon absolute right-3 top-3 h-10 w-10 ${closeClassName}`} onClick={onClose}>
         <CloseIcon />
       </button>
     </dialog>

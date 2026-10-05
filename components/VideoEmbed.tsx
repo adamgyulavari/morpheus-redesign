@@ -8,10 +8,14 @@
 import Image from 'next/image';
 import { useState } from 'react';
 
+import { fill } from '@/lib/format';
+
 import { PlayIcon } from './icons';
+import { useUi } from './UiStrings';
 
 export default function VideoEmbed({ youtubeId, title }: { youtubeId: string; title: string }) {
   const [playing, setPlaying] = useState(false);
+  const ui = useUi();
 
   if (playing) {
     return (
@@ -28,7 +32,7 @@ export default function VideoEmbed({ youtubeId, title }: { youtubeId: string; ti
   return (
     <a
       href={`https://www.youtube.com/watch?v=${youtubeId}`}
-      aria-label={`${title} lejátszása`}
+      aria-label={fill(ui.common.playVideo, { title })}
       className="group relative flex aspect-video items-center justify-center overflow-hidden rounded-[18px] bg-deep lg:rounded-3xl"
       onClick={(e) => {
         e.preventDefault();

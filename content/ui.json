@@ -1,0 +1,125 @@
+{
+  "common": {
+    "close": "Bezárás",
+    "readMore": "Tovább olvasom",
+    "more": "Bővebben",
+    "signup": "Jelentkezem",
+    "mainNav": "Főmenü",
+    "openMenu": "Menü megnyitása",
+    "closeMenu": "Menü bezárása",
+    "sliderPage": "{n}. oldal",
+    "slideshow": "diavetítés",
+    "playVideo": "{title} lejátszása",
+    "facebook": "A Morpheus Színműhely Facebook-oldala",
+    "instagram": "A Morpheus Színműhely Instagram-oldala",
+    "toc": "Tartalom",
+    "tocLabel": "Tartalomjegyzék",
+    "links": "Linkek"
+  },
+  "shows": {
+    "ticket": "Jegyek",
+    "registration": "Regisztráció",
+    "about": "Az előadásról",
+    "info": "Tudnivalók",
+    "nextShow": "Következő előadás",
+    "onStage": "Műsoron",
+    "upcomingCount": "{count} előadás a következő hetekben",
+    "empty": "Hamarosan új előadásokkal jelentkezünk."
+  },
+  "production": {
+    "backLink": "Vissza a repertoárhoz",
+    "upcomingLink": "Közelgő előadások",
+    "about": "Az előadásról",
+    "highlights": "Még mindig bizonytalan vagy?",
+    "quotes": "Így látják a darabot nézőink…",
+    "video": "Érezd meg az előadás különleges hangulatát!",
+    "gallery": "Képek az előadásból:",
+    "galleryLabel": "{title} — képek",
+    "dates": "Vedd meg a jegyed!",
+    "noDates": "Jelenleg nincs meghirdetett előadás.",
+    "ctaDates": "Megnézem az időpontokat",
+    "ctaBook": "Ez érdekel, lefoglalom a helyem",
+    "ctaConvinced": "Meggyőztetek, lássam az időpontokat!",
+    "invite": "Hadd hívjunk meg személyesen!"
+  },
+  "repertoire": {
+    "filter": "Szűrés",
+    "all": "Mind",
+    "company": "Társulati előadások",
+    "students": "Hallgatói előadások"
+  },
+  "reviews": {
+    "previous": "Előző vélemények",
+    "next": "Következő vélemények",
+    "photoPlaceholder": "Fotó helye: {name} portréja"
+  },
+  "gallery": {
+    "previous": "Előző képek",
+    "next": "Következő képek",
+    "previousImage": "Előző kép",
+    "nextImage": "Következő kép",
+    "zoom": "{alt} — nagyítás"
+  },
+  "course": {
+    "rhythm": "Ritmus",
+    "length": "Hossz",
+    "admission": "Felvétel",
+    "price": "Díj",
+    "start": "Indulás",
+    "startRolling": "folyamatos jelentkezés",
+    "startSoon": "hamarosan",
+    "details": "Részletek",
+    "nextIntake": "Következő induló szakmai kurzus",
+    "startsEmpty": "Hamarosan új csoportokat indítunk. Kérdésed van? Írj vagy hívj bátran!",
+    "startsEmptyLink": {
+      "label": "Kapcsolat",
+      "href": "/kapcsolat"
+    }
+  },
+  "workshops": {
+    "date": "Időpont",
+    "time": "Minden nap",
+    "leader": "Kurzusvezető",
+    "leaderHeading": "A kurzusvezetőről",
+    "empty": "Hamarosan új workshoppal jelentkezünk.",
+    "followUs": "Kövess minket a Facebookon"
+  },
+  "sessions": {
+    "book": "Foglalok",
+    "closed": "Lezárult",
+    "open": "Foglalás {deadline}, csütörtök éjfélig",
+    "closedText": "A foglalás erre az alkalomra lezárult",
+    "empty": "Hamarosan új időpontokkal jelentkezünk."
+  },
+  "teamBuilding": {
+    "duration": "Időkeret:",
+    "venue": "Helyszín:"
+  },
+  "quoteForm": {
+    "title": "Csapatépítő árajánlatkérés",
+    "required": "A *-gal jelölt mezők kitöltése kötelező.",
+    "fields": {
+      "company": "Cég neve *",
+      "lastName": "Vezetéknév *",
+      "firstName": "Keresztnév *",
+      "email": "E-mail cím *",
+      "phone": "Telefonszám *",
+      "message": "Kérdés, megjegyzés"
+    },
+    "messagePlaceholder": "Pl. létszám, időpont, helyszín, milyen program érdekel",
+    "error": "Kérjük, töltsd ki a kötelező mezőket.",
+    "submit": "Ajánlatot kérek",
+    "note": "A küldés gombra kattintva a levelezőprogramod nyílik meg a kitöltött adatokkal — a levelet onnan tudod elküldeni nekünk.",
+    "subject": "Csapatépítő árajánlatkérés – {company}",
+    "mail": {
+      "company": "Cég neve",
+      "contact": "Kapcsolattartó",
+      "email": "E-mail",
+      "phone": "Telefon"
+    }
+  },
+  "contact": {
+    "person": "Kapcsolattartó",
+    "directions": "Útvonaltervezés"
+  }
+}

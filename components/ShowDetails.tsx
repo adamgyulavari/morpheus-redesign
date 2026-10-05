@@ -1,20 +1,11 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Fragment } from 'react';
 
 import { showDateLine } from '@/lib/dates';
 import type { ShowWithRelations } from '@/lib/types';
 
 import DetailsDialog from './DetailsDialog';
-
-/** Paragraph text where "\n" marks a line break. */
-const Lines = ({ text }: { text: string }) =>
-  text.split('\n').map((line, i, all) => (
-    <Fragment key={i}>
-      {line}
-      {i < all.length - 1 && <br />}
-    </Fragment>
-  ));
+import Lines from './Lines';
 
 /** "Az előadásról" link + popup: description, cast, credits, audience info and the ticket/registration button. */
 export default function ShowDetails({

@@ -5,19 +5,11 @@
     "title": "Kezdő kurzus",
     "url": "/kezdo-kurzus",
     "signupUrl": "https://morpheus-szinmuhely.hu/hirek-jelentkezes/",
+    "rhythm": "heti 1×2 óra",
+    "length": "20 alkalom (+2)",
     "card": {
       "badge": "Kezdőknek",
       "text": "Improvizáció, karakterformálás, beszédtechnika, monológ-munka és színpadi mozgás — a végén vizsgaelőadással, igazi színházi körülmények között.",
-      "facts": [
-        {
-          "label": "Ritmus",
-          "value": "heti 1×2 óra"
-        },
-        {
-          "label": "Hossz",
-          "value": "20 alkalom (+2)"
-        }
-      ],
       "ctaLabel": "Részletek és jelentkezés"
     },
     "starts": [
@@ -69,19 +61,11 @@
     "title": "Szakmai kurzus",
     "url": "/szakmai-kurzus",
     "signupUrl": "https://morpheus-szinmuhely.hu/hirek-jelentkezes/",
+    "rhythm": "heti 1×3 óra",
+    "length": "6–8 hónap",
     "card": {
       "badge": "Haladóknak",
       "text": "Azoknak, akik már jártak színházi képzésre, és folyamatosan tanulnának, fejlődnének. Felvételi meghallgatással.",
-      "facts": [
-        {
-          "label": "Ritmus",
-          "value": "heti 1×3 óra"
-        },
-        {
-          "label": "Hossz",
-          "value": "6–8 hónap"
-        }
-      ],
       "ctaLabel": "Részletek"
     },
     "starts": [],

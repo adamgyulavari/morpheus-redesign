@@ -1,44 +1,48 @@
 {
+  "path": "/kozelgo-eloadasok",
+  "title": "Közelgő előadások",
   "meta": {
     "title": "Közelgő előadások — Morpheus Színműhely",
     "description": "A Morpheus Színműhely következő előadásai: időpontok, helyszínek, jegyek és regisztráció."
   },
-  "hero": {
-    "heading": "Közelgő előadások",
-    "lead": "Jegyek, regisztráció és minden tudnivaló a következő előadásainkhoz.",
-    "image": {
-      "src": "/images/szinhazi-kepzes-1.webp",
-      "alt": "Jelenet egy Morpheus-előadásból",
-      "width": 2048,
-      "height": 1152
-    }
-  },
-  "labels": {
-    "ticket": "Jegyek",
-    "registration": "Regisztráció",
-    "about": "Az előadásról",
-    "info": "Tudnivalók"
-  },
-  "empty": "Hamarosan új előadásokkal jelentkezünk.",
-  "repertoireLink": {
-    "label": "Teljes repertoár",
-    "href": "/repertoar"
-  },
-  "cta": {
-    "eyebrow": "Színpadra állnál?",
-    "heading": "A következő szereposztásban *te is ott lehetsz.*",
-    "text": "A kezdő kurzus vizsgaelőadással zárul, igazi színházi körülmények között.",
-    "primary": {
-      "label": "Megnézem a kezdő kurzust",
-      "href": "/kezdo-kurzus"
+  "layout": "site",
+  "blocks": [
+    {
+      "blockType": "pageHero",
+      "heading": "Közelgő előadások",
+      "lead": "Jegyek, regisztráció és minden tudnivaló a következő előadásainkhoz.",
+      "image": {
+        "src": "/images/szinhazi-kepzes-1.webp",
+        "alt": "Jelenet egy Morpheus-előadásból",
+        "width": 2048,
+        "height": 1152
+      },
+      "layout": {
+        "size": "lg",
+        "tilt": 1.5,
+        "position": "top"
+      }
     },
-    "secondary": {
-      "label": "Teljes repertoár",
-      "href": "/repertoar"
+    {
+      "blockType": "upcomingShows",
+      "spacing": {
+        "top": "md"
+      },
+      "variant": "byMonth",
+      "links": [
+        {
+          "label": "Összes jegyünk a Tixán",
+          "href": "https://www.tixa.hu/morpheus-szinmuhely"
+        },
+        {
+          "label": "Teljes repertoár",
+          "href": "/repertoar"
+        }
+      ]
+    },
+    {
+      "blockType": "ctaBand",
+      "ctaBand": "szinpadra-allnal-repertoar"
     }
-  },
-  "allTicketsLink": {
-    "label": "Összes jegyünk a Tixán",
-    "href": "https://www.tixa.hu/morpheus-szinmuhely"
-  }
+  ]
 }

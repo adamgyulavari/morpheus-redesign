@@ -7,7 +7,10 @@
  */
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 
+import { fill } from '@/lib/format';
+
 import { ArrowLeft } from './icons';
+import { useUi } from './UiStrings';
 
 export function useSnapSlider(): {
   trackRef: RefObject<HTMLDivElement | null>;
@@ -80,6 +83,7 @@ export function SliderControls({
   prevLabel: string;
   nextLabel: string;
 }) {
+  const ui = useUi();
   if (pages < 2) return null;
   return (
     <div className="flex items-center justify-center gap-5 pt-2">
@@ -92,7 +96,7 @@ export function SliderControls({
             key={i}
             type="button"
             className="flex h-11 w-8 items-center justify-center"
-            aria-label={`${i + 1}. oldal`}
+            aria-label={fill(ui.common.sliderPage, { n: String(i + 1) })}
             aria-current={i === current}
             onClick={() => go(i)}
           >

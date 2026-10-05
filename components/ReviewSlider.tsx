@@ -9,11 +9,13 @@
 import Image from 'next/image';
 import { useState } from 'react';
 
+import { fill } from '@/lib/format';
 import type { Review } from '@/lib/types';
 
 import Dialog from './Dialog';
 import { SliderControls, useSnapSlider } from './SnapSlider';
 import { PlaceholderAvatar } from './ui';
+import { useUi } from './UiStrings';
 
 /** Note colour, tilt and tape cycle by position (presentation only, not content). */
 const NOTES = [
@@ -29,6 +31,7 @@ const NOTES = [
 const note = (i: number) => NOTES[i % NOTES.length]!;
 
 function Avatar({ review, border }: { review: Review; border: string }) {
+  const ui = useUi();
   if (review.photo) {
     return (
       <Image
@@ -40,7 +43,7 @@ function Avatar({ review, border }: { review: Review; border: string }) {
       />
     );
   }
-  return <PlaceholderAvatar className={`h-12 w-12 border-[3px] ${border}`} label={`Fotó helye: ${review.name} portréja`} />;
+  return <PlaceholderAvatar className={`h-12 w-12 border-[3px] ${border}`} label={fill(ui.reviews.photoPlaceholder, { name: review.name })} />;
 }
 
 function Caption({ review, nameId }: { review: Review; nameId?: string }) {
@@ -60,11 +63,12 @@ function Caption({ review, nameId }: { review: Review; nameId?: string }) {
 export default function ReviewSlider({ reviews }: { reviews: Review[] }) {
   const { trackRef, pages, current, go } = useSnapSlider();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const ui = useUi();
 
   const open = openIndex === null ? null : reviews[openIndex];
 
   return (
-    <div className="lg:rounded-[32px] lg:bg-sand lg:px-11 lg:pb-7 lg:pt-8" aria-roledescription="diavetítés">
+    <div className="lg:rounded-[32px] lg:bg-sand lg:px-11 lg:pb-7 lg:pt-8" aria-roledescription={ui.common.slideshow}>
       <div
         ref={trackRef}
         className="no-scrollbar flex snap-x snap-mandatory items-start gap-4 overflow-x-auto scroll-smooth px-5 py-6 [scroll-padding-left:20px] sm:gap-6 lg:gap-8 lg:px-3.5 lg:[scroll-padding-left:14px]"
@@ -84,13 +88,13 @@ export default function ReviewSlider({ reviews }: { reviews: Review[] }) {
               className="link min-h-[44px] self-start font-bold text-teal"
               onClick={() => setOpenIndex(i)}
             >
-              Tovább olvasom
+              {ui.common.readMore}
             </button>
           </figure>
         ))}
       </div>
 
-      <SliderControls pages={pages} current={current} go={go} prevLabel="Előző vélemények" nextLabel="Következő vélemények" />
+      <SliderControls pages={pages} current={current} go={go} prevLabel={ui.reviews.previous} nextLabel={ui.reviews.next} />
 
       <Dialog
         open={open != null}

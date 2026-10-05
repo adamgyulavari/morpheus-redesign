@@ -11,6 +11,8 @@ import { createContext, useContext, useState, type ReactNode } from 'react';
 
 import type { ProductionGroup } from '@/lib/types';
 
+import { useUi } from './UiStrings';
+
 type Filter = 'all' | ProductionGroup;
 const FilterContext = createContext<{ filter: Filter; setFilter: (f: Filter) => void } | null>(null);
 
@@ -25,12 +27,15 @@ export default function RepertoireFilter({ children }: { children: ReactNode }) 
   return <FilterContext.Provider value={{ filter, setFilter }}>{children}</FilterContext.Provider>;
 }
 
-export function FilterChips({ label, chips }: { label: string; chips: { value: Filter; label: string; count: number }[] }) {
+/** The chips; `counts` = number of productions per chip. */
+export function FilterChips({ counts }: { counts: Record<Filter, number> }) {
   const { filter, setFilter } = useFilter();
+  const labels = useUi().repertoire;
+  const chips = (['all', 'company', 'students'] as const).map((value) => ({ value, label: labels[value], count: counts[value] }));
   return (
     <div
       role="group"
-      aria-label={label}
+      aria-label={labels.filter}
       className="no-scrollbar -mx-5 flex gap-2.5 overflow-x-auto px-5 pb-1 lg:mx-0 lg:mt-2 lg:flex-wrap lg:overflow-visible lg:px-0"
     >
       {chips.map((chip) => (
@@ -51,10 +56,10 @@ export function FilterChips({ label, chips }: { label: string; chips: { value: F
   );
 }
 
-export function FilterGroup({ group, className, children }: { group: ProductionGroup; className: string; children: ReactNode }) {
+export function FilterGroup({ group, id, className, children }: { group: ProductionGroup; id?: string; className: string; children: ReactNode }) {
   const { filter } = useFilter();
   return (
-    <section className={className} hidden={filter !== 'all' && filter !== group}>
+    <section id={id} className={className} hidden={filter !== 'all' && filter !== group}>
       {children}
     </section>
   );

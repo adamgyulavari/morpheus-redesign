@@ -17,12 +17,16 @@ export type QuoteRequest = {
 
 export type QuoteRequestResult = { kind: 'mailto'; href: string };
 
-export function submitQuoteRequest(data: QuoteRequest, options: { recipient: string; subject: string }): QuoteRequestResult {
+export function submitQuoteRequest(
+  data: QuoteRequest,
+  options: { recipient: string; subject: string; labels: { company: string; contact: string; email: string; phone: string } },
+): QuoteRequestResult {
+  const { labels } = options;
   const body = [
-    `Cég neve: ${data.company}`,
-    `Kapcsolattartó: ${data.lastName} ${data.firstName}`,
-    `E-mail: ${data.email}`,
-    `Telefon: ${data.phone}`,
+    `${labels.company}: ${data.company}`,
+    `${labels.contact}: ${data.lastName} ${data.firstName}`,
+    `${labels.email}: ${data.email}`,
+    `${labels.phone}: ${data.phone}`,
     '',
     data.message,
   ].join('\n');

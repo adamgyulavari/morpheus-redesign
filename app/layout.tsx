@@ -2,6 +2,9 @@ import type { Metadata } from 'next';
 import { Figtree, Instrument_Serif } from 'next/font/google';
 import type { ReactNode } from 'react';
 
+import { UiProvider } from '@/components/UiStrings';
+import { getSiteSettings, getUi } from '@/lib/data';
+
 import './globals.css';
 
 // next/font downloads the fonts at build time and serves them from this site (no request to
@@ -15,15 +18,18 @@ const instrumentSerif = Instrument_Serif({
   display: 'swap',
 });
 
-// Fallback only; every page sets its own title and description (see generateMetadata in each page).
-export const metadata: Metadata = {
-  title: 'Morpheus Színműhely',
-};
+// Fallback only; every page sets its own title and description (from its content).
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getSiteSettings()).name };
+}
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const ui = await getUi();
   return (
     <html lang="hu" className={`${figtree.variable} ${instrumentSerif.variable}`}>
-      <body className="bg-cream font-sans text-ink antialiased">{children}</body>
+      <body className="bg-cream font-sans text-ink antialiased">
+        <UiProvider ui={ui}>{children}</UiProvider>
+      </body>
     </html>
   );
 }

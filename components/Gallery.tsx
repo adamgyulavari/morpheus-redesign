@@ -7,15 +7,18 @@
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 
+import { fill } from '@/lib/format';
 import type { ImageRef } from '@/lib/types';
 
 import { ArrowLeft, CloseIcon } from './icons';
 import { SliderControls, useSnapSlider } from './SnapSlider';
+import { useUi } from './UiStrings';
 
 export default function Gallery({ images, label }: { images: ImageRef[]; label: string }) {
   const [index, setIndex] = useState<number | null>(null);
   const { trackRef, pages, current: page, go } = useSnapSlider();
   const ref = useRef<HTMLDialogElement>(null);
+  const ui = useUi();
   const current = index === null ? null : images[index];
 
   useEffect(() => {
@@ -29,7 +32,7 @@ export default function Gallery({ images, label }: { images: ImageRef[]; label: 
 
   return (
     <>
-      <div className="lg:rounded-[32px] lg:bg-sand lg:px-8 lg:pb-6 lg:pt-8" aria-roledescription="diavetítés">
+      <div className="lg:rounded-[32px] lg:bg-sand lg:px-8 lg:pb-6 lg:pt-8" aria-roledescription={ui.common.slideshow}>
         <div
           ref={trackRef}
           className="no-scrollbar -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-5 [scroll-padding-left:20px] sm:gap-6 lg:mx-0 lg:px-0 lg:[scroll-padding-left:0px]"
@@ -40,7 +43,7 @@ export default function Gallery({ images, label }: { images: ImageRef[]; label: 
               type="button"
               data-slide
               onClick={() => setIndex(i)}
-              aria-label={`${img.alt} — nagyítás`}
+              aria-label={fill(ui.gallery.zoom, { alt: img.alt })}
               className="group block w-[82%] shrink-0 snap-start overflow-hidden rounded-2xl bg-deep sm:w-[calc(50%-12px)] lg:w-[calc((100%-48px)/3)]"
             >
               <Image
@@ -54,7 +57,7 @@ export default function Gallery({ images, label }: { images: ImageRef[]; label: 
             </button>
           ))}
         </div>
-        <SliderControls pages={pages} current={page} go={go} prevLabel="Előző képek" nextLabel="Következő képek" />
+        <SliderControls pages={pages} current={page} go={go} prevLabel={ui.gallery.previous} nextLabel={ui.gallery.next} />
       </div>
       <dialog
         ref={ref}
@@ -83,13 +86,13 @@ export default function Gallery({ images, label }: { images: ImageRef[]; label: 
           </figure>
         )}
         <div className="on-dark mt-3 flex justify-center gap-3">
-          <button type="button" aria-label="Előző kép" className="btn-icon border-cream text-cream" onClick={() => step(-1)}>
+          <button type="button" aria-label={ui.gallery.previousImage} className="btn-icon border-cream text-cream" onClick={() => step(-1)}>
             <ArrowLeft />
           </button>
-          <button type="button" aria-label="Bezárás" className="btn-icon border-cream text-cream" onClick={() => setIndex(null)}>
+          <button type="button" aria-label={ui.common.close} className="btn-icon border-cream text-cream" onClick={() => setIndex(null)}>
             <CloseIcon />
           </button>
-          <button type="button" aria-label="Következő kép" className="btn-icon border-cream text-cream" onClick={() => step(1)}>
+          <button type="button" aria-label={ui.gallery.nextImage} className="btn-icon border-cream text-cream" onClick={() => step(1)}>
             <span className="rotate-180">
               <ArrowLeft />
             </span>

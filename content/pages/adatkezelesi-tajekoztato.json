@@ -1,0 +1,15 @@
+{
+  "path": "/adatkezelesi-tajekoztato",
+  "title": "Adatkezelési tájékoztató",
+  "meta": {
+    "title": "Adatkezelési tájékoztató — Morpheus Színműhely",
+    "description": "A Morpheus Színjátszó Egyesület Adatvédelmi Szabályzata."
+  },
+  "layout": "site",
+  "blocks": [
+    {
+      "blockType": "legalDocument",
+      "document": "adatkezelesi-tajekoztato"
+    }
+  ]
+}

@@ -2,11 +2,16 @@
  * Content types, modelled like future CMS collections (Payload / Sanity), not like page sections.
  * Items that appear on several pages live once in a collection and are referenced by id.
  *
+ * Pages are not modelled here as fixed shapes: every page is a list of typed blocks (see "Pages &
+ * blocks" at the bottom), so editors can build and rearrange pages in the CMS. Component text that
+ * isn't page content (button labels, empty states, aria labels…) lives in the `UiStrings` dictionary.
+ *
  * Conventions
  * - Dates are ISO calendar dates ("2026-10-03"), times "HH:mm", both in Europe/Budapest.
  * - `Emphasised` strings mark the highlighted part of a heading with *asterisks*.
  * - A `Paragraph` may contain "\n" for line breaks inside it (short-line stanzas).
  * - `href` is either a site route ("/kapcsolat#…", "#anchor") or an absolute URL.
+ * - Content never contains placeholders; only UI strings do ("{count} előadás…"), filled in by code.
  */
 
 export type ImageRef = { src: string; alt: string; width: number; height: number };
@@ -15,7 +20,8 @@ export type Emphasised = string;
 export type Link = { label: string; href: string };
 /** Nav item; `match` lists extra routes on which it counts as the current page. */
 export type NavItem = Link & { match?: string[] };
-export type Fact = { label: string; value: string; href?: string };
+/** A label/value pair. `coursePrice` takes the value from a course's prices ("140 000 Ft-tól") instead of `value`. */
+export type Fact = { label: string; value?: string; href?: string; coursePrice?: string };
 
 // ── Productions & shows ─────────────────────────────────────────────────────
 
@@ -115,7 +121,12 @@ export type Course = {
   /** Route of the course page, or the old site's URL until the page is rebuilt. */
   url: string;
   signupUrl: string;
-  card: { badge: string; text: string; facts: Fact[]; ctaLabel: string };
+  /** e.g. "heti 1×2 óra" */
+  rhythm: string;
+  /** e.g. "20 alkalom (+2)" */
+  length: string;
+  /** Homepage offering card and /kepzesek comparison. */
+  card: { badge: string; text: string; ctaLabel: string };
   starts: CourseStart[];
   /** Shown in the course comparison on /kepzesek, e.g. "felvételi meghallgatással". */
   admission: string;
@@ -163,7 +174,7 @@ export type TeamBuildingProgramme = {
   description: Paragraph[];
 };
 
-// ── Site & pages ────────────────────────────────────────────────────────────
+// ── Site ────────────────────────────────────────────────────────────────────
 
 export type SiteSettings = {
   name: string;
@@ -171,227 +182,273 @@ export type SiteSettings = {
   copyright: string;
   nav: NavItem[];
   headerCta: Link;
-  footerColumns: { title: string; links: Link[] }[];
+  /** `social: true` adds the Facebook/Instagram icons under the column's links. */
+  footerColumns: { title: string; links: Link[]; social?: boolean }[];
   privacy: Link;
   contact: { email: string; address: string; primaryPersonId: string };
   social: { facebook: string; instagram: string };
-  bioLinks: Link[];
-  urls: { signup: string; upcomingShows: string; instructors: string; workshopCamp: string; tickets: string };
-  video: { youtubeId: string; title: string };
+  urls: { upcomingShows: string; repertoire: string };
   map: { embedUrl: string; directionsUrl: string; title: string };
+  /** Settings of the production detail template (/repertoar/[slug]). */
+  productionPage: { ctaBand: string };
 };
 
-export type PageMeta = { title: string; description: string };
-type Section = { eyebrow: string; heading: Emphasised };
-type CtaBand = Section & { text: string; primary: Link; secondary: Link };
-type Hero = { heading: string; lead: string };
-
-export type OfferingCard =
-  | { courseId: string }
-  | { badge: string; title: string; text: string; facts: Fact[]; cta: Link };
-
-export type HomePage = {
-  meta: PageMeta;
-  hero: {
-    keywords: string[];
-    heading: Emphasised;
-    lead: string;
-    primaryCta: Link;
-    secondaryCta: Link;
-    imageLarge: ImageRef;
-    imageSmall: ImageRef;
-    nextShowLabel: string;
-  };
-  questions: Section & { items: { title: string; text: string }[]; closing: Emphasised; cta: Link };
-  offerings: Section & { instructorsLink: Link; cards: OfferingCard[] };
-  mood: Section & { text: string; facebookLink: Link };
-  reviews: Section & { intro: string };
-  shows: Section & {
-    allLink: Link;
-    upcomingLink: Link;
-    ticketLabel: string;
-    registrationLabel: string;
-    aboutLabel: string;
-    infoLabel: string;
-    empty: string;
-  };
-  contact: Section & { cta: Link; personLabel: string };
-  bottomImage: ImageRef;
+/** A reusable call-to-action band (referenced by id from pages). */
+export type CtaBand = {
+  id: string;
+  eyebrow: string;
+  heading: Emphasised;
+  text: string;
+  primary: Link;
+  secondary: Link;
 };
 
-export type AboutPage = {
-  meta: PageMeta;
-  hero: Hero & { primaryCta: Link; secondaryCta: Link; image: ImageRef };
-  goal: Section & { text: string };
-  name: Section & { text: string };
-  mission: Section & { quote: string; paragraphs: Paragraph[]; image: ImageRef };
-  next: Section & { cards: { eyebrow: string; title: string; href: string; text: string }[] };
-  cta: CtaBand;
-};
-
-export type CoursePage = {
-  meta: PageMeta;
-  courseId: string;
-  hero: Hero & { facts: Fact[]; primaryCtaLabel: string; secondaryCta: Link; image: ImageRef };
-  starts: Section & {
-    intro?: string;
-    ctaLabel: string;
-    /** Shown when there are no dated groups and no rolling enrolment. */
-    empty: { text: string; link: Link };
-    /** Rolling enrolment (no dated groups): "[…]" in `text` becomes a link to `inquiry`. */
-    rolling?: { nextIntakeLabel: string; text: string; note?: string; inquiry: Link };
+/**
+ * Component text that is not page content: labels, empty states, aria labels, form texts.
+ * One editable dictionary (a CMS global); "{name}" placeholders are filled in by the components.
+ */
+export type UiStrings = {
+  common: {
+    close: string;
+    readMore: string;
+    more: string;
+    signup: string;
+    mainNav: string;
+    openMenu: string;
+    closeMenu: string;
+    /** "{n}. oldal" */
+    sliderPage: string;
+    slideshow: string;
+    /** "{title} lejátszása" */
+    playVideo: string;
+    facebook: string;
+    instagram: string;
+    toc: string;
+    tocLabel: string;
+    links: string;
   };
-  /** Either numbered points or a single paragraph. */
-  benefits: Section & { items?: string[]; text?: string };
-  curriculum: Section & {
-    items: string[];
-    bonus?: { eyebrow: string; heading: string; text: string };
-    image: ImageRef;
-  };
-  why: { eyebrow: string; heading?: string; quote?: string; quoteSource?: string; text: string }[];
-  /** Either path steps or plain paragraphs (+ optional photo). */
-  after: Section & { steps?: { kicker: string; title: string; text: string }[]; paragraphs?: string[]; image?: ImageRef };
-  reviews: Section & { intro: string };
-  prices: Section & { intro?: string; ctaLabel: string };
-  cta: CtaBand;
-};
-
-export type CoursesOverviewPage = {
-  meta: PageMeta;
-  hero: Hero & { image: ImageRef };
-  compare: Section & {
-    labels: { rhythm: string; length: string; admission: string; price: string; start: string };
-    startRolling: string;
-    startSoon: string;
-    detailsLabel: string;
-    signupLabel: string;
-  };
-  path: CoursePage['after'];
-  cta: CtaBand;
-};
-
-export type OpenWorkshopPage = {
-  meta: PageMeta;
-  hero: Hero & { primaryCta: Link; workshopCta: Link; secondaryCta: Link; image: ImageRef };
-  workshops: {
-    eyebrow: string;
-    dateLabel: string;
-    timeLabel: string;
-    leaderLabel: string;
-    signupLabel: string;
-    moreLabel: string;
-    leaderHeading: string;
-    pastEyebrow: string;
-    pastHeading: string;
-    empty: string;
-    emptyLink: Link;
-  };
-  openWorkshop: Section & { lead: string; facts: Fact[] };
-  forYou: Section & { closing: string; items: string[] };
-  how: Section & { steps: { title: string; text: string }[] };
-  sessions: Section & {
-    intro: string;
-    title: string;
-    bookLabel: string;
-    closedLabel: string;
-    /** "{deadline}" is replaced with the formatted deadline date. */
-    openText: string;
-    closedText: string;
-    empty: string;
-  };
-  cta: CtaBand;
-};
-
-export type RepertoirePage = {
-  meta: PageMeta;
-  hero: Hero & { image: ImageRef };
-  /** Banner pointing to /kozelgo-eloadasok; "{count}" is the number of upcoming shows. */
-  upcoming: { eyebrow: string; text: string; link: Link };
-  detail: ProductionPage;
-  filter: { label: string; all: string; company: string; students: string };
-  groups: Record<ProductionGroup, Section & { intro: string }>;
-  labels: { onStage: string; nextShow: string; more: string };
-  cta: CtaBand;
-};
-
-export type InstructorsPage = { meta: PageMeta; hero: Hero & { image: ImageRef }; moreLabel: string; cta: CtaBand };
-
-export type BioPage = { meta: PageMeta; nextShowLabel: string; contactLabel: string };
-
-export type ProductionPage = {
-  backLink: Link;
-  upcomingLink: Link;
-  labels: {
-    nextShow: string;
+  shows: {
     ticket: string;
     registration: string;
+    about: string;
+    info: string;
+    nextShow: string;
+    onStage: string;
+    /** "{count} előadás a következő hetekben" */
+    upcomingCount: string;
+    empty: string;
+  };
+  production: {
+    backLink: string;
+    upcomingLink: string;
+    about: string;
     highlights: string;
-    cast: string;
     quotes: string;
     video: string;
     gallery: string;
+    /** lightbox label: "{title} — képek" */
+    galleryLabel: string;
     dates: string;
     noDates: string;
-    about: string;
     ctaDates: string;
     ctaBook: string;
     ctaConvinced: string;
     invite: string;
   };
-  cta: CtaBand;
+  repertoire: { filter: string; all: string; company: string; students: string };
+  reviews: { previous: string; next: string; /** "Fotó helye: {name} portréja" */ photoPlaceholder: string };
+  gallery: { previous: string; next: string; previousImage: string; nextImage: string; /** "{alt} — nagyítás" */ zoom: string };
+  course: {
+    rhythm: string;
+    length: string;
+    admission: string;
+    price: string;
+    start: string;
+    startRolling: string;
+    startSoon: string;
+    details: string;
+    nextIntake: string;
+    startsEmpty: string;
+    startsEmptyLink: Link;
+  };
+  workshops: {
+    date: string;
+    time: string;
+    leader: string;
+    leaderHeading: string;
+    empty: string;
+    followUs: string;
+  };
+  sessions: {
+    book: string;
+    closed: string;
+    /** "Foglalás {deadline}, csütörtök éjfélig" */
+    open: string;
+    closedText: string;
+    empty: string;
+  };
+  teamBuilding: { duration: string; venue: string };
+  quoteForm: {
+    title: string;
+    required: string;
+    fields: { company: string; lastName: string; firstName: string; email: string; phone: string; message: string };
+    messagePlaceholder: string;
+    error: string;
+    submit: string;
+    note: string;
+    /** "Csapatépítő árajánlatkérés – {company}" */
+    subject: string;
+    /** Labels inside the generated e-mail. */
+    mail: { company: string; contact: string; email: string; phone: string };
+  };
+  contact: { person: string; directions: string };
 };
 
-export type UpcomingShowsPage = {
-  meta: PageMeta;
-  hero: Hero & { image: ImageRef };
-  labels: { ticket: string; registration: string; about: string; info: string };
-  allTicketsLink: Link;
-  empty: string;
-  repertoireLink: Link;
-  cta: CtaBand;
-};
+// ── Pages & blocks ──────────────────────────────────────────────────────────
 
-export type TeamBuildingPage = {
-  meta: PageMeta;
-  hero: Hero & { primaryCta: Link; secondaryCta: Link; image: ImageRef };
-  programmes: Section & { durationLabel: string; venueLabel: string };
-  tailored: Section & { text: string; goals: string[]; image: ImageRef };
-  form: QuoteFormContent;
-};
+export type PageMeta = { title: string; description: string };
 
-export type QuoteFormContent = {
+/**
+ * A page: its route, the `<title>`/description, which frame it renders in, and its content as an
+ * ordered list of blocks. `site` = header + footer; `minimal` = a narrow standalone column (/bio).
+ */
+export type Page = {
+  /** Route, e.g. "/" or "/rolunk". */
+  path: string;
+  /** Short name, used where other pages link to this one (e.g. the course switcher). */
   title: string;
-  required: string;
-  fields: { company: string; lastName: string; firstName: string; email: string; phone: string; message: string };
-  messagePlaceholder: string;
-  error: string;
-  submit: string;
-  note: string;
-  recipient: string;
-  /** "{company}" is replaced with the company name. */
-  subject: string;
-};
-
-export type ContactPage = {
   meta: PageMeta;
-  hero: Hero & { image: ImageRef };
-  email: { eyebrow: string; heading: string };
-  location: Section & { addressLines: string[]; text: string; directionsLabel: string };
-  social: { heading: string; label: string };
+  layout: 'site' | 'minimal';
+  blocks: Block[];
 };
 
-export type PageContentMap = {
-  home: HomePage;
-  rolunk: AboutPage;
-  kepzesek: CoursesOverviewPage;
-  'kezdo-kurzus': CoursePage;
-  'szakmai-kurzus': CoursePage;
-  'nyitott-alkalmak': OpenWorkshopPage;
-  repertoar: RepertoirePage;
-  oktatok: InstructorsPage;
-  bio: BioPage;
-  'kozelgo-eloadasok': UpcomingShowsPage;
-  csapatepito: TeamBuildingPage;
-  kapcsolat: ContactPage;
+/** Vertical space above/below a block: none, xs (24/48px), sm (40/64), md (48/88), lg (64/120). */
+export type Space = 'none' | 'xs' | 'sm' | 'md' | 'lg';
+
+/** Fields every block has. `anchor` becomes the section's id (for "#idopontok"-style links). */
+type BlockBase = { anchor?: string; spacing?: { top?: Space; bottom?: Space } };
+
+type Section = { eyebrow: string; heading: Emphasised };
+
+/** A text segment; with `href` it is a link. A paragraph is a list of segments. */
+export type Segment = { text: string; href?: string };
+
+export type HeroButton = Link & {
+  variant?: 'primary' | 'outline';
+  /** Only shown when the condition holds, e.g. the "Workshop" button while one is upcoming. */
+  showIf?: 'upcomingWorkshops';
 };
-export type PageKey = keyof PageContentMap;
+
+/** How the hero photo sits next to the text. */
+export type HeroImageLayout = {
+  /** landscape: sm / md / lg; portrait: a tall card */
+  shape?: 'landscape' | 'portrait';
+  size?: 'sm' | 'md' | 'lg';
+  /** degrees, negative = counter-clockwise; phones use 60% of it */
+  tilt?: number;
+  /**
+   * bottom: the photo sits at the bottom of a 440px area (heroes with long text);
+   * top: the photo starts at the top and the area is only as tall as the photo (short heroes);
+   * middle: a taller photo centred on the sun
+   */
+  position?: 'top' | 'middle' | 'bottom';
+};
+
+export type OfferingCardData = { badge: string; title: string; text: string; facts: Fact[]; cta: Link };
+
+export type Block = BlockBase &
+  (
+    // ── heroes
+    | {
+        blockType: 'homeHero';
+        keywords: string[];
+        heading: Emphasised;
+        lead: string;
+        primaryCta: Link;
+        secondaryCta: Link;
+        imageLarge: ImageRef;
+        imageSmall: ImageRef;
+        /** Card with the next show (if there is one). */
+        nextShow?: boolean;
+      }
+    | {
+        blockType: 'pageHero';
+        heading: string;
+        lead: string;
+        image: ImageRef;
+        layout?: HeroImageLayout;
+        /** Segmented switch above the title linking sibling pages (by path); labels default to their titles. */
+        switcher?: { label: string; pages: { path: string; label?: string }[] };
+        facts?: Fact[];
+        buttons?: HeroButton[];
+        /** The repertoire filter chips (Mind / Társulati / Hallgatói). */
+        repertoireFilter?: boolean;
+      }
+    // ── editorial
+    | { blockType: 'ctaBand'; ctaBand: string }
+    | { blockType: 'textSplit'; eyebrow: string; heading: Emphasised; size?: 'md' | 'xl'; text: string; facts?: Fact[] }
+    | { blockType: 'statement'; eyebrow: string; heading: Emphasised; text: string }
+    | { blockType: 'imageText'; eyebrow: string; heading: Emphasised; quote?: string; paragraphs: Paragraph[]; image: ImageRef }
+    | (Section & { blockType: 'linkCards'; cards: { eyebrow: string; title: string; href: string; text: string }[] })
+    | (Section & { blockType: 'questions'; items: { title: string; text: string }[]; closing: Emphasised; cta: Link })
+    | (Section & { blockType: 'benefits'; text?: string; items?: string[] })
+    | (Section & { blockType: 'curriculum'; items: string[]; bonus?: { eyebrow: string; heading: string; text: string }; image: ImageRef })
+    | { blockType: 'featureCards'; cards: { eyebrow: string; heading?: string; quote?: string; quoteSource?: string; text: string }[] }
+    | (Section & {
+        blockType: 'path';
+        /** Numbered steps, or paragraphs (+ optional photo). */
+        steps?: { kicker: string; title: string; text: string }[];
+        paragraphs?: Paragraph[];
+        image?: ImageRef;
+      })
+    | (Section & { blockType: 'checklist'; closing: string; items: string[] })
+    | (Section & { blockType: 'steps'; steps: { title: string; text: string }[] })
+    | (Section & { blockType: 'moodVideo'; text: string; link: Link; video: { youtubeId: string; title: string } })
+    | { blockType: 'fullImage'; image: ImageRef }
+    | { blockType: 'socialBand'; heading: string; link: Link }
+    // ── driven by collections
+    | (Section & { blockType: 'offerings'; instructorsLink: Link; cards: ({ course: string } | OfferingCardData)[] })
+    | (Section & { blockType: 'reviews'; intro: string })
+    | (Section & { blockType: 'instructorRow'; text: string; link: Link })
+    | { blockType: 'instructorGrid' }
+    | {
+        blockType: 'upcomingShows';
+        /** list: one list with a heading; byMonth: grouped under month headings. */
+        variant: 'list' | 'byMonth';
+        eyebrow?: string;
+        heading?: string;
+        /** Shown beside the heading on desktop and with the links below on phones. */
+        headerLink?: Link;
+        links: Link[];
+      }
+    | { blockType: 'nextShowBanner'; link: Link }
+    | { blockType: 'repertoire'; groups: (Section & { group: ProductionGroup; intro: string })[] }
+    | (Section & { blockType: 'contactCard'; cta: Link })
+    | (Section & {
+        blockType: 'courseStarts';
+        course: string;
+        intro?: string;
+        /** Rolling enrolment (no dated groups): how to enquire. */
+        rolling?: { text: Segment[]; note?: string; inquiry: Link };
+      })
+    | (Section & { blockType: 'coursePrices'; course: string; intro?: string })
+    | (Section & { blockType: 'courseCompare'; courses: string[] })
+    | { blockType: 'upcomingWorkshops' }
+    | (Section & { blockType: 'pastWorkshops'; limit: number })
+    | (Section & { blockType: 'openWorkshopSessions'; intro: string; title: string; limit: number })
+    | (Section & { blockType: 'programmes' })
+    | (Section & { blockType: 'quoteRequest'; text: string; goals: string[]; image: ImageRef })
+    | { blockType: 'contactPeople'; email: { eyebrow: string; heading: string } }
+    | (Section & { blockType: 'location'; addressLines: string[]; text: string })
+    | { blockType: 'legalDocument'; document: string }
+    // ── link-in-bio
+    | { blockType: 'bioIntro' }
+    | { blockType: 'bioNextShow' }
+    | { blockType: 'linkList'; links: Link[] }
+    | { blockType: 'socialLinks' }
+    | { blockType: 'contactFooter' }
+  );
+
+export type BlockType = Block['blockType'];
+/** The block with the given `blockType`. */
+export type BlockOf<T extends BlockType> = Extract<Block, { blockType: T }>;

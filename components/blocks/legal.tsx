@@ -1,27 +1,27 @@
-import type { Metadata } from 'next';
 import { Fragment } from 'react';
 
-import { getLegalPage } from '@/lib/data';
+import { getLegalPage, getUi } from '@/lib/data';
 import { parseMarkdown, type Inline } from '@/lib/markdown';
 
-export const metadata: Metadata = {
-  title: 'Adatkezelési tájékoztató — Morpheus Színműhely',
-  description: 'A Morpheus Színjátszó Egyesület Adatvédelmi Szabályzata.',
-};
+import type { BlockProps } from './types';
 
 const Content = ({ content }: { content: Inline[] }) =>
   content.map((c, i) => ('br' in c ? <br key={i} /> : c.bold ? <strong key={i}>{c.text}</strong> : <Fragment key={i}>{c.text}</Fragment>));
 
-/** The privacy policy, rendered verbatim from content/legal/adatkezelesi-tajekoztato.md. */
-export default async function PrivacyPolicyPage() {
-  const blocks = parseMarkdown((await getLegalPage('adatkezelesi-tajekoztato')).markdown);
+/** A legal document (Markdown, verbatim) with its title and a sticky table of contents. */
+export async function LegalDocument({ block, className }: BlockProps<'legalDocument'>) {
+  const [ui, { markdown }] = await Promise.all([getUi(), getLegalPage(block.document)]);
+  const blocks = parseMarkdown(markdown);
   const title = blocks.find((b) => b.type === 'heading' && b.level === 1);
   const toc = blocks.filter((b) => b.type === 'heading' && b.level === 2);
   return (
-    <section className="mx-auto grid max-w-[1440px] gap-10 px-5 pb-16 pt-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,8fr)] lg:gap-16 lg:px-20 lg:pb-[120px] lg:pt-16">
+    <section
+      id={block.anchor}
+      className={`mx-auto grid max-w-[1440px] gap-10 px-5 pb-16 pt-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,8fr)] lg:gap-16 lg:px-20 lg:pb-[120px] lg:pt-16 ${className}`}
+    >
       <h1 className="font-display text-[48px] leading-[0.95] lg:col-span-2 lg:text-[96px]">{title?.type === 'heading' ? title.text : ''}</h1>
-      <nav aria-label="Tartalomjegyzék" className="lg:sticky lg:top-32 lg:self-start">
-        <span className="text-xs font-bold uppercase tracking-[0.18em] text-teal">Tartalom</span>
+      <nav aria-label={ui.common.tocLabel} className="lg:sticky lg:top-32 lg:self-start">
+        <span className="text-xs font-bold uppercase tracking-[0.18em] text-teal">{ui.common.toc}</span>
         <ol className="mt-3 flex flex-col gap-2 border-l-2 border-line pl-4 text-[15px]">
           {toc.map((h) =>
             h.type === 'heading' ? (

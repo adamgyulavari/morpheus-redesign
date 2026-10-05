@@ -6,33 +6,36 @@
  * re-implement the functions below against its API and keep the signatures and return types:
  * nothing outside this file has to change. They are already async for that reason.
  *
- * Caching: pages that show dated items export `revalidate = 86400`, so Next.js re-renders them at
- * most once a day (ISR) and anything dated before "today" drops off without a redeploy. With a CMS,
+ * Caching: the page routes export `revalidate = 86400`, so Next.js re-renders them at most once a
+ * day (ISR) and anything dated before "today" drops off without a redeploy. With a CMS,
  * on-demand revalidation from its publish webhook (`revalidatePath`) can be added on top.
  */
 import 'server-only';
 
 import contactPeopleJson from '@/content/contact-people.json';
 import coursesJson from '@/content/courses.json';
+import ctaBandsJson from '@/content/cta-bands.json';
 import instructorsJson from '@/content/instructors.json';
-import bioPageJson from '@/content/pages/bio.json';
-import instructorsPageJson from '@/content/pages/oktatok.json';
 import openWorkshopSessionsJson from '@/content/open-workshop-sessions.json';
-import homeJson from '@/content/pages/home.json';
-import aboutJson from '@/content/pages/rolunk.json';
-import coursesOverviewJson from '@/content/pages/kepzesek.json';
-import coursePageJson from '@/content/pages/kezdo-kurzus.json';
-import advancedCoursePageJson from '@/content/pages/szakmai-kurzus.json';
-import openWorkshopPageJson from '@/content/pages/nyitott-alkalmak.json';
-import repertoirePageJson from '@/content/pages/repertoar.json';
-import upcomingShowsPageJson from '@/content/pages/kozelgo-eloadasok.json';
+import legalPageJson from '@/content/pages/adatkezelesi-tajekoztato.json';
+import bioPageJson from '@/content/pages/bio.json';
 import teamBuildingPageJson from '@/content/pages/csapatepito.json';
+import homePageJson from '@/content/pages/home.json';
 import contactPageJson from '@/content/pages/kapcsolat.json';
+import coursesPageJson from '@/content/pages/kepzesek.json';
+import beginnerCoursePageJson from '@/content/pages/kezdo-kurzus.json';
+import upcomingShowsPageJson from '@/content/pages/kozelgo-eloadasok.json';
+import openSessionsPageJson from '@/content/pages/nyitott-alkalmak.json';
+import instructorsPageJson from '@/content/pages/oktatok.json';
+import repertoirePageJson from '@/content/pages/repertoar.json';
+import aboutPageJson from '@/content/pages/rolunk.json';
+import advancedCoursePageJson from '@/content/pages/szakmai-kurzus.json';
 import productionsJson from '@/content/productions.json';
 import reviewsJson from '@/content/reviews.json';
 import showsJson from '@/content/shows.json';
 import siteSettingsJson from '@/content/site-settings.json';
 import teamBuildingProgrammesJson from '@/content/team-building-programmes.json';
+import uiJson from '@/content/ui.json';
 import venuesJson from '@/content/venues.json';
 import workshopsJson from '@/content/workshops.json';
 
@@ -41,9 +44,9 @@ import type {
   ContactPerson,
   Course,
   Instructor,
+  CtaBand,
   OpenWorkshopSession,
-  PageContentMap,
-  PageKey,
+  Page,
   Production,
   ProductionGroup,
   Review,
@@ -51,6 +54,7 @@ import type {
   ShowWithRelations,
   SiteSettings,
   TeamBuildingProgramme,
+  UiStrings,
   Venue,
   Workshop,
 } from './types';
@@ -69,20 +73,25 @@ const contactPeople = contactPeopleJson as ContactPerson[];
 const workshops = workshopsJson as Workshop[];
 const siteSettings = siteSettingsJson as SiteSettings;
 
-const pages: PageContentMap = {
-  home: homeJson as PageContentMap['home'],
-  rolunk: aboutJson as PageContentMap['rolunk'],
-  kepzesek: coursesOverviewJson as PageContentMap['kepzesek'],
-  'kezdo-kurzus': coursePageJson as PageContentMap['kezdo-kurzus'],
-  'szakmai-kurzus': advancedCoursePageJson as PageContentMap['szakmai-kurzus'],
-  'nyitott-alkalmak': openWorkshopPageJson as PageContentMap['nyitott-alkalmak'],
-  repertoar: repertoirePageJson as PageContentMap['repertoar'],
-  oktatok: instructorsPageJson as PageContentMap['oktatok'],
-  bio: bioPageJson as PageContentMap['bio'],
-  'kozelgo-eloadasok': upcomingShowsPageJson as PageContentMap['kozelgo-eloadasok'],
-  csapatepito: teamBuildingPageJson as PageContentMap['csapatepito'],
-  kapcsolat: contactPageJson as PageContentMap['kapcsolat'],
-};
+const ctaBands = ctaBandsJson as CtaBand[];
+const ui = uiJson as UiStrings;
+
+// The Pages collection: each page is a route + a list of typed blocks.
+const pages = [
+  homePageJson,
+  aboutPageJson,
+  coursesPageJson,
+  beginnerCoursePageJson,
+  advancedCoursePageJson,
+  openSessionsPageJson,
+  repertoirePageJson,
+  upcomingShowsPageJson,
+  teamBuildingPageJson,
+  contactPageJson,
+  instructorsPageJson,
+  legalPageJson,
+  bioPageJson,
+] as Page[];
 
 function byId<T extends { id: string }>(items: T[], id: string, kind: string): T {
   const item = items.find((i) => i.id === id);
@@ -99,8 +108,22 @@ export async function getSiteSettings(): Promise<SiteSettings> {
   return siteSettings;
 }
 
-export async function getPageContent<K extends PageKey>(page: K): Promise<PageContentMap[K]> {
-  return pages[page];
+/** Component text (labels, empty states, aria labels) — one editable dictionary. */
+export async function getUi(): Promise<UiStrings> {
+  return ui;
+}
+
+export async function getPages(): Promise<Page[]> {
+  return pages;
+}
+
+/** The page at a route ("/", "/rolunk"), or undefined. */
+export async function getPage(path: string): Promise<Page | undefined> {
+  return pages.find((p) => p.path === path);
+}
+
+export async function getCtaBand(id: string): Promise<CtaBand> {
+  return byId(ctaBands, id, 'CTA band');
 }
 
 // ── Productions & shows ─────────────────────────────────────────────────────

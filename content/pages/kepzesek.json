@@ -1,65 +1,65 @@
 {
+  "path": "/kepzesek",
+  "title": "Képzések",
   "meta": {
     "title": "Képzések — Morpheus Színműhely",
     "description": "Színházi képzések felnőtteknek Budapesten: kezdő kurzus és szakmai kurzus egy helyen, összehasonlítva."
   },
-  "hero": {
-    "heading": "Képzések",
-    "lead": "Színházi képzéseinken nem csak a kiállásod fejlődik: részt vehetsz egy igazi színházi alkotófolyamatban, a ráhangoló játékoktól egészen a vizsgaelőadásig.",
-    "image": {
-      "src": "/images/szinhazi-kepzes-4.webp",
-      "alt": "Hallgatók egy próbán",
-      "width": 1000,
-      "height": 1387
-    }
-  },
-  "compare": {
-    "eyebrow": "Képzések és alkalmak",
-    "heading": "Válaszd ki, hogyan kezdenéd.",
-    "labels": {
-      "rhythm": "Ritmus",
-      "length": "Hossz",
-      "admission": "Felvétel",
-      "price": "Díj",
-      "start": "Indulás"
-    },
-    "startRolling": "folyamatos jelentkezés",
-    "startSoon": "hamarosan",
-    "detailsLabel": "Részletek",
-    "signupLabel": "Jelentkezem"
-  },
-  "path": {
-    "eyebrow": "Mi lesz a kezdő kurzus után?",
-    "heading": "Innen indul az utad.",
-    "steps": [
-      {
-        "kicker": "20 + 2 alkalom",
-        "title": "Kezdő kurzus",
-        "text": "Játékok, improvizáció, monológ-munka és beszédtechnika — a végén vizsgaelőadással."
+  "layout": "site",
+  "blocks": [
+    {
+      "blockType": "pageHero",
+      "heading": "Képzések",
+      "lead": "Színházi képzéseinken nem csak a kiállásod fejlődik: részt vehetsz egy igazi színházi alkotófolyamatban, a ráhangoló játékoktól egészen a vizsgaelőadásig.",
+      "image": {
+        "src": "/images/szinhazi-kepzes-4.webp",
+        "alt": "Hallgatók egy próbán",
+        "width": 1000,
+        "height": 1387
       },
-      {
-        "kicker": "Ha kedvet kaptál",
-        "title": "Szakmai csoport",
-        "text": "Részletesebben foglalkozunk improvizációval, különféle színészi munkamódszerekkel, mozgással, hanggal és beszédgyakorlatokkal, majd ezek segítségével különböző jeleneteket építünk fel."
-      },
-      {
-        "kicker": "A legjobbaknak",
-        "title": "Társulat",
-        "text": "A szakmai csoport legjobb tanulói zárt társulatban, 6–9 hónapos felkészülési folyamat után, hivatásos színészekkel együtt játszhatnak több száz fős nagyközönség előtt egy teljes színházi előadást."
+      "layout": {
+        "shape": "portrait",
+        "tilt": 2.5,
+        "position": "middle"
       }
-    ]
-  },
-  "cta": {
-    "eyebrow": "Még nem döntöttél?",
-    "heading": "Próbáld ki előbb *egy szombaton.*",
-    "text": "A Nyitott Műhelyre kötöttség nélkül, alkalmanként csatlakozhatsz.",
-    "primary": {
-      "label": "Nyitott Műhely",
-      "href": "/nyitott-alkalmak"
     },
-    "secondary": {
-      "label": "Kérdésem van",
-      "href": "/kapcsolat"
+    {
+      "blockType": "courseCompare",
+      "spacing": {
+        "top": "md"
+      },
+      "eyebrow": "Képzések és alkalmak",
+      "heading": "Válaszd ki, hogyan kezdenéd.",
+      "courses": [
+        "kezdo",
+        "szakmai"
+      ]
+    },
+    {
+      "blockType": "path",
+      "eyebrow": "Mi lesz a kezdő kurzus után?",
+      "heading": "Innen indul az utad.",
+      "steps": [
+        {
+          "kicker": "20 + 2 alkalom",
+          "title": "Kezdő kurzus",
+          "text": "Játékok, improvizáció, monológ-munka és beszédtechnika — a végén vizsgaelőadással."
+        },
+        {
+          "kicker": "Ha kedvet kaptál",
+          "title": "Szakmai csoport",
+          "text": "Részletesebben foglalkozunk improvizációval, különféle színészi munkamódszerekkel, mozgással, hanggal és beszédgyakorlatokkal, majd ezek segítségével különböző jeleneteket építünk fel."
+        },
+        {
+          "kicker": "A legjobbaknak",
+          "title": "Társulat",
+          "text": "A szakmai csoport legjobb tanulói zárt társulatban, 6–9 hónapos felkészülési folyamat után, hivatásos színészekkel együtt játszhatnak több száz fős nagyközönség előtt egy teljes színházi előadást."
+        }
+      ]
+    },
+    {
+      "blockType": "ctaBand",
+      "ctaBand": "probald-ki-egy-szombaton"
     }
-  }
+  ]
 }

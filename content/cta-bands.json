@@ -1,0 +1,72 @@
+[
+  {
+    "id": "probald-ki-egy-szombaton",
+    "eyebrow": "Még nem döntöttél?",
+    "heading": "Próbáld ki előbb *egy szombaton.*",
+    "text": "A Nyitott Műhelyre kötöttség nélkül, alkalmanként csatlakozhatsz.",
+    "primary": {
+      "label": "Nyitott Műhely",
+      "href": "/nyitott-alkalmak"
+    },
+    "secondary": {
+      "label": "Kérdésem van",
+      "href": "/kapcsolat"
+    }
+  },
+  {
+    "id": "oktatoink",
+    "eyebrow": "Oktatóink",
+    "heading": "Profi színészek *kísérnek végig.*",
+    "text": "Ismerd meg oktatóinkat, akik minden héten azon vannak, hogy hallgatóink felszabadultan és jókedvvel tanuljanak.",
+    "primary": {
+      "label": "Ismerd meg oktatóinkat",
+      "href": "/oktatok"
+    },
+    "secondary": {
+      "label": "Kapcsolat",
+      "href": "/kapcsolat"
+    }
+  },
+  {
+    "id": "kezdo-kurzus",
+    "eyebrow": "Hosszabb távra is kipróbálnád?",
+    "heading": "Jöhet a *kezdő kurzus.*",
+    "text": "20 alkalom, heti két óra — a végén vizsgaelőadással, igazi színházi körülmények között.",
+    "primary": {
+      "label": "Megnézem a kezdő kurzust",
+      "href": "/kezdo-kurzus"
+    },
+    "secondary": {
+      "label": "Kérdésem van",
+      "href": "/kapcsolat"
+    }
+  },
+  {
+    "id": "szinpadra-allnal",
+    "eyebrow": "Színpadra állnál?",
+    "heading": "A következő szereposztásban *te is ott lehetsz.*",
+    "text": "A kezdő kurzus vizsgaelőadással zárul, igazi színházi körülmények között.",
+    "primary": {
+      "label": "Megnézem a kezdő kurzust",
+      "href": "/kezdo-kurzus"
+    },
+    "secondary": {
+      "label": "Közelgő előadások",
+      "href": "/kozelgo-eloadasok"
+    }
+  },
+  {
+    "id": "szinpadra-allnal-repertoar",
+    "eyebrow": "Színpadra állnál?",
+    "heading": "A következő szereposztásban *te is ott lehetsz.*",
+    "text": "A kezdő kurzus vizsgaelőadással zárul, igazi színházi körülmények között.",
+    "primary": {
+      "label": "Megnézem a kezdő kurzust",
+      "href": "/kezdo-kurzus"
+    },
+    "secondary": {
+      "label": "Teljes repertoár",
+      "href": "/repertoar"
+    }
+  }
+]

@@ -1,8 +1,52 @@
 {
+  "path": "/bio",
+  "title": "Linkek",
   "meta": {
     "title": "Morpheus Színműhely — linkek",
     "description": "Közelgő előadások, jegyvásárlás, képzések — a Morpheus Színműhely linkjei."
   },
-  "nextShowLabel": "Következő előadás",
-  "contactLabel": "Kapcsolat"
+  "layout": "minimal",
+  "blocks": [
+    {
+      "blockType": "bioIntro"
+    },
+    {
+      "blockType": "bioNextShow"
+    },
+    {
+      "blockType": "linkList",
+      "links": [
+        {
+          "label": "Közelgő előadások",
+          "href": "/kozelgo-eloadasok"
+        },
+        {
+          "label": "Jegyvásárlás",
+          "href": "https://www.tixa.hu/morpheus-szinmuhely"
+        },
+        {
+          "label": "Képzéseink",
+          "href": "/kepzesek"
+        },
+        {
+          "label": "Nyitott Műhely",
+          "href": "/nyitott-alkalmak"
+        },
+        {
+          "label": "Céges csapatépítő",
+          "href": "/csapatepito"
+        },
+        {
+          "label": "Weboldal",
+          "href": "/"
+        }
+      ]
+    },
+    {
+      "blockType": "socialLinks"
+    },
+    {
+      "blockType": "contactFooter"
+    }
+  ]
 }

@@ -1,34 +1,59 @@
 {
+  "path": "/kapcsolat",
+  "title": "Kapcsolat",
   "meta": {
     "title": "Kapcsolat — Morpheus Színműhely",
     "description": "Morpheus Színműhely — Nagy Fruzsina Lilla: +36 30 463 9129, e-mail: morpheus.szinmuhely@gmail.com. 1027 Budapest, Frankel Leó út 6."
   },
-  "hero": {
-    "heading": "Kapcsolat",
-    "lead": "Kérdésed van a képzésekkel, a Nyitott Műhellyel vagy egy csapatépítővel kapcsolatban? Írj vagy hívj bátran!",
-    "image": {
-      "src": "/images/szakmai-kurzus-1.webp",
-      "alt": "A próbaterem a Frankel Leó úton",
-      "width": 800,
-      "height": 533
+  "layout": "site",
+  "blocks": [
+    {
+      "blockType": "pageHero",
+      "heading": "Kapcsolat",
+      "lead": "Kérdésed van a képzésekkel, a Nyitott Műhellyel vagy egy csapatépítővel kapcsolatban? Írj vagy hívj bátran!",
+      "image": {
+        "src": "/images/szakmai-kurzus-1.webp",
+        "alt": "A próbaterem a Frankel Leó úton",
+        "width": 800,
+        "height": 533
+      },
+      "layout": {
+        "size": "sm",
+        "tilt": -2,
+        "position": "top"
+      }
+    },
+    {
+      "blockType": "contactPeople",
+      "spacing": {
+        "top": "sm"
+      },
+      "email": {
+        "eyebrow": "E-mail",
+        "heading": "Írj nekünk"
+      }
+    },
+    {
+      "blockType": "location",
+      "eyebrow": "Helyszín",
+      "heading": "Az oktatás helyszíne",
+      "addressLines": [
+        "1027 Budapest,",
+        "Frankel Leó út 6."
+      ],
+      "text": "Itt tartjuk a kezdő kurzusokat és a szombati Nyitott Műhelyt is."
+    },
+    {
+      "blockType": "socialBand",
+      "spacing": {
+        "top": "lg",
+        "bottom": "lg"
+      },
+      "heading": "Kövess minket, és nézz be a próbák mögé.",
+      "link": {
+        "label": "Facebook",
+        "href": "https://www.facebook.com/profile.php?id=61553500586744"
+      }
     }
-  },
-  "email": {
-    "eyebrow": "E-mail",
-    "heading": "Írj nekünk"
-  },
-  "location": {
-    "eyebrow": "Helyszín",
-    "heading": "Az oktatás helyszíne",
-    "addressLines": [
-      "1027 Budapest,",
-      "Frankel Leó út 6."
-    ],
-    "text": "Itt tartjuk a kezdő kurzusokat és a szombati Nyitott Műhelyt is.",
-    "directionsLabel": "Útvonaltervezés"
-  },
-  "social": {
-    "heading": "Kövess minket, és nézz be a próbák mögé.",
-    "label": "Facebook"
-  }
+  ]
 }
