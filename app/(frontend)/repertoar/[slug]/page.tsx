@@ -11,21 +11,20 @@ import ShowRow from '@/components/ShowRow';
 import SiteLayout from '@/components/layouts/SiteLayout';
 import { CtaBand, Eyebrow, SectionHeading } from '@/components/ui';
 import VideoEmbed from '@/components/VideoEmbed';
-import { getCtaBand, getProduction, getProductionsWithDetailPage, getShowsForProduction, getSiteSettings, getUi } from '@/lib/data';
+import { getCtaBand, getProduction, getShowsForProduction, getSiteSettings, getUi } from '@/lib/data';
 import { dayOfMonth, monthLong, weekday } from '@/lib/dates';
 import { fill } from '@/lib/format';
 
 /**
  * The production page template (not a block page: its layout follows the production record).
- * Only productions with `detailPage: true` get a page; every one is generated at build time
- * (required for the static export), and any other slug is a 404. Its labels come from the UI
- * dictionary (ui.production), the closing CTA band from site settings.
+ * Only productions with `detailPage: true` get a page; any other slug is a 404. Its labels come
+ * from the UI dictionary (ui.production), the closing CTA band from site settings.
+ * Rendered on first request and cached (ISR), like the block pages.
  */
-export const dynamicParams = false;
 export const revalidate = 86400;
 
-export async function generateStaticParams() {
-  return (await getProductionsWithDetailPage()).map((p) => ({ slug: p.slug }));
+export function generateStaticParams() {
+  return [];
 }
 
 type Props = { params: Promise<{ slug: string }> };

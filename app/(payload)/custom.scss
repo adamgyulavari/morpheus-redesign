@@ -1,0 +1,134 @@
+// Morpheus look for the Payload admin (dark theme only, see `admin.theme` in payload.config.ts).
+// Payload builds its whole palette from the --color-base-* and --color-success-* scales, so
+// re-tinting those turns the neutral greys into the site's teals (night → deep → mist → paper) and
+// the accents into the site teal. Fonts (Figtree / Instrument Serif) come from AdminTheme.tsx.
+// Payload's own styles live in `@layer payload-default`; these unlayered rules win over them.
+
+:root {
+  // neutrals: paper (0) … night (900) … (1000)
+  --color-base-0: rgb(255, 250, 242);
+  --color-base-50: rgb(247, 240, 228);
+  --color-base-100: rgb(239, 229, 214);
+  --color-base-150: rgb(225, 224, 213);
+  --color-base-200: rgb(212, 219, 212);
+  --color-base-250: rgb(198, 214, 211);
+  --color-base-300: rgb(181, 199, 196);
+  --color-base-350: rgb(163, 184, 181);
+  --color-base-400: rgb(146, 168, 165);
+  --color-base-450: rgb(128, 153, 150);
+  --color-base-500: rgb(111, 138, 135);
+  --color-base-550: rgb(94, 123, 122);
+  --color-base-600: rgb(76, 108, 108);
+  --color-base-650: rgb(59, 93, 95);
+  --color-base-700: rgb(42, 78, 82);
+  --color-base-750: rgb(32, 69, 74);
+  --color-base-800: rgb(22, 60, 65);
+  --color-base-850: rgb(16, 49, 54);
+  --color-base-900: rgb(10, 38, 42);
+  --color-base-950: rgb(7, 29, 32);
+  --color-base-1000: rgb(4, 19, 21);
+
+  // accents ("success": published, toggles, info) in the site teal
+  --color-success-50: rgb(217, 237, 234);
+  --color-success-100: rgb(201, 230, 227);
+  --color-success-150: rgb(186, 222, 219);
+  --color-success-200: rgb(171, 215, 211);
+  --color-success-250: rgb(155, 208, 204);
+  --color-success-300: rgb(140, 201, 196);
+  --color-success-350: rgb(117, 189, 184);
+  --color-success-400: rgb(94, 178, 173);
+  --color-success-450: rgb(70, 166, 162);
+  --color-success-500: rgb(47, 154, 150);
+  --color-success-550: rgb(38, 142, 141);
+  --color-success-600: rgb(28, 131, 131);
+  --color-success-650: rgb(19, 119, 122);
+  --color-success-700: rgb(18, 111, 114);
+  --color-success-750: rgb(16, 103, 107);
+  --color-success-800: rgb(15, 95, 99);
+  --color-success-850: rgb(13, 82, 85);
+  --color-success-900: rgb(12, 68, 72);
+  --color-success-950: rgb(10, 54, 58);
+
+  // site colours used directly below
+  --morpheus-gold: #f9c86a;
+  --morpheus-rust: #c24e2c;
+  --morpheus-deep: #0b3a3f;
+  --morpheus-cream: #f7f1e8;
+
+  --style-radius-s: 6px;
+  --style-radius-m: 10px;
+  --style-radius-l: 16px;
+}
+
+// ── buttons: gold pill like the site's primary call to action, rust on hover ──────────────
+.btn {
+  border-radius: 999px;
+}
+.btn--style-primary {
+  --color: var(--morpheus-deep);
+  --bg-color: var(--morpheus-gold);
+  --hover-bg: var(--morpheus-rust);
+  --hover-color: var(--morpheus-cream);
+  font-weight: 700;
+}
+.btn--style-secondary {
+  --btn-border: 1.5px solid var(--theme-elevation-500);
+  --hover-color: var(--morpheus-gold);
+  --hover-btn-border: 1.5px solid var(--morpheus-gold);
+}
+
+// ── type: page titles in the display serif, like the site's headings ─────────────────────
+.render-title,
+.list-header__title,
+.dashboard h2,
+.login h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+// links and focus in gold, the site's accent on dark surfaces
+a:not(.btn):not(.card):hover {
+  color: var(--morpheus-gold);
+}
+:focus-visible {
+  outline-color: var(--morpheus-gold);
+}
+
+// the active item in the sidebar gets the gold marker
+.nav__link-indicator {
+  background-color: var(--morpheus-gold);
+}
+
+// ── branding (payload/components/Graphics.tsx) ───────────────────────────────────────────
+.morpheus-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  color: var(--theme-text);
+
+  svg {
+    width: 96px;
+    height: 96px;
+  }
+  &__name {
+    font-family: var(--font-display);
+    font-size: 40px;
+    line-height: 1;
+  }
+  &__name em {
+    color: var(--morpheus-gold);
+  }
+  &__sub {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--theme-elevation-500);
+  }
+}
+.morpheus-icon {
+  width: 100%;
+  height: 100%;
+}

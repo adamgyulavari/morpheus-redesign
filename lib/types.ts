@@ -186,7 +186,8 @@ export type SiteSettings = {
   footerColumns: { title: string; links: Link[]; social?: boolean }[];
   privacy: Link;
   contact: { email: string; address: string; primaryPersonId: string };
-  social: { facebook: string; instagram: string };
+  /** `tixa`: the organiser page on the ticketing site (all our shows). */
+  social: { facebook: string; instagram: string; tixa?: string };
   urls: { upcomingShows: string; repertoire: string };
   map: { embedUrl: string; directionsUrl: string; title: string };
   /** Settings of the production detail template (/repertoar/[slug]). */
@@ -302,6 +303,8 @@ export type UiStrings = {
     mail: { company: string; contact: string; email: string; phone: string };
   };
   contact: { person: string; directions: string };
+  /** The 404 page. */
+  notFound: { title: string; eyebrow: string; heading: string; text: string; primary: Link; secondary: Link };
 };
 
 // ── Pages & blocks ──────────────────────────────────────────────────────────

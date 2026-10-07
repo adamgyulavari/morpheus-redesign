@@ -1,0 +1,16 @@
+# Local development database: `npm run db:up` (or `docker compose -f docker-compose.dev.yml up -d`).
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: morpheus
+      POSTGRES_PASSWORD: morpheus
+      POSTGRES_DB: morpheus
+    ports:
+      - '127.0.0.1:${POSTGRES_PORT:-5433}:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

@@ -121,5 +121,19 @@
   "contact": {
     "person": "Kapcsolattartó",
     "directions": "Útvonaltervezés"
+  },
+  "notFound": {
+    "title": "Az oldal nem található — Morpheus Színműhely",
+    "eyebrow": "404 · Az oldal nem található",
+    "heading": "Ez a jelenet *nincs a darabban.*",
+    "text": "Az oldal, amit keresel, nem létezik, vagy közben máshová költözött. Kezdd újra a nyitóoldalon, vagy nézd meg, mikor játszunk legközelebb.",
+    "primary": {
+      "label": "Vissza a nyitóoldalra",
+      "href": "/"
+    },
+    "secondary": {
+      "label": "Közelgő előadások",
+      "href": "/kozelgo-eloadasok"
+    }
   }
 }

@@ -1,0 +1,17 @@
+node_modules
+.next
+out
+.git
+.github
+.env
+.env.*
+!.env.example
+media
+archive
+logo-source
+content
+public/images
+public/video
+*.tsbuildinfo
+Dockerfile
+docker-compose*.yml

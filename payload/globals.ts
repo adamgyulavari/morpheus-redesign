@@ -1,0 +1,260 @@
+import type { Field, GlobalConfig } from 'payload';
+
+import { anyone, loggedIn } from './access';
+import { link, links, relationship, text, textarea } from './fields';
+import { globalRevalidation } from './revalidate';
+
+const access = { read: anyone, update: loggedIn };
+
+export const SiteSettings: GlobalConfig = {
+  slug: 'siteSettings',
+  label: 'Beállítások',
+  access,
+  admin: { group: 'Beállítások', description: 'A weboldal egészére érvényes adatok: menü, lábléc, elérhetőségek, közösségi média.' },
+  hooks: globalRevalidation(),
+  fields: [
+    {
+      type: 'tabs',
+      tabs: [
+        {
+          label: 'Általános',
+          fields: [
+            text('name', 'A színműhely neve', { required: true }),
+            text('tagline', 'Jelmondat', { required: true }),
+            text('copyright', 'Copyright sor', { required: true }),
+          ],
+        },
+        {
+          label: 'Menü',
+          fields: [
+            {
+              name: 'nav',
+              label: 'Főmenü',
+              labels: { singular: 'Menüpont', plural: 'Menüpontok' },
+              type: 'array',
+              required: true,
+              fields: [
+                ...link('_', '', { required: true }).fields,
+                {
+                  name: 'match',
+                  label: 'Ezeken az oldalakon is aktív',
+                  type: 'text',
+                  hasMany: true,
+                  admin: { description: 'Pl. a „Képzések” a /kezdo-kurzus oldalon is kiemelt.' },
+                },
+              ],
+            },
+            link('headerCta', 'Gomb a fejlécben', { required: true }),
+          ],
+        },
+        {
+          label: 'Lábléc',
+          fields: [
+            {
+              name: 'footerColumns',
+              label: 'Lábléc oszlopai',
+              labels: { singular: 'Oszlop', plural: 'Oszlopok' },
+              type: 'array',
+              required: true,
+              fields: [
+                text('title', 'Cím', { required: true }),
+                links('links', 'Linkek', { required: true }),
+                { name: 'social', label: 'Közösségi média ikonok', type: 'checkbox' },
+              ],
+            },
+            link('privacy', 'Adatvédelmi link', { required: true }),
+          ],
+        },
+        {
+          label: 'Elérhetőség',
+          fields: [
+            {
+              name: 'contact',
+              label: 'Elérhetőség',
+              type: 'group',
+              fields: [
+                { type: 'row', fields: [text('email', 'E-mail', { required: true }), text('address', 'Cím', { required: true })] },
+                relationship('primaryPerson', 'Elsődleges kapcsolattartó', 'contactPeople', { required: true }),
+              ],
+            },
+            {
+              name: 'social',
+              label: 'Közösségi média',
+              type: 'group',
+              fields: [
+                text('facebook', 'Facebook oldal', { required: true }),
+                text('instagram', 'Instagram oldal', { required: true }),
+                text('tixa', 'Tixa szervezői oldal', { description: 'A jegyértékesítő oldal, ahol az összes előadásunk látszik.' }),
+              ],
+            },
+            {
+              name: 'map',
+              label: 'Térkép',
+              type: 'group',
+              fields: [
+                textarea('embedUrl', 'Beágyazási cím', { required: true, description: 'Google Térkép → Megosztás → Térkép beágyazása → az src="…" cím.' }),
+                text('directionsUrl', 'Útvonaltervezés link', { required: true }),
+                text('title', 'A térkép leírása', { required: true }),
+              ],
+            },
+          ],
+        },
+        {
+          label: 'Hivatkozások',
+          fields: [
+            {
+              name: 'urls',
+              label: 'Oldalak címei',
+              type: 'group',
+              admin: { description: 'Ide mutatnak a „Közelgő előadások” és a „Repertoár” linkek.' },
+              fields: [{ type: 'row', fields: [text('upcomingShows', 'Közelgő előadások', { required: true }), text('repertoire', 'Repertoár', { required: true })] }],
+            },
+            {
+              name: 'productionPage',
+              label: 'Előadás aloldalak',
+              type: 'group',
+              fields: [relationship('ctaBand', 'Felhívás sáv az aloldal alján', 'ctaBands', { required: true })],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+/**
+ * The UI dictionary (UiStrings): button labels, empty states, aria labels, form texts.
+ * Fields are generated from this description: group → [label, { key: label }].
+ */
+type Spec = { [key: string]: string | [string, Spec] };
+
+const UI: Spec = {
+  common: [
+    'Általános',
+    {
+      close: 'Bezárás',
+      readMore: 'Tovább olvasom',
+      more: 'Bővebben',
+      signup: 'Jelentkezem gomb',
+      mainNav: 'Főmenü (felolvasott név)',
+      openMenu: 'Menü megnyitása (felolvasott)',
+      closeMenu: 'Menü bezárása (felolvasott)',
+      sliderPage: 'Csúszka oldala — {n} = szám',
+      slideshow: 'Diavetítés (felolvasott)',
+      playVideo: 'Videó lejátszása — {title} = cím',
+      facebook: 'Facebook ikon (felolvasott)',
+      instagram: 'Instagram ikon (felolvasott)',
+      toc: 'Tartalom (felirat)',
+      tocLabel: 'Tartalomjegyzék (felolvasott)',
+      links: 'Linkek (felolvasott)',
+    },
+  ],
+  shows: [
+    'Előadások',
+    {
+      ticket: 'Jegyek gomb',
+      registration: 'Regisztráció gomb',
+      about: 'Az előadásról',
+      info: 'Tudnivalók',
+      nextShow: 'Következő előadás',
+      onStage: 'Műsoron címke',
+      upcomingCount: 'Előadások száma — {count} = szám',
+      empty: 'Nincs közelgő előadás',
+    },
+  ],
+  production: [
+    'Előadás aloldal',
+    {
+      backLink: 'Vissza a repertoárhoz',
+      upcomingLink: 'Közelgő előadások link',
+      about: 'Az előadásról cím',
+      highlights: 'Pontok címe',
+      quotes: 'Nézői vélemények címe',
+      video: 'Videó címe',
+      gallery: 'Galéria címe',
+      galleryLabel: 'Galéria (felolvasott) — {title} = cím',
+      dates: 'Időpontok címe',
+      noDates: 'Nincs időpont',
+      ctaDates: 'Időpontok gomb',
+      ctaBook: 'Foglalás gomb',
+      ctaConvinced: 'Meggyőztetek gomb',
+      invite: 'Meghívó videó címe',
+    },
+  ],
+  repertoire: ['Repertoár szűrő', { filter: 'Szűrés (felolvasott)', all: 'Mind', company: 'Társulati', students: 'Hallgatói' }],
+  reviews: ['Vélemények', { previous: 'Előző (felolvasott)', next: 'Következő (felolvasott)', photoPlaceholder: 'Fotó helye — {name} = név' }],
+  gallery: [
+    'Galéria',
+    { previous: 'Előző képek', next: 'Következő képek', previousImage: 'Előző kép', nextImage: 'Következő kép', zoom: 'Nagyítás — {alt} = kép leírása' },
+  ],
+  course: [
+    'Kurzusok',
+    {
+      rhythm: 'Ritmus',
+      length: 'Hossz',
+      admission: 'Felvétel',
+      price: 'Díj',
+      start: 'Indulás',
+      startRolling: 'Folyamatos jelentkezés',
+      startSoon: 'Hamarosan',
+      details: 'Részletek',
+      nextIntake: 'Következő indulás',
+      startsEmpty: 'Nincs induló csoport',
+      startsEmptyLink: ['Link üres állapotban', { label: 'Felirat', href: 'Cím (link)' }],
+    },
+  ],
+  workshops: [
+    'Workshopok',
+    { date: 'Időpont', time: 'Napi időbeosztás', leader: 'Kurzusvezető', leaderHeading: 'A kurzusvezetőről', empty: 'Nincs workshop', followUs: 'Kövess minket' },
+  ],
+  sessions: [
+    'Nyitott Műhely',
+    { book: 'Foglalok gomb', closed: 'Lezárult', open: 'Foglalási határidő — {deadline} = dátum', closedText: 'Lezárult foglalás', empty: 'Nincs időpont' },
+  ],
+  teamBuilding: ['Csapatépítő', { duration: 'Időkeret', venue: 'Helyszín' }],
+  quoteForm: [
+    'Árajánlat űrlap',
+    {
+      title: 'Cím',
+      required: 'Kötelező mezők',
+      fields: ['Mezők', { company: 'Cég', lastName: 'Vezetéknév', firstName: 'Keresztnév', email: 'E-mail', phone: 'Telefon', message: 'Üzenet' }],
+      messagePlaceholder: 'Üzenet mintaszöveg',
+      error: 'Hibaüzenet',
+      submit: 'Küldés gomb',
+      note: 'Megjegyzés a gomb alatt',
+      subject: 'E-mail tárgya — {company} = cég',
+      mail: ['Az e-mail címkéi', { company: 'Cég', contact: 'Kapcsolattartó', email: 'E-mail', phone: 'Telefon' }],
+    },
+  ],
+  contact: ['Kapcsolat', { person: 'Kapcsolattartó', directions: 'Útvonaltervezés' }],
+  notFound: [
+    '404 oldal',
+    {
+      title: 'Böngésző címsor',
+      eyebrow: 'Felcím',
+      heading: 'Cím — *csillagok közé* írt rész kiemelve',
+      text: 'Szöveg',
+      primary: ['Fő gomb', { label: 'Felirat', href: 'Cím (link)' }],
+      secondary: ['Másodlagos gomb', { label: 'Felirat', href: 'Cím (link)' }],
+    },
+  ],
+};
+
+const uiFields = (spec: Spec): Field[] =>
+  Object.entries(spec).map(([name, value]): Field =>
+    typeof value === 'string'
+      ? { name, label: value, type: 'text', required: true }
+      : { name, label: value[0], type: 'group', fields: uiFields(value[1]) },
+  );
+
+export const Ui: GlobalConfig = {
+  slug: 'ui',
+  label: 'Felületi szövegek',
+  access,
+  admin: {
+    group: 'Beállítások',
+    description: 'Gombok, üres állapotok, űrlapok és felolvasott feliratok szövegei. A {kapcsos zárójeles} részeket a weboldal tölti ki — ezeket hagyd meg.',
+  },
+  hooks: globalRevalidation(),
+  fields: uiFields(UI),
+};

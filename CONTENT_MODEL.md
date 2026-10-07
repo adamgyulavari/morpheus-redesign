@@ -1,7 +1,7 @@
 # Content model — Morpheus Színműhely
 
 `lib/types.ts` is the authoritative model; this is the overview, written with the planned Payload CMS
-admin in mind. Content is Hungarian and copied verbatim from the original site.
+admin in mind. Content is Hungarian and copied verbatim from the original site; it is edited in Payload CMS.
 
 Three kinds of content:
 
@@ -126,11 +126,24 @@ Every block has `blockType` and may have:
 production record, labels come from `ui.production`, and the closing band comes from
 `siteSettings.productionPage.ctaBand`.
 
-## Mapping to Payload
+## In Payload
 
-The changes below are made in `lib/data.ts` only.
+The model is implemented in `payload/` and stored in Postgres; `lib/data.ts` + `lib/cms-map.ts`
+turn the documents back into the types above, so components are unchanged.
 
-- Pages: a collection with a `blocks` field; one Payload `Block` per variant (slug = `blockType`).
-- References: `ctaBand`, `course`, `courses` and `switcher.pages` become `relationship` fields (to
-  CTA bands, courses and pages). Images become `upload` fields that are resolved to `ImageRef`.
-- Globals: `site-settings` and `ui`.
+- Pages: the `pages` collection with a `blocks` field; one Payload block per variant
+  (`payload/blocks/`, slug = `blockType`, same field names).
+- References are `relationship` fields: `ctaBand` → CTA bands, `course`/`courses`/`coursePrice` →
+  courses, `switcher.pages[].page` → pages, `legalDocument.document` → legal documents,
+  show → production and venue, site settings → primary contact person and production-page CTA band.
+- Images and videos are `upload` fields (Media); the data layer returns an `ImageRef` of the right
+  generated size (poster, card, gallery, band, og).
+- Lists of strings and paragraphs are arrays of `{ text }`; a production's long description and the
+  rolling-enrolment text are rich text (Lexical: plain paragraphs / paragraphs with links), the legal
+  documents full rich text (headings, lists, tables, links).
+- Dates are `date` fields (day only) shown in Budapest time; times are `HH:mm` text fields.
+- Globals: `siteSettings` and `ui`.
+- `importId` (hidden) keeps the original JSON id on seeded records so `npm run seed` can update them.
+
+The JSON/Markdown files in `content/` (the "file" column above) are the original content, used only
+as the import source of `scripts/seed.ts`.
