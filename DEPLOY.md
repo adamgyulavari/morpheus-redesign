@@ -88,8 +88,9 @@ media bucket.
 
 1. Coolify → the application → **Webhooks**: copy the *Deploy Webhook* URL.
 2. Coolify → **Keys & Tokens → API tokens**: create a token with *deploy* permission.
-3. GitHub → repository → **Settings → Secrets and variables → Actions**:
-   `COOLIFY_WEBHOOK` = the URL, `COOLIFY_TOKEN` = the token.
+3. GitHub → repository → **Settings → Environments → production** (create it if missing; the
+   workflow's `deploy` job runs in it): variable `COOLIFY_WEBHOOK` = the URL, secret
+   `COOLIFY_TOKEN` = the token.
 
 From then on every push to `main` deploys (Actions → *Build and deploy*; it can also be run by hand).
 
