@@ -1,30 +1,45 @@
 import type { Access, FieldAccess } from 'payload';
 
 /**
- * Roles: `admin` can do everything, including managing users; `editor` can edit all content but
- * cannot manage users (and cannot delete legal pages). Visitors (no user) only read published content.
+ * Roles (a user can have several):
+ * - `admin`: everything, including users and roles;
+ * - `staff`: edits all content and courses in /admin, cannot manage roles (or delete legal pages);
+ * - `student`: logs in on the public site only (/belepes, /fiokom), never in /admin.
+ * Visitors (no user) read published content.
  */
-export type Role = 'admin' | 'editor';
+export type Role = 'admin' | 'staff' | 'student';
 
-const roleOf = (user: unknown): Role | undefined => (user as { role?: Role } | null)?.role;
+export const ROLES: { label: string; value: Role }[] = [
+  { label: 'Adminisztrátor', value: 'admin' },
+  { label: 'Munkatárs', value: 'staff' },
+  { label: 'Hallgató', value: 'student' },
+];
+
+type MaybeUser = { id?: number | string; roles?: Role[] | null } | null | undefined;
+
+export const hasRole = (user: unknown, role: Role): boolean => Boolean((user as MaybeUser)?.roles?.includes(role));
+/** Plain checks on a user object, for code outside access functions (pages, hooks). */
+export const userIsAdmin = (user: unknown): boolean => hasRole(user, 'admin');
+export const userIsStaffOrAdmin = (user: unknown): boolean => hasRole(user, 'admin') || hasRole(user, 'staff');
 
 export const anyone: Access = () => true;
-export const loggedIn: Access = ({ req: { user } }) => Boolean(user);
-export const isAdmin: Access = ({ req: { user } }) => roleOf(user) === 'admin';
-export const isAdminField: FieldAccess = ({ req: { user } }) => roleOf(user) === 'admin';
+export const isAdmin: Access = ({ req: { user } }) => userIsAdmin(user);
+export const isStaffOrAdmin: Access = ({ req: { user } }) => userIsStaffOrAdmin(user);
 
-/** Admins: everyone; anyone else: only their own account. */
-export const adminOrSelf: Access = ({ req: { user } }) => {
-  if (!user) return false;
-  if (roleOf(user) === 'admin') return true;
-  return { id: { equals: user.id } };
-};
+/** Only the user's own account. */
+export const isSelf: Access = ({ req: { user } }) => (user ? { id: { equals: user.id } } : false);
 
-/** Logged-in users see drafts; visitors only published documents. */
-export const publishedOrLoggedIn: Access = ({ req: { user } }) => (user ? true : { _status: { equals: 'published' } });
+/** Staff and admins: every account; anyone else logged in: only their own. */
+export const isSelfOrStaff: Access = (args) => (userIsStaffOrAdmin(args.req.user) ? true : isSelf(args));
 
-/** Content collections: public read, logged-in (admin or editor) write. */
-export const contentAccess = { read: anyone, create: loggedIn, update: loggedIn, delete: loggedIn };
+export const isAdminField: FieldAccess = ({ req: { user } }) => userIsAdmin(user);
+export const isStaffOrAdminField: FieldAccess = ({ req: { user } }) => userIsStaffOrAdmin(user);
 
-/** Draft-enabled collections: visitors see only published documents. */
-export const draftContentAccess = { ...contentAccess, read: publishedOrLoggedIn };
+/** Staff see drafts; everyone else (visitors and students) only published documents. */
+export const publishedOrStaff: Access = ({ req: { user } }) => (userIsStaffOrAdmin(user) ? true : { _status: { equals: 'published' } });
+
+/** Content collections: public read, staff/admin write. */
+export const contentAccess = { read: anyone, create: isStaffOrAdmin, update: isStaffOrAdmin, delete: isStaffOrAdmin };
+
+/** Draft-enabled collections: only staff see drafts. */
+export const draftContentAccess = { ...contentAccess, read: publishedOrStaff };

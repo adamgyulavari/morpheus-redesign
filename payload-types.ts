@@ -80,8 +80,10 @@ export interface Config {
     instructors: Instructor;
     reviews: Review;
     contactPeople: ContactPerson;
+    courseGroups: CourseGroup;
     media: Media;
     users: User;
+    loginTokens: LoginToken;
     redirects: Redirect;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
@@ -89,7 +91,11 @@ export interface Config {
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
-  collectionsJoins: {};
+  collectionsJoins: {
+    users: {
+      courseGroups: 'courseGroups';
+    };
+  };
   collectionsSelect: {
     pages: PagesSelect<false> | PagesSelect<true>;
     ctaBands: CtaBandsSelect<false> | CtaBandsSelect<true>;
@@ -104,8 +110,10 @@ export interface Config {
     instructors: InstructorsSelect<false> | InstructorsSelect<true>;
     reviews: ReviewsSelect<false> | ReviewsSelect<true>;
     contactPeople: ContactPeopleSelect<false> | ContactPeopleSelect<true>;
+    courseGroups: CourseGroupsSelect<false> | CourseGroupsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
+    loginTokens: LoginTokensSelect<false> | LoginTokensSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
@@ -2053,18 +2061,87 @@ export interface ContactPerson {
   createdAt: string;
 }
 /**
- * Az admin felületre belépő munkatársak. Felhasználót csak adminisztrátor kezelhet.
+ * Az induló és futó csoportok a hallgatóikkal. A hallgatók a fiókjukban (/fiokom) látják a saját csoportjaikat.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "courseGroups".
+ */
+export interface CourseGroup {
+  id: number;
+  /**
+   * Pl. „Kezdő kurzus — 2026 ősz, csütörtök”
+   */
+  title: string;
+  type: 'kezdo' | 'szakmai' | 'egyeb';
+  /**
+   * Nem kötelező: melyik kurzus csoportja.
+   */
+  course?: (number | null) | Course;
+  startDate: string;
+  /**
+   * Eddig a napig számít aktív hallgatónak, aki a csoportban van.
+   */
+  endDate: string;
+  /**
+   * A havi számlázáshoz (később).
+   */
+  monthlyFee?: number | null;
+  /**
+   * A hónap hányadik napján (1–28).
+   */
+  invoiceDay?: number | null;
+  /**
+   * Általános információk a csoportról; a hallgatók a fiókjukban látják.
+   */
+  info?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  instructors?: (number | User)[] | null;
+  students?: (number | User)[] | null;
+  /**
+   * A csoport hallgatóinak száma.
+   */
+  studentCount?: number | null;
+  /**
+   * Automatikus: a befejezés napjáig aktív.
+   */
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Munkatársak (admin felület) és hallgatók (a weboldal fiókja). Szerepkört csak adminisztrátor adhat.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
   id: number;
-  name: string;
+  lastName: string;
+  firstName: string;
+  phone?: string | null;
+  name?: string | null;
   /**
-   * Szerkesztő: minden tartalmat szerkeszthet, felhasználókat nem. Adminisztrátor: mindent.
+   * Hallgató: csak a weboldalon lép be. Munkatárs: tartalmat és csoportokat szerkeszt. Adminisztrátor: mindent, a felhasználókat is.
    */
-  role: 'admin' | 'editor';
+  roles: ('admin' | 'staff' | 'student')[];
+  courseGroups?: {
+    docs?: (number | CourseGroup)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -2073,6 +2150,8 @@ export interface User {
   salt?: string | null;
   hash?: string | null;
   resetPasswordRequestedAt?: string | null;
+  _verified?: boolean | null;
+  _verificationToken?: string | null;
   loginAttempts?: number | null;
   lockUntil?: string | null;
   sessions?:
@@ -2084,6 +2163,19 @@ export interface User {
     | null;
   password?: string | null;
   collection: 'users';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "loginTokens".
+ */
+export interface LoginToken {
+  id: number;
+  user?: (number | null) | User;
+  tokenHash: string;
+  expiresAt: string;
+  usedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * Régi vagy megszűnt címek továbbítása egy mostani oldalra (pl. a korábbi weboldal /rolunk-2/ címe → Rólunk).
@@ -2300,12 +2392,20 @@ export interface PayloadLockedDocument {
         value: number | ContactPerson;
       } | null)
     | ({
+        relationTo: 'courseGroups';
+        value: number | CourseGroup;
+      } | null)
+    | ({
         relationTo: 'media';
         value: number | Media;
       } | null)
     | ({
         relationTo: 'users';
         value: number | User;
+      } | null)
+    | ({
+        relationTo: 'loginTokens';
+        value: number | LoginToken;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -3581,6 +3681,26 @@ export interface ContactPeopleSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "courseGroups_select".
+ */
+export interface CourseGroupsSelect<T extends boolean = true> {
+  title?: T;
+  type?: T;
+  course?: T;
+  startDate?: T;
+  endDate?: T;
+  monthlyFee?: T;
+  invoiceDay?: T;
+  info?: T;
+  instructors?: T;
+  students?: T;
+  studentCount?: T;
+  isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
@@ -3669,8 +3789,12 @@ export interface MediaSelect<T extends boolean = true> {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  lastName?: T;
+  firstName?: T;
+  phone?: T;
   name?: T;
-  role?: T;
+  roles?: T;
+  courseGroups?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -3679,6 +3803,8 @@ export interface UsersSelect<T extends boolean = true> {
   salt?: T;
   hash?: T;
   resetPasswordRequestedAt?: T;
+  _verified?: T;
+  _verificationToken?: T;
   loginAttempts?: T;
   lockUntil?: T;
   sessions?:
@@ -3688,6 +3814,18 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "loginTokens_select".
+ */
+export interface LoginTokensSelect<T extends boolean = true> {
+  user?: T;
+  tokenHash?: T;
+  expiresAt?: T;
+  usedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

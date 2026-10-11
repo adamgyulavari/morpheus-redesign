@@ -3,7 +3,7 @@ import { slugField, type CollectionConfig } from 'payload';
 
 import { slugify } from '@/lib/slugify';
 
-import { contentAccess, draftContentAccess, isAdmin, loggedIn, publishedOrLoggedIn } from '../access';
+import { contentAccess, draftContentAccess, isAdmin, isStaffOrAdmin, publishedOrStaff } from '../access';
 import { date, fullRichText, image, importId, paragraphsRichText, relationship, text, textarea, time } from '../fields';
 import { previewPath } from '../preview';
 import { collectionRevalidation } from '../revalidate';
@@ -228,7 +228,7 @@ export const Shows: CollectionConfig = {
 export const LegalPages: CollectionConfig = {
   slug: 'legalPages',
   labels: { singular: 'Jogi dokumentum', plural: 'Jogi dokumentumok' },
-  access: { read: publishedOrLoggedIn, create: loggedIn, update: loggedIn, delete: isAdmin },
+  access: { read: publishedOrStaff, create: isStaffOrAdmin, update: isStaffOrAdmin, delete: isAdmin },
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'slug', 'effectiveDate', '_status'],

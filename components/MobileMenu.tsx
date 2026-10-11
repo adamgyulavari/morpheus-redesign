@@ -9,6 +9,7 @@ import { useEffect, useId, useState } from 'react';
 
 import type { Link, NavItem } from '@/lib/types';
 
+import AccountLink from './AccountLink';
 import { MenuIcon } from './icons';
 import NavLink from './NavLink';
 import { useUi } from './UiStrings';
@@ -51,6 +52,7 @@ export default function MobileMenu({ nav, cta }: { nav: NavItem[]; cta: Link }) 
             <span className="link-nav">{item.label}</span>
           </NavLink>
         ))}
+        <AccountLink className="flex min-h-[48px] items-center gap-2 border-b border-line text-lg font-medium" onNavigate={() => setOpen(false)} />
         <NavLink href={cta.href} className="btn btn-lg btn-primary mt-5 w-full" onNavigate={() => setOpen(false)}>
           {cta.label}
         </NavLink>

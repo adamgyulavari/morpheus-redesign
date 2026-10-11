@@ -344,7 +344,11 @@ async function seed() {
   const { totalDocs } = await payload.count({ collection: 'users' });
   if (totalDocs === 0) {
     if (process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
-      await payload.create({ collection: 'users', data: { email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD, name: 'Adminisztrátor', role: 'admin' } });
+      await payload.create({
+        collection: 'users',
+        data: { email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD, lastName: 'Adminisztrátor', firstName: 'Morpheus', roles: ['admin'], _verified: true },
+        disableVerificationEmail: true,
+      });
       payload.logger.info(`created admin ${process.env.ADMIN_EMAIL}`);
     } else payload.logger.warn('no users yet: set ADMIN_EMAIL and ADMIN_PASSWORD, or create the first user at /admin');
   }

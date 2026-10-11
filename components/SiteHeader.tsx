@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { getSiteSettings, getUi } from '@/lib/data';
 
+import AccountLink from './AccountLink';
 import Logo from './Logo';
 import MobileMenu from './MobileMenu';
 import NavLink from './NavLink';
@@ -26,6 +27,8 @@ export default async function SiteHeader() {
               </NavLink>
             ))}
           </nav>
+          {/* icon only until the header has room for the label */}
+          <AccountLink className="-ml-4 flex items-center gap-2 whitespace-nowrap text-[17px] font-medium" labelClassName="max-[1399px]:sr-only" />
           <Link href={headerCta.href} className="btn btn-md btn-primary">
             {headerCta.label}
           </Link>

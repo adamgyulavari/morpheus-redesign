@@ -1,10 +1,10 @@
 import type { Field, GlobalConfig } from 'payload';
 
-import { anyone, loggedIn } from './access';
+import { anyone, isStaffOrAdmin } from './access';
 import { link, links, relationship, text, textarea } from './fields';
 import { globalRevalidation } from './revalidate';
 
-const access = { read: anyone, update: loggedIn };
+const access = { read: anyone, update: isStaffOrAdmin };
 
 export const SiteSettings: GlobalConfig = {
   slug: 'siteSettings',

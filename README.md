@@ -57,7 +57,7 @@ app/
                            (the admin's Morpheus look: teal palette, gold buttons, site fonts)
 payload.config.ts        Payload: database, storage, i18n (hu), collections, globals, jobs
 payload/
-  collections/           Pages, CtaBands, LegalPages, Productions, Shows, Venues, Courses, …, Media, Users
+  collections/           Pages, CtaBands, LegalPages, Productions, Shows, Venues, Courses, …, CourseGroups, Media, Users, LoginTokens
   blocks/                one Payload block per page block type (same slugs as lib/types.ts)
   globals.ts             Site settings, UI dictionary
   fields.ts, access.ts   shared field builders (Hungarian labels/hints) and access rules
@@ -152,11 +152,13 @@ All content lives in Payload (Postgres). In the admin (Hungarian, grouped in the
 | Képzések és programok | **Courses** (with start groups, `nextIntake` month for rolling enrolment, prices), **Open workshop sessions**, **Workshops** (upcoming featured, past under "Korábbi workshopok"), **Team-building programmes** | course, workshop and programme blocks |
 | Emberek | **Instructors** (`order`), **Reviews**, **Contact people** | people blocks, /bio |
 | Tartalom | **Media** (images and videos, alt text required, focal point, generated sizes) | everywhere |
-| Beállítások | **Users** (roles `admin` / `editor`), **Site settings** (global), **UI dictionary** (global) | header, footer, every component |
+| Kurzusok | **Course groups** (`courseGroups`: a concrete group with dates, students, instructors, info for students; optional link to its catalogue course) | /fiokom |
+| Beállítások | **Users** (roles `admin` / `staff` / `student`), **Site settings** (global), **UI dictionary** (global) | header, footer, every component |
 
 Pages, productions and legal documents have **drafts and versions**; pages and productions have
-**live preview** (the eye icon in the admin). Visitors only ever see published documents. Editors can
-edit all content; only admins manage users, and only admins can delete legal documents.
+**live preview** (the eye icon in the admin). Visitors and students only ever see published documents.
+Staff can edit all content and course groups; only admins give roles, change other admins' accounts,
+delete users and delete legal documents. All access rules are the helpers in `payload/access.ts`.
 
 Text conventions: `*…*` marks the emphasised (italic, coloured) part of a heading; a line break inside
 a paragraph is kept. Dates are Budapest calendar days.
@@ -172,6 +174,32 @@ Payload documents.
 
 The quote form (`lib/quote-request.ts`) still opens the visitor's mail client; turning it into a
 Server Action that stores/e-mails the request is a later step.
+
+## Accounts
+
+One auth layer: Payload's `users` collection. A user has one or more **roles**: `admin` and `staff`
+work in `/admin`; `student`s log in on the public site only (`/admin` refuses them). Registration
+(public) always makes a student; the first account ever created is an admin.
+
+| route | |
+|---|---|
+| `/belepes` | password login, or "Belépési link küldése" (magic link, `payload/magic-link.ts`) |
+| `/belepes/link` | the magic link: single-use token (only its SHA-256 hash is stored, 15 minutes), starts a normal Payload session (`payload/session.ts`) |
+| `/regisztracio` | sign-up (honeypot, privacy checkbox) → verification e-mail |
+| `/email-megerosites`, `/elfelejtett-jelszo`, `/jelszo-visszaallitas` | verification and password reset (links in the e-mails point here, not to /admin) |
+| `/fiokom` | own data, own course groups ("Kurzusaim"), logout; staff also get a link to /admin |
+
+- The forms are Server Actions (`lib/account-actions.ts`) on the Payload Local API; the session is
+  the admin's HTTP-only `payload-token` cookie. `lib/auth.ts` has `getCurrentUser()` / `requireUser()`.
+- Account pages are dynamic and never cached; user data never goes through `lib/data.ts`. The cached
+  public pages stay the same for everyone: the header's "Belépés" / "Fiókom" is decided in the
+  browser from a hint cookie (`morpheus-signed-in`, no secret in it) set at login.
+- Verification is required; 5 failed logins lock the account for 10 minutes.
+- `payload/students.ts` → `isActiveStudent(payload, user)`: in a course group whose end date hasn't
+  passed (for the later student area / room booking).
+- E-mail: SMTP (`SMTP_*`, `EMAIL_FROM*`, see `.env.example`) with one Hungarian layout
+  (`payload/email.ts`). Without `SMTP_HOST` e-mails are printed to the console; locally, Mailpit
+  from `docker-compose.dev.yml` catches them at http://localhost:8025.
 
 ## SEO and redirects
 

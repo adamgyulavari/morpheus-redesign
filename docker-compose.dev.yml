@@ -1,4 +1,6 @@
-# Local development database: `npm run db:up` (or `docker compose -f docker-compose.dev.yml up -d`).
+# Local development services: `npm run db:up` (or `docker compose -f docker-compose.dev.yml up -d`).
+# Postgres, and Mailpit, which catches the site's e-mails: SMTP on localhost:1025, inbox at
+# http://localhost:8025 (set SMTP_HOST=localhost and SMTP_PORT=1025 in .env).
 services:
   postgres:
     image: postgres:17-alpine
@@ -11,6 +13,13 @@ services:
       - '127.0.0.1:${POSTGRES_PORT:-5433}:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:1025:1025'
+      - '127.0.0.1:8025:8025'
 
 volumes:
   pgdata:
