@@ -8,7 +8,8 @@
  *   (a POST) uses up the token. Mail scanners that open links (e.g. Outlook Safe Links) therefore
  *   can't use it up before the person does.
  * - The code is for a different device (link requested on the laptop, e-mail read on the phone):
- *   typed on /belepes. 5 wrong codes invalidate the code and its link.
+ *   typed on /belepes. 5 wrong codes invalidate the code and its link; after 10 wrong codes in a day
+ *   code login is off for the account until they age out (the e-mailed link still works).
  * - Requesting a link never reveals whether the address has an account: the answer is always the
  *   same. Requests are rate limited per IP and per address (in memory: one server process).
  * - A successful link or code starts a normal Payload session (payload/session.ts).
@@ -25,6 +26,8 @@ const WINDOW_MS = 15 * 60 * 1000;
 const MAX_PER_IP = 10;
 const MAX_PER_EMAIL = 3;
 const MAX_CODE_ATTEMPTS = 5;
+/** Wrong codes per account in 24 hours; then code login is off for it until they age out (links still work). */
+const MAX_CODE_FAILURES_PER_DAY = 10;
 
 export const MAGIC_LINK_SENT = 'Ha ezzel az e-mail-címmel van megerősített fiók, elküldtük rá a belépési linket és kódot. Nézd meg a postafiókod (a spam mappát is).';
 
@@ -78,11 +81,11 @@ export async function requestMagicLink(payload: Payload, rawEmail: string, ip: s
     const locked = user?.lockUntil && new Date(user.lockUntil) > new Date();
     if (!user || user._verified === false || locked) return 'sent';
 
-    // old links of this account stop working when a new one is sent; expired ones go too
-    await payload.delete({
-      collection: 'loginTokens',
-      where: { or: [{ user: { equals: user.id } }, { expiresAt: { less_than: new Date().toISOString() } }] },
-    });
+    // older links of this account stop working when a new one is sent. They are kept for a day
+    // (their wrong-code counts make up the daily cap), then deleted.
+    await db(payload).drizzle.execute(sql`
+      UPDATE login_tokens SET expires_at = now() WHERE user_id = ${user.id} AND used_at IS NULL AND expires_at > now()`);
+    await db(payload).drizzle.execute(sql`DELETE FROM login_tokens WHERE created_at < now() - interval '24 hours'`);
     const token = randomBytes(32).toString('base64url');
     const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
     const tokenHash = hash(token);
@@ -148,6 +151,11 @@ export async function consumeLoginCode(payload: Payload, rawEmail: string, rawCo
     ORDER BY t.created_at DESC LIMIT 1`);
   const row = rows[0];
   if (!row?.code_hash || Number(row.attempts ?? 0) >= MAX_CODE_ATTEMPTS) return null;
+  // someone requesting new codes for an address to keep guessing: 6 digits are few
+  const failures = await db(payload).drizzle.execute<{ n: string | number }>(sql`
+    SELECT coalesce(sum(attempts), 0) AS n FROM login_tokens
+    WHERE user_id = (SELECT user_id FROM login_tokens WHERE id = ${row.id}) AND created_at > now() - interval '24 hours'`);
+  if (Number(failures.rows[0]?.n ?? 0) >= MAX_CODE_FAILURES_PER_DAY) return null;
 
   const expected = Buffer.from(row.code_hash, 'hex');
   const given = Buffer.from(codeHash(payload.secret, row.token_hash, code), 'hex');
