@@ -2172,6 +2172,8 @@ export interface LoginToken {
   id: number;
   user?: (number | null) | User;
   tokenHash: string;
+  codeHash?: string | null;
+  attempts?: number | null;
   expiresAt: string;
   usedAt?: string | null;
   updatedAt: string;
@@ -3822,6 +3824,8 @@ export interface UsersSelect<T extends boolean = true> {
 export interface LoginTokensSelect<T extends boolean = true> {
   user?: T;
   tokenHash?: T;
+  codeHash?: T;
+  attempts?: T;
   expiresAt?: T;
   usedAt?: T;
   updatedAt?: T;

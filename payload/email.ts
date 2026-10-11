@@ -67,17 +67,23 @@ type Layout = {
   /** Plain text; escaped here. */
   paragraphs: string[];
   button?: { label: string; href: string };
+  /** A one-time code shown large under the button, with a line introducing it. */
+  code?: { intro: string; value: string };
   /** Small print under the button, e.g. "the link expires in 15 minutes". */
   footnote?: string;
 };
 
-export function emailLayout({ preheader, heading, paragraphs, button, footnote }: Layout): string {
+export function emailLayout({ preheader, heading, paragraphs, button, code, footnote }: Layout): string {
   const p = (text: string) => `<p style="margin:0 0 16px;font:16px/1.6 ${FONT};color:${C.ink2}">${escapeHtml(text)}</p>`;
   const cta = button
     ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 24px"><tr><td style="border-radius:999px;background:${C.teal}">
         <a href="${escapeHtml(button.href)}" style="display:inline-block;padding:14px 28px;font:600 16px/1 ${FONT};color:${C.cream};text-decoration:none;border-radius:999px">${escapeHtml(button.label)}</a>
       </td></tr></table>
       <p style="margin:0 0 16px;font:13px/1.6 ${FONT};color:${C.muted}">Ha a gomb nem működik, másold be ezt a címet a böngésződbe:<br><a href="${escapeHtml(button.href)}" style="color:${C.teal};word-break:break-all">${escapeHtml(button.href)}</a></p>`
+    : '';
+  const codeBlock = code
+    ? `<p style="margin:8px 0 8px;font:16px/1.6 ${FONT};color:${C.ink2}">${escapeHtml(code.intro)}</p>
+      <p style="margin:0 0 24px;padding:14px 20px;background:${C.cream};border:1px solid ${C.line};border-radius:16px;text-align:center;font:700 32px/1 ${FONT};letter-spacing:8px;color:${C.deep}">${escapeHtml(code.value)}</p>`
     : '';
   const note = footnote ? `<p style="margin:0;font:13px/1.6 ${FONT};color:${C.muted}">${escapeHtml(footnote)}</p>` : '';
   return `<!doctype html>
@@ -97,6 +103,7 @@ export function emailLayout({ preheader, heading, paragraphs, button, footnote }
       <h1 style="margin:0 0 20px;font:400 32px/1.1 Georgia, 'Times New Roman', serif;color:${C.ink}">${escapeHtml(heading)}</h1>
       ${paragraphs.map(p).join('\n      ')}
       ${cta}
+      ${codeBlock}
       ${note}
     </td></tr>
     <tr><td style="padding:20px 8px 0;font:12px/1.6 ${FONT};color:${C.muted}">
@@ -137,12 +144,13 @@ export const resetPassword = {
 
 export const magicLink = {
   subject: 'Belépési link',
-  html: (href: string, user: Recipient) =>
+  html: (href: string, code: string, user: Recipient) =>
     emailLayout({
-      preheader: 'Egy kattintással beléphetsz a Morpheus-fiókodba.',
-      heading: 'Belépés egy kattintással',
+      preheader: `Belépési kódod: ${code}`,
+      heading: 'Belépés jelszó nélkül',
       paragraphs: [hello(user), 'Az alábbi gombbal jelszó nélkül beléphetsz a Morpheus-fiókodba.'],
       button: { label: 'Belépés', href },
-      footnote: 'A link 15 percig érvényes, és csak egyszer használható. Ha nem te kérted, hagyd figyelmen kívül ezt a levelet.',
+      code: { intro: 'Ha a belépést egy másik eszközön kérted, ott ezt a kódot írd be:', value: `${code.slice(0, 3)} ${code.slice(3)}` },
+      footnote: 'A link és a kód 15 percig érvényes, és csak egyszer használható. Ha nem te kérted, hagyd figyelmen kívül ezt a levelet.',
     }),
 };

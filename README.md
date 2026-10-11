@@ -183,8 +183,8 @@ work in `/admin`; `student`s log in on the public site only (`/admin` refuses th
 
 | route | |
 |---|---|
-| `/belepes` | password login, or "Belépési link küldése" (magic link, `payload/magic-link.ts`) |
-| `/belepes/link` | the magic link: single-use token (only its SHA-256 hash is stored, 15 minutes), starts a normal Payload session (`payload/session.ts`) |
+| `/belepes` | password login, or "Belépési link küldése" (`payload/magic-link.ts`): the e-mail has a link and a 6-digit code; after sending, this page asks for the code (for reading the e-mail on another device) |
+| `/belepes/link` | the link's confirm page: opening it doesn't log in, its "Belépés" button (a POST) does — so mail scanners that open links can't use it up. Link and code: 15 minutes, once, only hashes stored, 5 wrong codes invalidate both; a success starts a normal Payload session (`payload/session.ts`) |
 | `/regisztracio` | sign-up (honeypot, privacy checkbox) → verification e-mail |
 | `/email-megerosites`, `/elfelejtett-jelszo`, `/jelszo-visszaallitas` | verification and password reset (links in the e-mails point here, not to /admin) |
 | `/fiokom` | own data, own course groups ("Kurzusaim"), logout; staff also get a link to /admin |

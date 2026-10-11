@@ -10,8 +10,10 @@ import { useFormStatus } from 'react-dom';
 
 import { ArrowRight } from '@/components/icons';
 import {
+  confirmMagicLink,
   forgotPassword,
   login,
+  loginWithCode,
   register,
   resetPassword,
   sendMagicLink,
@@ -52,29 +54,59 @@ const v = (state: FormState, key: string) => state.values?.[key];
 
 // ── /belepes ────────────────────────────────────────────────────────────────
 
-/** Password login, with "send me a login link" as the alternative. */
+/** Password login, with "send me a login link" (+ the code from that e-mail) as the alternative. */
 export function LoginForms({ returnTo, info }: { returnTo: string; info?: string }) {
   const [mode, setMode] = useState<'password' | 'link'>('password');
   const [loginState, loginAction] = useActionState(login, initial);
   const [linkState, linkAction] = useActionState(sendMagicLink, initial);
+  const [codeState, codeAction] = useActionState(loginWithCode, initial);
+
+  if (mode === 'link' && linkState.done) {
+    // the link was sent: it can be opened on any device; here, the code from the same e-mail works
+    return (
+      <form action={codeAction} className="flex flex-col gap-4 lg:gap-5">
+        <h2 className="font-display text-[32px] leading-none lg:text-[40px]">Nézd meg a postafiókod</h2>
+        <Notice state={linkState} />
+        <p className="text-[15px] leading-relaxed text-ink2">
+          Kattints a levélben lévő gombra, vagy ha a levelet másik eszközön olvasod, írd be ide a benne lévő 6 jegyű kódot.
+        </p>
+        <Notice state={codeState.error ? codeState : undefined} />
+        <input type="hidden" name="email" value={linkState.values?.email ?? ''} />
+        <input type="hidden" name="vissza" value={returnTo} />
+        <label className="field-label">
+          Belépési kód
+          <input
+            className="field max-w-[220px] text-center text-2xl font-semibold tracking-[0.3em] placeholder:font-normal placeholder:text-muted/40"
+            name="code"
+            required
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            pattern="[0-9 ]{6,7}"
+            maxLength={7}
+            placeholder="123 456"
+          />
+        </label>
+        <Submit>Belépés a kóddal</Submit>
+        <button type="button" className="link self-start text-[15px] font-semibold" onClick={() => setMode('password')}>
+          Inkább jelszóval lépek be
+        </button>
+      </form>
+    );
+  }
 
   if (mode === 'link') {
     return (
       <form action={linkAction} className="flex flex-col gap-4 lg:gap-5">
         <h2 className="font-display text-[32px] leading-none lg:text-[40px]">Belépési link</h2>
         <p className="text-[15px] leading-relaxed text-ink2">
-          Megadod az e-mail-címed, és küldünk egy linket, amellyel jelszó nélkül beléphetsz. A link 15 percig érvényes.
+          Megadod az e-mail-címed, és küldünk egy linket és egy kódot, amellyel jelszó nélkül beléphetsz. 15 percig érvényesek.
         </p>
         <Notice state={linkState} />
-        {!linkState.done && (
-          <>
-            <label className="field-label">
-              E-mail-cím
-              <input className="field" type="email" name="email" required autoComplete="email" defaultValue={v(linkState, 'email') ?? v(loginState, 'email')} />
-            </label>
-            <Submit>Belépési link küldése</Submit>
-          </>
-        )}
+        <label className="field-label">
+          E-mail-cím
+          <input className="field" type="email" name="email" required autoComplete="email" defaultValue={v(linkState, 'email') ?? v(loginState, 'email')} />
+        </label>
+        <Submit>Belépési link küldése</Submit>
         <button type="button" className="link self-start text-[15px] font-semibold" onClick={() => setMode('password')}>
           Inkább jelszóval lépek be
         </button>
@@ -104,6 +136,22 @@ export function LoginForms({ returnTo, info }: { returnTo: string; info?: string
           Elfelejtettem a jelszavam
         </Link>
       </div>
+    </form>
+  );
+}
+
+/** /belepes/link: whose login it is, and the button that uses up the link. */
+export function MagicLinkConfirm({ token, email }: { token: string; email: string }) {
+  const [state, action] = useActionState(confirmMagicLink, initial);
+  return (
+    <form action={action} className="flex flex-col gap-4 lg:gap-5">
+      <Notice state={state} />
+      <p className="text-[17px] leading-relaxed text-ink2">
+        Belépés ezzel a fiókkal: <strong className="font-semibold text-ink">{email}</strong>
+      </p>
+      <input type="hidden" name="token" value={token} />
+      <Submit>Belépés</Submit>
+      <p className="text-sm text-muted">Nem te kérted? Csukd be ezt az oldalt, és nem történik semmi.</p>
     </form>
   );
 }

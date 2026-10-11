@@ -2,13 +2,18 @@
  * Passwordless login ("Belépési link küldése"). Students log in rarely, so they can ask for a link
  * by e-mail instead of remembering a password.
  *
- * - The token is 32 random bytes; only its SHA-256 hash is stored (loginTokens), for 15 minutes,
- *   and it can be used once.
+ * - The e-mail has a link and a 6-digit code; both are valid for 15 minutes, once (one of them).
+ *   Only hashes are stored (loginTokens): SHA-256 of the 32-byte token, an HMAC of the code.
+ * - Opening the link doesn't log in yet: /belepes/link shows a "Belépés" button, and only that
+ *   (a POST) uses up the token. Mail scanners that open links (e.g. Outlook Safe Links) therefore
+ *   can't use it up before the person does.
+ * - The code is for a different device (link requested on the laptop, e-mail read on the phone):
+ *   typed on /belepes. 5 wrong codes invalidate the code and its link.
  * - Requesting a link never reveals whether the address has an account: the answer is always the
  *   same. Requests are rate limited per IP and per address (in memory: one server process).
- * - /belepes/link checks the token and starts a normal Payload session (payload/session.ts).
+ * - A successful link or code starts a normal Payload session (payload/session.ts).
  */
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
 
 import { sql } from '@payloadcms/db-postgres';
 import type { Endpoint, Payload } from 'payload';
@@ -19,10 +24,16 @@ const TOKEN_TTL_MS = 15 * 60 * 1000;
 const WINDOW_MS = 15 * 60 * 1000;
 const MAX_PER_IP = 10;
 const MAX_PER_EMAIL = 3;
+const MAX_CODE_ATTEMPTS = 5;
 
-export const MAGIC_LINK_SENT = 'Ha ezzel az e-mail-címmel van megerősített fiók, elküldtük rá a belépési linket. Nézd meg a postafiókod (a spam mappát is).';
+export const MAGIC_LINK_SENT = 'Ha ezzel az e-mail-címmel van megerősített fiók, elküldtük rá a belépési linket és kódot. Nézd meg a postafiókod (a spam mappát is).';
 
 const hash = (token: string) => createHash('sha256').update(token).digest('hex');
+/** The code's hash, keyed with the server secret and salted with its token (6 digits are few). */
+const codeHash = (secret: string, tokenHash: string, code: string) => createHmac('sha256', secret).update(`${tokenHash}:${code}`).digest('hex');
+
+type Db = { drizzle: { execute: <T>(q: ReturnType<typeof sql>) => Promise<{ rows: T[] }> } };
+const db = (payload: Payload) => payload.db as unknown as Db;
 
 // ── rate limit ──────────────────────────────────────────────────────────────
 
@@ -73,14 +84,16 @@ export async function requestMagicLink(payload: Payload, rawEmail: string, ip: s
       where: { or: [{ user: { equals: user.id } }, { expiresAt: { less_than: new Date().toISOString() } }] },
     });
     const token = randomBytes(32).toString('base64url');
+    const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
+    const tokenHash = hash(token);
     await payload.create({
       collection: 'loginTokens',
-      data: { user: user.id, tokenHash: hash(token), expiresAt: new Date(Date.now() + TOKEN_TTL_MS).toISOString() },
+      data: { user: user.id, tokenHash, codeHash: codeHash(payload.secret, tokenHash, code), expiresAt: new Date(Date.now() + TOKEN_TTL_MS).toISOString() },
     });
     await payload.sendEmail({
       to: user.email,
       subject: magicLink.subject,
-      html: magicLink.html(siteUrl(`/belepes/link?token=${token}`), user),
+      html: magicLink.html(siteUrl(`/belepes/link?token=${token}`), code, user),
     });
   } catch (err) {
     payload.logger.error({ err, msg: 'magic link: sending failed' });
@@ -88,18 +101,66 @@ export async function requestMagicLink(payload: Payload, rawEmail: string, ip: s
   return 'sent';
 }
 
+const validToken = (token: string) => /^[A-Za-z0-9_-]{43}$/.test(token);
+
+/** Verified and not locked: may log in with a link or code. */
+async function canLogIn(payload: Payload, userId: number): Promise<{ id: number; email: string } | null> {
+  const user = await payload.findByID({ collection: 'users', id: userId, depth: 0, showHiddenFields: true, disableErrors: true });
+  const locked = user?.lockUntil && new Date(user.lockUntil) > new Date();
+  return user && user._verified !== false && !locked ? { id: user.id, email: user.email } : null;
+}
+
+/** Looks at a link without using it up: whose is it, if it is still valid (for the confirm page). */
+export async function peekMagicLink(payload: Payload, token: string): Promise<{ email: string } | null> {
+  if (!validToken(token)) return null;
+  const { rows } = await db(payload).drizzle.execute<{ user_id: number | null }>(sql`
+    SELECT user_id FROM login_tokens
+    WHERE token_hash = ${hash(token)} AND used_at IS NULL AND expires_at > now() AND coalesce(attempts, 0) < ${MAX_CODE_ATTEMPTS}`);
+  const userId = rows[0]?.user_id;
+  return userId ? canLogIn(payload, userId) : null;
+}
+
 /**
- * Uses up a token: in one statement it is marked used, if it exists, is unused and has not expired
+ * Uses up a link: in one statement it is marked used, if it exists, is unused and has not expired
  * (so two clicks can't both log in). Returns the user's id, or null.
  */
 export async function consumeMagicLink(payload: Payload, token: string): Promise<number | null> {
-  if (!/^[A-Za-z0-9_-]{43}$/.test(token)) return null;
-  const db = payload.db as unknown as { drizzle: { execute: (q: ReturnType<typeof sql>) => Promise<{ rows: { user_id: number }[] }> } };
-  const { rows } = await db.drizzle.execute(sql`
+  if (!validToken(token)) return null;
+  const { rows } = await db(payload).drizzle.execute<{ user_id: number | null }>(sql`
     UPDATE login_tokens SET used_at = now()
-    WHERE token_hash = ${hash(token)} AND used_at IS NULL AND expires_at > now()
+    WHERE token_hash = ${hash(token)} AND used_at IS NULL AND expires_at > now() AND coalesce(attempts, 0) < ${MAX_CODE_ATTEMPTS}
     RETURNING user_id`);
-  return rows[0]?.user_id ?? null;
+  const userId = rows[0]?.user_id;
+  return userId && (await canLogIn(payload, userId)) ? userId : null;
+}
+
+/**
+ * Logs in with the code from the e-mail: checks it against the address's latest valid link and
+ * uses that up. A wrong code counts; after 5 the link and code stop working. Returns the user's id.
+ */
+export async function consumeLoginCode(payload: Payload, rawEmail: string, rawCode: string): Promise<number | null> {
+  const email = rawEmail.trim().toLowerCase();
+  const code = rawCode.replace(/\s/g, '');
+  if (!/^\d{6}$/.test(code) || !email) return null;
+  const { rows } = await db(payload).drizzle.execute<{ id: number; token_hash: string; code_hash: string | null; attempts: string | number | null }>(sql`
+    SELECT t.id, t.token_hash, t.code_hash, t.attempts FROM login_tokens t JOIN users u ON u.id = t.user_id
+    WHERE lower(u.email) = ${email} AND t.used_at IS NULL AND t.expires_at > now()
+    ORDER BY t.created_at DESC LIMIT 1`);
+  const row = rows[0];
+  if (!row?.code_hash || Number(row.attempts ?? 0) >= MAX_CODE_ATTEMPTS) return null;
+
+  const expected = Buffer.from(row.code_hash, 'hex');
+  const given = Buffer.from(codeHash(payload.secret, row.token_hash, code), 'hex');
+  if (!timingSafeEqual(expected, given)) {
+    await db(payload).drizzle.execute(sql`UPDATE login_tokens SET attempts = coalesce(attempts, 0) + 1 WHERE id = ${row.id}`);
+    return null;
+  }
+  const used = await db(payload).drizzle.execute<{ user_id: number | null }>(sql`
+    UPDATE login_tokens SET used_at = now()
+    WHERE id = ${row.id} AND used_at IS NULL AND expires_at > now()
+    RETURNING user_id`);
+  const userId = used.rows[0]?.user_id;
+  return userId && (await canLogIn(payload, userId)) ? userId : null;
 }
 
 /** POST /api/users/magic-link { email } */

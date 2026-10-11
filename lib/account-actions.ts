@@ -9,7 +9,8 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createLocalReq, logoutOperation } from 'payload';
 
-import { allow, clientIp, MAGIC_LINK_SENT, requestMagicLink } from '@/payload/magic-link';
+import { allow, clientIp, consumeLoginCode, consumeMagicLink, MAGIC_LINK_SENT, requestMagicLink } from '@/payload/magic-link';
+import { issueSession } from '@/payload/session';
 
 import { clearSessionCookies, getCurrentUser, payloadClient, safeReturnPath, setSessionCookies } from './auth';
 
@@ -55,7 +56,29 @@ export async function sendMagicLink(_: FormState, form: FormData): Promise<FormS
   if (!email) return { error: 'Add meg az e-mail-címed.', values: { email } };
   const result = await requestMagicLink(await payloadClient(), email, clientIp(await headers()));
   if (result === 'rate-limited') return { error: TOO_MANY, values: { email } };
-  return { done: true, message: MAGIC_LINK_SENT };
+  return { done: true, message: MAGIC_LINK_SENT, values: { email } };
+}
+
+/** The "Belépés" button on /belepes/link: only this POST uses up the link (not opening it). */
+export async function confirmMagicLink(_: FormState, form: FormData): Promise<FormState> {
+  const payload = await payloadClient();
+  const userId = await consumeMagicLink(payload, str(form, 'token'));
+  if (!userId) redirect('/belepes?hiba=link');
+  const { token, expires } = await issueSession(payload, userId);
+  await setSessionCookies(token, expires);
+  redirect('/fiokom');
+}
+
+/** The 6-digit code from the login-link e-mail, typed on another device. */
+export async function loginWithCode(_: FormState, form: FormData): Promise<FormState> {
+  const email = str(form, 'email');
+  if (!allow(`code:${clientIp(await headers())}`, 20)) return { error: TOO_MANY, values: { email } };
+  const payload = await payloadClient();
+  const userId = await consumeLoginCode(payload, email, str(form, 'code'));
+  if (!userId) return { error: 'Hibás vagy lejárt kód. Ellenőrizd, vagy kérj új belépési linket.', values: { email } };
+  const { token, expires } = await issueSession(payload, userId);
+  await setSessionCookies(token, expires);
+  redirect(safeReturnPath(form.get('vissza')));
 }
 
 export async function logout(): Promise<void> {
