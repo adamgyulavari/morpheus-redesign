@@ -60,7 +60,7 @@ jobs:
     steps:
       - name: Trigger Coolify deployment
         run: |
-          curl --fail-with-body -sS "$COOLIFY_WEBHOOK" -H "Authorization: Bearer $COOLIFY_TOKEN"
+          curl --fail-with-body -sS -X POST "$COOLIFY_WEBHOOK" -H "Authorization: Bearer $COOLIFY_TOKEN"
         env:
           COOLIFY_WEBHOOK: ${{ vars.COOLIFY_WEBHOOK }}
           COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
