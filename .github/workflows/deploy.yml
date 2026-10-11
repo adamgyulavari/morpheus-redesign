@@ -1,5 +1,5 @@
-# On every push to main: build the Docker image (no database needed), push it to GitHub Container
-# Registry, then ask Coolify to deploy it. The container runs pending migrations when it starts.
+# On every push to main: lint (Biome), build the Docker image (no database needed), push it to GitHub
+# Container Registry, then ask Coolify to deploy it. The container runs pending migrations when it starts.
 #
 # GitHub environment "production": variable COOLIFY_WEBHOOK (the app's deploy webhook URL) and
 # secret COOLIFY_TOKEN (a Coolify API token).
@@ -19,7 +19,19 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Biome lint + format check (biome.json); a failure stops the deploy. Uses the Biome version from
+  # package-lock.json, without installing the project's dependencies.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: biomejs/setup-biome@v2
+
+      - run: biome ci
+
   build:
+    needs: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
