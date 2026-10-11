@@ -119,7 +119,7 @@ export default buildConfig({
   ],
   globals: [SiteSettings, Ui],
   editor: lexicalEditor(),
-  // SMTP when SMTP_HOST is set; otherwise e-mails are written to the console (development)
+  // SMTP when SMTP_HOST is set; otherwise e-mails (with their links) are written to the console
   email: emailAdapter(),
   db: postgresAdapter({
     pool: { connectionString: process.env.DATABASE_URL || '' },

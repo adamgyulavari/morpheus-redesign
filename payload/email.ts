@@ -1,7 +1,7 @@
 /**
  * Transactional e-mail: one SMTP setup (Scaleway TEM in production) and one shared Hungarian
- * layout. Without SMTP_HOST, Payload logs the e-mails to the console instead (local development;
- * docker-compose.dev.yml also has Mailpit, see .env.example).
+ * layout. Without SMTP_HOST, e-mails are written to the console with their links, so the flows
+ * can be followed locally (or use Mailpit from docker-compose.dev.yml, see .env.example).
  *
  * The layout uses tables and inline styles: e-mail clients ignore most CSS. The colours are the
  * site's tokens (app/(frontend)/globals.css).
@@ -11,9 +11,29 @@ import type { EmailAdapter } from 'payload';
 
 import { serverUrl } from '@/lib/env';
 
-export function emailAdapter(): Promise<EmailAdapter> | undefined {
+/**
+ * Development fallback. Payload's own console adapter prints only the subject; this one also
+ * prints the e-mail's links (verification, password reset, login link).
+ */
+const consoleAdapter: EmailAdapter = ({ payload }) => ({
+  name: 'console',
+  defaultFromAddress: process.env.EMAIL_FROM || 'noreply@morpheus-szinmuhely.hu',
+  defaultFromName: process.env.EMAIL_FROM_NAME || 'Morpheus Színműhely',
+  sendEmail: async (message) => {
+    const to = Array.isArray(message.to) ? message.to.join(', ') : String(typeof message.to === 'object' ? message.to?.address : message.to);
+    const home = `${serverUrl()}/`;
+    const links = [...String(message.html ?? '').matchAll(/href="([^"]+)"/g)]
+      .map((m) => m[1]!.replace(/&amp;/g, '&'))
+      .filter((href, i, all) => href !== home && all.indexOf(href) === i);
+    payload.logger.info(
+      [`E-mail (not sent: no SMTP_HOST) to ${to}: ${message.subject}`, ...links.map((l) => `  → ${l}`)].join('\n'),
+    );
+  },
+});
+
+export function emailAdapter(): Promise<EmailAdapter> | EmailAdapter {
   const host = process.env.SMTP_HOST;
-  if (!host) return undefined;
+  if (!host) return consoleAdapter;
   const port = Number(process.env.SMTP_PORT || 587);
   const user = process.env.SMTP_USER;
   return nodemailerAdapter({
