@@ -68,7 +68,6 @@ export default function AdminRoomCalendar({ isAdmin }: { isAdmin: boolean }) {
   const [version, setVersion] = useState(0);
   const [clearSelection, setClearSelection] = useState(0);
   const [unplaced, setUnplaced] = useState<Unplaced>([]);
-  const [override, setOverride] = useState(false);
   const [toast, setToast] = useState<{ text: string; error?: boolean } | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const fillFor = useSearchParams().get('feltoltes');
@@ -92,28 +91,24 @@ export default function AdminRoomCalendar({ isAdmin }: { isAdmin: boolean }) {
     return r.events;
   }, []);
 
-  // unplaced sessions can be dragged onto the calendar (while the list is shown)
-  const listShown = Boolean(opts) && !draft;
+  // unplaced sessions can be dragged onto the calendar (once the panel is rendered)
+  const loaded = Boolean(opts);
   useEffect(() => {
-    if (!listShown || !panel.current) return;
+    if (!loaded || !panel.current) return;
     const d = new Draggable(panel.current, {
       itemSelector: '[data-session-id]',
       eventData: (el) => ({ title: el.dataset.title, duration: el.dataset.duration, create: false }),
     });
     return () => d.destroy();
-  }, [listShown]);
+  }, [loaded]);
 
   if (!opts) return <p className={s.muted}>Betöltés…</p>;
 
   const onEventChange = async (e: ScheduleEvent, change: { start: Date; end: Date }, revert: () => void) => {
-    const r = await updateBooking(e.bookingId, {
-      start: change.start.toISOString(),
-      end: change.end.toISOString(),
-      overridePractice: override,
-    });
+    const r = await updateBooking(e.bookingId, { start: change.start.toISOString(), end: change.end.toISOString() });
     if (!r.ok) {
       revert();
-      return say(r.reason, true);
+      return say(withOverrideHint(r.reason), true);
     }
     if ('locationType' in r && r.locationType === 'unplaced') {
       say('Az új időpontban ütközés van, ezért az alkalom helyszín nélkül maradt.', true);
@@ -133,12 +128,17 @@ export default function AdminRoomCalendar({ isAdmin }: { isAdmin: boolean }) {
       end: end.toISOString(),
       locationType: 'room',
       roomIds: session.roomIds,
-      overridePractice: override,
     });
-    if (!r.ok) return say(r.reason, true);
+    if (!r.ok) return say(withOverrideHint(r.reason), true);
     say('Elhelyezve.');
     reload();
   };
+
+  // a clash with student practice can be overridden from the form (admins)
+  const withOverrideHint = (reason: string) =>
+    isAdmin && reason.startsWith('Ütközik')
+      ? `${reason} Ha diák-gyakorlással ütközik: kattints a bejegyzésre, és mentsd az „Ütköző diákfoglalások felülírása” bejelölésével.`
+      : reason;
 
   return (
     <div className={s.admin}>
@@ -165,62 +165,56 @@ export default function AdminRoomCalendar({ isAdmin }: { isAdmin: boolean }) {
           onEventChange={onEventChange}
           onDrop={onDrop}
         />
-        <div className={`${s.panel} ${EDITOR}`} ref={panel}>
-          {draft ? (
-            <EntryForm
-              key={`${draft.start.getTime()}-${draft.existing?.id ?? draft.placing?.sessionId ?? 'new'}`}
-              draft={draft}
-              opts={opts}
-              override={override}
-              onClose={closeDraft}
-              onDone={(text) => {
-                closeDraft();
-                say(text);
-                reload();
-              }}
-            />
-          ) : (
-            <>
-              <button type="button" className={`${s.btn} ${s.primary}`} onClick={() => setMonth('fill')}>
-                Hónap feltöltése
-              </button>
-              <button type="button" className={s.btn} onClick={() => setMonth('delete')}>
-                Generált alkalmak törlése
-              </button>
-              <p className={s.panelTitle}>Helyszín nélküli alkalmak ({unplaced.length})</p>
-              <p className={s.muted}>A látott időszakban. Húzd a naptárba az elhelyezéshez.</p>
-              {unplaced.map((u) => (
-                <div
-                  key={u.id}
-                  className={s.chip}
-                  data-session-id={u.id}
-                  data-title={u.title}
-                  data-duration={duration(u.start, u.end)}
-                >
-                  <strong>{u.title}</strong>
-                  <div className={s.muted}>
-                    {when(u.start, u.end)} · {SESSION_KINDS[u.kind]}
+        <div className={s.side}>
+          {draft && (
+            <div className={`${s.panel} ${EDITOR}`}>
+              <EntryForm
+                key={`${draft.start.getTime()}-${draft.existing?.id ?? draft.placing?.sessionId ?? 'new'}`}
+                draft={draft}
+                opts={opts}
+                isAdmin={isAdmin}
+                onClose={closeDraft}
+                onDone={(text) => {
+                  closeDraft();
+                  say(text);
+                  reload();
+                }}
+              />
+            </div>
+          )}
+          <div className={s.panel} ref={panel}>
+            <button type="button" className={`${s.btn} ${s.primary}`} onClick={() => setMonth('fill')}>
+              Hónap feltöltése
+            </button>
+            <button type="button" className={s.btn} onClick={() => setMonth('delete')}>
+              Generált alkalmak törlése
+            </button>
+            {toast && (
+              <p className={toast.error ? s.error : s.notice} role="status">
+                {toast.text}
+              </p>
+            )}
+            {unplaced.length > 0 && (
+              <>
+                <p className={s.panelTitle}>Helyszín nélküli alkalmak ({unplaced.length})</p>
+                <p className={s.muted}>A látott időszakban. Húzd a naptárba az elhelyezéshez.</p>
+                {unplaced.map((u) => (
+                  <div
+                    key={u.id}
+                    className={s.chip}
+                    data-session-id={u.id}
+                    data-title={u.title}
+                    data-duration={duration(u.start, u.end)}
+                  >
+                    <strong>{u.title}</strong>
+                    <div className={s.muted}>
+                      {when(u.start, u.end)} · {SESSION_KINDS[u.kind]}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </>
-          )}
-          {isAdmin && (
-            <label className={s.check}>
-              <input type="checkbox" checked={override} onChange={(e) => setOverride(e.target.checked)} />
-              <span>
-                Ütköző diákfoglalások felülírása
-                <span className={s.muted} style={{ display: 'block' }}>
-                  Áthelyezésnél és mentésnél lemondja az útban lévő diák-gyakorlásokat (a diákok e-mailt kapnak).
-                </span>
-              </span>
-            </label>
-          )}
-          {toast && (
-            <p className={toast.error ? s.error : s.notice} role="status">
-              {toast.text}
-            </p>
-          )}
+                ))}
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -239,13 +233,13 @@ export default function AdminRoomCalendar({ isAdmin }: { isAdmin: boolean }) {
 function EntryForm({
   draft,
   opts,
-  override,
+  isAdmin,
   onClose,
   onDone,
 }: {
   draft: Draft;
   opts: Options;
-  override: boolean;
+  isAdmin: boolean;
   onClose: () => void;
   onDone: (text: string) => void;
 }) {
@@ -253,6 +247,7 @@ function EntryForm({
   const [kind, setKind] = useState<SessionKind>('course');
   const [location, setLocation] = useState<LocationType>('room');
   const [confirm, setConfirm] = useState<'cancel' | 'delete' | null>(null);
+  const [override, setOverride] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -453,6 +448,17 @@ function EntryForm({
         </fieldset>
       )}
 
+      {isAdmin && (
+        <label className={s.check}>
+          <input type="checkbox" checked={override} onChange={(e) => setOverride(e.target.checked)} />
+          <span>
+            Ütköző diákfoglalások felülírása
+            <span className={s.muted} style={{ display: 'block' }}>
+              Mentéskor lemondja az útban lévő diák-gyakorlásokat (a diákok e-mailt kapnak).
+            </span>
+          </span>
+        </label>
+      )}
       {error && (
         <p className={s.error} role="alert">
           {error}

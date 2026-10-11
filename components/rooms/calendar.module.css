@@ -175,6 +175,13 @@
     grid-template-columns: minmax(0, 1fr) 280px;
   }
 }
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-self: start;
+  min-width: 0;
+}
 .panel {
   background: var(--cal-panel);
   border: 1px solid var(--cal-line);
