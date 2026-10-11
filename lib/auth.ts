@@ -12,7 +12,7 @@ import { getPayload } from 'payload';
 import { generatePayloadCookie } from 'payload/shared';
 import { cache } from 'react';
 
-import { SIGNED_IN_COOKIE } from '@/payload/session';
+import { SIGNED_IN_COOKIE, signedInValue } from '@/payload/session';
 
 export const payloadClient = () => getPayload({ config });
 
@@ -50,7 +50,7 @@ const toNext = (c: CookieObject) => ({
 });
 
 /** Sets the session cookie (from a Payload token) and the "signed in" hint, in a Server Action. */
-export async function setSessionCookies(token: string, expires: Date) {
+export async function setSessionCookies(token: string, expires: Date, user: unknown) {
   const payload = await payloadClient();
   const session = generatePayloadCookie({
     collectionAuthConfig: payload.collections.users.config.auth,
@@ -60,7 +60,7 @@ export async function setSessionCookies(token: string, expires: Date) {
   }) as CookieObject;
   const jar = await cookies();
   jar.set(toNext(session));
-  jar.set({ name: SIGNED_IN_COOKIE, value: '1', expires, path: '/', sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
+  jar.set({ name: SIGNED_IN_COOKIE, value: signedInValue(user), expires, path: '/', sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
 }
 
 export async function clearSessionCookies() {

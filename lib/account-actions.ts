@@ -30,9 +30,9 @@ export async function login(_: FormState, form: FormData): Promise<FormState> {
 
   const payload = await payloadClient();
   try {
-    const { token, exp } = await payload.login({ collection: 'users', data: { email, password } });
+    const { token, exp, user } = await payload.login({ collection: 'users', data: { email, password } });
     if (!token || !exp) return { error: 'Valami hiba történt. Próbáld újra.', values };
-    await setSessionCookies(token, new Date(exp * 1000));
+    await setSessionCookies(token, new Date(exp * 1000), user);
   } catch (err) {
     // Payload's error classes don't survive bundling for `instanceof`; their HTTP status does:
     // 403 = e-mail not verified, 401 = wrong credentials or a locked account
@@ -64,8 +64,8 @@ export async function confirmMagicLink(_: FormState, form: FormData): Promise<Fo
   const payload = await payloadClient();
   const userId = await consumeMagicLink(payload, str(form, 'token'));
   if (!userId) redirect('/belepes?hiba=link');
-  const { token, expires } = await issueSession(payload, userId);
-  await setSessionCookies(token, expires);
+  const { token, expires, user } = await issueSession(payload, userId);
+  await setSessionCookies(token, expires, user);
   redirect('/fiokom');
 }
 
@@ -76,8 +76,8 @@ export async function loginWithCode(_: FormState, form: FormData): Promise<FormS
   const payload = await payloadClient();
   const userId = await consumeLoginCode(payload, email, str(form, 'code'));
   if (!userId) return { error: 'Hibás vagy lejárt kód. Ellenőrizd, vagy kérj új belépési linket.', values: { email } };
-  const { token, expires } = await issueSession(payload, userId);
-  await setSessionCookies(token, expires);
+  const { token, expires, user } = await issueSession(payload, userId);
+  await setSessionCookies(token, expires, user);
   redirect(safeReturnPath(form.get('vissza')));
 }
 
@@ -152,8 +152,8 @@ export async function resetPassword(_: FormState, form: FormData): Promise<FormS
 
   const payload = await payloadClient();
   try {
-    const { token: session } = await payload.resetPassword({ collection: 'users', data: { token, password }, overrideAccess: true });
-    if (session) await setSessionCookies(session, new Date(Date.now() + payload.collections.users.config.auth.tokenExpiration * 1000));
+    const { token: session, user } = await payload.resetPassword({ collection: 'users', data: { token, password }, overrideAccess: true });
+    if (session) await setSessionCookies(session, new Date(Date.now() + payload.collections.users.config.auth.tokenExpiration * 1000), user);
   } catch {
     return { error: 'A link érvénytelen vagy lejárt. Kérj újat az „Elfelejtett jelszó” oldalon.' };
   }

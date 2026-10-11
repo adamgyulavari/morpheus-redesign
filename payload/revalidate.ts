@@ -1,9 +1,9 @@
 /**
  * On-demand revalidation. Pages are cached (ISR); when an editor saves, the pages that show the
  * changed content are regenerated. Which pages that are is derived from the data: each collection
- * is shown by certain block types, and the pages containing those blocks are revalidated (plus the
- * production detail pages where relevant). Site-wide content (settings, UI texts, media) revalidates
- * everything.
+ * is shown by certain block types (declared on the blocks, payload/blocks), and the pages containing
+ * those blocks are revalidated (plus the production detail pages where relevant). Site-wide content
+ * (settings, UI texts, media) revalidates everything.
  */
 import { revalidatePath } from 'next/cache';
 import type {
@@ -18,27 +18,14 @@ import type {
 
 import type { BlockType } from '@/lib/types';
 
-const SHOW_BLOCKS: BlockType[] = ['homeHero', 'upcomingShows', 'nextShowBanner', 'repertoire', 'bioNextShow'];
+import { blocksShowing } from './blocks';
 
-/** Block types that render each collection. */
-const SHOWN_BY: Record<string, BlockType[]> = {
-  shows: SHOW_BLOCKS,
-  productions: SHOW_BLOCKS,
-  venues: SHOW_BLOCKS,
-  reviews: ['reviews'],
-  instructors: ['instructorRow', 'instructorGrid', 'offerings'],
-  courses: ['offerings', 'courseStarts', 'coursePrices', 'courseCompare', 'pageHero', 'textSplit'],
-  openWorkshopSessions: ['openWorkshopSessions'],
-  workshops: ['upcomingWorkshops', 'pastWorkshops', 'pageHero'],
-  teamBuildingProgrammes: ['programmes'],
-  contactPeople: ['contactCard', 'contactPeople', 'bioIntro', 'contactFooter'],
-  ctaBands: ['ctaBand'],
-  legalPages: ['legalDocument'],
-};
+/** Block types that render each collection: declared on the blocks (payload/blocks). */
+const SHOWN_BY = blocksShowing;
 
 /** Blocks whose content depends on today's date (upcoming shows, course starts, sessions…). */
 const DATE_DEPENDENT: BlockType[] = [
-  ...SHOW_BLOCKS,
+  ...SHOWN_BY.shows!,
   'offerings',
   'courseStarts',
   'courseCompare',

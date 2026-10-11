@@ -319,6 +319,8 @@ export type PageMeta = { title: string; description?: string; image?: ImageRef }
  * ordered list of blocks. `site` = header + footer; `minimal` = a narrow standalone column (/bio).
  */
 export type Page = {
+  /** The Pages document id (for the staff edit overlay). */
+  id: string;
   /** Route, e.g. "/" or "/rolunk". */
   path: string;
   /** Short name, used where other pages link to this one (e.g. the course switcher). */
@@ -332,7 +334,12 @@ export type Page = {
 export type Space = 'none' | 'xs' | 'sm' | 'md' | 'lg';
 
 /** Fields every block has. `anchor` becomes the section's id (for "#idopontok"-style links). */
-type BlockBase = { anchor?: string; spacing?: { top?: Space; bottom?: Space } };
+type BlockBase = {
+  anchor?: string;
+  spacing?: { top?: Space; bottom?: Space };
+  /** The block's row id in the page (for the staff edit overlay's "Blokk szerkesztése"). */
+  blockId?: string;
+};
 
 type Section = { eyebrow: string; heading: Emphasised };
 

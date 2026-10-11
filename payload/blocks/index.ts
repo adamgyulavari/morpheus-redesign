@@ -2,7 +2,7 @@
  * Page blocks: one Payload block per `Block` variant in lib/types.ts (same `blockType` slugs and
  * field names), so lib/data.ts can hand the documents to components/blocks/ almost as they are.
  */
-import type { Block, Field } from 'payload';
+import type { Block, CollectionSlug, Field } from 'payload';
 
 import type { BlockType } from '@/lib/types';
 
@@ -23,7 +23,16 @@ import {
   textarea,
 } from '../fields';
 
-type Def = { slug: BlockType; label: string; description?: string; fields?: Field[] };
+type Def = {
+  slug: BlockType;
+  label: string;
+  description?: string;
+  fields?: Field[];
+  /** Collections the block lists: linked from its help line in the admin, and saving them re-renders the page. */
+  lists?: CollectionSlug[];
+  /** Collections that only affect the block (e.g. a button shown when a workshop is coming up): re-render only. */
+  dependsOn?: CollectionSlug[];
+};
 
 /** Sections of the "add block" drawer. */
 const GROUPS: [string, BlockType[]][] = [
@@ -37,15 +46,18 @@ const GROUPS: [string, BlockType[]][] = [
 // everything else renders records from the collections (shows, courses, people…)
 const groupOf = (slug: BlockType) => GROUPS.find(([, slugs]) => slugs.includes(slug))?.[0] ?? 'Gyűjteményekből (előadások, kurzusok, emberek)';
 
-const block = ({ slug, label, description, fields = [] }: Def): Block => ({
+const block = ({ slug, label, description, fields = [], lists = [], dependsOn = [] }: Def): Block => ({
   slug,
   labels: { singular: label, plural: label },
   // thumbnail in the drawer: a screenshot of the block (npm run block-thumbnails)
   imageURL: `/admin/blocks/${slug}.webp`,
   imageAltText: label,
   admin: { disableBlockName: true, group: groupOf(slug) },
+  custom: { lists, dependsOn },
   fields: [
-    ...(description ? [{ name: 'help', type: 'ui', admin: { components: { Field: '@/payload/components/BlockHelp#BlockHelp' }, custom: { text: description } } } as Field] : []),
+    ...(description || lists.length
+      ? [{ name: 'help', type: 'ui', admin: { components: { Field: '@/payload/components/BlockHelp#BlockHelp' }, custom: { text: description, lists } } } as Field]
+      : []),
     ...fields,
     blockBase,
   ],
@@ -66,6 +78,7 @@ export const blocks: Block[] = [
   // ── heroes
   block({
     slug: 'homeHero',
+    lists: ['shows', 'productions', 'venues'],
     label: 'Nyitóoldali fejléc',
     description: 'A nyitóoldal teteje: kulcsszavak, cím, két gomb, a logó a fotókkal és a következő előadás kártyája.',
     fields: [
@@ -79,6 +92,7 @@ export const blocks: Block[] = [
   }),
   block({
     slug: 'pageHero',
+    dependsOn: ['workshops'],
     label: 'Oldal fejléc',
     description: 'Az aloldalak teteje: cím, bevezető, fotó, és ha kell: tények, gombok, oldalváltó.',
     fields: [
@@ -259,6 +273,7 @@ export const blocks: Block[] = [
   // ── driven by collections
   block({
     slug: 'offerings',
+    lists: ['instructors'],
     label: 'Kínálat kártyák',
     description: 'Kártyák a képzésekről. Kurzust választva a kártya a kurzus adataiból készül; különben töltsd ki a mezőket.',
     fields: [
@@ -275,16 +290,18 @@ export const blocks: Block[] = [
       ]),
     ],
   }),
-  block({ slug: 'reviews', label: 'Vélemények', description: 'Az összes vélemény csúszkában.', fields: [...section(), textarea('intro', 'Bevezető', { required: true })] }),
+  block({ slug: 'reviews', lists: ['reviews'], label: 'Vélemények', description: 'Az összes vélemény csúszkában.', fields: [...section(), textarea('intro', 'Bevezető', { required: true })] }),
   block({
     slug: 'instructorRow',
+    lists: ['instructors'],
     label: 'Oktatók (sor)',
     description: 'Az oktatók fotói egy sorban, szöveggel és linkkel.',
     fields: [...section(), textarea('text', 'Szöveg', { required: true }), link('link', 'Link', { required: true })],
   }),
-  block({ slug: 'instructorGrid', label: 'Oktatók (rács)', description: 'Az összes oktató bemutatkozással.' }),
+  block({ slug: 'instructorGrid', lists: ['instructors'], label: 'Oktatók (rács)', description: 'Az összes oktató bemutatkozással.' }),
   block({
     slug: 'upcomingShows',
+    lists: ['shows', 'productions', 'venues'],
     label: 'Közelgő előadások',
     description: 'A mai naptól számított előadások, az „Időpontok” közül.',
     fields: [
@@ -304,9 +321,10 @@ export const blocks: Block[] = [
       links('links', 'Linkek alul'),
     ],
   }),
-  block({ slug: 'nextShowBanner', label: 'Következő előadás sáv', description: 'Csak akkor látszik, ha van közelgő előadás.', fields: [link('link', 'Link', { required: true })] }),
+  block({ slug: 'nextShowBanner', lists: ['shows', 'productions', 'venues'], label: 'Következő előadás sáv', description: 'Csak akkor látszik, ha van közelgő előadás.', fields: [link('link', 'Link', { required: true })] }),
   block({
     slug: 'repertoire',
+    lists: ['shows', 'productions', 'venues'],
     label: 'Repertoár',
     description: 'A darabok csoportonként (társulati / hallgatói).',
     fields: [
@@ -326,7 +344,7 @@ export const blocks: Block[] = [
       ]),
     ],
   }),
-  block({ slug: 'contactCard', label: 'Kapcsolat kártya', description: 'Az elsődleges kapcsolattartó (Beállítások) kártyája.', fields: [...section(), link('cta', 'Gomb', { required: true })] }),
+  block({ slug: 'contactCard', lists: ['contactPeople'], label: 'Kapcsolat kártya', description: 'Az elsődleges kapcsolattartó (Beállítások) kártyája.', fields: [...section(), link('cta', 'Gomb', { required: true })] }),
   block({
     slug: 'courseStarts',
     label: 'Induló csoportok',
@@ -350,14 +368,16 @@ export const blocks: Block[] = [
   }),
   block({ slug: 'coursePrices', label: 'Kurzus árak', fields: [relationship('course', 'Kurzus', 'courses', { required: true }), ...section(), textarea('intro', 'Bevezető')] }),
   block({ slug: 'courseCompare', label: 'Kurzusok összehasonlítása', fields: [...section(), relationship('courses', 'Kurzusok', 'courses', { required: true, hasMany: true })] }),
-  block({ slug: 'upcomingWorkshops', label: 'Közelgő workshopok', description: 'A közelgő workshopok kiemelve; ha nincs ilyen, nem jelenik meg semmi.' }),
+  block({ slug: 'upcomingWorkshops', lists: ['workshops'], label: 'Közelgő workshopok', description: 'A közelgő workshopok kiemelve; ha nincs ilyen, nem jelenik meg semmi.' }),
   block({
     slug: 'pastWorkshops',
+    lists: ['workshops'],
     label: 'Korábbi workshopok',
     fields: [...section(), { name: 'limit', label: 'Legfeljebb ennyi', type: 'number', required: true, defaultValue: 3 }],
   }),
   block({
     slug: 'openWorkshopSessions',
+    lists: ['openWorkshopSessions'],
     label: 'Nyitott Műhely időpontok',
     fields: [
       ...section(),
@@ -366,7 +386,7 @@ export const blocks: Block[] = [
       { name: 'limit', label: 'Legfeljebb ennyi időpont', type: 'number', required: true, defaultValue: 4 },
     ],
   }),
-  block({ slug: 'programmes', label: 'Csapatépítő programok', fields: section() }),
+  block({ slug: 'programmes', lists: ['teamBuildingProgrammes'], label: 'Csapatépítő programok', fields: section() }),
   block({
     slug: 'quoteRequest',
     label: 'Árajánlatkérés',
@@ -375,6 +395,7 @@ export const blocks: Block[] = [
   }),
   block({
     slug: 'contactPeople',
+    lists: ['contactPeople'],
     label: 'Kapcsolattartók',
     fields: [{ name: 'email', label: 'E-mail szakasz', type: 'group', fields: [eyebrow(), text('heading', 'Cím', { required: true })] }],
   }),
@@ -386,9 +407,31 @@ export const blocks: Block[] = [
   block({ slug: 'legalDocument', label: 'Jogi dokumentum', fields: [relationship('document', 'Dokumentum', 'legalPages', { required: true })] }),
 
   // ── link-in-bio
-  block({ slug: 'bioIntro', label: 'Bio: bemutatkozás', description: 'Logó, név és jelmondat a Beállításokból.' }),
-  block({ slug: 'bioNextShow', label: 'Bio: következő előadás' }),
+  block({ slug: 'bioIntro', lists: ['contactPeople'], label: 'Bio: bemutatkozás', description: 'Logó, név és jelmondat a Beállításokból.' }),
+  block({ slug: 'bioNextShow', lists: ['shows', 'productions', 'venues'], label: 'Bio: következő előadás' }),
   block({ slug: 'linkList', label: 'Bio: linkek', fields: [links('links', 'Linkek', { required: true })] }),
   block({ slug: 'socialLinks', label: 'Bio: közösségi média' }),
-  block({ slug: 'contactFooter', label: 'Bio: kapcsolat lábléc' }),
+  block({ slug: 'contactFooter', lists: ['contactPeople'], label: 'Bio: kapcsolat lábléc' }),
 ];
+
+type FieldWithChildren = Field & { fields?: Field[]; tabs?: { fields: Field[] }[]; relationTo?: string | string[] };
+
+/** The collections a block's relationship fields point to (a picked course, CTA band…). */
+function relationTargets(fields: Field[], out = new Set<string>()): Set<string> {
+  for (const f of fields as FieldWithChildren[]) {
+    if (f.type === 'relationship') [f.relationTo].flat().forEach((slug) => slug && out.add(slug));
+    if (f.fields) relationTargets(f.fields, out);
+    f.tabs?.forEach((tab) => relationTargets(tab.fields, out));
+  }
+  return out;
+}
+
+/**
+ * Which block types show each collection, for re-rendering pages when it is saved
+ * (payload/revalidate.ts): the blocks' `lists` and `dependsOn`, plus their relationship fields.
+ */
+export const blocksShowing: Record<string, BlockType[]> = {};
+for (const b of blocks) {
+  const { lists = [], dependsOn = [] } = (b.custom ?? {}) as { lists?: string[]; dependsOn?: string[] };
+  for (const slug of new Set([...lists, ...dependsOn, ...relationTargets(b.fields)])) (blocksShowing[slug] ??= []).push(b.slug as BlockType);
+}

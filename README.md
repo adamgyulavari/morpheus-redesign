@@ -201,6 +201,22 @@ work in `/admin`; `student`s log in on the public site only (`/admin` refuses th
   (`payload/email.ts`). Without `SMTP_HOST` e-mails are printed to the console; locally, Mailpit
   from `docker-compose.dev.yml` catches them at http://localhost:8025.
 
+## Edit buttons for staff
+
+Logged-in staff get a **Szerkesztés** button (bottom left) on the live site: this page (or
+production) in the admin, the site settings and the UI texts. **Blokkok mutatása** outlines the
+block under the pointer with a **Blokk szerkesztése** button, which opens the page in the admin at
+that block. Links open the admin in a new tab.
+
+- The cached pages stay the same for everyone: they carry hidden markers (`data-cms-doc`, and
+  `data-cms-block` before each block, `components/blocks/index.tsx`), and
+  `components/edit/EditMode.tsx` decides in the browser, from the hint cookie
+  (`morpheus-signed-in=staff`), whether to load the overlay (`EditOverlay.tsx`, a separate chunk
+  visitors never download). The admin checks the real permissions. Not shown in live preview.
+- `payload/components/BlockFocus.tsx` (a UI field on Pages) handles `?blokk=<block id>`. It relies on
+  Payload's DOM ids for block rows (`blocks-row-<n>`): check it after a Payload upgrade.
+- The role is read at login: someone who becomes staff sees the buttons after logging in again.
+
 ## SEO and redirects
 
 - **Meta data**: pages and productions have an **SEO** tab (Payload SEO plugin): browser title,

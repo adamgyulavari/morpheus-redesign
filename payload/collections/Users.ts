@@ -70,8 +70,8 @@ export const Users: CollectionConfig = {
       },
     ],
     // a cookie that only tells the cached public pages "show Fiókom" (see payload/session.ts)
-    afterLogin: [({ req }) => setSignedInHint(req, new Date(Date.now() + TOKEN_EXPIRATION * 1000))],
-    afterRefresh: [({ req, exp }) => setSignedInHint(req, new Date(exp * 1000))],
+    afterLogin: [({ req, user }) => setSignedInHint(req, new Date(Date.now() + TOKEN_EXPIRATION * 1000), user)],
+    afterRefresh: [({ req, exp }) => setSignedInHint(req, new Date(exp * 1000), req.user)],
     afterLogout: [({ req }) => setSignedInHint(req, new Date(0))],
   },
   fields: [

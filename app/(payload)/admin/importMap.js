@@ -1,3 +1,4 @@
+import { BlockFocus as BlockFocus_a863bad74a8f7f4b5921b1522cd9a608 } from '@/payload/components/BlockFocus'
 import { BlockHelp as BlockHelp_e5a144e044fde489657218832730cc50 } from '@/payload/components/BlockHelp'
 import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { RscEntryLexicalField as RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
@@ -26,6 +27,7 @@ import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc056
 
 /** @type import('payload').ImportMap */
 export const importMap = {
+  "@/payload/components/BlockFocus#BlockFocus": BlockFocus_a863bad74a8f7f4b5921b1522cd9a608,
   "@/payload/components/BlockHelp#BlockHelp": BlockHelp_e5a144e044fde489657218832730cc50,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalCell": RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalField": RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e,

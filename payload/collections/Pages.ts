@@ -47,6 +47,8 @@ export const Pages: CollectionConfig = {
                 },
               ],
             },
+            // opened from the live site's edit overlay with ?blokk=<id>: scrolls to that block
+            { name: 'blockFocus', type: 'ui', admin: { components: { Field: '@/payload/components/BlockFocus#BlockFocus' } } },
             {
               name: 'blocks',
               label: 'Blokkok',

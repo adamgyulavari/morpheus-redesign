@@ -3,7 +3,7 @@
  * by mapping its blocks through here, so adding a block type = a type in lib/types.ts + a component
  * registered below (+ the matching block config in the CMS).
  */
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 
 import type { Block, BlockType, Page, Space } from '@/lib/types';
 
@@ -91,9 +91,17 @@ function spacingClass(block: Block, layout: Page['layout']): string {
   return [TOP[top], BOTTOM[bottom], block.anchor ? 'scroll-mt-36' : ''].filter(Boolean).join(' ');
 }
 
+/** Hidden, before each block: tells the staff edit overlay (components/edit) where the block is edited. */
+const EditMarker = ({ block }: { block: Block }) => <span hidden data-cms-block={block.blockId} />;
+
 export default function RenderBlocks({ blocks, layout, ctx }: { blocks: Block[]; layout: Page['layout']; ctx: BlockContext }) {
   return blocks.map((block, i) => {
     const Component = registry[block.blockType] as (props: BlockProps<BlockType>) => ReactNode | Promise<ReactNode>;
-    return <Component key={`${block.blockType}-${i}`} block={block} className={spacingClass(block, layout)} ctx={ctx} />;
+    return (
+      <Fragment key={`${block.blockType}-${i}`}>
+        <EditMarker block={block} />
+        <Component block={block} className={spacingClass(block, layout)} ctx={ctx} />
+      </Fragment>
+    );
   });
 }

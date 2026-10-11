@@ -328,6 +328,7 @@ type RawBlock = NonNullable<P.Page['blocks']>[number];
 
 export function block(raw: RawBlock): Block {
   const b = (clean(raw, '_', raw.blockType) ?? {}) as Record<string, unknown> & { blockType: string };
+  b.blockId = opt(raw.id);
   const empty = (k: string) => Array.isArray(b[k]) && (b[k] as unknown[]).length === 0 && delete b[k];
   switch (b.blockType) {
     case 'pageHero': {
@@ -366,6 +367,7 @@ export function block(raw: RawBlock): Block {
 }
 
 export const page = (p: P.Page): Page => ({
+  id: String(p.id),
   path: p.path,
   title: p.title,
   // empty title: the route falls back to "<title> — <site name>"

@@ -47,8 +47,13 @@ export default async function ContentPage({ params }: Props) {
   const page = await getPage(path);
   if (!page) return redirectOrNotFound(path);
 
-  let content = <RenderBlocks blocks={page.blocks} layout={page.layout} ctx={{ path }} />;
-  if (needsRepertoireFilter(page)) content = <RepertoireFilter>{content}</RepertoireFilter>;
-
-  return page.layout === 'minimal' ? <MinimalLayout>{content}</MinimalLayout> : <SiteLayout>{content}</SiteLayout>;
+  const Layout = page.layout === 'minimal' ? MinimalLayout : SiteLayout;
+  const blocks = <RenderBlocks blocks={page.blocks} layout={page.layout} ctx={{ path }} />;
+  return (
+    <Layout>
+      {/* which document this is, for the staff edit overlay (components/edit) */}
+      <span hidden data-cms-doc={`pages/${page.id}`} />
+      {needsRepertoireFilter(page) ? <RepertoireFilter>{blocks}</RepertoireFilter> : blocks}
+    </Layout>
+  );
 }

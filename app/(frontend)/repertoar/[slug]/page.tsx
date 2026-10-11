@@ -86,6 +86,8 @@ export default async function ProductionPage({ params }: Props) {
 
   return (
     <SiteLayout>
+      {/* which document this is, for the staff edit overlay (components/edit) */}
+      <span hidden data-cms-doc={`productions/${p.id}`} />
       {/* HERO — full-bleed image (or the poster, blurred) under a dark veil, with the next-date card */}
       <section className="on-dark relative isolate overflow-hidden bg-night text-cream">
         <Image
