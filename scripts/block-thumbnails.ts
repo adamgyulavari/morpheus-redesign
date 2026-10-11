@@ -30,7 +30,9 @@ const W = 600;
 const H = 400;
 const CREAM = { r: 247, g: 241, b: 232, alpha: 1 };
 
-const labels = new Map(blocks.map((b) => [b.slug, typeof b.labels?.singular === 'string' ? b.labels.singular : b.slug]));
+const labels = new Map(
+  blocks.map((b) => [b.slug, typeof b.labels?.singular === 'string' ? b.labels.singular : b.slug]),
+);
 
 /** A plain card with the block's name, for blocks that render nothing with the current content. */
 async function placeholder(slug: string, label: string) {
@@ -41,7 +43,9 @@ async function placeholder(slug: string, label: string) {
     <text x="48" y="140" font-family="Georgia, serif" font-size="42" fill="#10292c">${esc(label)}</text>
     ${[0, 1, 2].map((i) => `<rect x="${48 + i * 172}" y="190" width="152" height="150" rx="16" fill="#fffaf2" stroke="#e4d8c6" stroke-width="2"/>`).join('')}
   </svg>`;
-  await sharp(Buffer.from(svg)).webp({ quality: 80 }).toFile(path.join(OUT, `${slug}.webp`));
+  await sharp(Buffer.from(svg))
+    .webp({ quality: 80 })
+    .toFile(path.join(OUT, `${slug}.webp`));
 }
 
 await mkdir(OUT, { recursive: true });
@@ -52,18 +56,32 @@ const placeholders = new Set<string>(JSON.parse(await readFile(PLACEHOLDERS, 'ut
 const args = process.argv.slice(2);
 const force = args.includes('--force');
 const only = args.filter((a) => !a.startsWith('--'));
-const exists = (slug: string) => access(path.join(OUT, `${slug}.webp`)).then(() => true, () => false);
+const exists = (slug: string) =>
+  access(path.join(OUT, `${slug}.webp`)).then(
+    () => true,
+    () => false,
+  );
 /** A hand-made screenshot that is newer than the thumbnail made from it. */
 const newManual = async (slug: string) => {
-  const [m, t] = await Promise.all([path.join('scripts', 'block-thumbnails', `${slug}.png`), path.join(OUT, `${slug}.webp`)].map((f) => stat(f).catch(() => null)));
+  const [m, t] = await Promise.all(
+    [path.join('scripts', 'block-thumbnails', `${slug}.png`), path.join(OUT, `${slug}.webp`)].map((f) =>
+      stat(f).catch(() => null),
+    ),
+  );
   return Boolean(m && (!t || m.mtimeMs > t.mtimeMs));
 };
 const todo = [];
 for (const b of blocks) {
-  const wanted = only.length ? only.includes(b.slug) : force || placeholders.has(b.slug) || !(await exists(b.slug)) || (await newManual(b.slug));
+  const wanted = only.length
+    ? only.includes(b.slug)
+    : force || placeholders.has(b.slug) || !(await exists(b.slug)) || (await newManual(b.slug));
   if (wanted) todo.push(b);
 }
-console.log(todo.length ? `Capturing ${todo.length} of ${blocks.length} blocks…` : 'All thumbnails exist (use --force to redo them).');
+console.log(
+  todo.length
+    ? `Capturing ${todo.length} of ${blocks.length} blocks…`
+    : 'All thumbnails exist (use --force to redo them).',
+);
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true });
 const page = await browser.newPage();
 const failed: string[] = [];
@@ -72,7 +90,10 @@ const MANUAL = path.join(process.cwd(), 'scripts', 'block-thumbnails');
 
 /** Fit the width, keep the top of tall images, centre short ones on the page colour. */
 async function save(slug: string, png: Uint8Array) {
-  const { data, info } = await sharp(png).resize({ width: BIO.has(slug) ? 300 : W }).png().toBuffer({ resolveWithObject: true });
+  const { data, info } = await sharp(png)
+    .resize({ width: BIO.has(slug) ? 300 : W })
+    .png()
+    .toBuffer({ resolveWithObject: true });
   const tall = info.height > H;
   const input = tall ? await sharp(data).extract({ left: 0, top: 0, width: info.width, height: H }).toBuffer() : data;
   await sharp({ create: { width: W, height: H, channels: 4, background: CREAM } })
@@ -109,7 +130,10 @@ for (const { slug } of todo) {
       // only the top is visible in a 3:2 thumbnail; blocks that render nothing today get a placeholder
       if (!box || box.height < 4) break;
       const width = BIO.has(slug) ? 480 : 1440;
-      shot = await page.screenshot({ type: 'png', clip: { x: 0, y: box.y, width, height: Math.min(box.height, (width * H) / (BIO.has(slug) ? 300 : W)) } });
+      shot = await page.screenshot({
+        type: 'png',
+        clip: { x: 0, y: box.y, width, height: Math.min(box.height, (width * H) / (BIO.has(slug) ? 300 : W)) },
+      });
     } catch (err) {
       console.warn(`  ${slug}: ${(err as Error).message.split('\n')[0]} — retrying`);
       await new Promise((r) => setTimeout(r, 1500));
@@ -118,7 +142,9 @@ for (const { slug } of todo) {
   if (!shot) {
     await placeholder(slug, labels.get(slug) ?? slug);
     placeholders.add(slug);
-    console.log(`○ ${slug}: no screenshot (renders nothing today, or the capture failed) — placeholder; a manual scripts/block-thumbnails/${slug}.png replaces it`);
+    console.log(
+      `○ ${slug}: no screenshot (renders nothing today, or the capture failed) — placeholder; a manual scripts/block-thumbnails/${slug}.png replaces it`,
+    );
     continue;
   }
   await save(slug, shot);

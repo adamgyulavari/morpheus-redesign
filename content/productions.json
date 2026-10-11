@@ -28,62 +28,39 @@
     "cast": [
       {
         "role": "Az ördög",
-        "names": [
-          "László G. Attila",
-          "Zsámbok Zalán"
-        ]
+        "names": ["László G. Attila", "Zsámbok Zalán"]
       },
       {
         "role": "János",
-        "names": [
-          "Petus Gábor",
-          "Vellai Tamás"
-        ]
+        "names": ["Petus Gábor", "Vellai Tamás"]
       },
       {
         "role": "Jolán",
-        "names": [
-          "Tóth Szilvia Lilla",
-          "Burus Henrietta"
-        ]
+        "names": ["Tóth Szilvia Lilla", "Burus Henrietta"]
       },
       {
         "role": "Selyem Cinka",
-        "names": [
-          "Dobsony Nikolett",
-          "Végh Melinda"
-        ]
+        "names": ["Dobsony Nikolett", "Végh Melinda"]
       },
       {
         "role": "Elza",
-        "names": [
-          "Szijártó Aurélia",
-          "Serdült Anikó"
-        ]
+        "names": ["Szijártó Aurélia", "Serdült Anikó"]
       },
       {
         "role": "László",
-        "names": [
-          "Komenda Roland"
-        ]
+        "names": ["Komenda Roland"]
       },
       {
         "role": "András",
-        "names": [
-          "Kiss András"
-        ]
+        "names": ["Kiss András"]
       },
       {
         "role": "Klotild",
-        "names": [
-          "Wéber Katalin"
-        ]
+        "names": ["Wéber Katalin"]
       },
       {
         "role": "Matild",
-        "names": [
-          "Ferenczi Adrienn"
-        ]
+        "names": ["Ferenczi Adrienn"]
       }
     ],
     "highlights": [
@@ -199,54 +176,35 @@
     "cast": [
       {
         "role": "Mollie Ralston",
-        "names": [
-          "Nagy Fruzsina Lilla"
-        ]
+        "names": ["Nagy Fruzsina Lilla"]
       },
       {
         "role": "Giles Ralston",
-        "names": [
-          "Komenda Roland"
-        ]
+        "names": ["Komenda Roland"]
       },
       {
         "role": "Christopher Wren",
-        "names": [
-          "Zsámbok Zalán"
-        ]
+        "names": ["Zsámbok Zalán"]
       },
       {
         "role": "Mrs. Boyle",
-        "names": [
-          "Töreky Erzsébet",
-          "Sallai Valéria"
-        ]
+        "names": ["Töreky Erzsébet", "Sallai Valéria"]
       },
       {
         "role": "Metcalf őrnagy",
-        "names": [
-          "Petus Gábor",
-          "Makai Csaba"
-        ]
+        "names": ["Petus Gábor", "Makai Csaba"]
       },
       {
         "role": "Miss Casewell",
-        "names": [
-          "Palásthy Petra"
-        ]
+        "names": ["Palásthy Petra"]
       },
       {
         "role": "Mr. Paravicini",
-        "names": [
-          "Vellai Tamás",
-          "Károlyi Krisztián"
-        ]
+        "names": ["Vellai Tamás", "Károlyi Krisztián"]
       },
       {
         "role": "Trotter",
-        "names": [
-          "Boros Ádám"
-        ],
+        "names": ["Boros Ádám"],
         "roleNote": "rendőr őrmester"
       }
     ],
@@ -361,14 +319,10 @@
     "castLabel": "Előadják",
     "cast": [
       {
-        "names": [
-          "Nagy Fruzsina Lilla"
-        ]
+        "names": ["Nagy Fruzsina Lilla"]
       },
       {
-        "names": [
-          "Károlyi Krisztián"
-        ]
+        "names": ["Károlyi Krisztián"]
       }
     ],
     "highlights": [
@@ -435,60 +389,39 @@
     "cast": [
       {
         "role": "Dr. David Mortimore",
-        "names": [
-          "Komenda Roland"
-        ]
+        "names": ["Komenda Roland"]
       },
       {
         "role": "Dr. Hubert Bonney",
-        "names": [
-          "Petus Gábor"
-        ]
+        "names": ["Petus Gábor"]
       },
       {
         "role": "Dr. Mike Connolly",
-        "names": [
-          "Haász Tamás",
-          "Zsámbok Zalán"
-        ]
+        "names": ["Haász Tamás", "Zsámbok Zalán"]
       },
       {
         "role": "Bill",
-        "names": [
-          "Marosvölgyi György"
-        ]
+        "names": ["Marosvölgyi György"]
       },
       {
         "role": "Rosemary Mortimore",
-        "names": [
-          "Nagy Fruzsina Lilla"
-        ]
+        "names": ["Nagy Fruzsina Lilla"]
       },
       {
         "role": "Főnővér",
-        "names": [
-          "Wéber Katalin",
-          "Egyed Anita"
-        ]
+        "names": ["Wéber Katalin", "Egyed Anita"]
       },
       {
         "role": "Jane Tate",
-        "names": [
-          "Kozma Petra",
-          "Burus Henrietta"
-        ]
+        "names": ["Kozma Petra", "Burus Henrietta"]
       },
       {
         "role": "Leslie",
-        "names": [
-          "Végh Melinda"
-        ]
+        "names": ["Végh Melinda"]
       },
       {
         "role": "Őrmester",
-        "names": [
-          "Vellai Tamás"
-        ]
+        "names": ["Vellai Tamás"]
       }
     ],
     "note": "A szerző engedélyét a Ray Cooney Plays (UK) és a HoFra Kft. közvetítette.",
@@ -588,39 +521,25 @@
     "castLabel": "Szereplők",
     "cast": [
       {
-        "names": [
-          "Sallai Valéria"
-        ]
+        "names": ["Sallai Valéria"]
       },
       {
-        "names": [
-          "Palásthy Petra"
-        ]
+        "names": ["Palásthy Petra"]
       },
       {
-        "names": [
-          "Tóth Anita"
-        ]
+        "names": ["Tóth Anita"]
       },
       {
-        "names": [
-          "Ferenczi Adrienn"
-        ]
+        "names": ["Ferenczi Adrienn"]
       },
       {
-        "names": [
-          "Makai Csaba"
-        ]
+        "names": ["Makai Csaba"]
       },
       {
-        "names": [
-          "Csépe Szilvia"
-        ]
+        "names": ["Csépe Szilvia"]
       },
       {
-        "names": [
-          "Bölcskei Andrea"
-        ]
+        "names": ["Bölcskei Andrea"]
       }
     ],
     "poster": {
@@ -656,34 +575,22 @@
     "castLabel": "Szereplők",
     "cast": [
       {
-        "names": [
-          "Dobsony Nikolett"
-        ]
+        "names": ["Dobsony Nikolett"]
       },
       {
-        "names": [
-          "Gregus-Csoma Kata"
-        ]
+        "names": ["Gregus-Csoma Kata"]
       },
       {
-        "names": [
-          "Teréki Cintia"
-        ]
+        "names": ["Teréki Cintia"]
       },
       {
-        "names": [
-          "Gyulavári Ádám"
-        ]
+        "names": ["Gyulavári Ádám"]
       },
       {
-        "names": [
-          "Jánvári Gusztáv"
-        ]
+        "names": ["Jánvári Gusztáv"]
       },
       {
-        "names": [
-          "Molnár Zoltán"
-        ]
+        "names": ["Molnár Zoltán"]
       }
     ],
     "poster": {
@@ -713,29 +620,19 @@
     "castLabel": "Szereplők",
     "cast": [
       {
-        "names": [
-          "Végh Melinda"
-        ]
+        "names": ["Végh Melinda"]
       },
       {
-        "names": [
-          "Serdült Anikó"
-        ]
+        "names": ["Serdült Anikó"]
       },
       {
-        "names": [
-          "Hódi Anna"
-        ]
+        "names": ["Hódi Anna"]
       },
       {
-        "names": [
-          "Pálossy Janka"
-        ]
+        "names": ["Pálossy Janka"]
       },
       {
-        "names": [
-          "Egyed Anita"
-        ]
+        "names": ["Egyed Anita"]
       }
     ],
     "poster": {
@@ -766,39 +663,25 @@
     "castLabel": "Szereplők",
     "cast": [
       {
-        "names": [
-          "Burus Henrietta"
-        ]
+        "names": ["Burus Henrietta"]
       },
       {
-        "names": [
-          "Kozma Petra"
-        ]
+        "names": ["Kozma Petra"]
       },
       {
-        "names": [
-          "Petus Gábor"
-        ]
+        "names": ["Petus Gábor"]
       },
       {
-        "names": [
-          "Töreky Erzsébet"
-        ]
+        "names": ["Töreky Erzsébet"]
       },
       {
-        "names": [
-          "Vellai Tamás"
-        ]
+        "names": ["Vellai Tamás"]
       },
       {
-        "names": [
-          "Wéber Katalin"
-        ]
+        "names": ["Wéber Katalin"]
       },
       {
-        "names": [
-          "Zsámbok Zalán"
-        ]
+        "names": ["Zsámbok Zalán"]
       }
     ],
     "poster": {
@@ -826,63 +709,43 @@
     "cast": [
       {
         "role": "Bernarda",
-        "names": [
-          "Egyed Anita"
-        ]
+        "names": ["Egyed Anita"]
       },
       {
         "role": "María Josefa",
-        "names": [
-          "Hódi Anna"
-        ]
+        "names": ["Hódi Anna"]
       },
       {
         "role": "Angustias",
-        "names": [
-          "Bölcskei Andrea"
-        ]
+        "names": ["Bölcskei Andrea"]
       },
       {
         "role": "Magdalena",
-        "names": [
-          "Dobsony Nikolett"
-        ]
+        "names": ["Dobsony Nikolett"]
       },
       {
         "role": "Amelia",
-        "names": [
-          "Hódi Anna"
-        ]
+        "names": ["Hódi Anna"]
       },
       {
         "role": "Martirio",
-        "names": [
-          "Pálossy Janka"
-        ]
+        "names": ["Pálossy Janka"]
       },
       {
         "role": "Adela",
-        "names": [
-          "Serdült Anikó"
-        ]
+        "names": ["Serdült Anikó"]
       },
       {
         "role": "Poncia",
-        "names": [
-          "Sallai Valéria"
-        ]
+        "names": ["Sallai Valéria"]
       },
       {
         "role": "Szolgáló",
-        "names": [
-          "Susanits Andrea"
-        ]
+        "names": ["Susanits Andrea"]
       },
       {
         "role": "Prudencia / Szomszédasszony",
-        "names": [
-          "Gregus-Csoma Katalin"
-        ]
+        "names": ["Gregus-Csoma Katalin"]
       }
     ],
     "poster": {
@@ -910,84 +773,60 @@
     "cast": [
       {
         "role": "Orsino herceg",
-        "names": [
-          "Petus Gábor"
-        ],
+        "names": ["Petus Gábor"],
         "roleNote": "Illíria uralkodója"
       },
       {
         "role": "Viola",
-        "names": [
-          "Burus Henrietta"
-        ],
+        "names": ["Burus Henrietta"],
         "roleNote": "fiatal lány"
       },
       {
         "role": "Olivia",
-        "names": [
-          "Kozma Petra"
-        ],
+        "names": ["Kozma Petra"],
         "roleNote": "grófnő"
       },
       {
         "role": "Nemes Böffen Tóbiás",
-        "names": [
-          "Vellai Tamás"
-        ],
+        "names": ["Vellai Tamás"],
         "roleNote": "Olivia rokona"
       },
       {
         "role": "Mária",
-        "names": [
-          "Töreky Erzsébet"
-        ],
+        "names": ["Töreky Erzsébet"],
         "roleNote": "Olivia társalkodónője"
       },
       {
         "role": "Nemes Keszeg András / Hajóskapitány",
-        "names": [
-          "Zsámbok Zalán"
-        ]
+        "names": ["Zsámbok Zalán"]
       },
       {
         "role": "Feste",
-        "names": [
-          "Wéber Katalin"
-        ],
+        "names": ["Wéber Katalin"],
         "roleNote": "bohóc"
       },
       {
         "role": "Malvolio",
-        "names": [
-          "Lázár István"
-        ],
+        "names": ["Lázár István"],
         "roleNote": "háznagy Oliviánál"
       },
       {
         "role": "Sebastian",
-        "names": [
-          "Ódor András"
-        ],
+        "names": ["Ódor András"],
         "roleNote": "Viola ikertestvére"
       },
       {
         "role": "Antonio, tengerésztiszt / Curio",
-        "names": [
-          "Makai Csaba"
-        ]
+        "names": ["Makai Csaba"]
       },
       {
         "role": "Frida",
-        "names": [
-          "Csaba Noémi"
-        ],
+        "names": ["Csaba Noémi"],
         "roleNote": "szolgálólány"
       },
       {
         "role": "Valentine / Pap / Darabont",
-        "names": [
-          "Lázár István"
-        ]
+        "names": ["Lázár István"]
       }
     ],
     "poster": {

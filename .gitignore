@@ -6,5 +6,8 @@ next-env.d.ts
 .DS_Store
 .env*.local
 .env
+prod.env
 coolify.env
 /media/
+/media-copy/
+dev.dump

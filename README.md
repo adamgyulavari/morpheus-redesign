@@ -21,14 +21,22 @@ npm run dev                   # http://localhost:3000, admin at http://localhost
 | `npm run dev` / `build` / `start` | Next.js. The build needs **no database** (nothing is rendered at build time). |
 | `npm run migrate` | apply pending migrations (`payload/migrations/`) |
 | `npm run migrate:create -- <name>` | generate a migration after changing collections/blocks |
+| `npm run migrate:snapshot` | rebuild the schema snapshot from the config — after merging branches that both added migrations |
 | `npm run seed` | import `content/` + `public/images`, `public/video` into Payload; safe to re-run (updates, no duplicates) |
 | `npm run generate:types` | regenerate `payload-types.ts` after a schema change |
 | `npm run generate:importmap` | regenerate the admin import map after adding an admin component |
 | `npm run typecheck` | |
+| `npm run lint` / `format` | Biome: check / fix lint and formatting (CI runs `biome ci` before deploying) |
 
 **Schema changes always go through migrations**, locally too (`push: false`): edit `payload/`, run
 `npm run migrate:create -- <name>`, review the file, `npm run migrate`, `npm run generate:types`,
 commit the migration. Production applies it on container start.
+
+Next to the newest migration there is one generated `.json`: the schema snapshot `migrate:create`
+diffs against (running migrations never reads it). Only the newest is kept — older ones are deleted
+after each `migrate:create` — and git shows it as a binary file, so reviews show just the `.ts`.
+After merging two branches that each added a migration, run `npm run migrate:snapshot` once, or the
+next `migrate:create` would repeat one side's changes.
 
 Uploads go to `./media` locally and to Leafcloud Object Storage in production (when `S3_BUCKET` is
 set). Deployment, environment variables and backups: see **[DEPLOY.md](DEPLOY.md)**.
@@ -57,7 +65,7 @@ app/
                            (the admin's Morpheus look: teal palette, gold buttons, site fonts)
 payload.config.ts        Payload: database, storage, i18n (hu), collections, globals, jobs
 payload/
-  collections/           Pages, CtaBands, LegalPages, Productions, Shows, Venues, Courses, …, Media, Users
+  collections/           Pages, CtaBands, LegalPages, Productions, Shows, Venues, Courses, …, CourseGroups, Media, Users, LoginTokens
   blocks/                one Payload block per page block type (same slugs as lib/types.ts)
   globals.ts             Site settings, UI dictionary
   fields.ts, access.ts   shared field builders (Hungarian labels/hints) and access rules
@@ -152,11 +160,13 @@ All content lives in Payload (Postgres). In the admin (Hungarian, grouped in the
 | Képzések és programok | **Courses** (with start groups, `nextIntake` month for rolling enrolment, prices), **Open workshop sessions**, **Workshops** (upcoming featured, past under "Korábbi workshopok"), **Team-building programmes** | course, workshop and programme blocks |
 | Emberek | **Instructors** (`order`), **Reviews**, **Contact people** | people blocks, /bio |
 | Tartalom | **Media** (images and videos, alt text required, focal point, generated sizes) | everywhere |
-| Beállítások | **Users** (roles `admin` / `editor`), **Site settings** (global), **UI dictionary** (global) | header, footer, every component |
+| Kurzusok | **Course groups** (`courseGroups`: a concrete group with dates, students, instructors, info for students; optional link to its catalogue course) | /fiokom |
+| Beállítások | **Users** (roles `admin` / `staff` / `student`), **Site settings** (global), **UI dictionary** (global) | header, footer, every component |
 
 Pages, productions and legal documents have **drafts and versions**; pages and productions have
-**live preview** (the eye icon in the admin). Visitors only ever see published documents. Editors can
-edit all content; only admins manage users, and only admins can delete legal documents.
+**live preview** (the eye icon in the admin). Visitors and students only ever see published documents.
+Staff can edit all content and course groups; only admins give roles, change other admins' accounts,
+delete users and delete legal documents. All access rules are the helpers in `payload/access.ts`.
 
 Text conventions: `*…*` marks the emphasised (italic, coloured) part of a heading; a line break inside
 a paragraph is kept. Dates are Budapest calendar days.
@@ -172,6 +182,48 @@ Payload documents.
 
 The quote form (`lib/quote-request.ts`) still opens the visitor's mail client; turning it into a
 Server Action that stores/e-mails the request is a later step.
+
+## Accounts
+
+One auth layer: Payload's `users` collection. A user has one or more **roles**: `admin` and `staff`
+work in `/admin`; `student`s log in on the public site only (`/admin` refuses them). Registration
+(public) always makes a student; the first account ever created is an admin.
+
+| route | |
+|---|---|
+| `/belepes` | password login, or "Belépési link küldése" (`payload/magic-link.ts`): the e-mail has a link and a 6-digit code; after sending, this page asks for the code (for reading the e-mail on another device) |
+| `/belepes/link` | the link's confirm page: opening it doesn't log in, its "Belépés" button (a POST) does — so mail scanners that open links can't use it up. Link and code: 15 minutes, once, only hashes stored, 5 wrong codes invalidate both; a success starts a normal Payload session (`payload/session.ts`) |
+| `/regisztracio` | sign-up (honeypot, privacy checkbox) → verification e-mail |
+| `/email-megerosites`, `/elfelejtett-jelszo`, `/jelszo-visszaallitas` | verification and password reset (links in the e-mails point here, not to /admin) |
+| `/fiokom` | own data, own course groups ("Kurzusaim"), logout; staff also get a link to /admin |
+
+- The forms are Server Actions (`lib/account-actions.ts`) on the Payload Local API; the session is
+  the admin's HTTP-only `payload-token` cookie. `lib/auth.ts` has `getCurrentUser()` / `requireUser()`.
+- Account pages are dynamic and never cached; user data never goes through `lib/data.ts`. The cached
+  public pages stay the same for everyone: the header's "Belépés" / "Fiókom" is decided in the
+  browser from a hint cookie (`morpheus-signed-in`, no secret in it) set at login.
+- Verification is required; 5 failed logins lock the account for 10 minutes.
+- `payload/students.ts` → `isActiveStudent(payload, user)`: in a course group whose end date hasn't
+  passed (for the later student area / room booking).
+- E-mail: SMTP (`SMTP_*`, `EMAIL_FROM*`, see `.env.example`) with one Hungarian layout
+  (`payload/email.ts`). Without `SMTP_HOST` e-mails are printed to the console; locally, Mailpit
+  from `docker-compose.dev.yml` catches them at http://localhost:8025.
+
+## Edit buttons for staff
+
+Logged-in staff get a **Szerkesztés** button (bottom left) on the live site: this page (or
+production) in the admin, the site settings and the UI texts. **Blokkok mutatása** outlines the
+block under the pointer with a **Blokk szerkesztése** button, which opens the page in the admin at
+that block. Links open the admin in a new tab.
+
+- The cached pages stay the same for everyone: they carry hidden markers (`data-cms-doc`, and
+  `data-cms-block` before each block, `components/blocks/index.tsx`), and
+  `components/edit/EditMode.tsx` decides in the browser, from the hint cookie
+  (`morpheus-signed-in=staff`), whether to load the overlay (`EditOverlay.tsx`, a separate chunk
+  visitors never download). The admin checks the real permissions. Not shown in live preview.
+- `payload/components/BlockFocus.tsx` (a UI field on Pages) handles `?blokk=<block id>`. It relies on
+  Payload's DOM ids for block rows (`blocks-row-<n>`): check it after a Payload upgrade.
+- The role is read at login: someone who becomes staff sees the buttons after logging in again.
 
 ## SEO and redirects
 

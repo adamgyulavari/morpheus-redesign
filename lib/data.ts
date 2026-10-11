@@ -76,7 +76,13 @@ export const getUi = cache(async (): Promise<UiStrings> => {
 const PAGE_POPULATE = { pages: { path: true, title: true } } as const;
 
 export async function getPages(): Promise<Page[]> {
-  const { docs } = await (await payload()).find({ collection: 'pages', depth: 2, populate: PAGE_POPULATE, ...all, ...(await drafts()) });
+  const { docs } = await (await payload()).find({
+    collection: 'pages',
+    depth: 2,
+    populate: PAGE_POPULATE,
+    ...all,
+    ...(await drafts()),
+  });
   return docs.map(map.page);
 }
 
@@ -100,7 +106,13 @@ export const getCtaBand = cache(async (id: string): Promise<CtaBand> => {
 // ── Productions & shows ─────────────────────────────────────────────────────
 
 const findProductions = cache(async (): Promise<Production[]> => {
-  const { docs } = await (await payload()).find({ collection: 'productions', sort: 'order', depth: 1, ...all, ...(await drafts()) });
+  const { docs } = await (await payload()).find({
+    collection: 'productions',
+    sort: 'order',
+    depth: 1,
+    ...all,
+    ...(await drafts()),
+  });
   return docs.map(map.production);
 });
 
@@ -127,7 +139,13 @@ export async function getShowsForProduction(productionId: string): Promise<ShowW
 const findUpcomingShows = cache(async (): Promise<ShowWithRelations[]> => {
   const p = await payload();
   const [{ docs }, productions] = await Promise.all([
-    p.find({ collection: 'shows', where: { date: { greater_than_equal: fromToday() } }, sort: ['date', 'time'], depth: 1, ...all }),
+    p.find({
+      collection: 'shows',
+      where: { date: { greater_than_equal: fromToday() } },
+      sort: ['date', 'time'],
+      depth: 1,
+      ...all,
+    }),
     findProductions(),
   ]);
   // Only shows of published productions (or, in preview, of any).
@@ -195,7 +213,9 @@ const upcomingStarts = (course: Course): Course => {
   const today = todayInBudapest();
   return {
     ...course,
-    starts: course.starts.filter((s) => s.date >= today).sort((a, b) => `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`)),
+    starts: course.starts
+      .filter((s) => s.date >= today)
+      .sort((a, b) => `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`)),
   };
 };
 
@@ -241,7 +261,9 @@ export async function getPastWorkshops(limit?: number): Promise<Workshop[]> {
 }
 
 /** A legal document (rich text) by slug. */
-export async function getLegalPage(slug: string): Promise<{ title: string; effectiveDate?: string; content: SerializedEditorState }> {
+export async function getLegalPage(
+  slug: string,
+): Promise<{ title: string; effectiveDate?: string; content: SerializedEditorState }> {
   const { docs } = await (await payload()).find({
     collection: 'legalPages',
     where: { slug: { equals: slug } },
@@ -251,11 +273,20 @@ export async function getLegalPage(slug: string): Promise<{ title: string; effec
   });
   const doc = docs[0];
   if (!doc) throw new Error(`Unknown legal page "${slug}"`);
-  return { title: doc.title, effectiveDate: doc.effectiveDate ? map.day(doc.effectiveDate) : undefined, content: doc.body as SerializedEditorState };
+  return {
+    title: doc.title,
+    effectiveDate: doc.effectiveDate ? map.day(doc.effectiveDate) : undefined,
+    content: doc.body as SerializedEditorState,
+  };
 }
 
 export const getTeamBuildingProgrammes = cache(async (): Promise<TeamBuildingProgramme[]> => {
-  const { docs } = await (await payload()).find({ collection: 'teamBuildingProgrammes', sort: 'order', depth: 0, ...all });
+  const { docs } = await (await payload()).find({
+    collection: 'teamBuildingProgrammes',
+    sort: 'order',
+    depth: 0,
+    ...all,
+  });
   return docs.map(map.teamBuildingProgramme);
 });
 
@@ -286,4 +317,3 @@ export async function getRedirect(path: string): Promise<{ href: string; permane
         : ref && 'path' in ref && ref.path;
   return href ? { href, permanent: r.type !== '302' } : undefined;
 }
-

@@ -31,7 +31,9 @@ export default function SessionStatus({
 
   return (
     <>
-      <span className="col-start-2 text-sm text-ink2 sm:col-start-auto lg:text-base">{open ? openText : closedText}</span>
+      <span className="col-start-2 text-sm text-ink2 sm:col-start-auto lg:text-base">
+        {open ? openText : closedText}
+      </span>
       {open ? (
         <a href={bookingUrl} className="btn btn-md btn-outline col-span-2 sm:col-span-1">
           {bookLabel}

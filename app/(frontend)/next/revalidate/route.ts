@@ -10,7 +10,8 @@ import { revalidateDateDependent } from '@/payload/revalidate';
  */
 export async function POST(req: Request): Promise<Response> {
   const payload = await getPayload({ config });
-  if (req.headers.get('authorization') !== `Bearer ${payload.secret}`) return new Response('Unauthorized', { status: 401 });
+  if (req.headers.get('authorization') !== `Bearer ${payload.secret}`)
+    return new Response('Unauthorized', { status: 401 });
   await revalidateDateDependent(payload);
   return Response.json({ revalidated: true, at: new Date().toISOString() });
 }

@@ -1,9 +1,9 @@
 /**
  * On-demand revalidation. Pages are cached (ISR); when an editor saves, the pages that show the
  * changed content are regenerated. Which pages that are is derived from the data: each collection
- * is shown by certain block types, and the pages containing those blocks are revalidated (plus the
- * production detail pages where relevant). Site-wide content (settings, UI texts, media) revalidates
- * everything.
+ * is shown by certain block types (declared on the blocks, payload/blocks), and the pages containing
+ * those blocks are revalidated (plus the production detail pages where relevant). Site-wide content
+ * (settings, UI texts, media) revalidates everything.
  */
 import { revalidatePath } from 'next/cache';
 import type {
@@ -18,27 +18,14 @@ import type {
 
 import type { BlockType } from '@/lib/types';
 
-const SHOW_BLOCKS: BlockType[] = ['homeHero', 'upcomingShows', 'nextShowBanner', 'repertoire', 'bioNextShow'];
+import { blocksShowing } from './blocks';
 
-/** Block types that render each collection. */
-const SHOWN_BY: Record<string, BlockType[]> = {
-  shows: SHOW_BLOCKS,
-  productions: SHOW_BLOCKS,
-  venues: SHOW_BLOCKS,
-  reviews: ['reviews'],
-  instructors: ['instructorRow', 'instructorGrid', 'offerings'],
-  courses: ['offerings', 'courseStarts', 'coursePrices', 'courseCompare', 'pageHero', 'textSplit'],
-  openWorkshopSessions: ['openWorkshopSessions'],
-  workshops: ['upcomingWorkshops', 'pastWorkshops', 'pageHero'],
-  teamBuildingProgrammes: ['programmes'],
-  contactPeople: ['contactCard', 'contactPeople', 'bioIntro', 'contactFooter'],
-  ctaBands: ['ctaBand'],
-  legalPages: ['legalDocument'],
-};
+/** Block types that render each collection: declared on the blocks (payload/blocks). */
+const SHOWN_BY = blocksShowing;
 
 /** Blocks whose content depends on today's date (upcoming shows, course starts, sessions…). */
 const DATE_DEPENDENT: BlockType[] = [
-  ...SHOW_BLOCKS,
+  ...(SHOWN_BY.shows ?? []),
   'offerings',
   'courseStarts',
   'courseCompare',
@@ -64,7 +51,13 @@ function revalidate(payload: Payload, path: string, type?: 'page' | 'layout') {
 /** Paths of the pages that contain any of the given block types. */
 async function pagesWith(payload: Payload, types: BlockType[]): Promise<string[]> {
   const wanted = new Set<string>(types);
-  const { docs } = await payload.find({ collection: 'pages', depth: 0, limit: 0, pagination: false, select: { path: true, blocks: true } });
+  const { docs } = await payload.find({
+    collection: 'pages',
+    depth: 0,
+    limit: 0,
+    pagination: false,
+    select: { path: true, blocks: true },
+  });
   return docs.filter((p) => (p.blocks ?? []).some((b) => wanted.has(b.blockType))).map((p) => p.path);
 }
 
@@ -78,7 +71,13 @@ export const revalidateDateDependent = (payload: Payload) => revalidatePagesWith
 
 const skip = (req: PayloadRequest) => Boolean(req.context.disableRevalidate);
 
-type Doc = { _status?: string | null; slug?: string | null; path?: string | null; title?: string | null; production?: unknown };
+type Doc = {
+  _status?: string | null;
+  slug?: string | null;
+  path?: string | null;
+  title?: string | null;
+  production?: unknown;
+};
 
 /** Drafts and autosaves don't change the public site; publishing or unpublishing does. */
 const isPublicChange = (doc: Doc, previousDoc?: Doc) =>

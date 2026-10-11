@@ -20,7 +20,14 @@ export default function WorkshopFeature({ workshop: w, ui }: { workshop: Worksho
     <article className="on-dark relative grid overflow-hidden rounded-[26px] bg-deep text-cream lg:grid-cols-[5fr_7fr] lg:rounded-[32px]">
       {/* the whole image is shown (workshop posters often carry text); a blurred copy fills spare height */}
       <div className="relative overflow-hidden bg-deep">
-        <Image src={w.image.src} alt="" aria-hidden="true" fill sizes="40vw" className="hidden scale-110 object-cover opacity-60 blur-2xl lg:block" />
+        <Image
+          src={w.image.src}
+          alt=""
+          aria-hidden="true"
+          fill
+          sizes="40vw"
+          className="hidden scale-110 object-cover opacity-60 blur-2xl lg:block"
+        />
         <Image
           src={w.image.src}
           alt={w.image.alt}
@@ -67,8 +74,8 @@ export default function WorkshopFeature({ workshop: w, ui }: { workshop: Worksho
               {w.intro && <p className="font-semibold text-ink">{w.intro}</p>}
               <p>{w.summary}</p>
               <p>
-                <span className="font-semibold text-ink">{copy.date}:</span> {dateRange(w.startDate, w.endDate)} ({weekdayRange(w.startDate, w.endDate)}),{' '}
-                {copy.time.toLowerCase()} {w.startTime}–{w.endTime}
+                <span className="font-semibold text-ink">{copy.date}:</span> {dateRange(w.startDate, w.endDate)} (
+                {weekdayRange(w.startDate, w.endDate)}), {copy.time.toLowerCase()} {w.startTime}–{w.endTime}
               </p>
             </div>
             {w.leader && (
@@ -84,11 +91,21 @@ export default function WorkshopFeature({ workshop: w, ui }: { workshop: Worksho
             {w.gallery.length > 0 && (
               <div className="grid grid-cols-2 gap-3">
                 {w.gallery.map((img) => (
-                  <Image key={img.src} src={img.src} alt={img.alt} width={img.width} height={img.height} sizes="320px" className="w-full rounded-xl object-cover" />
+                  <Image
+                    key={img.src}
+                    src={img.src}
+                    alt={img.alt}
+                    width={img.width}
+                    height={img.height}
+                    sizes="320px"
+                    className="w-full rounded-xl object-cover"
+                  />
                 ))}
               </div>
             )}
-            {w.closing && <p className="font-display text-[26px] italic leading-tight text-deep lg:text-[30px]">{w.closing}</p>}
+            {w.closing && (
+              <p className="font-display text-[26px] italic leading-tight text-deep lg:text-[30px]">{w.closing}</p>
+            )}
             <a href={w.signupUrl} className="btn btn-lg btn-primary self-start">
               {ui.common.signup}
               <ArrowRight />

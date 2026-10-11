@@ -58,7 +58,11 @@ export default function ProductionCard({
         className={`relative col-start-1 row-start-1 xl:row-span-2 xl:overflow-hidden xl:bg-deep ${posterCol}`}
         data-poster={posterFirst ? 'first' : 'last'}
       >
-        <div className="hidden xl:block" style={{ aspectRatio: `${p.poster.width} / ${p.poster.height}` }} aria-hidden="true" />
+        <div
+          className="hidden xl:block"
+          style={{ aspectRatio: `${p.poster.width} / ${p.poster.height}` }}
+          aria-hidden="true"
+        />
         <Image
           src={p.poster.src}
           alt=""
@@ -78,7 +82,9 @@ export default function ProductionCard({
         {nextShow && <OnStageBadge label={labels.onStage} desktop />}
       </div>
 
-      <div className={`col-start-2 row-start-1 flex flex-col justify-end gap-2 xl:gap-3 xl:px-[60px] xl:pt-11 ${textCol}`}>
+      <div
+        className={`col-start-2 row-start-1 flex flex-col justify-end gap-2 xl:gap-3 xl:px-[60px] xl:pt-11 ${textCol}`}
+      >
         {nextShow && <OnStageBadge label={labels.onStage} desktop={false} />}
         <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1">
           {p.genre && (
@@ -86,13 +92,17 @@ export default function ProductionCard({
               {p.genre}
             </span>
           )}
-          <span className="hidden text-[13px] font-bold uppercase tracking-[0.14em] text-teal xl:inline">{p.byline}</span>
+          <span className="hidden text-[13px] font-bold uppercase tracking-[0.14em] text-teal xl:inline">
+            {p.byline}
+          </span>
         </div>
         <h3 className="font-display text-[30px] leading-[1.02] xl:text-[60px] xl:leading-none">{p.title}</h3>
         <span className="text-xs font-bold uppercase tracking-[0.12em] text-teal xl:hidden">{p.byline}</span>
       </div>
 
-      <div className={`col-span-2 flex flex-col gap-4 xl:col-span-1 xl:row-start-2 xl:px-[60px] xl:pb-11 xl:pt-5 ${textCol}`}>
+      <div
+        className={`col-span-2 flex flex-col gap-4 xl:col-span-1 xl:row-start-2 xl:px-[60px] xl:pb-11 xl:pt-5 ${textCol}`}
+      >
         {p.detailPage ? (
           // productions with their own page link there; the others open the popup
           <p className="text-[15.5px] leading-relaxed text-ink2 xl:text-lg xl:leading-[28px]">
@@ -122,8 +132,8 @@ export default function ProductionCard({
               </div>
             </div>
             <div className="flex flex-col gap-3.5 border-t border-line pt-5 text-[15.5px] leading-relaxed text-ink2 lg:text-[17px]">
-              {p.longDescription.map((para, i) => (
-                <p key={i}>
+              {p.longDescription.map((para) => (
+                <p key={para}>
                   <Lines text={para} />
                 </p>
               ))}
@@ -146,8 +156,8 @@ export default function ProductionCard({
           <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted xl:text-xs">{p.castLabel}</span>
           {named ? (
             <dl className="grid grid-cols-2 gap-x-5 gap-y-3.5 sm:grid-cols-3 xl:gap-x-8 xl:gap-y-4">
-              {p.cast.map((c, i) => (
-                <div key={i} className="flex flex-col gap-1">
+              {p.cast.map((c) => (
+                <div key={`${c.role ?? ''}: ${c.names.join(', ')}`} className="flex flex-col gap-1">
                   <dt className="font-display text-[17px] italic leading-tight text-deep xl:text-[19px]">
                     {c.role}
                     {c.roleNote && <span className="block font-sans text-xs not-italic text-muted">{c.roleNote}</span>}

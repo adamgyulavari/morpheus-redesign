@@ -2,14 +2,16 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { postgresAdapter } from '@payloadcms/db-postgres';
-import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import { redirectsPlugin } from '@payloadcms/plugin-redirects';
 import { seoPlugin } from '@payloadcms/plugin-seo';
+import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import { s3Storage } from '@payloadcms/storage-s3';
 import { hu } from '@payloadcms/translations/languages/hu';
 import { buildConfig, type Payload } from 'payload';
 import sharp from 'sharp';
-
+import { serverUrl } from './lib/env';
+import { CourseGroups } from './payload/collections/CourseGroups';
+import { LoginTokens } from './payload/collections/LoginTokens';
 import { Media } from './payload/collections/Media';
 import { Pages } from './payload/collections/Pages';
 import { LegalPages, Productions, Shows } from './payload/collections/productions';
@@ -25,8 +27,8 @@ import {
   Workshops,
 } from './payload/collections/simple';
 import { Users } from './payload/collections/Users';
+import { emailAdapter } from './payload/email';
 import { SiteSettings, Ui } from './payload/globals';
-import { serverUrl } from './lib/env';
 import { migrations } from './payload/migrations';
 import { redirectsConfig, redirectsTranslationsHu } from './payload/redirects';
 import { generateDescription, generateImage, generateTitle, generateURL, seoFields } from './payload/seo';
@@ -61,7 +63,11 @@ async function ensureAdmin(payload: Payload) {
   if (!email || !password) return;
   const { totalDocs } = await payload.count({ collection: 'users' });
   if (totalDocs > 0) return;
-  await payload.create({ collection: 'users', data: { email, password, name: 'Adminisztrátor', role: 'admin' } });
+  await payload.create({
+    collection: 'users',
+    data: { email, password, lastName: 'Adminisztrátor', firstName: 'Morpheus', roles: ['admin'], _verified: true },
+    disableVerificationEmail: true,
+  });
   payload.logger.info(`Created the first admin user: ${email}`);
 }
 
@@ -105,11 +111,15 @@ export default buildConfig({
     Instructors,
     Reviews,
     ContactPeople,
+    CourseGroups,
     Media,
     Users,
+    LoginTokens,
   ],
   globals: [SiteSettings, Ui],
   editor: lexicalEditor(),
+  // SMTP when SMTP_HOST is set; otherwise e-mails (with their links) are written to the console
+  email: emailAdapter(),
   db: postgresAdapter({
     pool: { connectionString: process.env.DATABASE_URL || '' },
     // Schema changes always go through migrations (payload/migrations, `npm run migrate:create`),

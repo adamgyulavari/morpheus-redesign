@@ -5,7 +5,7 @@
  * and provides it once; interactive components read their labels with `useUi()`. Server components
  * call `getUi()` from the data layer instead.
  */
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, type ReactNode, useContext } from 'react';
 
 import type { UiStrings } from '@/lib/types';
 

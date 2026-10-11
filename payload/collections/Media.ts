@@ -48,7 +48,9 @@ export const Media: CollectionConfig = {
       label: 'Alternatív szöveg',
       type: 'text',
       required: true,
-      admin: { description: 'Mi látható a képen? Ezt olvassa fel a képernyőolvasó, és ez jelenik meg, ha a kép nem tölt be.' },
+      admin: {
+        description: 'Mi látható a képen? Ezt olvassa fel a képernyőolvasó, és ez jelenik meg, ha a kép nem tölt be.',
+      },
     },
     importId,
   ],

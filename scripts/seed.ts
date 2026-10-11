@@ -8,18 +8,19 @@
  *
  * The content JSON is the import source only — the site reads everything from Payload.
  */
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import config from '@payload-config';
 import { convertMarkdownToLexical, editorConfigFactory } from '@payloadcms/richtext-lexical';
-import { getPayload, type CollectionSlug, type Payload } from 'payload';
+import { type CollectionSlug, getPayload, type Payload } from 'payload';
 
 import { firstSentence } from '@/lib/format';
 import { fullRichText } from '@/payload/fields';
 
 const root = process.cwd();
-const json = async <T>(file: string): Promise<T> => JSON.parse(await readFile(path.join(root, 'content', file), 'utf-8')) as T;
+const json = async <T>(file: string): Promise<T> =>
+  JSON.parse(await readFile(path.join(root, 'content', file), 'utf-8')) as T;
 const ctx = { disableRevalidate: true };
 
 type Img = { src: string; alt: string };
@@ -31,10 +32,32 @@ const day = (d: string) => `${d.length === 7 ? `${d}-01` : d}T12:00:00.000Z`;
 
 // ── lexical ─────────────────────────────────────────────────────────────────
 
-const textNode = (text: string) => ({ type: 'text', version: 1, text, format: 0, detail: 0, mode: 'normal', style: '' });
-const inline = (text: string) => text.split('\n').flatMap((line, i) => [...(i ? [{ type: 'linebreak', version: 1 }] : []), ...(line ? [textNode(line)] : [])]);
-const paragraph = (children: unknown[]) => ({ type: 'paragraph', version: 1, children, direction: 'ltr', format: '', indent: 0, textFormat: 0, textStyle: '' });
-const lexical = (children: unknown[]) => ({ root: { type: 'root', version: 1, children, direction: 'ltr', format: '', indent: 0 } });
+const textNode = (text: string) => ({
+  type: 'text',
+  version: 1,
+  text,
+  format: 0,
+  detail: 0,
+  mode: 'normal',
+  style: '',
+});
+const inline = (text: string) =>
+  text
+    .split('\n')
+    .flatMap((line, i) => [...(i ? [{ type: 'linebreak', version: 1 }] : []), ...(line ? [textNode(line)] : [])]);
+const paragraph = (children: unknown[]) => ({
+  type: 'paragraph',
+  version: 1,
+  children,
+  direction: 'ltr',
+  format: '',
+  indent: 0,
+  textFormat: 0,
+  textStyle: '',
+});
+const lexical = (children: unknown[]) => ({
+  root: { type: 'root', version: 1, children, direction: 'ltr', format: '', indent: 0 },
+});
 
 /** Paragraph strings → rich text (one paragraph each; "\n" becomes a line break). */
 const richParagraphs = (paras: string[]) => lexical(paras.map((p) => paragraph(inline(p))));
@@ -45,7 +68,17 @@ const richSegments = (segments: { text: string; href?: string }[]) =>
     paragraph(
       segments.flatMap((s) =>
         s.href
-          ? [{ type: 'link', version: 3, fields: { linkType: 'custom', url: s.href, newTab: false }, children: [textNode(s.text)], direction: 'ltr', format: '', indent: 0 }]
+          ? [
+              {
+                type: 'link',
+                version: 3,
+                fields: { linkType: 'custom', url: s.href, newTab: false },
+                children: [textNode(s.text)],
+                direction: 'ltr',
+                format: '',
+                indent: 0,
+              },
+            ]
           : inline(s.text),
       ),
     ),
@@ -53,8 +86,21 @@ const richSegments = (segments: { text: string; href?: string }[]) =>
 
 // ── upserts ─────────────────────────────────────────────────────────────────
 
-async function upsert(payload: Payload, collection: CollectionSlug, importId: string, data: Obj, drafts = false): Promise<Id> {
-  const { docs } = await payload.find({ collection, where: { importId: { equals: importId } }, limit: 1, depth: 0, draft: drafts, context: ctx });
+async function upsert(
+  payload: Payload,
+  collection: CollectionSlug,
+  importId: string,
+  data: Obj,
+  drafts = false,
+): Promise<Id> {
+  const { docs } = await payload.find({
+    collection,
+    where: { importId: { equals: importId } },
+    limit: 1,
+    depth: 0,
+    draft: drafts,
+    context: ctx,
+  });
   const body = { ...data, importId, ...(drafts ? { _status: 'published' } : {}) } as never;
   const doc = docs[0]
     ? await payload.update({ collection, id: docs[0].id, data: body, depth: 0, context: ctx })
@@ -65,30 +111,79 @@ async function upsert(payload: Payload, collection: CollectionSlug, importId: st
 function mediaUploader(payload: Payload) {
   const ids = new Map<string, Id>();
   const alts = new Map<string, string>();
-  /** The media id of a /images/… or /video/… file, uploaded once (first alt text wins). */
-  return async function media(ref: Img | string | undefined, alt?: string): Promise<Id | undefined> {
-    if (!ref) return undefined;
-    const src = typeof ref === 'string' ? ref : ref.src;
-    const text = typeof ref === 'string' ? (alt ?? path.basename(src)) : ref.alt;
+  // One upload at a time: callers use Promise.all, and parallel creates race on Payload's
+  // unique-filename check (both see the name free, the second insert fails).
+  let queue: Promise<unknown> = Promise.resolve();
+
+  async function upload(src: string, text: string): Promise<Id> {
     const known = ids.get(src);
     if (known) {
-      if (alts.get(src) !== text) payload.logger.warn(`${src}: used with another alt text too ("${text}"); keeping "${alts.get(src)}"`);
+      if (alts.get(src) !== text)
+        payload.logger.warn(`${src}: used with another alt text too ("${text}"); keeping "${alts.get(src)}"`);
       return known;
     }
-    const { docs } = await payload.find({ collection: 'media', where: { importId: { equals: src } }, limit: 1, depth: 0 });
-    const id = docs[0]
-      ? (await payload.update({ collection: 'media', id: docs[0].id, data: { alt: text }, depth: 0, context: ctx })).id
-      : (await payload.create({ collection: 'media', data: { alt: text, importId: src }, filePath: path.join(root, 'public', src), depth: 0, context: ctx })).id;
-    ids.set(src, id);
-    alts.set(src, text);
-    return id;
+    // by filename too: a file uploaded by hand (or by an earlier run) would otherwise clash on it
+    const { docs } = await payload.find({
+      collection: 'media',
+      where: { or: [{ importId: { equals: src } }, { filename: { equals: path.basename(src) } }] },
+      limit: 1,
+      depth: 0,
+    });
+    try {
+      const id = docs[0]
+        ? (
+            await payload.update({
+              collection: 'media',
+              id: docs[0].id,
+              data: { alt: text, importId: src },
+              depth: 0,
+              context: ctx,
+            })
+          ).id
+        : (
+            await payload.create({
+              collection: 'media',
+              data: { alt: text, importId: src },
+              filePath: path.join(root, 'public', src),
+              depth: 0,
+              context: ctx,
+            })
+          ).id;
+      ids.set(src, id);
+      alts.set(src, text);
+      return id;
+    } catch (err) {
+      payload.logger.error(`media ${src} failed (${docs[0] ? `updating #${docs[0].id}` : 'creating'})`);
+      throw err;
+    }
+  }
+
+  /** The media id of a /images/… or /video/… file, uploaded once (first alt text wins). */
+  return function media(ref: Img | string | undefined, alt?: string): Promise<Id | undefined> {
+    if (!ref) return Promise.resolve(undefined);
+    const src = typeof ref === 'string' ? ref : ref.src;
+    const text = typeof ref === 'string' ? (alt ?? path.basename(src)) : ref.alt;
+    const result = queue.then(() => upload(src, text));
+    queue = result.catch(() => undefined);
+    return result;
   };
 }
 
 // ── run ─────────────────────────────────────────────────────────────────────
 
 async function seed() {
+  // Payload checks the local upload folder for name clashes even when files go to S3: with the dev
+  // ./media present, every upload would be renamed (photo.jpg → photo-1.jpg).
+  if (process.env.S3_BUCKET && (await readdir(path.join(root, 'media')).catch(() => [])).length) {
+    throw new Error(
+      'S3_BUCKET is set but ./media has files: move ./media aside (e.g. mv media media.local) before seeding.',
+    );
+  }
   const payload = await getPayload({ config });
+  const db = new URL(process.env.DATABASE_URL ?? 'postgres://unset');
+  payload.logger.info(
+    `seeding ${db.host}${db.pathname}, media ${process.env.S3_BUCKET ? `→ s3://${process.env.S3_BUCKET}` : '→ ./media'}`,
+  );
   const media = mediaUploader(payload);
   const log = (what: string, n: number) => payload.logger.info(`seeded ${n} ${what}`);
   const ids: Record<string, Map<string, Id>> = {};
@@ -97,9 +192,16 @@ async function seed() {
     if (id === undefined) throw new Error(`Unknown ${kind} "${old}"`);
     return id;
   };
-  async function each<T extends { id: string }>(kind: string, collection: CollectionSlug, items: T[], toData: (item: T, index: number) => Promise<Obj> | Obj, drafts = false) {
+  async function each<T extends { id: string }>(
+    kind: string,
+    collection: CollectionSlug,
+    items: T[],
+    toData: (item: T, index: number) => Promise<Obj> | Obj,
+    drafts = false,
+  ) {
     ids[kind] = new Map();
-    for (const [i, item] of items.entries()) ids[kind].set(item.id, await upsert(payload, collection, `${kind}:${item.id}`, await toData(item, i), drafts));
+    for (const [i, item] of items.entries())
+      ids[kind].set(item.id, await upsert(payload, collection, `${kind}:${item.id}`, await toData(item, i), drafts));
     log(kind, items.length);
   }
   const texts = (list?: string[]) => (list ?? []).map((text) => ({ text }));
@@ -139,7 +241,11 @@ async function seed() {
   await each('course', 'courses', await json<Any[]>('courses.json'), (c) => ({
     ...c,
     id: undefined,
-    starts: (c.starts as Obj[]).map((s) => ({ date: day(s.date as string), startTime: s.startTime, endTime: s.endTime })),
+    starts: (c.starts as Obj[]).map((s) => ({
+      date: day(s.date as string),
+      startTime: s.startTime,
+      endTime: s.endTime,
+    })),
     nextIntake: c.nextIntake ? day(c.nextIntake as string) : null,
     prices: (c.prices as Obj[]).map(({ id: _, ...p }) => p),
   }));
@@ -170,12 +276,30 @@ async function seed() {
     async ({ id }) => {
       const md = await readFile(path.join(root, 'content', 'legal', `${id}.md`), 'utf-8');
       const title = md.match(/^# (.+)$/m)?.[1]?.trim() ?? id;
-      const effective = md.match(/(\d{4})\. (január|február|március|április|május|június|július|augusztus|szeptember|október|november|december) (\d{1,2})\. napján lép hatályba/);
-      const months = ['január', 'február', 'március', 'április', 'május', 'június', 'július', 'augusztus', 'szeptember', 'október', 'november', 'december'];
+      const effective = md.match(
+        /(\d{4})\. (január|február|március|április|május|június|július|augusztus|szeptember|október|november|december) (\d{1,2})\. napján lép hatályba/,
+      );
+      const [, y = '', month = '', d = ''] = effective ?? [];
+      const months = [
+        'január',
+        'február',
+        'március',
+        'április',
+        'május',
+        'június',
+        'július',
+        'augusztus',
+        'szeptember',
+        'október',
+        'november',
+        'december',
+      ];
       return {
         title,
         slug: id,
-        effectiveDate: effective ? day(`${effective[1]}-${String(months.indexOf(effective[2]!) + 1).padStart(2, '0')}-${effective[3]!.padStart(2, '0')}`) : null,
+        effectiveDate: effective
+          ? day(`${y}-${String(months.indexOf(month) + 1).padStart(2, '0')}-${d.padStart(2, '0')}`)
+          : null,
         body: convertMarkdownToLexical({ editorConfig: legalEditor, markdown: md.replace(/^# .+\n+/m, '') }),
       };
     },
@@ -198,7 +322,10 @@ async function seed() {
         // SEO: what the production page has shown so far (title, first sentence of the story);
         // no image, so sharing keeps using the full poster
         meta: p.detailPage
-          ? { title: `${p.title} — ${siteName}`, description: firstSentence((p.longDescription as string[])[0] ?? (p.summary as string)) }
+          ? {
+              title: `${p.title} — ${siteName}`,
+              description: firstSentence((p.longDescription as string[])[0] ?? (p.summary as string)),
+            }
           : undefined,
         longDescription: richParagraphs(p.longDescription as string[]),
         // the media library requires alt text; untitled posters get "<title> — plakát", like the others
@@ -206,7 +333,9 @@ async function seed() {
         heroImage: await media(p.heroImage as Img | undefined),
         heroVideo: await media(p.heroVideo as string | undefined, `${p.title} — háttérvideó`),
         gallery: await Promise.all(((p.gallery as Img[] | undefined) ?? []).map((g) => media(g))),
-        inviteVideo: invite ? { video: await media(invite.src, invite.title), title: invite.title, poster: await media(invite.poster) } : undefined,
+        inviteVideo: invite
+          ? { video: await media(invite.src, invite.title), title: invite.title, poster: await media(invite.poster) }
+          : undefined,
       };
     },
     true,
@@ -223,12 +352,42 @@ async function seed() {
   }));
 
   // pages: first make sure every page exists (the course switcher references pages by path)
-  const files = ['home', 'rolunk', 'kepzesek', 'kezdo-kurzus', 'szakmai-kurzus', 'nyitott-alkalmak', 'repertoar', 'kozelgo-eloadasok', 'csapatepito', 'kapcsolat', 'oktatok', 'adatkezelesi-tajekoztato', 'bio'];
+  const files = [
+    'home',
+    'rolunk',
+    'kepzesek',
+    'kezdo-kurzus',
+    'szakmai-kurzus',
+    'nyitott-alkalmak',
+    'repertoar',
+    'kozelgo-eloadasok',
+    'csapatepito',
+    'kapcsolat',
+    'oktatok',
+    'adatkezelesi-tajekoztato',
+    'bio',
+  ];
   const pages = await Promise.all(files.map((f) => json<Obj & { path: string; blocks: Obj[] }>(`pages/${f}.json`)));
   const pageIds = new Map<string, Id>();
   for (const p of pages) {
-    const { docs } = await payload.find({ collection: 'pages', where: { importId: { equals: `page:${p.path}` } }, limit: 1, depth: 0, draft: true });
-    pageIds.set(p.path, docs[0]?.id ?? (await upsert(payload, 'pages', `page:${p.path}`, { title: p.title, path: p.path, meta: p.meta, layout: p.layout, blocks: [] }, true)));
+    const { docs } = await payload.find({
+      collection: 'pages',
+      where: { importId: { equals: `page:${p.path}` } },
+      limit: 1,
+      depth: 0,
+      draft: true,
+    });
+    pageIds.set(
+      p.path,
+      docs[0]?.id ??
+        (await upsert(
+          payload,
+          'pages',
+          `page:${p.path}`,
+          { title: p.title, path: p.path, meta: p.meta, layout: p.layout, blocks: [] },
+          true,
+        )),
+    );
   }
 
   /** JSON block → Payload block data (the inverse of lib/cms-map.ts). */
@@ -247,12 +406,20 @@ async function seed() {
     }
     const o = value as Obj;
     if (typeof o.src === 'string' && typeof o.alt === 'string') return media(o as Img);
-    if (key === 'rolling') return { ...o, text: richSegments(o.text as { text: string; href?: string }[]), inquiry: o.inquiry };
+    if (key === 'rolling')
+      return { ...o, text: richSegments(o.text as { text: string; href?: string }[]), inquiry: o.inquiry };
     if (key === 'switcher') {
-      return { label: o.label, pages: (o.pages as { path: string; label?: string }[]).map((p) => ({ page: pageIds.get(p.path), label: p.label })) };
+      return {
+        label: o.label,
+        pages: (o.pages as { path: string; label?: string }[]).map((p) => ({
+          page: pageIds.get(p.path),
+          label: p.label,
+        })),
+      };
     }
     const out: Obj = {};
-    for (const [k, v] of Object.entries(o)) out[k] = k === 'courses' ? (v as string[]).map((c) => idOf('course', c)) : await convert(v, k);
+    for (const [k, v] of Object.entries(o))
+      out[k] = k === 'courses' ? (v as string[]).map((c) => idOf('course', c)) : await convert(v, k);
     return out;
   }
 
@@ -264,7 +431,10 @@ async function seed() {
   // redirects: the previous (WordPress) site's addresses → the new pages, so search results and
   // old links keep working. Paths of the live site, from its sitemap (October 2026).
   const page = (path: string) => ({ type: 'reference', reference: { relationTo: 'pages', value: pageIds.get(path) } });
-  const production = (old: string) => ({ type: 'reference', reference: { relationTo: 'productions', value: idOf('production', old) } });
+  const production = (old: string) => ({
+    type: 'reference',
+    reference: { relationTo: 'productions', value: idOf('production', old) },
+  });
   const url = (href: string) => ({ type: 'custom', url: href });
   const redirects: [string, Obj][] = [
     ['/rolunk-2', page('/rolunk')],
@@ -306,7 +476,10 @@ async function seed() {
     context: ctx,
     data: {
       ...settings,
-      contact: { ...settings.contact, primaryPerson: idOf('contactPerson', settings.contact.primaryPersonId as string) },
+      contact: {
+        ...settings.contact,
+        primaryPerson: idOf('contactPerson', settings.contact.primaryPersonId as string),
+      },
       productionPage: { ctaBand: idOf('ctaBand', settings.productionPage.ctaBand as string) },
     } as never,
   });
@@ -316,7 +489,18 @@ async function seed() {
   const { totalDocs } = await payload.count({ collection: 'users' });
   if (totalDocs === 0) {
     if (process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
-      await payload.create({ collection: 'users', data: { email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD, name: 'Adminisztrátor', role: 'admin' } });
+      await payload.create({
+        collection: 'users',
+        data: {
+          email: process.env.ADMIN_EMAIL,
+          password: process.env.ADMIN_PASSWORD,
+          lastName: 'Adminisztrátor',
+          firstName: 'Morpheus',
+          roles: ['admin'],
+          _verified: true,
+        },
+        disableVerificationEmail: true,
+      });
       payload.logger.info(`created admin ${process.env.ADMIN_EMAIL}`);
     } else payload.logger.warn('no users yet: set ADMIN_EMAIL and ADMIN_PASSWORD, or create the first user at /admin');
   }

@@ -1,16 +1,19 @@
 import type { Field, GlobalConfig } from 'payload';
 
-import { anyone, loggedIn } from './access';
+import { anyone, isStaffOrAdmin } from './access';
 import { link, links, relationship, text, textarea } from './fields';
 import { globalRevalidation } from './revalidate';
 
-const access = { read: anyone, update: loggedIn };
+const access = { read: anyone, update: isStaffOrAdmin };
 
 export const SiteSettings: GlobalConfig = {
   slug: 'siteSettings',
   label: 'Beállítások',
   access,
-  admin: { group: 'Beállítások', description: 'A weboldal egészére érvényes adatok: menü, lábléc, elérhetőségek, közösségi média.' },
+  admin: {
+    group: 'Beállítások',
+    description: 'A weboldal egészére érvényes adatok: menü, lábléc, elérhetőségek, közösségi média.',
+  },
   hooks: globalRevalidation(),
   fields: [
     {
@@ -73,7 +76,10 @@ export const SiteSettings: GlobalConfig = {
               label: 'Elérhetőség',
               type: 'group',
               fields: [
-                { type: 'row', fields: [text('email', 'E-mail', { required: true }), text('address', 'Cím', { required: true })] },
+                {
+                  type: 'row',
+                  fields: [text('email', 'E-mail', { required: true }), text('address', 'Cím', { required: true })],
+                },
                 relationship('primaryPerson', 'Elsődleges kapcsolattartó', 'contactPeople', { required: true }),
               ],
             },
@@ -84,7 +90,9 @@ export const SiteSettings: GlobalConfig = {
               fields: [
                 text('facebook', 'Facebook oldal', { required: true }),
                 text('instagram', 'Instagram oldal', { required: true }),
-                text('tixa', 'Tixa szervezői oldal', { description: 'A jegyértékesítő oldal, ahol az összes előadásunk látszik.' }),
+                text('tixa', 'Tixa szervezői oldal', {
+                  description: 'A jegyértékesítő oldal, ahol az összes előadásunk látszik.',
+                }),
               ],
             },
             {
@@ -92,7 +100,10 @@ export const SiteSettings: GlobalConfig = {
               label: 'Térkép',
               type: 'group',
               fields: [
-                textarea('embedUrl', 'Beágyazási cím', { required: true, description: 'Google Térkép → Megosztás → Térkép beágyazása → az src="…" cím.' }),
+                textarea('embedUrl', 'Beágyazási cím', {
+                  required: true,
+                  description: 'Google Térkép → Megosztás → Térkép beágyazása → az src="…" cím.',
+                }),
                 text('directionsUrl', 'Útvonaltervezés link', { required: true }),
                 text('title', 'A térkép leírása', { required: true }),
               ],
@@ -107,7 +118,15 @@ export const SiteSettings: GlobalConfig = {
               label: 'Oldalak címei',
               type: 'group',
               admin: { description: 'Ide mutatnak a „Közelgő előadások” és a „Repertoár” linkek.' },
-              fields: [{ type: 'row', fields: [text('upcomingShows', 'Közelgő előadások', { required: true }), text('repertoire', 'Repertoár', { required: true })] }],
+              fields: [
+                {
+                  type: 'row',
+                  fields: [
+                    text('upcomingShows', 'Közelgő előadások', { required: true }),
+                    text('repertoire', 'Repertoár', { required: true }),
+                  ],
+                },
+              ],
             },
             {
               name: 'productionPage',
@@ -181,11 +200,23 @@ const UI: Spec = {
       invite: 'Meghívó videó címe',
     },
   ],
-  repertoire: ['Repertoár szűrő', { filter: 'Szűrés (felolvasott)', all: 'Mind', company: 'Társulati', students: 'Hallgatói' }],
-  reviews: ['Vélemények', { previous: 'Előző (felolvasott)', next: 'Következő (felolvasott)', photoPlaceholder: 'Fotó helye — {name} = név' }],
+  repertoire: [
+    'Repertoár szűrő',
+    { filter: 'Szűrés (felolvasott)', all: 'Mind', company: 'Társulati', students: 'Hallgatói' },
+  ],
+  reviews: [
+    'Vélemények',
+    { previous: 'Előző (felolvasott)', next: 'Következő (felolvasott)', photoPlaceholder: 'Fotó helye — {name} = név' },
+  ],
   gallery: [
     'Galéria',
-    { previous: 'Előző képek', next: 'Következő képek', previousImage: 'Előző kép', nextImage: 'Következő kép', zoom: 'Nagyítás — {alt} = kép leírása' },
+    {
+      previous: 'Előző képek',
+      next: 'Következő képek',
+      previousImage: 'Előző kép',
+      nextImage: 'Következő kép',
+      zoom: 'Nagyítás — {alt} = kép leírása',
+    },
   ],
   course: [
     'Kurzusok',
@@ -205,11 +236,24 @@ const UI: Spec = {
   ],
   workshops: [
     'Workshopok',
-    { date: 'Időpont', time: 'Napi időbeosztás', leader: 'Kurzusvezető', leaderHeading: 'A kurzusvezetőről', empty: 'Nincs workshop', followUs: 'Kövess minket' },
+    {
+      date: 'Időpont',
+      time: 'Napi időbeosztás',
+      leader: 'Kurzusvezető',
+      leaderHeading: 'A kurzusvezetőről',
+      empty: 'Nincs workshop',
+      followUs: 'Kövess minket',
+    },
   ],
   sessions: [
     'Nyitott Műhely',
-    { book: 'Foglalok gomb', closed: 'Lezárult', open: 'Foglalási határidő — {deadline} = dátum', closedText: 'Lezárult foglalás', empty: 'Nincs időpont' },
+    {
+      book: 'Foglalok gomb',
+      closed: 'Lezárult',
+      open: 'Foglalási határidő — {deadline} = dátum',
+      closedText: 'Lezárult foglalás',
+      empty: 'Nincs időpont',
+    },
   ],
   teamBuilding: ['Csapatépítő', { duration: 'Időkeret', venue: 'Helyszín' }],
   quoteForm: [
@@ -217,7 +261,17 @@ const UI: Spec = {
     {
       title: 'Cím',
       required: 'Kötelező mezők',
-      fields: ['Mezők', { company: 'Cég', lastName: 'Vezetéknév', firstName: 'Keresztnév', email: 'E-mail', phone: 'Telefon', message: 'Üzenet' }],
+      fields: [
+        'Mezők',
+        {
+          company: 'Cég',
+          lastName: 'Vezetéknév',
+          firstName: 'Keresztnév',
+          email: 'E-mail',
+          phone: 'Telefon',
+          message: 'Üzenet',
+        },
+      ],
       messagePlaceholder: 'Üzenet mintaszöveg',
       error: 'Hibaüzenet',
       submit: 'Küldés gomb',
@@ -241,10 +295,11 @@ const UI: Spec = {
 };
 
 const uiFields = (spec: Spec): Field[] =>
-  Object.entries(spec).map(([name, value]): Field =>
-    typeof value === 'string'
-      ? { name, label: value, type: 'text', required: true }
-      : { name, label: value[0], type: 'group', fields: uiFields(value[1]) },
+  Object.entries(spec).map(
+    ([name, value]): Field =>
+      typeof value === 'string'
+        ? { name, label: value, type: 'text', required: true }
+        : { name, label: value[0], type: 'group', fields: uiFields(value[1]) },
   );
 
 export const Ui: GlobalConfig = {
@@ -253,7 +308,8 @@ export const Ui: GlobalConfig = {
   access,
   admin: {
     group: 'Beállítások',
-    description: 'Gombok, üres állapotok, űrlapok és felolvasott feliratok szövegei. A {kapcsos zárójeles} részeket a weboldal tölti ki — ezeket hagyd meg.',
+    description:
+      'Gombok, üres állapotok, űrlapok és felolvasott feliratok szövegei. A {kapcsos zárójeles} részeket a weboldal tölti ki — ezeket hagyd meg.',
   },
   hooks: globalRevalidation(),
   fields: uiFields(UI),

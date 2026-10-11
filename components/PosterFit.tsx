@@ -7,7 +7,7 @@
  * stacked layout and nothing is adjusted.
  * Client component: it measures rendered heights, which only exist in the browser.
  */
-import { useEffect, useRef, type ReactNode } from 'react';
+import { type ReactNode, useEffect, useRef } from 'react';
 
 const DESKTOP = '(min-width: 1280px)';
 
@@ -44,7 +44,10 @@ export default function PosterFit({ className, children }: { className: string; 
 
   useEffect(() => {
     const media = window.matchMedia(DESKTOP);
-    const fitAll = () => ref.current?.querySelectorAll<HTMLElement>('article').forEach((card) => fitCard(card, media.matches));
+    const fitAll = () =>
+      ref.current?.querySelectorAll<HTMLElement>('article').forEach((card) => {
+        fitCard(card, media.matches);
+      });
     let timer: ReturnType<typeof setTimeout> | undefined;
     const onResize = () => {
       clearTimeout(timer);

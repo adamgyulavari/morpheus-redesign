@@ -31,7 +31,8 @@ export const redirectsConfig: RedirectsPluginConfig = {
       group: 'Oldalak',
       useAsTitle: 'from',
       defaultColumns: ['from', 'destination', 'type', 'updatedAt'],
-      description: 'Régi vagy megszűnt címek továbbítása egy mostani oldalra (pl. a korábbi weboldal /rolunk-2/ címe → Rólunk).',
+      description:
+        'Régi vagy megszűnt címek továbbítása egy mostani oldalra (pl. a korábbi weboldal /rolunk-2/ címe → Rólunk).',
     },
     hooks: collectionRevalidation('redirects'),
     fields: ({ defaultFields }) => [
@@ -39,7 +40,11 @@ export const redirectsConfig: RedirectsPluginConfig = {
         'name' in field && field.name === 'from'
           ? ({
               ...field,
-              admin: { ...field.admin, description: 'A régi cím, a domain nélkül, perjellel kezdve: pl. /rolunk-2 (a végén lévő perjel nem számít).' },
+              admin: {
+                ...field.admin,
+                description:
+                  'A régi cím, a domain nélkül, perjellel kezdve: pl. /rolunk-2 (a végén lévő perjel nem számít).',
+              },
             } as Field)
           : field,
       ),
@@ -49,11 +54,17 @@ export const redirectsConfig: RedirectsPluginConfig = {
         label: 'Cél',
         type: 'text',
         virtual: true,
-        admin: { readOnly: true, position: 'sidebar', description: 'Ide visz az átirányítás (a fenti beállításból számolva).' },
+        admin: {
+          readOnly: true,
+          position: 'sidebar',
+          description: 'Ide visz az átirányítás (a fenti beállításból számolva).',
+        },
         hooks: {
           afterRead: [
             async ({ siblingData, req }) => {
-              const to = siblingData.to as { type?: string; url?: string; reference?: { relationTo: string; value: unknown } } | undefined;
+              const to = siblingData.to as
+                | { type?: string; url?: string; reference?: { relationTo: string; value: unknown } }
+                | undefined;
               if (to?.type === 'custom') return to.url;
               const ref = to?.reference;
               if (!ref?.value) return undefined;
@@ -61,10 +72,18 @@ export const redirectsConfig: RedirectsPluginConfig = {
                 typeof ref.value === 'object'
                   ? (ref.value as { path?: string; slug?: string })
                   : await req.payload
-                      .findByID({ collection: ref.relationTo as 'pages' | 'productions', id: ref.value as number, depth: 0, draft: true, req })
+                      .findByID({
+                        collection: ref.relationTo as 'pages' | 'productions',
+                        id: ref.value as number,
+                        depth: 0,
+                        draft: true,
+                        req,
+                      })
                       .catch(() => null);
               if (!doc) return undefined;
-              return ref.relationTo === 'productions' ? `/repertoar/${(doc as { slug?: string }).slug}` : (doc as { path?: string }).path;
+              return ref.relationTo === 'productions'
+                ? `/repertoar/${(doc as { slug?: string }).slug}`
+                : (doc as { path?: string }).path;
             },
           ],
         },

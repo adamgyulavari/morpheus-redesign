@@ -17,12 +17,20 @@ export const Venues: CollectionConfig = {
   slug: 'venues',
   labels: { singular: 'Helyszín', plural: 'Helyszínek' },
   access: contentAccess,
-  admin: { useAsTitle: 'name', defaultColumns: ['name', 'shortName'], group: SHOWS, description: 'Ahol az előadásokat tartjuk.' },
+  admin: {
+    useAsTitle: 'name',
+    defaultColumns: ['name', 'shortName'],
+    group: SHOWS,
+    description: 'Ahol az előadásokat tartjuk.',
+  },
   defaultSort: 'name',
   hooks: collectionRevalidation('venues'),
   fields: [
     text('name', 'Teljes név / cím', { required: true, description: 'Pl. „1027 Budapest, Frankel Leó út 6.”' }),
-    text('shortName', 'Rövid név', { required: true, description: 'Listákban ez jelenik meg, pl. „Frankel Leó út 6.”' }),
+    text('shortName', 'Rövid név', {
+      required: true,
+      description: 'Listákban ez jelenik meg, pl. „Frankel Leó út 6.”',
+    }),
     importId,
   ],
 };
@@ -31,15 +39,37 @@ export const Reviews: CollectionConfig = {
   slug: 'reviews',
   labels: { singular: 'Vélemény', plural: 'Vélemények' },
   access: contentAccess,
-  admin: { useAsTitle: 'name', defaultColumns: ['name', 'label', 'order'], group: PEOPLE, description: 'Hallgatói vélemények a csúszkában.' },
+  admin: {
+    useAsTitle: 'name',
+    defaultColumns: ['name', 'label', 'order'],
+    group: PEOPLE,
+    description: 'Hallgatói vélemények a csúszkában.',
+  },
   defaultSort: 'order',
   hooks: collectionRevalidation('reviews'),
   fields: [
-    { type: 'row', fields: [text('name', 'Név', { required: true }), text('label', 'Címke', { required: true, description: 'Pl. „Morpheus-hallgató”' })] },
-    textarea('quote', 'Kiemelt idézet', { required: true, description: 'A kártyán megjelenő rövid idézet, „idézőjelekkel”.' }),
-    paragraphs('fullText', 'Teljes vélemény', { required: true, description: 'A „Tovább olvasom” ablakban jelenik meg.' }),
+    {
+      type: 'row',
+      fields: [
+        text('name', 'Név', { required: true }),
+        text('label', 'Címke', { required: true, description: 'Pl. „Morpheus-hallgató”' }),
+      ],
+    },
+    textarea('quote', 'Kiemelt idézet', {
+      required: true,
+      description: 'A kártyán megjelenő rövid idézet, „idézőjelekkel”.',
+    }),
+    paragraphs('fullText', 'Teljes vélemény', {
+      required: true,
+      description: 'A „Tovább olvasom” ablakban jelenik meg.',
+    }),
     image('photo', 'Portré', { description: 'Nem kötelező; nélküle helykitöltő jelenik meg.' }),
-    { name: 'order', label: 'Sorrend', type: 'number', admin: { position: 'sidebar', description: 'Kisebb szám előrébb kerül.' } },
+    {
+      name: 'order',
+      label: 'Sorrend',
+      type: 'number',
+      admin: { position: 'sidebar', description: 'Kisebb szám előrébb kerül.' },
+    },
     importId,
   ],
 };
@@ -48,14 +78,31 @@ export const Instructors: CollectionConfig = {
   slug: 'instructors',
   labels: { singular: 'Oktató', plural: 'Oktatók' },
   access: contentAccess,
-  admin: { useAsTitle: 'name', defaultColumns: ['name', 'role', 'order'], group: PEOPLE, description: 'Az oktatók az Oktatóink oldalon és a nyitóoldalon.' },
+  admin: {
+    useAsTitle: 'name',
+    defaultColumns: ['name', 'role', 'order'],
+    group: PEOPLE,
+    description: 'Az oktatók az Oktatóink oldalon és a nyitóoldalon.',
+  },
   defaultSort: 'order',
   hooks: collectionRevalidation('instructors'),
   fields: [
-    { type: 'row', fields: [text('name', 'Név', { required: true }), text('role', 'Szerep', { required: true, description: 'Pl. „Színészmesterség oktató”' })] },
+    {
+      type: 'row',
+      fields: [
+        text('name', 'Név', { required: true }),
+        text('role', 'Szerep', { required: true, description: 'Pl. „Színészmesterség oktató”' }),
+      ],
+    },
     paragraphs('bio', 'Bemutatkozás', { required: true }),
     image('photo', 'Fotó', { required: true }),
-    { name: 'order', label: 'Sorrend', type: 'number', required: true, admin: { position: 'sidebar', description: 'Kisebb szám előrébb kerül.' } },
+    {
+      name: 'order',
+      label: 'Sorrend',
+      type: 'number',
+      required: true,
+      admin: { position: 'sidebar', description: 'Kisebb szám előrébb kerül.' },
+    },
     importId,
   ],
 };
@@ -64,7 +111,12 @@ export const ContactPeople: CollectionConfig = {
   slug: 'contactPeople',
   labels: { singular: 'Kapcsolattartó', plural: 'Kapcsolattartók' },
   access: contentAccess,
-  admin: { useAsTitle: 'name', defaultColumns: ['name', 'role', 'phone'], group: PEOPLE, description: 'A Kapcsolat oldalon és a bio oldalon megjelenő személyek.' },
+  admin: {
+    useAsTitle: 'name',
+    defaultColumns: ['name', 'role', 'phone'],
+    group: PEOPLE,
+    description: 'A Kapcsolat oldalon és a bio oldalon megjelenő személyek.',
+  },
   defaultSort: 'order',
   hooks: collectionRevalidation('contactPeople'),
   fields: [
@@ -80,12 +132,20 @@ export const TeamBuildingProgrammes: CollectionConfig = {
   slug: 'teamBuildingProgrammes',
   labels: { singular: 'Csapatépítő program', plural: 'Csapatépítő programok' },
   access: contentAccess,
-  admin: { useAsTitle: 'name', defaultColumns: ['name', 'duration', 'order'], group: PROGRAMMES, description: 'A Csapatépítő oldalon felsorolt programok.' },
+  admin: {
+    useAsTitle: 'name',
+    defaultColumns: ['name', 'duration', 'order'],
+    group: PROGRAMMES,
+    description: 'A Csapatépítő oldalon felsorolt programok.',
+  },
   defaultSort: 'order',
   hooks: collectionRevalidation('teamBuildingProgrammes'),
   fields: [
     text('name', 'Név', { required: true }),
-    { type: 'row', fields: [text('duration', 'Időkeret', { required: true }), text('venue', 'Helyszín', { required: true })] },
+    {
+      type: 'row',
+      fields: [text('duration', 'Időkeret', { required: true }), text('venue', 'Helyszín', { required: true })],
+    },
     paragraphs('description', 'Leírás', { required: true }),
     { name: 'order', label: 'Sorrend', type: 'number', admin: { position: 'sidebar' } },
     importId,
@@ -100,7 +160,8 @@ export const Courses: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['title', 'rhythm', 'length'],
     group: PROGRAMMES,
-    description: 'A kurzusok adatai, induló csoportjai és árai. Az oldalak ezekből építik a kártyákat, időpontokat és árakat.',
+    description:
+      'A kurzusok adatai, induló csoportjai és árai. Az oldalak ezekből építik a kártyákat, időpontokat és árakat.',
   },
   defaultSort: 'title',
   hooks: collectionRevalidation('courses'),
@@ -111,7 +172,13 @@ export const Courses: CollectionConfig = {
         {
           label: 'Alapadatok',
           fields: [
-            { type: 'row', fields: [text('title', 'Név', { required: true }), text('slug', 'Azonosító', { required: true, description: 'Ékezet nélkül, pl. kezdo-kurzus' })] },
+            {
+              type: 'row',
+              fields: [
+                text('title', 'Név', { required: true }),
+                text('slug', 'Azonosító', { required: true, description: 'Ékezet nélkül, pl. kezdo-kurzus' }),
+              ],
+            },
             {
               type: 'row',
               fields: [
@@ -126,7 +193,10 @@ export const Courses: CollectionConfig = {
                 text('length', 'Hossz', { required: true, description: 'Pl. „20 alkalom (+2)”' }),
               ],
             },
-            text('admission', 'Felvétel', { required: true, description: 'Pl. „előzetes tapasztalat nélkül” — a Képzések összehasonlításban.' }),
+            text('admission', 'Felvétel', {
+              required: true,
+              description: 'Pl. „előzetes tapasztalat nélkül” — a Képzések összehasonlításban.',
+            }),
             {
               name: 'card',
               label: 'Kártya (nyitóoldal, Képzések)',
@@ -150,7 +220,13 @@ export const Courses: CollectionConfig = {
               type: 'array',
               fields: [
                 date('date', 'Első alkalom', { required: true }),
-                { type: 'row', fields: [time('startTime', 'Kezdés', { required: true }), time('endTime', 'Vége', { required: true })] },
+                {
+                  type: 'row',
+                  fields: [
+                    time('startTime', 'Kezdés', { required: true }),
+                    time('endTime', 'Vége', { required: true }),
+                  ],
+                },
               ],
             },
             {
@@ -174,7 +250,13 @@ export const Courses: CollectionConfig = {
               type: 'array',
               required: true,
               fields: [
-                { type: 'row', fields: [text('label', 'Megnevezés', { required: true }), { name: 'amount', label: 'Összeg (Ft)', type: 'number', required: true }] },
+                {
+                  type: 'row',
+                  fields: [
+                    text('label', 'Megnevezés', { required: true }),
+                    { name: 'amount', label: 'Összeg (Ft)', type: 'number', required: true },
+                  ],
+                },
                 {
                   type: 'row',
                   fields: [
@@ -207,7 +289,10 @@ export const OpenWorkshopSessions: CollectionConfig = {
   hooks: collectionRevalidation('openWorkshopSessions'),
   fields: [
     date('date', 'Dátum', { required: true }),
-    { type: 'row', fields: [time('startTime', 'Kezdés', { required: true }), time('endTime', 'Vége', { required: true })] },
+    {
+      type: 'row',
+      fields: [time('startTime', 'Kezdés', { required: true }), time('endTime', 'Vége', { required: true })],
+    },
     { name: 'price', label: 'Ár (Ft)', type: 'number', required: true },
     text('bookingUrl', 'Foglalási link', { required: true }),
     date('bookingDeadline', 'Foglalási határidő', { required: true, description: 'A foglalás e nap végén zárul.' }),
@@ -228,10 +313,25 @@ export const Workshops: CollectionConfig = {
   defaultSort: '-startDate',
   hooks: collectionRevalidation('workshops'),
   fields: [
-    { type: 'row', fields: [text('kind', 'Típus', { required: true, description: '„Workshop” vagy „Tábor” — felcímként jelenik meg.' }), text('title', 'Cím', { required: true })] },
+    {
+      type: 'row',
+      fields: [
+        text('kind', 'Típus', { required: true, description: '„Workshop” vagy „Tábor” — felcímként jelenik meg.' }),
+        text('title', 'Cím', { required: true }),
+      ],
+    },
     text('subtitle', 'Alcím', { description: 'Pl. „Szigethy Norberttel”' }),
-    { type: 'row', fields: [date('startDate', 'Első nap', { required: true }), date('endDate', 'Utolsó nap', { required: true })] },
-    { type: 'row', fields: [time('startTime', 'Napi kezdés', { required: true }), time('endTime', 'Napi befejezés', { required: true })] },
+    {
+      type: 'row',
+      fields: [date('startDate', 'Első nap', { required: true }), date('endDate', 'Utolsó nap', { required: true })],
+    },
+    {
+      type: 'row',
+      fields: [
+        time('startTime', 'Napi kezdés', { required: true }),
+        time('endTime', 'Napi befejezés', { required: true }),
+      ],
+    },
     textarea('intro', 'Bevezető mondat'),
     textarea('summary', 'Összefoglaló', { required: true }),
     {
@@ -256,16 +356,26 @@ export const CtaBands: CollectionConfig = {
     useAsTitle: 'name',
     defaultColumns: ['name', 'heading'],
     group: PAGES,
-    description: 'Újrahasznosítható „Felhívás” sávok (felcím, cím, két gomb). Az oldalak hivatkoznak rájuk, így egy helyen szerkeszthetők.',
+    description:
+      'Újrahasznosítható „Felhívás” sávok (felcím, cím, két gomb). Az oldalak hivatkoznak rájuk, így egy helyen szerkeszthetők.',
   },
   defaultSort: 'name',
   hooks: collectionRevalidation('ctaBands'),
   fields: [
-    text('name', 'Belső név', { required: true, description: 'Csak az admin felületen látszik, a sáv kiválasztásához.' }),
+    text('name', 'Belső név', {
+      required: true,
+      description: 'Csak az admin felületen látszik, a sáv kiválasztásához.',
+    }),
     eyebrow(),
     emphasised('heading', 'Cím', { required: true }),
     textarea('text', 'Szöveg', { required: true }),
-    { type: 'row', fields: [link('primary', 'Fő gomb', { required: true }), link('secondary', 'Másodlagos gomb', { required: true })] },
+    {
+      type: 'row',
+      fields: [
+        link('primary', 'Fő gomb', { required: true }),
+        link('secondary', 'Másodlagos gomb', { required: true }),
+      ],
+    },
     importId,
   ],
 };

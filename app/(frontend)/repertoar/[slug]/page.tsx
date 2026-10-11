@@ -6,8 +6,8 @@ import { Fragment } from 'react';
 import Gallery from '@/components/Gallery';
 import { ArrowLeft, ArrowRight } from '@/components/icons';
 import Lines from '@/components/Lines';
-import ShowRow from '@/components/ShowRow';
 import SiteLayout from '@/components/layouts/SiteLayout';
+import ShowRow from '@/components/ShowRow';
 import { CtaBand, Eyebrow, SectionHeading } from '@/components/ui';
 import VideoEmbed from '@/components/VideoEmbed';
 import { getCtaBand, getProduction, getShowsForProduction, getSiteSettings, getUi } from '@/lib/data';
@@ -68,7 +68,11 @@ export default async function ProductionPage({ params }: Props) {
   const labels = ui.production;
   const next = shows[0];
   const action = (s: (typeof shows)[number]) =>
-    s.ticketUrl ? { label: ui.shows.ticket, href: s.ticketUrl } : s.registrationUrl ? { label: ui.shows.registration, href: s.registrationUrl } : undefined;
+    s.ticketUrl
+      ? { label: ui.shows.ticket, href: s.ticketUrl }
+      : s.registrationUrl
+        ? { label: ui.shows.registration, href: s.registrationUrl }
+        : undefined;
   const nextAction = next && action(next);
   const video = p.videoUrl && youtubeId(p.videoUrl);
   const named = p.cast.some((c) => c.role);
@@ -86,6 +90,8 @@ export default async function ProductionPage({ params }: Props) {
 
   return (
     <SiteLayout>
+      {/* which document this is, for the staff edit overlay (components/edit) */}
+      <span hidden data-cms-doc={`productions/${p.id}`} />
       {/* HERO — full-bleed image (or the poster, blurred) under a dark veil, with the next-date card */}
       <section className="on-dark relative isolate overflow-hidden bg-night text-cream">
         <Image
@@ -109,14 +115,22 @@ export default async function ProductionPage({ params }: Props) {
             playsInline
             preload="auto"
             aria-hidden="true"
+            tabIndex={-1}
           />
         )}
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-night/90 via-night/75 to-night/45" aria-hidden="true" />
+        <div
+          className="absolute inset-0 -z-10 bg-gradient-to-r from-night/90 via-night/75 to-night/45"
+          aria-hidden="true"
+        />
         <div className="mx-auto grid max-w-[1440px] gap-10 px-5 pb-14 pt-16 lg:min-h-[560px] lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)] lg:items-end lg:gap-16 lg:px-20 lg:pb-20 lg:pt-28">
           <div className="flex flex-col gap-5 lg:gap-7">
             <Eyebrow dark>{[p.genre, p.byline].filter(Boolean).join(' · ')}</Eyebrow>
             <h1 className="font-display text-[60px] leading-[0.95] lg:text-[128px] lg:leading-[0.88]">{p.title}</h1>
-            {p.tagline && <p className="max-w-[620px] font-display text-[26px] italic leading-snug text-gold lg:text-[34px]">{p.tagline}</p>}
+            {p.tagline && (
+              <p className="max-w-[620px] font-display text-[26px] italic leading-snug text-gold lg:text-[34px]">
+                {p.tagline}
+              </p>
+            )}
             {p.credits.length > 0 && (
               <div className="flex flex-wrap gap-x-7 gap-y-1.5 text-[15px] text-mist lg:text-[17px]">
                 {p.credits.map((c) => (
@@ -179,16 +193,23 @@ export default async function ProductionPage({ params }: Props) {
         </div>
         <div className="flex max-w-[720px] flex-col gap-6">
           <Eyebrow>{labels.about}</Eyebrow>
-          {p.descriptionHeading && <h2 className="font-display text-[40px] leading-[1.02] lg:text-[60px] lg:leading-none">{p.descriptionHeading}</h2>}
+          {p.descriptionHeading && (
+            <h2 className="font-display text-[40px] leading-[1.02] lg:text-[60px] lg:leading-none">
+              {p.descriptionHeading}
+            </h2>
+          )}
           <div className="flex flex-col gap-5 text-[17px] leading-relaxed text-ink2 lg:text-[19px] lg:leading-[1.65]">
             {story.map((para, i) =>
               isQuote(para) ? (
                 // a line of dialogue from the play becomes a pull quote
-                <blockquote key={i} className="border-l-4 border-gold py-1 pl-5 font-display text-[28px] italic leading-snug text-deep lg:text-[36px]">
+                <blockquote
+                  key={para}
+                  className="border-l-4 border-gold py-1 pl-5 font-display text-[28px] italic leading-snug text-deep lg:text-[36px]"
+                >
                   {para}
                 </blockquote>
               ) : (
-                <p key={i} className={i === 0 ? 'text-[19px] text-ink lg:text-[22px] lg:leading-[1.55]' : undefined}>
+                <p key={para} className={i === 0 ? 'text-[19px] text-ink lg:text-[22px] lg:leading-[1.55]' : undefined}>
                   <Lines text={para} />
                 </p>
               ),
@@ -202,11 +223,13 @@ export default async function ProductionPage({ params }: Props) {
             <h2 className="font-display text-[36px] leading-none lg:text-[48px]">{p.castLabel}</h2>
             {named ? (
               <dl className="grid grid-cols-2 gap-x-5 gap-y-5 sm:grid-cols-3 lg:gap-x-8">
-                {p.cast.map((c, i) => (
-                  <div key={i} className="flex flex-col gap-1">
+                {p.cast.map((c) => (
+                  <div key={`${c.role ?? ''}: ${c.names.join(', ')}`} className="flex flex-col gap-1">
                     <dt className="font-display text-[19px] italic leading-tight text-deep lg:text-[21px]">
                       {c.role}
-                      {c.roleNote && <span className="block font-sans text-xs not-italic text-muted">{c.roleNote}</span>}
+                      {c.roleNote && (
+                        <span className="block font-sans text-xs not-italic text-muted">{c.roleNote}</span>
+                      )}
                     </dt>
                     <dd className="text-[15px] font-semibold leading-snug">
                       {c.names.map((name, k) => (
@@ -235,13 +258,20 @@ export default async function ProductionPage({ params }: Props) {
       {/* HIGHLIGHTS — compact band */}
       {p.highlights && p.highlights.length > 0 && (
         <section className="on-dark relative mt-16 overflow-hidden bg-deep text-cream lg:mt-[120px]">
-          <div className="sun absolute -right-24 -top-28 h-52 w-52 rounded-full opacity-90 lg:-right-28 lg:-top-36 lg:h-[300px] lg:w-[300px]" aria-hidden="true" />
+          <div
+            className="sun absolute -right-24 -top-28 h-52 w-52 rounded-full opacity-90 lg:-right-28 lg:-top-36 lg:h-[300px] lg:w-[300px]"
+            aria-hidden="true"
+          />
           <div className="relative mx-auto flex max-w-[1440px] flex-col gap-7 px-5 py-12 lg:gap-10 lg:px-20 lg:py-16">
-            <h2 className="font-display text-[36px] leading-[1.02] lg:text-[52px] lg:leading-none">{labels.highlights}</h2>
+            <h2 className="font-display text-[36px] leading-[1.02] lg:text-[52px] lg:leading-none">
+              {labels.highlights}
+            </h2>
             <div className="grid gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
               {p.highlights.map((h, i) => (
                 <div key={h.title} className="flex gap-4 border-t border-[#2b5a5e] pt-4">
-                  <span className="font-display text-[28px] leading-none text-gold">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="font-display text-[28px] leading-none text-gold">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
                   <div className="flex flex-col gap-1.5">
                     <h3 className="text-lg font-semibold leading-tight">{h.title}</h3>
                     <p className="text-[15px] leading-relaxed text-mist">{h.text}</p>
@@ -262,6 +292,7 @@ export default async function ProductionPage({ params }: Props) {
             <h2 className="font-display text-[40px] leading-[1.02] lg:text-[64px] lg:leading-none">{labels.invite}</h2>
             {shows.length > 0 && <DatesCta label={labels.ctaBook} />}
           </div>
+          {/* biome-ignore lint/a11y/useMediaCaption: no caption files exist yet (content to add: a captions upload for the invite video) */}
           <video
             className="aspect-square w-full max-w-[520px] justify-self-center rounded-3xl bg-deep shadow-[0_24px_48px_-24px_rgba(11,58,63,0.55)]"
             src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}${p.inviteVideo.src}`}
@@ -282,12 +313,19 @@ export default async function ProductionPage({ params }: Props) {
           <div className="mx-auto flex w-fit max-w-full flex-wrap justify-center gap-6 rounded-[32px] lg:gap-8 lg:bg-sand lg:p-10">
             {p.audienceQuotes.map((q, i) => (
               <figure
-                key={i}
+                key={q.text}
                 className={`relative flex w-full flex-col gap-4 rounded-[18px] px-6 pb-6 pt-7 sm:w-[320px] lg:w-[340px] shadow-[0_16px_30px_-20px_rgba(11,58,63,0.55)] ${
-                  ['-rotate-[1.2deg] border border-line bg-paper', 'rotate-[1deg] bg-[#d3e7e3]', '-rotate-[0.6deg] bg-[#fbe3b0]'][i % 3]
+                  [
+                    '-rotate-[1.2deg] border border-line bg-paper',
+                    'rotate-[1deg] bg-[#d3e7e3]',
+                    '-rotate-[0.6deg] bg-[#fbe3b0]',
+                  ][i % 3]
                 }`}
               >
-                <span className={`absolute -top-[11px] left-1/2 h-[22px] w-[86px] -translate-x-1/2 ${['-rotate-3 bg-[#f9c86a]/75', 'rotate-3 bg-[#e0603a]/45', '-rotate-2 bg-white/60'][i % 3]}`} aria-hidden="true" />
+                <span
+                  className={`absolute -top-[11px] left-1/2 h-[22px] w-[86px] -translate-x-1/2 ${['-rotate-3 bg-[#f9c86a]/75', 'rotate-3 bg-[#e0603a]/45', '-rotate-2 bg-white/60'][i % 3]}`}
+                  aria-hidden="true"
+                />
                 <blockquote className="font-display text-[22px] leading-[1.22] lg:text-[24px]">„{q.text}”</blockquote>
                 {q.author && <figcaption className="mt-auto text-sm font-bold">{q.author}</figcaption>}
               </figure>
@@ -316,14 +354,23 @@ export default async function ProductionPage({ params }: Props) {
       )}
 
       {/* DATES */}
-      <section id="idopontok" className="mx-auto flex max-w-[1440px] scroll-mt-28 flex-col gap-6 px-5 pt-16 lg:gap-10 lg:px-20 lg:pt-[120px]">
+      <section
+        id="idopontok"
+        className="mx-auto flex max-w-[1440px] scroll-mt-28 flex-col gap-6 px-5 pt-16 lg:gap-10 lg:px-20 lg:pt-[120px]"
+      >
         <SectionHeading eyebrow={p.title} heading={labels.dates} />
         {shows.length === 0 ? (
           <p className="border-y border-line py-8 text-[17px] text-ink2 lg:text-xl">{labels.noDates}</p>
         ) : (
           <div className="flex flex-col">
             {shows.map((show, i) => (
-              <ShowRow key={show.id} show={show} ticketLabel={ui.shows.ticket} registrationLabel={ui.shows.registration} last={i === shows.length - 1} />
+              <ShowRow
+                key={show.id}
+                show={show}
+                ticketLabel={ui.shows.ticket}
+                registrationLabel={ui.shows.registration}
+                last={i === shows.length - 1}
+              />
             ))}
           </div>
         )}

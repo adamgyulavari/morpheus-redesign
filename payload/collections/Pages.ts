@@ -33,7 +33,10 @@ export const Pages: CollectionConfig = {
             {
               type: 'row',
               fields: [
-                text('title', 'Rövid név', { required: true, description: 'Ahol más oldalak hivatkoznak rá (pl. az oldalváltóban).' }),
+                text('title', 'Rövid név', {
+                  required: true,
+                  description: 'Ahol más oldalak hivatkoznak rá (pl. az oldalváltóban).',
+                }),
                 {
                   name: 'path',
                   label: 'Útvonal',
@@ -43,9 +46,17 @@ export const Pages: CollectionConfig = {
                   index: true,
                   admin: { description: 'Az oldal címe a weboldalon: „/” a nyitóoldal, különben pl. /rolunk' },
                   validate: (value: unknown) =>
-                    typeof value === 'string' && /^\/([a-z0-9-]+(\/[a-z0-9-]+)*)?$/.test(value) ? true : 'Pl. / vagy /rolunk — kisbetű, szám, kötőjel',
+                    typeof value === 'string' && /^\/([a-z0-9-]+(\/[a-z0-9-]+)*)?$/.test(value)
+                      ? true
+                      : 'Pl. / vagy /rolunk — kisbetű, szám, kötőjel',
                 },
               ],
+            },
+            // opened from the live site's edit overlay with ?blokk=<id>: scrolls to that block
+            {
+              name: 'blockFocus',
+              type: 'ui',
+              admin: { components: { Field: '@/payload/components/BlockFocus#BlockFocus' } },
             },
             {
               name: 'blocks',

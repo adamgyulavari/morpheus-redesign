@@ -75,8 +75,13 @@ media bucket.
    | `NEXT_PUBLIC_SERVER_URL` | e.g. `https://morpheus-szinmuhely.hu` (the public address, no trailing slash) |
    | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | the first admin, created on start-up while there are no users; remove afterwards |
    | `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | from step 1 |
+   | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Scaleway Transactional Email: `smtp.tem.scaleway.com`, port `587` (or `2587`), user = the project ID, password = an API secret key |
+   | `EMAIL_FROM`, `EMAIL_FROM_NAME` | sender, e.g. `noreply@morpheus-szinmuhely.hu` / `Morpheus Színműhely` (the domain must be verified in Scaleway TEM) |
 
    Don't set `TZ`; dates are handled in Budapest time by the code.
+
+   Without `SMTP_HOST` the site still runs, but verification, password-reset and login-link
+   e-mails are only written to the container log, so students can't register.
 4. **Domains**: `https://morpheus-szinmuhely.hu` (and `https://www.…` with a redirect if wanted).
    Point the DNS A record(s) to the VPS; Coolify gets a Let's Encrypt certificate automatically
    when the domain starts with `https://`.
