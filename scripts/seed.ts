@@ -8,7 +8,7 @@
  *
  * The content JSON is the import source only — the site reads everything from Payload.
  */
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import config from '@payload-config';
@@ -65,30 +65,58 @@ async function upsert(payload: Payload, collection: CollectionSlug, importId: st
 function mediaUploader(payload: Payload) {
   const ids = new Map<string, Id>();
   const alts = new Map<string, string>();
-  /** The media id of a /images/… or /video/… file, uploaded once (first alt text wins). */
-  return async function media(ref: Img | string | undefined, alt?: string): Promise<Id | undefined> {
-    if (!ref) return undefined;
-    const src = typeof ref === 'string' ? ref : ref.src;
-    const text = typeof ref === 'string' ? (alt ?? path.basename(src)) : ref.alt;
+  // One upload at a time: callers use Promise.all, and parallel creates race on Payload's
+  // unique-filename check (both see the name free, the second insert fails).
+  let queue: Promise<unknown> = Promise.resolve();
+
+  async function upload(src: string, text: string): Promise<Id> {
     const known = ids.get(src);
     if (known) {
       if (alts.get(src) !== text) payload.logger.warn(`${src}: used with another alt text too ("${text}"); keeping "${alts.get(src)}"`);
       return known;
     }
-    const { docs } = await payload.find({ collection: 'media', where: { importId: { equals: src } }, limit: 1, depth: 0 });
-    const id = docs[0]
-      ? (await payload.update({ collection: 'media', id: docs[0].id, data: { alt: text }, depth: 0, context: ctx })).id
-      : (await payload.create({ collection: 'media', data: { alt: text, importId: src }, filePath: path.join(root, 'public', src), depth: 0, context: ctx })).id;
-    ids.set(src, id);
-    alts.set(src, text);
-    return id;
+    // by filename too: a file uploaded by hand (or by an earlier run) would otherwise clash on it
+    const { docs } = await payload.find({
+      collection: 'media',
+      where: { or: [{ importId: { equals: src } }, { filename: { equals: path.basename(src) } }] },
+      limit: 1,
+      depth: 0,
+    });
+    try {
+      const id = docs[0]
+        ? (await payload.update({ collection: 'media', id: docs[0].id, data: { alt: text, importId: src }, depth: 0, context: ctx })).id
+        : (await payload.create({ collection: 'media', data: { alt: text, importId: src }, filePath: path.join(root, 'public', src), depth: 0, context: ctx })).id;
+      ids.set(src, id);
+      alts.set(src, text);
+      return id;
+    } catch (err) {
+      payload.logger.error(`media ${src} failed (${docs[0] ? `updating #${docs[0].id}` : 'creating'})`);
+      throw err;
+    }
+  }
+
+  /** The media id of a /images/… or /video/… file, uploaded once (first alt text wins). */
+  return function media(ref: Img | string | undefined, alt?: string): Promise<Id | undefined> {
+    if (!ref) return Promise.resolve(undefined);
+    const src = typeof ref === 'string' ? ref : ref.src;
+    const text = typeof ref === 'string' ? (alt ?? path.basename(src)) : ref.alt;
+    const result = queue.then(() => upload(src, text));
+    queue = result.catch(() => undefined);
+    return result;
   };
 }
 
 // ── run ─────────────────────────────────────────────────────────────────────
 
 async function seed() {
+  // Payload checks the local upload folder for name clashes even when files go to S3: with the dev
+  // ./media present, every upload would be renamed (photo.jpg → photo-1.jpg).
+  if (process.env.S3_BUCKET && (await readdir(path.join(root, 'media')).catch(() => [])).length) {
+    throw new Error('S3_BUCKET is set but ./media has files: move ./media aside (e.g. mv media media.local) before seeding.');
+  }
   const payload = await getPayload({ config });
+  const db = new URL(process.env.DATABASE_URL ?? 'postgres://unset');
+  payload.logger.info(`seeding ${db.host}${db.pathname}, media ${process.env.S3_BUCKET ? `→ s3://${process.env.S3_BUCKET}` : '→ ./media'}`);
   const media = mediaUploader(payload);
   const log = (what: string, n: number) => payload.logger.info(`seeded ${n} ${what}`);
   const ids: Record<string, Map<string, Id>> = {};
