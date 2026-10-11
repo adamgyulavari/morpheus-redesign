@@ -225,3 +225,19 @@ export async function deleteGeneratedSessions(year: number, month: number, group
   if (!user) return null;
   return deleteGenerated(await payloadClient(), user, year, month, groupIds);
 }
+
+/** Deletes a session (and its booking), or a booking without a session. */
+export async function deleteEntry(target: { sessionId?: number; bookingId?: number }): Promise<Result> {
+  const user = await staff();
+  if (!user) return denied;
+  const payload = await payloadClient();
+  try {
+    if (target.sessionId)
+      await payload.delete({ collection: 'sessions', id: target.sessionId, user, overrideAccess: false });
+    else if (target.bookingId)
+      await payload.delete({ collection: 'roomBookings', id: target.bookingId, user, overrideAccess: false });
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, reason: errorMessage(err) };
+  }
+}

@@ -89,6 +89,11 @@ export default buildConfig({
         Icon: '@/payload/components/Graphics#AdminIcon',
       },
       providers: ['@/payload/components/AdminTheme#AdminTheme'],
+      beforeNavLinks: ['@/payload/components/RoomCalendarNav#RoomCalendarNav'],
+      views: {
+        // the room calendar (lib/rooms, components/rooms)
+        teremnaptar: { Component: '@/payload/views/RoomCalendarView#RoomCalendarView', path: '/teremnaptar' },
+      },
     },
     dateFormat: 'yyyy. MM. dd. HH:mm',
     livePreview: {

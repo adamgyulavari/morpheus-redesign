@@ -132,6 +132,11 @@ export const CourseGroups: CollectionConfig = {
       ],
     },
     {
+      name: 'fillMonth',
+      type: 'ui',
+      admin: { components: { Field: '@/payload/components/FillMonthLink#FillMonthLink' } },
+    },
+    {
       name: 'sessions',
       label: 'Alkalmak',
       type: 'join',
