@@ -82,6 +82,7 @@ export interface Config {
     contactPeople: ContactPerson;
     media: Media;
     users: User;
+    redirects: Redirect;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
     'payload-locked-documents': PayloadLockedDocument;
@@ -105,6 +106,7 @@ export interface Config {
     contactPeople: ContactPeopleSelect<false> | ContactPeopleSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
+    redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -175,7 +177,6 @@ export interface Page {
    * Az oldal címe a weboldalon: „/” a nyitóoldal, különben pl. /rolunk
    */
   path: string;
-  layout: 'site' | 'minimal';
   blocks?:
     | (
         | {
@@ -1410,16 +1411,21 @@ export interface Page {
           }
       )[]
     | null;
-  meta: {
+  meta?: {
     /**
-     * Pl. „Rólunk — Morpheus Színműhely”
+     * A Google-találat címe és a böngészőfül felirata. Üresen: „<név> — Morpheus Színműhely”.
      */
-    title: string;
+    title?: string | null;
     /**
      * A Google-találatban megjelenő 1–2 mondat.
      */
-    description: string;
+    description?: string | null;
+    /**
+     * Facebookon és más oldalakon megosztva ez a kép látszik (1200×630-ra vágva a fókuszpont körül).
+     */
+    image?: (number | null) | Media;
   };
+  layout: 'site' | 'minimal';
   importId?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -1438,6 +1444,8 @@ export interface Media {
    */
   alt: string;
   importId?: string | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -1777,6 +1785,20 @@ export interface Production {
         id?: string | null;
       }[]
     | null;
+  meta?: {
+    /**
+     * A Google-találat címe és a böngészőfül felirata. Üresen: „<név> — Morpheus Színműhely”.
+     */
+    title?: string | null;
+    /**
+     * A Google-találatban megjelenő 1–2 mondat.
+     */
+    description?: string | null;
+    /**
+     * Facebookon és más oldalakon megosztva ez a kép látszik (1200×630-ra vágva a fókuszpont körül).
+     */
+    image?: (number | null) | Media;
+  };
   /**
    * A repertoárban kisebb szám kerül előrébb.
    */
@@ -2064,6 +2086,43 @@ export interface User {
   collection: 'users';
 }
 /**
+ * Régi vagy megszűnt címek továbbítása egy mostani oldalra (pl. a korábbi weboldal /rolunk-2/ címe → Rólunk).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redirects".
+ */
+export interface Redirect {
+  id: number;
+  /**
+   * A régi cím, a domain nélkül, perjellel kezdve: pl. /rolunk-2 (a végén lévő perjel nem számít).
+   */
+  from: string;
+  to?: {
+    type?: ('reference' | 'custom') | null;
+    reference?:
+      | ({
+          relationTo: 'pages';
+          value: number | Page;
+        } | null)
+      | ({
+          relationTo: 'productions';
+          value: number | Production;
+        } | null);
+    url?: string | null;
+  };
+  /**
+   * Régi címekhez szinte mindig a véglegeset válaszd: így a Google is átviszi a helyezést.
+   */
+  type: '301' | '302';
+  /**
+   * Ide visz az átirányítás (a fenti beállításból számolva).
+   */
+  destination?: string | null;
+  importId?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -2247,6 +2306,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'users';
         value: number | User;
+      } | null)
+    | ({
+        relationTo: 'redirects';
+        value: number | Redirect;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -2297,7 +2360,6 @@ export interface PayloadMigration {
 export interface PagesSelect<T extends boolean = true> {
   title?: T;
   path?: T;
-  layout?: T;
   blocks?:
     | T
     | {
@@ -3201,7 +3263,9 @@ export interface PagesSelect<T extends boolean = true> {
     | {
         title?: T;
         description?: T;
+        image?: T;
       };
+  layout?: T;
   importId?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -3303,6 +3367,13 @@ export interface ProductionsSelect<T extends boolean = true> {
         roleNote?: T;
         names?: T;
         id?: T;
+      };
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
       };
   order?: T;
   generateSlug?: T;
@@ -3515,6 +3586,8 @@ export interface ContactPeopleSelect<T extends boolean = true> {
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
   importId?: T;
+  prefix?: T;
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -3615,6 +3688,25 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redirects_select".
+ */
+export interface RedirectsSelect<T extends boolean = true> {
+  from?: T;
+  to?:
+    | T
+    | {
+        type?: T;
+        reference?: T;
+        url?: T;
+      };
+  type?: T;
+  destination?: T;
+  importId?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

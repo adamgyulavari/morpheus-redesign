@@ -7,10 +7,7 @@ import type { NextConfig } from 'next';
  */
 const nextConfig: NextConfig = {
   output: 'standalone',
-  async redirects() {
-    // The page was renamed when workshops moved onto it; keep old links working.
-    return [{ source: '/nyitott-muhely', destination: '/nyitott-alkalmak', permanent: true }];
-  },
+  // Redirects (old addresses → pages) are content: the Átirányítások collection in the admin.
   images: {
     // Uploaded media, served by Payload (from local disk or S3)
     localPatterns: [{ pathname: '/api/media/file/**' }],

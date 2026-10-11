@@ -15,6 +15,7 @@ import config from '@payload-config';
 import { convertMarkdownToLexical, editorConfigFactory } from '@payloadcms/richtext-lexical';
 import { getPayload, type CollectionSlug, type Payload } from 'payload';
 
+import { firstSentence } from '@/lib/format';
 import { fullRichText } from '@/payload/fields';
 
 const root = process.cwd();
@@ -181,6 +182,7 @@ async function seed() {
     true,
   );
 
+  const siteName = (await json<{ name: string }>('site-settings.json')).name;
   const productions = await json<Any[]>('productions.json');
   await each(
     'production',
@@ -193,6 +195,11 @@ async function seed() {
         id: undefined,
         order: i + 1,
         generateSlug: false,
+        // SEO: what the production page has shown so far (title, first sentence of the story);
+        // no image, so sharing keeps using the full poster
+        meta: p.detailPage
+          ? { title: `${p.title} — ${siteName}`, description: firstSentence((p.longDescription as string[])[0] ?? (p.summary as string)) }
+          : undefined,
         longDescription: richParagraphs(p.longDescription as string[]),
         // the media library requires alt text; untitled posters get "<title> — plakát", like the others
         poster: await media({ ...(p.poster as Img), alt: (p.poster as Img).alt || `${p.title} — plakát` }),
@@ -253,6 +260,44 @@ async function seed() {
     await upsert(payload, 'pages', `page:${p.path}`, { ...p, blocks: await convert(p.blocks, 'blocks') }, true);
   }
   log('pages', pages.length);
+
+  // redirects: the previous (WordPress) site's addresses → the new pages, so search results and
+  // old links keep working. Paths of the live site, from its sitemap (October 2026).
+  const page = (path: string) => ({ type: 'reference', reference: { relationTo: 'pages', value: pageIds.get(path) } });
+  const production = (old: string) => ({ type: 'reference', reference: { relationTo: 'productions', value: idOf('production', old) } });
+  const url = (href: string) => ({ type: 'custom', url: href });
+  const redirects: [string, Obj][] = [
+    ['/rolunk-2', page('/rolunk')],
+    ['/kepzeseink-2', page('/kezdo-kurzus')],
+    ['/kapcsolat-2', page('/kapcsolat')],
+    ['/repertoar-2', page('/repertoar')],
+    ['/kozelgo-eloadasok-2', page('/kozelgo-eloadasok')],
+    ['/ceges-csapatepito', page('/csapatepito')],
+    ['/nyitott-muhely', page('/nyitott-alkalmak')],
+    ['/workshop-tabor', url('/nyitott-alkalmak#workshopok')],
+    ['/szinhazi-mozgas-workshop-szigethy-norbival-08-13-16', url('/nyitott-alkalmak#workshopok')],
+    ['/uj-fooldal', page('/')],
+    ['/fejlesztes-alatt', page('/')],
+    ['/molnar-ferenc-az-ordog', production('az-ordog')],
+    ['/agatha-christie-egerfogo', production('az-egerfogo')],
+    ['/boldogsag-es-en', production('a-boldogsag-es-en')],
+    ['/csalad-ellen-nincs-orvossag', production('csalad-ellen-nincs-orvossag')],
+    ['/events', page('/kozelgo-eloadasok')],
+    ['/event/molnar-ferenc-az-ordog-4', production('az-ordog')],
+    ['/event/832-hallgatoi-eloadas-nyilvanos-foproba', page('/kozelgo-eloadasok')],
+    ['/event/a-premier-hallgatoi-eloadas-nyilvanos-foproba', page('/kozelgo-eloadasok')],
+    ['/event/federico-garcia-lorca-bernarda-alba-haza-hallgatoi-eloadas-2', page('/kozelgo-eloadasok')],
+    ['/events/kategoria/ordog', production('az-ordog')],
+    ['/events/kategoria/agatha-christie-egerfogo', production('az-egerfogo')],
+    ['/events/kategoria/ray-cooney-csalad-ellen-nincs-orvossag', production('csalad-ellen-nincs-orvossag')],
+    ['/events/kategoria/other', page('/kozelgo-eloadasok')],
+  ];
+  await each(
+    'redirect',
+    'redirects',
+    redirects.map(([from, to]) => ({ id: from, from, to })),
+    ({ from, to }) => ({ from, to, type: '301' }),
+  );
 
   // globals
   const settings = await json<Obj & { contact: Obj; productionPage: Obj; social: Obj }>('site-settings.json');

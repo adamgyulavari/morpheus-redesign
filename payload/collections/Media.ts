@@ -5,7 +5,7 @@ import { importId } from '../fields';
 import { collectionRevalidation } from '../revalidate';
 
 /**
- * Images and videos. In production the files live in S3 (Scaleway Object Storage, see
+ * Images and videos. In production the files live in S3 (Leafcloud Object Storage, see
  * payload.config.ts); locally in ./media. Payload serves them at /api/media/file/<name>.
  *
  * Sizes are generated on upload. They keep the original proportions (the design crops with CSS),

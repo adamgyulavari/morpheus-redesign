@@ -6,6 +6,8 @@ import type { ReactNode } from 'react';
 import LivePreviewListener from '@/components/LivePreviewListener';
 import { UiProvider } from '@/components/UiStrings';
 import { getSiteSettings, getUi } from '@/lib/data';
+import { serverUrl } from '@/lib/env';
+import { robots } from '@/lib/seo';
 
 import './globals.css';
 
@@ -23,8 +25,8 @@ const instrumentSerif = Instrument_Serif({
 // Fallback only; every page sets its own title and description (from its content).
 // metadataBase makes relative image URLs (Open Graph) absolute; read at runtime, not inlined.
 export async function generateMetadata(): Promise<Metadata> {
-  const serverUrl = process.env['NEXT_PUBLIC_SERVER_URL'];
-  return { title: (await getSiteSettings()).name, metadataBase: serverUrl ? new URL(serverUrl) : undefined };
+  const base = serverUrl();
+  return { title: (await getSiteSettings()).name, metadataBase: base ? new URL(base) : undefined, robots };
 }
 
 export default async function RootLayout({ children }: { children: ReactNode }) {

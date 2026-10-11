@@ -25,10 +25,25 @@ import {
 
 type Def = { slug: BlockType; label: string; description?: string; fields?: Field[] };
 
+/** Sections of the "add block" drawer. */
+const GROUPS: [string, BlockType[]][] = [
+  ['Fejlécek', ['homeHero', 'pageHero']],
+  [
+    'Szöveg és kép',
+    ['ctaBand', 'textSplit', 'statement', 'imageText', 'linkCards', 'questions', 'benefits', 'curriculum', 'featureCards', 'path', 'checklist', 'steps', 'moodVideo', 'fullImage', 'socialBand'],
+  ],
+  ['Bio oldal', ['bioIntro', 'bioNextShow', 'linkList', 'socialLinks', 'contactFooter']],
+];
+// everything else renders records from the collections (shows, courses, people…)
+const groupOf = (slug: BlockType) => GROUPS.find(([, slugs]) => slugs.includes(slug))?.[0] ?? 'Gyűjteményekből (előadások, kurzusok, emberek)';
+
 const block = ({ slug, label, description, fields = [] }: Def): Block => ({
   slug,
   labels: { singular: label, plural: label },
-  admin: { disableBlockName: true },
+  // thumbnail in the drawer: a screenshot of the block (npm run block-thumbnails)
+  imageURL: `/admin/blocks/${slug}.webp`,
+  imageAltText: label,
+  admin: { disableBlockName: true, group: groupOf(slug) },
   fields: [
     ...(description ? [{ name: 'help', type: 'ui', admin: { components: { Field: '@/payload/components/BlockHelp#BlockHelp' }, custom: { text: description } } } as Field] : []),
     ...fields,

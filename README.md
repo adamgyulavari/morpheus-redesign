@@ -30,7 +30,7 @@ npm run dev                   # http://localhost:3000, admin at http://localhost
 `npm run migrate:create -- <name>`, review the file, `npm run migrate`, `npm run generate:types`,
 commit the migration. Production applies it on container start.
 
-Uploads go to `./media` locally and to Scaleway Object Storage in production (when `S3_BUCKET` is
+Uploads go to `./media` locally and to Leafcloud Object Storage in production (when `S3_BUCKET` is
 set). Deployment, environment variables and backups: see **[DEPLOY.md](DEPLOY.md)**.
 
 The approved static design lives in `archive/static-site/` (open the HTML files directly — images
@@ -172,6 +172,22 @@ Payload documents.
 
 The quote form (`lib/quote-request.ts`) still opens the visitor's mail client; turning it into a
 Server Action that stores/e-mails the request is a later step.
+
+## SEO and redirects
+
+- **Meta data**: pages and productions have an **SEO** tab (Payload SEO plugin): browser title,
+  description, sharing image and a Google preview, with *Automatikus generálás* buttons
+  (`payload/seo.ts`). Left empty, the site falls back to "<name> — Morpheus Színműhely", the
+  hero lead / the story's first sentence, and (productions) the full poster. `lib/seo.ts` builds the
+  `<head>`: description, canonical URL, Open Graph, `robots: max-image-preview:large` (as on the
+  previous site). The seed fills the SEO fields with the texts the site used so far.
+- **Redirects** (*Oldalak → Átirányítások*, Payload redirects plugin, `payload/redirects.ts`): old
+  addresses → current pages or productions. The seed adds the previous WordPress site's URLs
+  (`/rolunk-2/`, `/kepzeseink-2/`, `/molnar-ferenc-az-ordog/`, `/event/…`, …) as permanent
+  redirects. They are only looked up for paths that have no page (`lib/not-found.ts`).
+- `/sitemap.xml` (all pages and production pages) and `/robots.txt` are generated per request.
+- The public address comes from `NEXT_PUBLIC_SERVER_URL`, read at runtime through `lib/env.ts`
+  (Next.js would otherwise inline it at build time, when it isn't set).
 
 ## Caching & dates
 

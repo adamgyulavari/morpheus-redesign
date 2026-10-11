@@ -62,6 +62,8 @@ export type Production = {
   cast: CastEntry[];
   note?: string;
   poster: ImageRef;
+  /** SEO overrides; the detail page falls back to "<title> — <site>", the first sentence and the poster. */
+  meta?: Partial<PageMeta>;
 };
 
 export type Venue = { id: string; name: string; shortName: string };
@@ -309,7 +311,8 @@ export type UiStrings = {
 
 // ── Pages & blocks ──────────────────────────────────────────────────────────
 
-export type PageMeta = { title: string; description: string };
+/** Search engine / social sharing metadata. `image` is the Open Graph image (1200×630 crop). */
+export type PageMeta = { title: string; description?: string; image?: ImageRef };
 
 /**
  * A page: its route, the `<title>`/description, which frame it renders in, and its content as an

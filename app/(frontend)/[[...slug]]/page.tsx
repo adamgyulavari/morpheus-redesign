@@ -1,17 +1,19 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 
 import RenderBlocks from '@/components/blocks';
 import MinimalLayout from '@/components/layouts/MinimalLayout';
 import SiteLayout from '@/components/layouts/SiteLayout';
 import RepertoireFilter from '@/components/RepertoireFilter';
-import { getPage } from '@/lib/data';
+import { getPage, getSiteSettings } from '@/lib/data';
+import { redirectOrNotFound } from '@/lib/not-found';
+import { pageMetadata } from '@/lib/seo';
 import type { Page } from '@/lib/types';
 
 /**
  * Every content page is rendered here from its data: the Pages collection gives the route, the
- * frame (site / minimal) and an ordered list of blocks. Any path that isn't in the collection is a
- * 404. (Production pages have their own template under /repertoar/[slug].)
+ * frame (site / minimal) and an ordered list of blocks. Any other path follows a redirect
+ * (Átirányítások, e.g. the previous site's addresses) or is a 404. (Production pages have their
+ * own template under /repertoar/[slug].)
  *
  * Nothing is rendered at build time (the build has no database). Each page renders on its first
  * request and is then cached (ISR); saving in the admin revalidates the affected pages, and the
@@ -29,8 +31,11 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const page = await getPage(pathOf((await params).slug));
-  return page ? { title: page.meta.title, description: page.meta.description } : {};
+  const path = pathOf((await params).slug);
+  const [page, settings] = await Promise.all([getPage(path), getSiteSettings()]);
+  if (!page) return {};
+  const { meta } = page;
+  return pageMetadata({ title: meta.title || `${page.title} — ${settings.name}`, description: meta.description, image: meta.image, path, siteName: settings.name });
 }
 
 /** The repertoire filter state is shared by the hero chips and the production sections. */
@@ -40,7 +45,7 @@ const needsRepertoireFilter = (page: Page) =>
 export default async function ContentPage({ params }: Props) {
   const path = pathOf((await params).slug);
   const page = await getPage(path);
-  if (!page) notFound();
+  if (!page) return redirectOrNotFound(path);
 
   let content = <RenderBlocks blocks={page.blocks} layout={page.layout} ctx={{ path }} />;
   if (needsRepertoireFilter(page)) content = <RepertoireFilter>{content}</RepertoireFilter>;

@@ -87,6 +87,12 @@ const isPublicChange = (doc: Doc, previousDoc?: Doc) =>
 async function afterCollectionChange(slug: string, req: PayloadRequest, doc: Doc, previousDoc?: Doc) {
   const { payload } = req;
   if (slug === 'media') return revalidate(payload, '/', 'layout');
+  if (slug === 'redirects') {
+    // the old address may be cached as a 404 or as the previous redirect
+    const froms = [(doc as { from?: string }).from, (previousDoc as { from?: string } | undefined)?.from];
+    for (const from of new Set(froms.filter(Boolean) as string[])) revalidate(payload, from.replace(/\/+$/, '') || '/');
+    return;
+  }
   if (slug === 'pages') {
     for (const path of new Set([doc.path, previousDoc?.path].filter(Boolean) as string[])) revalidate(payload, path);
     // other pages show page titles in the course switcher

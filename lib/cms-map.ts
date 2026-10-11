@@ -147,6 +147,7 @@ export function production(p: P.Production): Production {
     cast: (p.cast ?? []).map((c) => ({ role: opt(c.role), roleNote: opt(c.roleNote), names: c.names ?? [] })),
     note: opt(p.note),
     poster: imgReq(p.poster, 'poster'),
+    meta: { title: opt(p.meta?.title), description: opt(p.meta?.description), image: img(p.meta?.image, 'og') },
   };
 }
 
@@ -367,7 +368,8 @@ export function block(raw: RawBlock): Block {
 export const page = (p: P.Page): Page => ({
   path: p.path,
   title: p.title,
-  meta: { title: p.meta.title, description: p.meta.description },
+  // empty title: the route falls back to "<title> — <site name>"
+  meta: { title: p.meta?.title ?? '', description: opt(p.meta?.description), image: img(p.meta?.image, 'og') },
   layout: p.layout,
   blocks: (p.blocks ?? []).map(block),
 });

@@ -3,6 +3,8 @@ import { fileURLToPath } from 'node:url';
 
 import { postgresAdapter } from '@payloadcms/db-postgres';
 import { lexicalEditor } from '@payloadcms/richtext-lexical';
+import { redirectsPlugin } from '@payloadcms/plugin-redirects';
+import { seoPlugin } from '@payloadcms/plugin-seo';
 import { s3Storage } from '@payloadcms/storage-s3';
 import { hu } from '@payloadcms/translations/languages/hu';
 import { buildConfig, type Payload } from 'payload';
@@ -24,26 +26,33 @@ import {
 } from './payload/collections/simple';
 import { Users } from './payload/collections/Users';
 import { SiteSettings, Ui } from './payload/globals';
+import { serverUrl } from './lib/env';
 import { migrations } from './payload/migrations';
+import { redirectsConfig, redirectsTranslationsHu } from './payload/redirects';
+import { generateDescription, generateImage, generateTitle, generateURL, seoFields } from './payload/seo';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** S3-compatible object storage (Scaleway, Paris) when configured; otherwise files go to ./media. */
-const s3 = process.env.S3_BUCKET
-  ? s3Storage({
-      collections: { media: true },
-      bucket: process.env.S3_BUCKET,
-      config: {
-        endpoint: process.env.S3_ENDPOINT,
-        region: process.env.S3_REGION,
-        forcePathStyle: true,
-        credentials: {
-          accessKeyId: process.env.S3_ACCESS_KEY_ID ?? '',
-          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY ?? '',
-        },
-      },
-    })
-  : null;
+/**
+ * S3-compatible object storage (Leafcloud, Amsterdam) when S3_BUCKET is set; otherwise files go to
+ * ./media. The plugin is always registered (alwaysInsertFields) so the media schema — and thus the
+ * migrations — are the same with and without S3.
+ */
+const s3 = s3Storage({
+  enabled: Boolean(process.env.S3_BUCKET),
+  alwaysInsertFields: true,
+  collections: { media: true },
+  bucket: process.env.S3_BUCKET ?? '',
+  config: {
+    endpoint: process.env.S3_ENDPOINT,
+    region: process.env.S3_REGION,
+    forcePathStyle: true,
+    credentials: {
+      accessKeyId: process.env.S3_ACCESS_KEY_ID ?? '',
+      secretAccessKey: process.env.S3_SECRET_ACCESS_KEY ?? '',
+    },
+  },
+});
 
 /** The first admin, from ADMIN_EMAIL / ADMIN_PASSWORD, when the database has no users yet. */
 async function ensureAdmin(payload: Payload) {
@@ -57,9 +66,7 @@ async function ensureAdmin(payload: Payload) {
 }
 
 export default buildConfig({
-  // bracket access: read at runtime (Next.js would inline process.env.NEXT_PUBLIC_… at build time,
-  // and the Docker build has no environment)
-  serverURL: process.env['NEXT_PUBLIC_SERVER_URL'] || undefined,
+  serverURL: serverUrl() || undefined,
   secret: process.env.PAYLOAD_SECRET || '',
   admin: {
     user: Users.slug,
@@ -83,7 +90,7 @@ export default buildConfig({
       ],
     },
   },
-  i18n: { supportedLanguages: { hu }, fallbackLanguage: 'hu' },
+  i18n: { supportedLanguages: { hu }, fallbackLanguage: 'hu', translations: { hu: redirectsTranslationsHu } },
   collections: [
     Pages,
     CtaBands,
@@ -115,7 +122,22 @@ export default buildConfig({
     migrationDir: path.resolve(dirname, 'payload/migrations'),
   }),
   sharp,
-  plugins: s3 ? [s3] : [],
+  plugins: [
+    // SEO tab (meta title, description, sharing image, Google preview) on pages and productions
+    seoPlugin({
+      collections: ['pages', 'productions'],
+      uploadsCollection: 'media',
+      tabbedUI: true,
+      fields: seoFields,
+      generateTitle,
+      generateDescription,
+      generateImage,
+      generateURL,
+    }),
+    // old / retired addresses → current pages (see payload/redirects.ts)
+    redirectsPlugin(redirectsConfig),
+    s3,
+  ],
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
   graphQL: { disable: true },
   onInit: ensureAdmin,

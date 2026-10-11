@@ -258,3 +258,32 @@ export const getTeamBuildingProgrammes = cache(async (): Promise<TeamBuildingPro
   const { docs } = await (await payload()).find({ collection: 'teamBuildingProgrammes', sort: 'order', depth: 0, ...all });
   return docs.map(map.teamBuildingProgramme);
 });
+
+// ── Redirects ───────────────────────────────────────────────────────────────
+
+/**
+ * Where an old address (e.g. the previous site's /rolunk-2/) should go, or undefined. Looked up only
+ * for paths that have no page. The trailing slash doesn't matter.
+ */
+export async function getRedirect(path: string): Promise<{ href: string; permanent: boolean } | undefined> {
+  const bare = path.replace(/\/+$/, '') || '/';
+  const { docs } = await (await payload()).find({
+    collection: 'redirects',
+    where: { from: { in: [bare, `${bare}/`] } },
+    depth: 1,
+    populate: { pages: { path: true }, productions: { slug: true } },
+    limit: 1,
+  });
+  const r = docs[0];
+  if (!r) return undefined;
+  const target = r.to?.type === 'reference' ? r.to.reference : undefined;
+  const ref = target && typeof target.value === 'object' ? target.value : undefined;
+  const href =
+    r.to?.type === 'custom'
+      ? r.to.url
+      : target?.relationTo === 'productions'
+        ? ref && 'slug' in ref && ref.slug && `/repertoar/${ref.slug}`
+        : ref && 'path' in ref && ref.path;
+  return href ? { href, permanent: r.type !== '302' } : undefined;
+}
+

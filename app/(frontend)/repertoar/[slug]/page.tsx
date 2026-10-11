@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
 import { Fragment } from 'react';
 
 import Gallery from '@/components/Gallery';
@@ -13,7 +12,9 @@ import { CtaBand, Eyebrow, SectionHeading } from '@/components/ui';
 import VideoEmbed from '@/components/VideoEmbed';
 import { getCtaBand, getProduction, getShowsForProduction, getSiteSettings, getUi } from '@/lib/data';
 import { dayOfMonth, monthLong, weekday } from '@/lib/dates';
-import { fill } from '@/lib/format';
+import { fill, firstSentence } from '@/lib/format';
+import { redirectOrNotFound } from '@/lib/not-found';
+import { pageMetadata } from '@/lib/seo';
 
 /**
  * The production page template (not a block page: its layout follows the production record).
@@ -29,14 +30,18 @@ export function generateStaticParams() {
 
 type Props = { params: Promise<{ slug: string }> };
 
-const firstSentence = (text: string) => (text.match(/^.*?[.!?…](?=\s|$)/)?.[0] ?? text).trim();
-
+/** SEO fields from the admin, falling back to "<title> — <site>", the story's first sentence and the full poster. */
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const [p, settings] = await Promise.all([getProduction((await params).slug), getSiteSettings()]);
-  if (!p) return {};
-  const title = `${p.title} — ${settings.name}`;
-  const description = firstSentence(p.longDescription[0] ?? p.summary);
-  return { title, description, openGraph: { title, description, images: [{ url: p.poster.src, width: p.poster.width, height: p.poster.height, alt: p.poster.alt }] } };
+  if (!p?.detailPage) return {};
+  return pageMetadata({
+    title: p.meta?.title || `${p.title} — ${settings.name}`,
+    description: p.meta?.description || firstSentence(p.longDescription[0] ?? p.summary),
+    image: p.meta?.image ?? p.poster,
+    path: `/repertoar/${p.slug}`,
+    siteName: settings.name,
+    type: 'article',
+  });
 }
 
 /** Paragraphs that are a line of dialogue („…”) are set as pull quotes. */
@@ -55,8 +60,9 @@ function DatesCta({ label, dark = false }: { label: string; dark?: boolean }) {
 const youtubeId = (url: string) => url.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/)?.[1];
 
 export default async function ProductionPage({ params }: Props) {
-  const p = await getProduction((await params).slug);
-  if (!p?.detailPage) notFound();
+  const { slug } = await params;
+  const p = await getProduction(slug);
+  if (!p?.detailPage) return redirectOrNotFound(`/repertoar/${slug}`);
   const [ui, settings, shows] = await Promise.all([getUi(), getSiteSettings(), getShowsForProduction(p.id)]);
   const cta = await getCtaBand(settings.productionPage.ctaBand);
   const labels = ui.production;

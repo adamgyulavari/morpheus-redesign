@@ -1,4 +1,4 @@
-# Deploying — Coolify on a VPS, Scaleway Object Storage
+# Deploying — Coolify on a VPS, Leafcloud Object Storage
 
 The site and the CMS are one Docker image (Next.js + Payload). GitHub Actions builds it on every push
 to `main`, pushes it to GitHub Container Registry (GHCR) and calls Coolify's deploy webhook. The VPS
@@ -14,26 +14,26 @@ What lives where:
 
 | | where | backed up by |
 |---|---|---|
-| content (pages, shows, users…) | Postgres (Coolify) | Coolify scheduled backups → Scaleway bucket |
-| uploaded images/videos | Scaleway Object Storage bucket | the bucket itself (enable versioning if you want undo) |
+| content (pages, shows, users…) | Postgres (Coolify) | Coolify scheduled backups → Leafcloud bucket |
+| uploaded images/videos | Leafcloud Object Storage bucket | the bucket itself (enable versioning if you want undo) |
 | code | GitHub / GHCR image | git |
 
 The container holds no state; it can be deleted and recreated at any time.
 
-## 1. Scaleway Object Storage
+## 1. Leafcloud Object Storage
 
-1. Scaleway console → **Object Storage → Create bucket**: region **Paris (fr-par)**, e.g.
-   `morpheus-media`, **private** visibility (files are served through the site at `/api/media/file/…`,
+1. Leafcloud console → **Object Storage → Create container (bucket)**: region **europe-nl**,
+   e.g. `morpheus-media`, **private** visibility (files are served through the site at `/api/media/file/…`,
    never directly from the bucket).
 2. Create a second bucket for database backups, e.g. `morpheus-backups` (private).
-3. **IAM → API keys → Generate API key** (for an application with the *ObjectStorageFullAccess*
-   policy, scoped to the project). Note the *access key* and *secret key*.
+3. Create S3-compatible (EC2) credentials for the project, e.g.
+   `openstack ec2 credentials create`. Note the *access key* and *secret key*.
 
 Values for the app:
 
 ```
-S3_ENDPOINT=https://s3.fr-par.scw.cloud
-S3_REGION=fr-par
+S3_ENDPOINT=https://leafcloud.store
+S3_REGION=europe-nl
 S3_BUCKET=morpheus-media
 S3_ACCESS_KEY_ID=<access key>
 S3_SECRET_ACCESS_KEY=<secret key>
@@ -46,10 +46,10 @@ S3_SECRET_ACCESS_KEY=<secret key>
 3. Copy the **internal** connection URL (`postgres://…@<container-name>:5432/postgres`); the app
    uses it as `DATABASE_URL`.
 
-### Scheduled backups to Scaleway
+### Scheduled backups to Leafcloud
 
-1. Coolify → **Settings → S3 Storages → + Add**: endpoint `https://s3.fr-par.scw.cloud`, region
-   `fr-par`, bucket `morpheus-backups`, the access/secret key. Click *Validate*.
+1. Coolify → **Settings → S3 Storages → + Add**: endpoint `https://leafcloud.store`, region
+   `europe-nl`, bucket `morpheus-backups`, the access/secret key. Click *Validate*.
 2. Database → **Backups → Scheduled backups → + Add**: frequency e.g. `0 3 * * *` (every night at
    03:00 server time), enable **Save to S3** with the storage above, set retention (e.g. 14 local,
    60 in S3).
@@ -103,7 +103,7 @@ SSH tunnel (the database stays private):
 ssh -N -L 5434:<db container ip>:5432 root@<vps>        # keep running in another terminal
 
 DATABASE_URL='postgres://<user>:<password>@localhost:5434/postgres' \
-S3_ENDPOINT=https://s3.fr-par.scw.cloud S3_REGION=fr-par S3_BUCKET=morpheus-media \
+S3_ENDPOINT=https://leafcloud.store S3_REGION=europe-nl S3_BUCKET=morpheus-media \
 S3_ACCESS_KEY_ID=… S3_SECRET_ACCESS_KEY=… \
 PAYLOAD_SECRET=<same as the app> \
 npm run seed
@@ -112,6 +112,18 @@ npm run seed
 The app must have started once before (so the migrations have run). The seed uploads the images to
 the bucket and is safe to run again (it updates instead of duplicating). After it, save something in
 the admin (or redeploy) so the cached pages are rebuilt.
+
+### Moving existing uploads from disk to the bucket
+
+If a database already has media documents whose files are on disk (`./media`, e.g. after seeding
+without `S3_BUCKET`), copy the files over — the database needs no change, the filename is the key:
+
+```bash
+npm run upload-media            # ./media → S3_BUCKET, using .env; skips files already there
+npm run upload-media -- <dir>   # another folder
+```
+
+Then set `S3_BUCKET` in the app's environment and restart.
 
 ## Changing the data model
 
