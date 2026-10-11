@@ -109,7 +109,7 @@ export function checkPractice(
   }
   const lastDay = addDays(dayOf(now), s.horizonDays);
   if (dayOf(req.start) > lastDay)
-    return refuse(`Legfeljebb ${s.horizonDays} nappal előre lehet foglalni (${huDay(lastDay)}-ig).`);
+    return refuse(`Legfeljebb ${s.horizonDays} nappal előre lehet foglalni (${huDay(lastDay).slice(0, -1)}-ig).`);
 
   if (s.hoursFrom && s.hoursTo) {
     const from = clockMinutes(s.hoursFrom);

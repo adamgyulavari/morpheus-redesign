@@ -23824,6 +23824,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "note": {
+          "name": "note",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
         "notes": {
           "name": "notes",
           "type": "varchar",
@@ -30822,6 +30828,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "1b4be021-411f-4462-a1f1-407102b72075",
+  "id": "eff98376-9a31-4fbc-867d-4ccf4a0f40f6",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

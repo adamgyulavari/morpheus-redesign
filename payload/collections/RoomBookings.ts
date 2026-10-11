@@ -231,6 +231,15 @@ export const RoomBookings: CollectionConfig = {
         textarea('cancelReason', 'Lemondás oka'),
       ],
     },
+    {
+      name: 'note',
+      label: 'Megjegyzés a foglalótól',
+      type: 'textarea',
+      admin: {
+        condition: (_, s) => s?.kind === 'practice',
+        description: 'A diák írja foglaláskor; csak ő és a munkatársak látják.',
+      },
+    },
     textarea('notes', 'Belső megjegyzés', { description: 'Csak a munkatársak látják.' }),
     {
       name: 'overridePractice',

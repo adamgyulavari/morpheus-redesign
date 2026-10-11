@@ -2034,6 +2034,10 @@ export interface RoomBooking {
   cancelledAt?: string | null;
   cancelReason?: string | null;
   /**
+   * A diák írja foglaláskor; csak ő és a munkatársak látják.
+   */
+  note?: string | null;
+  /**
    * Csak a munkatársak látják.
    */
   notes?: string | null;
@@ -3973,6 +3977,7 @@ export interface RoomBookingsSelect<T extends boolean = true> {
   cancelledBy?: T;
   cancelledAt?: T;
   cancelReason?: T;
+  note?: T;
   notes?: T;
   overridePractice?: T;
   updatedAt?: T;
