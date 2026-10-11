@@ -298,6 +298,8 @@ export function errorMessage(err: unknown): string {
 // ── fill month ──────────────────────────────────────────────────────────────
 
 export type FillPreviewItem = {
+  /** "groupId:entry:day" — what to tick to create it. */
+  key: string;
   title: string;
   day: string;
   start: string;
@@ -386,6 +388,7 @@ export async function previewFill(payload: Payload, year: number, month: number,
     }
     if (!clashes.length) taken.push(p);
     items.push({
+      key: generatedKey(p.courseGroup, p.entry, p.day),
       title: p.title,
       day: p.day,
       start: p.start.toISOString(),
@@ -397,15 +400,19 @@ export async function previewFill(payload: Payload, year: number, month: number,
   return { groups: groups.map((g) => ({ id: g.id, title: g.title })), items };
 }
 
-/** Creates the planned sessions (with bookings where the rooms are free). No e-mails. */
+/** Creates the planned sessions — or only the ticked ones (`keys`) — with bookings where the rooms are free. No e-mails. */
 export async function applyFill(
   payload: Payload,
   user: TypedUser,
   year: number,
   month: number,
   groupIds: number[] | null,
+  keys?: string[],
 ) {
-  const { planned } = await planFill(payload, year, month, groupIds);
+  const wanted = keys ? new Set(keys) : null;
+  const planned = (await planFill(payload, year, month, groupIds)).planned.filter(
+    (p) => !wanted || wanted.has(generatedKey(p.courseGroup, p.entry, p.day)),
+  );
   let placed = 0;
   const unplaced: { title: string; day: string; start: string; clashes: string[] }[] = [];
   for (const p of planned) {
@@ -434,14 +441,8 @@ export async function applyFill(
   return { created: planned.length, placed, unplaced };
 }
 
-/** Deletes future, not hand-edited generated sessions of a month (and their bookings). */
-export async function deleteGenerated(
-  payload: Payload,
-  user: TypedUser,
-  year: number,
-  month: number,
-  groupIds: number[] | null,
-) {
+/** The month's generated sessions that "Generált alkalmak törlése" may delete: future, not hand-edited. */
+export async function deletableGenerated(payload: Payload, year: number, month: number, groupIds: number[] | null) {
   const days = daysOfMonth(year, month);
   const { docs } = await payload.find({
     collection: 'sessions',
@@ -455,9 +456,30 @@ export async function deleteGenerated(
       ],
     },
     depth: 0,
-    select: { start: true },
+    select: { displayTitle: true, start: true, end: true, locationType: true },
+    sort: 'start',
     ...all,
   });
+  return docs.map((s) => ({
+    id: s.id,
+    title: String(s.displayTitle ?? ''),
+    start: s.start,
+    end: s.end,
+    placed: s.locationType === 'room',
+  }));
+}
+
+/** Deletes them (and their bookings) — or only the ticked ones (`ids`, still checked here). */
+export async function deleteGenerated(
+  payload: Payload,
+  user: TypedUser,
+  year: number,
+  month: number,
+  groupIds: number[] | null,
+  ids?: number[],
+) {
+  const wanted = ids ? new Set(ids) : null;
+  const docs = (await deletableGenerated(payload, year, month, groupIds)).filter((d) => !wanted || wanted.has(d.id));
   for (const s of docs) await payload.delete({ collection: 'sessions', id: s.id, user, overrideAccess: false });
   return { deleted: docs.length };
 }

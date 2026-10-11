@@ -43,6 +43,12 @@ export type RoomCalendarProps = {
   onEventChange?: (e: ScheduleEvent, change: { start: Date; end: Date }, revert: () => void) => void;
   onDrop?: (d: { sessionId: number; start: Date }) => void;
   ownLabel?: string;
+  /**
+   * Keep the dragged range highlighted while a form next to the calendar is open: clicks inside
+   * elements matching this selector don't clear it. Change `clearSelection` to clear it.
+   */
+  keepSelectionIn?: string;
+  clearSelection?: number;
 };
 
 export default function RoomCalendar(props: RoomCalendarProps) {
@@ -60,6 +66,9 @@ export default function RoomCalendar(props: RoomCalendarProps) {
   useEffect(() => {
     if (version) (ref.current?.getApi() as CalendarApi | undefined)?.refetchEvents();
   }, [version]);
+  useEffect(() => {
+    if (props.clearSelection) (ref.current?.getApi() as CalendarApi | undefined)?.unselect();
+  }, [props.clearSelection]);
 
   const options = useMemo(() => {
     const phone = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
@@ -82,6 +91,7 @@ export default function RoomCalendar(props: RoomCalendarProps) {
       selectable: Boolean(props.selectable),
       selectMirror: true,
       unselectAuto: true,
+      unselectCancel: props.keepSelectionIn,
       droppable: Boolean(props.droppable),
       selectAllow: props.futureOnly ? (span: { start: Date }) => span.start >= new Date() : undefined,
       events: (
@@ -124,7 +134,7 @@ export default function RoomCalendar(props: RoomCalendarProps) {
       },
       select: (info: DateSelectArg) => {
         latest.current.onSelect?.({ start: info.start, end: info.end });
-        info.view.calendar.unselect();
+        if (!latest.current.keepSelectionIn) info.view.calendar.unselect();
       },
       eventClick: (info: EventClickArg) => {
         info.jsEvent.preventDefault();
@@ -137,7 +147,16 @@ export default function RoomCalendar(props: RoomCalendarProps) {
         if (sessionId) latest.current.onDrop?.({ sessionId, start: info.date });
       },
     };
-  }, [props.editable, props.selectable, props.futureOnly, props.droppable, props.month, roomColors, roomNames]);
+  }, [
+    props.editable,
+    props.selectable,
+    props.futureOnly,
+    props.droppable,
+    props.month,
+    props.keepSelectionIn,
+    roomColors,
+    roomNames,
+  ]);
 
   return (
     <div className={`${s.root} ${theme === 'admin' ? s.admin : s.site}`}>

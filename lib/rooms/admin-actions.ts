@@ -11,6 +11,7 @@ import { getCurrentUser, payloadClient } from '@/lib/auth';
 import type { LocationType, SessionKind } from './labels';
 import {
   applyFill,
+  deletableGenerated,
   deleteGenerated,
   errorMessage,
   getRoomSchedule,
@@ -214,16 +215,22 @@ export async function fillMonthPreview(year: number, month: number, groupIds: nu
   return previewFill(await payloadClient(), year, month, groupIds);
 }
 
-export async function fillMonthApply(year: number, month: number, groupIds: number[] | null) {
+export async function fillMonthApply(year: number, month: number, groupIds: number[] | null, keys?: string[]) {
   const user = await staff();
   if (!user) return null;
-  return applyFill(await payloadClient(), user, year, month, groupIds);
+  return applyFill(await payloadClient(), user, year, month, groupIds, keys);
 }
 
-export async function deleteGeneratedSessions(year: number, month: number, groupIds: number[] | null) {
+/** What "Generált alkalmak törlése" would delete in the month. */
+export async function generatedPreview(year: number, month: number, groupIds: number[] | null) {
+  if (!(await staff())) return null;
+  return deletableGenerated(await payloadClient(), year, month, groupIds);
+}
+
+export async function deleteGeneratedSessions(year: number, month: number, groupIds: number[] | null, ids?: number[]) {
   const user = await staff();
   if (!user) return null;
-  return deleteGenerated(await payloadClient(), user, year, month, groupIds);
+  return deleteGenerated(await payloadClient(), user, year, month, groupIds, ids);
 }
 
 /** Deletes a session (and its booking), or a booking without a session. */
