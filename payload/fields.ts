@@ -133,6 +133,24 @@ export const date = (name: string, label: string, opts: Opts = {}): DateField =>
   },
 });
 
+/** A moment (stored in UTC; the admin shows and picks it in the browser's zone, i.e. Budapest). */
+export const dateTime = (name: string, label: string, opts: Opts = {}): DateField => ({
+  name,
+  label,
+  type: 'date',
+  required: opts.required,
+  index: true,
+  admin: {
+    description: opts.description,
+    date: {
+      pickerAppearance: 'dayAndTime',
+      displayFormat: 'yyyy. MM. dd. HH:mm',
+      timeFormat: 'HH:mm',
+      timeIntervals: 30,
+    },
+  },
+});
+
 /** A time of day as "HH:mm", e.g. 18:00. */
 export const time = (name: string, label: string, opts: Opts = {}): TextField => ({
   name,

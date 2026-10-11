@@ -3,7 +3,14 @@ import { type CollectionConfig, slugField } from 'payload';
 
 import { slugify } from '@/lib/slugify';
 
-import { contentAccess, draftContentAccess, isAdmin, isStaffOrAdmin, publishedOrStaff } from '../access';
+import {
+  contentAccess,
+  draftContentAccess,
+  isAdmin,
+  isStaffOrAdmin,
+  isStaffOrAdminField,
+  publishedOrStaff,
+} from '../access';
 import { date, fullRichText, image, importId, paragraphsRichText, relationship, text, textarea, time } from '../fields';
 import { previewPath } from '../preview';
 import { collectionRevalidation } from '../revalidate';
@@ -183,6 +190,31 @@ export const Productions: CollectionConfig = {
                   admin: { description: 'Kettős szereposztásnál mindkét nevet add meg (Enter a nevek között).' },
                 },
               ],
+            },
+          ],
+        },
+        {
+          // not shown on the public site; for the room calendar and the student area
+          label: 'Próbák',
+          description:
+            'A próbák és vizsgák a Teremnaptárban kezelhetők; a megadott csoportok hallgatói látják őket a fiókjukban.',
+          fields: [
+            {
+              ...relationship('courseGroups', 'Játszó csoportok', 'courseGroups', {
+                hasMany: true,
+                description: 'Ezek a csoportok játsszák: a hallgatóik látják a próbákat, és gyakorolhatnak hozzá.',
+              }),
+              access: { read: isStaffOrAdminField },
+            },
+            {
+              name: 'sessions',
+              label: 'Alkalmak',
+              type: 'join',
+              collection: 'sessions',
+              on: 'production',
+              defaultSort: 'start',
+              access: { read: isStaffOrAdminField },
+              admin: { defaultColumns: ['displayTitle', 'kind', 'start', 'locationType', 'status'] },
             },
           ],
         },

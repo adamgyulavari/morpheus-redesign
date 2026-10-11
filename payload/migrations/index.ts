@@ -5,6 +5,7 @@ import * as migration_20261010_233009_s3_object_key from './20261010_233009_s3_o
 import * as migration_20261011_133053_accounts from './20261011_133053_accounts';
 import * as migration_20261011_133108_drop_user_role from './20261011_133108_drop_user_role';
 import * as migration_20261011_190535_login_codes from './20261011_190535_login_codes';
+import * as migration_20261011_214820_rooms_sessions from './20261011_214820_rooms_sessions';
 
 export const migrations = [
   {
@@ -40,6 +41,11 @@ export const migrations = [
   {
     up: migration_20261011_190535_login_codes.up,
     down: migration_20261011_190535_login_codes.down,
-    name: '20261011_190535_login_codes'
+    name: '20261011_190535_login_codes',
+  },
+  {
+    up: migration_20261011_214820_rooms_sessions.up,
+    down: migration_20261011_214820_rooms_sessions.down,
+    name: '20261011_214820_rooms_sessions'
   },
 ];

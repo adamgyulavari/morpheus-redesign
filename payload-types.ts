@@ -81,6 +81,10 @@ export interface Config {
     reviews: Review;
     contactPeople: ContactPerson;
     courseGroups: CourseGroup;
+    studentLinks: StudentLink;
+    sessions: Session;
+    roomBookings: RoomBooking;
+    rooms: Room;
     media: Media;
     users: User;
     loginTokens: LoginToken;
@@ -92,6 +96,12 @@ export interface Config {
     'payload-migrations': PayloadMigration;
   };
   collectionsJoins: {
+    productions: {
+      sessions: 'sessions';
+    };
+    courseGroups: {
+      sessions: 'sessions';
+    };
     users: {
       courseGroups: 'courseGroups';
     };
@@ -111,6 +121,10 @@ export interface Config {
     reviews: ReviewsSelect<false> | ReviewsSelect<true>;
     contactPeople: ContactPeopleSelect<false> | ContactPeopleSelect<true>;
     courseGroups: CourseGroupsSelect<false> | CourseGroupsSelect<true>;
+    studentLinks: StudentLinksSelect<false> | StudentLinksSelect<true>;
+    sessions: SessionsSelect<false> | SessionsSelect<true>;
+    roomBookings: RoomBookingsSelect<false> | RoomBookingsSelect<true>;
+    rooms: RoomsSelect<false> | RoomsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     loginTokens: LoginTokensSelect<false> | LoginTokensSelect<true>;
@@ -128,11 +142,13 @@ export interface Config {
   globals: {
     siteSettings: SiteSetting;
     ui: Ui;
+    roomBookingSettings: RoomBookingSetting;
     'payload-jobs-stats': PayloadJobsStat;
   };
   globalsSelect: {
     siteSettings: SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     ui: UiSelect<false> | UiSelect<true>;
+    roomBookingSettings: RoomBookingSettingsSelect<false> | RoomBookingSettingsSelect<true>;
     'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
   };
   locale: null;
@@ -1793,6 +1809,15 @@ export interface Production {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Ezek a csoportok játsszák: a hallgatóik látják a próbákat, és gyakorolhatnak hozzá.
+   */
+  courseGroups?: (number | CourseGroup)[] | null;
+  sessions?: {
+    docs?: (number | Session)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
   meta?: {
     /**
      * A Google-találat címe és a böngészőfül felirata. Üresen: „<név> — Morpheus Színműhely”.
@@ -1823,6 +1848,244 @@ export interface Production {
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * Az induló és futó csoportok a hallgatóikkal. A hallgatók a fiókjukban (/fiokom) látják a saját csoportjaikat.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "courseGroups".
+ */
+export interface CourseGroup {
+  id: number;
+  /**
+   * Pl. „Kezdő kurzus — 2026 ősz, csütörtök”
+   */
+  title: string;
+  type: 'kezdo' | 'szakmai' | 'egyeb';
+  /**
+   * Nem kötelező: melyik kurzus csoportja.
+   */
+  course?: (number | null) | Course;
+  startDate: string;
+  /**
+   * Eddig a napig számít aktív hallgatónak, aki a csoportban van.
+   */
+  endDate: string;
+  /**
+   * A havi számlázáshoz (később).
+   */
+  monthlyFee?: number | null;
+  /**
+   * A hónap hányadik napján (1–28).
+   */
+  invoiceDay?: number | null;
+  /**
+   * Általános információk a csoportról; a hallgatók a fiókjukban látják.
+   */
+  info?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * A heti órák. A Teremnaptár „Hónap feltöltése” gombja ezekből hozza létre az alkalmakat a kezdés és a befejezés között.
+   */
+  defaultSchedule?:
+    | {
+        weekday: '1' | '2' | '3' | '4' | '5' | '6' | '7';
+        startTime: string;
+        endTime: string;
+        rooms: (number | Room)[];
+        id?: string | null;
+      }[]
+    | null;
+  sessions?: {
+    docs?: (number | Session)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  instructors?: (number | User)[] | null;
+  students?: (number | User)[] | null;
+  /**
+   * A csoport hallgatóinak száma.
+   */
+  studentCount?: number | null;
+  /**
+   * Automatikus: a befejezés napjáig aktív.
+   */
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * A termek. Inaktív teremre nem lehet foglalni; diákok csak a „Diákok foglalhatják” termeket foglalhatják.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rooms".
+ */
+export interface Room {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  capacity?: number | null;
+  /**
+   * Hex színkód, pl. #0f5f63
+   */
+  color: string;
+  photo?: (number | null) | Media;
+  active?: boolean | null;
+  studentBookable?: boolean | null;
+  /**
+   * Kisebb szám előrébb.
+   */
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Órák, próbák, vizsgák, előadások. A helyszín: terem (foglalással), külső helyszín vagy még nincs.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sessions".
+ */
+export interface Session {
+  id: number;
+  displayTitle?: string | null;
+  /**
+   * Üresen a csoport vagy az előadás nevéből készül.
+   */
+  title?: string | null;
+  kind: 'course' | 'rehearsal' | 'exam' | 'show' | 'other';
+  status: 'scheduled' | 'cancelled';
+  /**
+   * Óránál kötelező.
+   */
+  courseGroup?: (number | null) | CourseGroup;
+  /**
+   * Próbánál kötelező.
+   */
+  production?: (number | null) | Production;
+  start: string;
+  end: string;
+  locationType: 'room' | 'external' | 'unplaced';
+  /**
+   * Ahol lesz. „Helyszín nélkül” állapotban ezeket a termeket próbálja meg újra, amikor elhelyezed.
+   */
+  rooms?: (number | Room)[] | null;
+  externalLocation?: string | null;
+  /**
+   * Automatikus: az alkalom ideje és termei szerint.
+   */
+  booking?: (number | null) | RoomBooking;
+  /**
+   * Csak a munkatársak látják.
+   */
+  notes?: string | null;
+  generatedFrom?: {
+    courseGroup?: (number | null) | CourseGroup;
+    entry?: number | null;
+    day?: string | null;
+  };
+  /**
+   * A hónap újbóli feltöltése és a generált alkalmak törlése nem nyúl hozzá.
+   */
+  customized?: boolean | null;
+  /**
+   * Csak adminisztrátor: az ütköző diák-gyakorlásokat lemondja (a diákok e-mailt kapnak).
+   */
+  overridePractice?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Ki és mi foglal termet. Az alkalmak (órák, próbák) foglalását az alkalom kezeli; itt a bérléseket, egyéb foglalásokat és a diákok gyakorlásait látod.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "roomBookings".
+ */
+export interface RoomBooking {
+  id: number;
+  displayTitle?: string | null;
+  kind: 'session' | 'practice' | 'rental' | 'other';
+  status: 'confirmed' | 'cancelled';
+  rooms: (number | Room)[];
+  start: string;
+  end: string;
+  title?: string | null;
+  /**
+   * Az alkalom kezeli ezt a foglalást.
+   */
+  session?: (number | null) | Session;
+  user?: (number | null) | User;
+  courseGroup?: (number | null) | CourseGroup;
+  production?: (number | null) | Production;
+  cancelledBy?: (number | null) | User;
+  cancelledAt?: string | null;
+  cancelReason?: string | null;
+  /**
+   * Csak a munkatársak látják.
+   */
+  notes?: string | null;
+  /**
+   * Csak adminisztrátor: az ütköző diák-gyakorlásokat lemondja (a diákok e-mailt kapnak). Alkalommal és bérléssel ütközni nem lehet.
+   */
+  overridePractice?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Munkatársak (admin felület) és hallgatók (a weboldal fiókja). Szerepkört csak adminisztrátor adhat.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users".
+ */
+export interface User {
+  id: number;
+  lastName: string;
+  firstName: string;
+  phone?: string | null;
+  name?: string | null;
+  /**
+   * Hallgató: csak a weboldalon lép be. Munkatárs: tartalmat és csoportokat szerkeszt. Adminisztrátor: mindent, a felhasználókat is.
+   */
+  roles: ('admin' | 'staff' | 'student')[];
+  courseGroups?: {
+    docs?: (number | CourseGroup)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  resetPasswordRequestedAt?: string | null;
+  _verified?: boolean | null;
+  _verificationToken?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'users';
 }
 /**
  * Az előadások időpontjai. Elöl a legkésőbbi; a múltbeli időpontok másnap automatikusan eltűnnek az oldalról.
@@ -2061,108 +2324,25 @@ export interface ContactPerson {
   createdAt: string;
 }
 /**
- * Az induló és futó csoportok a hallgatóikkal. A hallgatók a fiókjukban (/fiokom) látják a saját csoportjaikat.
+ * A hallgatók a fiókjukban látják: mindenki, vagy csak a kiválasztott csoportok hallgatói.
  *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "courseGroups".
+ * via the `definition` "studentLinks".
  */
-export interface CourseGroup {
+export interface StudentLink {
   id: number;
-  /**
-   * Pl. „Kezdő kurzus — 2026 ősz, csütörtök”
-   */
   title: string;
-  type: 'kezdo' | 'szakmai' | 'egyeb';
   /**
-   * Nem kötelező: melyik kurzus csoportja.
+   * Teljes webcím (https://…) vagy oldal (/…).
    */
-  course?: (number | null) | Course;
-  startDate: string;
-  /**
-   * Eddig a napig számít aktív hallgatónak, aki a csoportban van.
-   */
-  endDate: string;
-  /**
-   * A havi számlázáshoz (később).
-   */
-  monthlyFee?: number | null;
-  /**
-   * A hónap hányadik napján (1–28).
-   */
-  invoiceDay?: number | null;
-  /**
-   * Általános információk a csoportról; a hallgatók a fiókjukban látják.
-   */
-  info?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  instructors?: (number | User)[] | null;
-  students?: (number | User)[] | null;
-  /**
-   * A csoport hallgatóinak száma.
-   */
-  studentCount?: number | null;
-  /**
-   * Automatikus: a befejezés napjáig aktív.
-   */
-  isActive?: boolean | null;
+  url: string;
+  description?: string | null;
+  audience: 'all' | 'courseGroups';
+  courseGroups?: (number | CourseGroup)[] | null;
+  active?: boolean | null;
+  order?: number | null;
   updatedAt: string;
   createdAt: string;
-}
-/**
- * Munkatársak (admin felület) és hallgatók (a weboldal fiókja). Szerepkört csak adminisztrátor adhat.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users".
- */
-export interface User {
-  id: number;
-  lastName: string;
-  firstName: string;
-  phone?: string | null;
-  name?: string | null;
-  /**
-   * Hallgató: csak a weboldalon lép be. Munkatárs: tartalmat és csoportokat szerkeszt. Adminisztrátor: mindent, a felhasználókat is.
-   */
-  roles: ('admin' | 'staff' | 'student')[];
-  courseGroups?: {
-    docs?: (number | CourseGroup)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  resetPasswordRequestedAt?: string | null;
-  _verified?: boolean | null;
-  _verificationToken?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  sessions?:
-    | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
-      }[]
-    | null;
-  password?: string | null;
-  collection: 'users';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2396,6 +2576,22 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'courseGroups';
         value: number | CourseGroup;
+      } | null)
+    | ({
+        relationTo: 'studentLinks';
+        value: number | StudentLink;
+      } | null)
+    | ({
+        relationTo: 'sessions';
+        value: number | Session;
+      } | null)
+    | ({
+        relationTo: 'roomBookings';
+        value: number | RoomBooking;
+      } | null)
+    | ({
+        relationTo: 'rooms';
+        value: number | Room;
       } | null)
     | ({
         relationTo: 'media';
@@ -3470,6 +3666,8 @@ export interface ProductionsSelect<T extends boolean = true> {
         names?: T;
         id?: T;
       };
+  courseGroups?: T;
+  sessions?: T;
   meta?:
     | T
     | {
@@ -3694,10 +3892,106 @@ export interface CourseGroupsSelect<T extends boolean = true> {
   monthlyFee?: T;
   invoiceDay?: T;
   info?: T;
+  defaultSchedule?:
+    | T
+    | {
+        weekday?: T;
+        startTime?: T;
+        endTime?: T;
+        rooms?: T;
+        id?: T;
+      };
+  sessions?: T;
   instructors?: T;
   students?: T;
   studentCount?: T;
   isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "studentLinks_select".
+ */
+export interface StudentLinksSelect<T extends boolean = true> {
+  title?: T;
+  url?: T;
+  description?: T;
+  audience?: T;
+  courseGroups?: T;
+  active?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sessions_select".
+ */
+export interface SessionsSelect<T extends boolean = true> {
+  displayTitle?: T;
+  title?: T;
+  kind?: T;
+  status?: T;
+  courseGroup?: T;
+  production?: T;
+  start?: T;
+  end?: T;
+  locationType?: T;
+  rooms?: T;
+  externalLocation?: T;
+  booking?: T;
+  notes?: T;
+  generatedFrom?:
+    | T
+    | {
+        courseGroup?: T;
+        entry?: T;
+        day?: T;
+      };
+  customized?: T;
+  overridePractice?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "roomBookings_select".
+ */
+export interface RoomBookingsSelect<T extends boolean = true> {
+  displayTitle?: T;
+  kind?: T;
+  status?: T;
+  rooms?: T;
+  start?: T;
+  end?: T;
+  title?: T;
+  session?: T;
+  user?: T;
+  courseGroup?: T;
+  production?: T;
+  cancelledBy?: T;
+  cancelledAt?: T;
+  cancelReason?: T;
+  notes?: T;
+  overridePractice?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rooms_select".
+ */
+export interface RoomsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  description?: T;
+  capacity?: T;
+  color?: T;
+  photo?: T;
+  active?: T;
+  studentBookable?: T;
+  order?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -4155,6 +4449,53 @@ export interface Ui {
   createdAt?: string | null;
 }
 /**
+ * A diákok teremfoglalásának szabályai. A munkatársakra nem vonatkoznak (az ütközés tilalma mindenkire igen).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "roomBookingSettings".
+ */
+export interface RoomBookingSetting {
+  id: number;
+  /**
+   * Üresen: éjjel-nappal.
+   */
+  studentHoursFrom?: string | null;
+  /**
+   * Üresen: éjjel-nappal.
+   */
+  studentHoursTo?: string | null;
+  /**
+   * A foglalás eleje és vége erre kerekedik.
+   */
+  slotMinutes: '15' | '30' | '60';
+  maxHours: number;
+  horizonDays: number;
+  minNoticeHours: number;
+  /**
+   * Üresen: korlátlan.
+   */
+  weeklyQuotaHours?: number | null;
+  /**
+   * 0: egészen a kezdésig.
+   */
+  cancelHoursBefore: number;
+  /**
+   * Ezekre a napokra a „Hónap feltöltése” nem hoz létre alkalmat (ünnepek, szünetek).
+   */
+  closedDates?:
+    | {
+        date: string;
+        /**
+         * Pl. „Mindenszentek”
+         */
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-jobs-stats".
  */
@@ -4427,6 +4768,30 @@ export interface UiSelect<T extends boolean = true> {
               label?: T;
               href?: T;
             };
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "roomBookingSettings_select".
+ */
+export interface RoomBookingSettingsSelect<T extends boolean = true> {
+  studentHoursFrom?: T;
+  studentHoursTo?: T;
+  slotMinutes?: T;
+  maxHours?: T;
+  horizonDays?: T;
+  minNoticeHours?: T;
+  weeklyQuotaHours?: T;
+  cancelHoursBefore?: T;
+  closedDates?:
+    | T
+    | {
+        date?: T;
+        note?: T;
+        id?: T;
       };
   updatedAt?: T;
   createdAt?: T;
