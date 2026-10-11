@@ -22,7 +22,9 @@ export default function OfferingCard({
     return (
       <article className="on-dark relative flex flex-col gap-5 overflow-hidden rounded-3xl bg-teal px-7 py-8 text-cream lg:min-h-[520px]">
         <div className="sun absolute -right-20 -top-20 h-40 w-40 rounded-full" aria-hidden="true" />
-        <span className="relative self-start rounded-full bg-gold px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-deep">{badge}</span>
+        <span className="relative self-start rounded-full bg-gold px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-deep">
+          {badge}
+        </span>
         <h3 className="relative font-display text-[40px] leading-none">{title}</h3>
         <p className="leading-relaxed text-[#d7e5e2]">{text}</p>
         <dl className="mt-auto flex flex-col gap-2.5 text-[15px]">
@@ -41,7 +43,9 @@ export default function OfferingCard({
   }
   return (
     <article className="flex flex-col gap-5 rounded-3xl border border-line bg-paper px-7 py-8 lg:min-h-[520px]">
-      <span className="self-start rounded-full bg-sand px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-deep">{badge}</span>
+      <span className="self-start rounded-full bg-sand px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-deep">
+        {badge}
+      </span>
       <h3 className="font-display text-[40px] leading-none">{title}</h3>
       <p className="leading-relaxed text-ink2">{text}</p>
       <dl className="mt-auto flex flex-col gap-2.5 text-[15px]">

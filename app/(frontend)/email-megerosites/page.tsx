@@ -28,9 +28,19 @@ export default async function VerifyEmailPage({ searchParams }: Props) {
         {verified ? (
           <Notice info="Az e-mail-címed megerősítve. Most már be tudsz lépni." />
         ) : (
-          <Notice state={{ error: 'Ez a megerősítő link érvénytelen vagy már felhasználták. Ha korábban már megerősítetted a címed, egyszerűen lépj be.' }} />
+          <Notice
+            state={{
+              error:
+                'Ez a megerősítő link érvénytelen vagy már felhasználták. Ha korábban már megerősítetted a címed, egyszerűen lépj be.',
+            }}
+          />
         )}
-        <ButtonLink link={{ label: 'Belépés', href: '/belepes' }} variant="primary" arrow className="self-stretch sm:self-start" />
+        <ButtonLink
+          link={{ label: 'Belépés', href: '/belepes' }}
+          variant="primary"
+          arrow
+          className="self-stretch sm:self-start"
+        />
       </Card>
     </AccountShell>
   );

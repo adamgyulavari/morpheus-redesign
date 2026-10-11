@@ -13,14 +13,25 @@ export const generateMetadata = () => accountMetadata('Új jelszó');
 export default async function ResetPasswordPage({ searchParams }: Props) {
   const { token } = await searchParams;
   return (
-    <AccountShell eyebrow="Fiók" heading="Új *jelszó*" intro={token ? <p>Add meg az új jelszavad. Mentés után be is léptetünk.</p> : undefined}>
+    <AccountShell
+      eyebrow="Fiók"
+      heading="Új *jelszó*"
+      intro={token ? <p>Add meg az új jelszavad. Mentés után be is léptetünk.</p> : undefined}
+    >
       <Card>
         {token ? (
           <ResetPasswordForm token={token} />
         ) : (
           <>
-            <Notice state={{ error: 'Hiányzik a visszaállító kód. Nyisd meg újra a levélben kapott linket, vagy kérj újat.' }} />
-            <ButtonLink link={{ label: 'Új link kérése', href: '/elfelejtett-jelszo' }} variant="primary" arrow className="self-stretch sm:self-start" />
+            <Notice
+              state={{ error: 'Hiányzik a visszaállító kód. Nyisd meg újra a levélben kapott linket, vagy kérj újat.' }}
+            />
+            <ButtonLink
+              link={{ label: 'Új link kérése', href: '/elfelejtett-jelszo' }}
+              variant="primary"
+              arrow
+              className="self-stretch sm:self-start"
+            />
           </>
         )}
       </Card>

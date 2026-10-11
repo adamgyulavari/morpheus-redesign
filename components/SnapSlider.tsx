@@ -5,12 +5,20 @@
  * desktop and one dot per "page" of visible items — recalculated on resize, kept in sync with
  * scrolling. Items are marked with `data-slide`.
  */
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
+import { type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
 import { fill } from '@/lib/format';
 
 import { ArrowLeft } from './icons';
 import { useUi } from './UiStrings';
+
+const slidesOf = (track: HTMLElement | null) => Array.from(track?.querySelectorAll<HTMLElement>('[data-slide]') ?? []);
+
+/** Distance between two neighbouring slides (1 when there is only one). */
+function stepOf(track: HTMLElement | null): number {
+  const [a, b] = slidesOf(track);
+  return a && b ? b.offsetLeft - a.offsetLeft : 1;
+}
 
 export function useSnapSlider(): {
   trackRef: RefObject<HTMLDivElement | null>;
@@ -23,26 +31,20 @@ export function useSnapSlider(): {
   const [perView, setPerView] = useState(1);
   const [current, setCurrent] = useState(0);
 
-  const slides = () => Array.from(trackRef.current?.querySelectorAll<HTMLElement>('[data-slide]') ?? []);
-  const step = () => {
-    const [a, b] = slides();
-    return a && b ? b.offsetLeft - a.offsetLeft : 1;
-  };
-
   const sync = useCallback(() => {
     const track = trackRef.current;
     if (!track) return;
     const atEnd = track.scrollLeft >= track.scrollWidth - track.clientWidth - 4;
-    setCurrent(atEnd ? pages - 1 : Math.min(pages - 1, Math.round(track.scrollLeft / step() / perView)));
+    setCurrent(atEnd ? pages - 1 : Math.min(pages - 1, Math.round(track.scrollLeft / stepOf(track) / perView)));
   }, [pages, perView]);
 
   useEffect(() => {
     const layout = () => {
       const track = trackRef.current;
       if (!track) return;
-      const pv = Math.max(1, Math.round((track.clientWidth + 8) / step()));
+      const pv = Math.max(1, Math.round((track.clientWidth + 8) / stepOf(track)));
       setPerView(pv);
-      setPages(Math.ceil(slides().length / pv));
+      setPages(Math.ceil(slidesOf(track).length / pv));
     };
     layout();
     window.addEventListener('resize', layout);
@@ -60,7 +62,7 @@ export function useSnapSlider(): {
 
   const go = (page: number) => {
     const p = Math.max(0, Math.min(pages - 1, page));
-    const all = slides();
+    const all = slidesOf(trackRef.current);
     const target = all[Math.min(p * perView, all.length - 1)];
     const first = all[0];
     if (target && first) trackRef.current?.scrollTo({ left: target.offsetLeft - first.offsetLeft });
@@ -87,12 +89,19 @@ export function SliderControls({
   if (pages < 2) return null;
   return (
     <div className="flex items-center justify-center gap-5 pt-2">
-      <button type="button" aria-label={prevLabel} className="btn-icon hidden lg:inline-flex" disabled={current === 0} onClick={() => go(current - 1)}>
+      <button
+        type="button"
+        aria-label={prevLabel}
+        className="btn-icon hidden lg:inline-flex"
+        disabled={current === 0}
+        onClick={() => go(current - 1)}
+      >
         <ArrowLeft />
       </button>
       <div className="flex items-center">
         {Array.from({ length: pages }, (_, i) => (
           <button
+            // biome-ignore lint/suspicious/noArrayIndexKey: one dot per page number
             key={i}
             type="button"
             className="flex h-11 w-8 items-center justify-center"
@@ -100,11 +109,19 @@ export function SliderControls({
             aria-current={i === current}
             onClick={() => go(i)}
           >
-            <span className={`block h-2.5 rounded-full transition-all duration-300 ${i === current ? 'w-[30px] bg-teal' : 'w-2.5 bg-[#c9b89c]'}`} />
+            <span
+              className={`block h-2.5 rounded-full transition-all duration-300 ${i === current ? 'w-[30px] bg-teal' : 'w-2.5 bg-[#c9b89c]'}`}
+            />
           </button>
         ))}
       </div>
-      <button type="button" aria-label={nextLabel} className="btn-icon hidden lg:inline-flex" disabled={current === pages - 1} onClick={() => go(current + 1)}>
+      <button
+        type="button"
+        aria-label={nextLabel}
+        className="btn-icon hidden lg:inline-flex"
+        disabled={current === pages - 1}
+        onClick={() => go(current + 1)}
+      >
         <span className="rotate-180">
           <ArrowLeft />
         </span>

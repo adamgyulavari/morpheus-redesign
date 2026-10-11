@@ -9,11 +9,7 @@
   "blocks": [
     {
       "blockType": "homeHero",
-      "keywords": [
-        "Színház",
-        "Önismeret",
-        "Közösség"
-      ],
+      "keywords": ["Színház", "Önismeret", "Közösség"],
       "heading": "Itt *(szín)*játszva tanul az ember.",
       "lead": "Színházi képzéseinken nem csak a kiállásod fejlődik: részt vehetsz egy igazi színházi alkotófolyamatban, a ráhangoló játékoktól egészen a vizsgaelőadásig.",
       "primaryCta": {

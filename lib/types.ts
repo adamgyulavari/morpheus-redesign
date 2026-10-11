@@ -259,8 +259,14 @@ export type UiStrings = {
     invite: string;
   };
   repertoire: { filter: string; all: string; company: string; students: string };
-  reviews: { previous: string; next: string; /** "Fotó helye: {name} portréja" */ photoPlaceholder: string };
-  gallery: { previous: string; next: string; previousImage: string; nextImage: string; /** "{alt} — nagyítás" */ zoom: string };
+  reviews: { previous: string; next: string /** "Fotó helye: {name} portréja" */; photoPlaceholder: string };
+  gallery: {
+    previous: string;
+    next: string;
+    previousImage: string;
+    nextImage: string /** "{alt} — nagyítás" */;
+    zoom: string;
+  };
   course: {
     rhythm: string;
     length: string;
@@ -370,8 +376,8 @@ export type HeroImageLayout = {
 export type OfferingCardData = { badge: string; title: string; text: string; facts: Fact[]; cta: Link };
 
 export type Block = BlockBase &
+  // ── heroes
   (
-    // ── heroes
     | {
         blockType: 'homeHero';
         keywords: string[];
@@ -401,12 +407,27 @@ export type Block = BlockBase &
     | { blockType: 'ctaBand'; ctaBand: string }
     | { blockType: 'textSplit'; eyebrow: string; heading: Emphasised; size?: 'md' | 'xl'; text: string; facts?: Fact[] }
     | { blockType: 'statement'; eyebrow: string; heading: Emphasised; text: string }
-    | { blockType: 'imageText'; eyebrow: string; heading: Emphasised; quote?: string; paragraphs: Paragraph[]; image: ImageRef }
+    | {
+        blockType: 'imageText';
+        eyebrow: string;
+        heading: Emphasised;
+        quote?: string;
+        paragraphs: Paragraph[];
+        image: ImageRef;
+      }
     | (Section & { blockType: 'linkCards'; cards: { eyebrow: string; title: string; href: string; text: string }[] })
     | (Section & { blockType: 'questions'; items: { title: string; text: string }[]; closing: Emphasised; cta: Link })
     | (Section & { blockType: 'benefits'; text?: string; items?: string[] })
-    | (Section & { blockType: 'curriculum'; items: string[]; bonus?: { eyebrow: string; heading: string; text: string }; image: ImageRef })
-    | { blockType: 'featureCards'; cards: { eyebrow: string; heading?: string; quote?: string; quoteSource?: string; text: string }[] }
+    | (Section & {
+        blockType: 'curriculum';
+        items: string[];
+        bonus?: { eyebrow: string; heading: string; text: string };
+        image: ImageRef;
+      })
+    | {
+        blockType: 'featureCards';
+        cards: { eyebrow: string; heading?: string; quote?: string; quoteSource?: string; text: string }[];
+      }
     | (Section & {
         blockType: 'path';
         /** Numbered steps, or paragraphs (+ optional photo). */

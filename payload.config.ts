@@ -2,14 +2,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { postgresAdapter } from '@payloadcms/db-postgres';
-import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import { redirectsPlugin } from '@payloadcms/plugin-redirects';
 import { seoPlugin } from '@payloadcms/plugin-seo';
+import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import { s3Storage } from '@payloadcms/storage-s3';
 import { hu } from '@payloadcms/translations/languages/hu';
 import { buildConfig, type Payload } from 'payload';
 import sharp from 'sharp';
-
+import { serverUrl } from './lib/env';
 import { CourseGroups } from './payload/collections/CourseGroups';
 import { LoginTokens } from './payload/collections/LoginTokens';
 import { Media } from './payload/collections/Media';
@@ -27,9 +27,8 @@ import {
   Workshops,
 } from './payload/collections/simple';
 import { Users } from './payload/collections/Users';
-import { SiteSettings, Ui } from './payload/globals';
-import { serverUrl } from './lib/env';
 import { emailAdapter } from './payload/email';
+import { SiteSettings, Ui } from './payload/globals';
 import { migrations } from './payload/migrations';
 import { redirectsConfig, redirectsTranslationsHu } from './payload/redirects';
 import { generateDescription, generateImage, generateTitle, generateURL, seoFields } from './payload/seo';

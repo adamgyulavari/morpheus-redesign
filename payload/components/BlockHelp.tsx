@@ -9,7 +9,9 @@ export function BlockHelp({ field, payload }: UIFieldServerProps) {
   const { text, lists = [] } = (field.admin?.custom ?? {}) as { text?: string; lists?: string[] };
   const links = lists.flatMap((slug) => {
     const plural = payload.collections[slug as keyof typeof payload.collections]?.config.labels.plural;
-    return typeof plural === 'string' ? [{ href: `${payload.config.routes.admin}/collections/${slug}`, label: plural }] : [];
+    return typeof plural === 'string'
+      ? [{ href: `${payload.config.routes.admin}/collections/${slug}`, label: plural }]
+      : [];
   });
   if (!text && !links.length) return null;
   return (
@@ -22,7 +24,12 @@ export function BlockHelp({ field, payload }: UIFieldServerProps) {
           {links.map((l, i) => (
             <span key={l.href}>
               {i > 0 && ', '}
-              <a href={l.href} target="_blank" rel="noopener" style={{ color: 'var(--theme-text)', textDecoration: 'underline' }}>
+              <a
+                href={l.href}
+                target="_blank"
+                rel="noopener"
+                style={{ color: 'var(--theme-text)', textDecoration: 'underline' }}
+              >
                 {l.label}
               </a>
             </span>

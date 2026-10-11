@@ -15,18 +15,18 @@ import type {
   CtaBand,
   ImageRef,
   Instructor,
+  Link,
   OpenWorkshopSession,
   Page,
   Production,
   Review,
+  Segment,
   Show,
   SiteSettings,
   TeamBuildingProgramme,
   UiStrings,
   Venue,
   Workshop,
-  Segment,
-  Link,
 } from '@/lib/types';
 import type * as P from '@/payload-types';
 
@@ -40,7 +40,7 @@ type Rel<T> = number | T | null | undefined;
 export const idOf = (rel: Rel<{ id: number }>): string => String(typeof rel === 'object' && rel ? rel.id : rel);
 const doc = <T extends object>(rel: Rel<T>): T | undefined => (typeof rel === 'object' && rel ? rel : undefined);
 const opt = <T>(v: T | null | undefined): T | undefined => (v === null || v === '' ? undefined : v);
-const optArray = <T>(v: T[] | null | undefined): T[] | undefined => (v && v.length ? v : undefined);
+const optArray = <T>(v: T[] | null | undefined): T[] | undefined => (v?.length ? v : undefined);
 
 /** A stored day (a timestamp around noon) → its Budapest calendar date. */
 export const day = (iso: string): string => todayInBudapest(new Date(iso));
@@ -61,13 +61,12 @@ export function img(rel: Rel<P.Media>, size: Size): ImageRef | undefined {
   const m = doc(rel);
   if (!m?.url) return undefined;
   const s = m.sizes?.[size];
-  const sized = s?.url && s.width && s.height;
-  return {
-    src: relative(sized ? s.url! : m.url),
-    alt: m.alt,
-    width: (sized ? s.width : m.width) ?? 0,
-    height: (sized ? s.height : m.height) ?? 0,
-  };
+  // the generated size, if it was made (small originals have none)
+  const use =
+    s?.url && s.width && s.height
+      ? { url: s.url, width: s.width, height: s.height }
+      : { url: m.url, width: m.width, height: m.height };
+  return { src: relative(use.url), alt: m.alt, width: use.width ?? 0, height: use.height ?? 0 };
 }
 
 const imgReq = (rel: Rel<P.Media>, size: Size): ImageRef => {
@@ -77,12 +76,19 @@ const imgReq = (rel: Rel<P.Media>, size: Size): ImageRef => {
 };
 
 const texts = (items: { text: string }[] | null | undefined): string[] => (items ?? []).map((i) => i.text);
-const link = (l: { label?: string | null; href?: string | null } | null | undefined): Link => ({ label: l?.label ?? '', href: l?.href ?? '' });
-const optLink = (l: { label?: string | null; href?: string | null } | null | undefined): Link | undefined => (l?.href ? link(l) : undefined);
+const link = (l: { label?: string | null; href?: string | null } | null | undefined): Link => ({
+  label: l?.label ?? '',
+  href: l?.href ?? '',
+});
 
 // ── rich text ───────────────────────────────────────────────────────────────
 
-type LexNode = { type: string; text?: string; children?: LexNode[]; fields?: { url?: string; linkType?: string; doc?: { value?: unknown } } };
+type LexNode = {
+  type: string;
+  text?: string;
+  children?: LexNode[];
+  fields?: { url?: string; linkType?: string; doc?: { value?: unknown } };
+};
 
 const plain = (nodes: LexNode[] = []): string =>
   nodes.map((n) => (n.type === 'linebreak' ? '\n' : n.type === 'tab' ? '\t' : (n.text ?? plain(n.children)))).join('');
@@ -119,6 +125,11 @@ export function segmentsFromRichText(state: SerializedEditorState | null | undef
 
 export const venue = (v: P.Venue): Venue => ({ id: String(v.id), name: v.name, shortName: v.shortName });
 
+function inviteVideo(v: P.Production['inviteVideo']): Production['inviteVideo'] {
+  const src = mediaUrl(v?.video);
+  return src && v?.poster ? { src, title: v.title ?? '', poster: imgReq(v.poster, 'card') } : undefined;
+}
+
 export function production(p: P.Production): Production {
   return {
     id: String(p.id),
@@ -137,10 +148,7 @@ export function production(p: P.Production): Production {
     highlights: optArray(p.highlights?.map((h) => ({ title: h.title, text: h.text }))),
     audienceQuotes: optArray(p.audienceQuotes?.map((q) => ({ text: q.text, author: opt(q.author) }))),
     videoUrl: opt(p.videoUrl),
-    inviteVideo:
-      p.inviteVideo?.video && p.inviteVideo.poster
-        ? { src: mediaUrl(p.inviteVideo.video)!, title: p.inviteVideo.title ?? '', poster: imgReq(p.inviteVideo.poster, 'card') }
-        : undefined,
+    inviteVideo: inviteVideo(p.inviteVideo),
     gallery: optArray((p.gallery ?? []).map((g) => img(g, 'gallery')).filter((g): g is ImageRef => Boolean(g))),
     credits: (p.credits ?? []).map((c) => ({ label: c.label, name: c.name })),
     castLabel: p.castLabel,
@@ -198,7 +206,12 @@ export const course = (c: P.Course): Course => ({
   rhythm: c.rhythm,
   length: c.length,
   card: { badge: c.card.badge, text: c.card.text, ctaLabel: c.card.ctaLabel },
-  starts: (c.starts ?? []).map((s) => ({ id: s.id ?? s.date, date: day(s.date), startTime: s.startTime, endTime: s.endTime })),
+  starts: (c.starts ?? []).map((s) => ({
+    id: s.id ?? s.date,
+    date: day(s.date),
+    startTime: s.startTime,
+    endTime: s.endTime,
+  })),
   admission: c.admission,
   nextIntake: c.nextIntake ? day(c.nextIntake).slice(0, 7) : undefined,
   prices: c.prices.map((p) => ({
@@ -264,7 +277,11 @@ export const siteSettings = (s: P.SiteSetting): SiteSettings => ({
   copyright: s.copyright,
   nav: s.nav.map((n) => ({ ...link(n), match: optArray(n.match) })),
   headerCta: link(s.headerCta),
-  footerColumns: s.footerColumns.map((c) => ({ title: c.title, links: c.links.map(link), social: c.social || undefined })),
+  footerColumns: s.footerColumns.map((c) => ({
+    title: c.title,
+    links: c.links.map(link),
+    social: c.social || undefined,
+  })),
   privacy: link(s.privacy),
   contact: { email: s.contact.email, address: s.contact.address, primaryPersonId: idOf(s.contact.primaryPerson) },
   social: { facebook: s.social.facebook, instagram: s.social.instagram, tixa: opt(s.social.tixa) },
@@ -303,11 +320,14 @@ function clean(value: unknown, key: string, blockType: string): unknown {
   if (value === null || value === undefined || value === '') return undefined;
   if (Array.isArray(value)) {
     const items = value.map((v) => clean(v, key, blockType)).filter((v) => v !== undefined);
-    const isTextList = value.every((v) => v && typeof v === 'object' && Object.keys(v).every((k) => k === 'id' || k === 'text'));
+    const isTextList = value.every(
+      (v) => v && typeof v === 'object' && Object.keys(v).every((k) => k === 'id' || k === 'text'),
+    );
     return isTextList && value.length ? items.map((i) => (i as { text: string }).text) : items;
   }
   if (typeof value !== 'object') return value;
-  if (isMedia(value)) return img(value, FULL_WIDTH_BLOCKS.has(blockType) ? 'band' : (BLOCK_IMAGE_SIZE[key] ?? 'gallery'));
+  if (isMedia(value))
+    return img(value, FULL_WIDTH_BLOCKS.has(blockType) ? 'band' : (BLOCK_IMAGE_SIZE[key] ?? 'gallery'));
   if (isLexical(value)) return segmentsFromRichText(value);
   // relationships to other collections
   if ('id' in value && key !== '_') {
@@ -335,7 +355,12 @@ export function block(raw: RawBlock): Block {
       ['facts', 'buttons'].forEach(empty);
       const sw = b.switcher as { label?: string; pages?: unknown[] } | undefined;
       if (!sw?.pages?.length) delete b.switcher;
-      else sw.pages = (raw as { switcher?: { pages?: { page: Rel<P.Page>; label?: string | null }[] | null } }).switcher!.pages!.map((p) => ({ path: doc(p.page)?.path ?? '', label: opt(p.label) }));
+      else {
+        const rawPages =
+          (raw as { switcher?: { pages?: { page: Rel<P.Page>; label?: string | null }[] | null } }).switcher?.pages ??
+          [];
+        sw.pages = rawPages.map((p) => ({ path: doc(p.page)?.path ?? '', label: opt(p.label) }));
+      }
       break;
     }
     case 'textSplit':
@@ -360,7 +385,9 @@ export function block(raw: RawBlock): Block {
       break;
     }
     case 'offerings':
-      b.cards = ((b.cards as Record<string, unknown>[] | undefined) ?? []).map((c) => (c.course ? { course: c.course } : { facts: [], ...c }));
+      b.cards = ((b.cards as Record<string, unknown>[] | undefined) ?? []).map((c) =>
+        c.course ? { course: c.course } : { facts: [], ...c },
+      );
       break;
   }
   return b as unknown as Block;

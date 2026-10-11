@@ -26,7 +26,11 @@ export default function ShowDetails({
     );
   }
   return (
-    <DetailsDialog label={labels.about} titleId={titleId} buttonClassName="link mt-1 self-start text-sm font-bold text-teal lg:text-base">
+    <DetailsDialog
+      label={labels.about}
+      titleId={titleId}
+      buttonClassName="link mt-1 self-start text-sm font-bold text-teal lg:text-base"
+    >
       <div className="flex items-end gap-4 pr-12 lg:gap-5">
         <Image
           src={p.poster.src}
@@ -47,8 +51,8 @@ export default function ShowDetails({
         </div>
       </div>
       <div className="flex flex-col gap-3.5 border-t border-line pt-5 text-[15.5px] leading-relaxed text-ink2 lg:text-[17px]">
-        {p.longDescription.map((para, k) => (
-          <p key={k}>
+        {p.longDescription.map((para) => (
+          <p key={para}>
             <Lines text={para} />
           </p>
         ))}

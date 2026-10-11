@@ -1,5 +1,5 @@
 /** Productions (the repertoire), their shows, and the legal pages. */
-import { slugField, type CollectionConfig } from 'payload';
+import { type CollectionConfig, slugField } from 'payload';
 
 import { slugify } from '@/lib/slugify';
 
@@ -19,7 +19,10 @@ const slug = () =>
       for (const f of row.fields) {
         if ('name' in f && f.name === 'slug') {
           f.label = 'URL-azonosító';
-          f.admin = { ...f.admin, description: 'A címből készül automatikusan; átírható. Pl. az-ordog → /repertoar/az-ordog' };
+          f.admin = {
+            ...f.admin,
+            description: 'A címből készül automatikusan; átírható. Pl. az-ordog → /repertoar/az-ordog',
+          };
         }
       }
       return row;
@@ -77,7 +80,10 @@ export const Productions: CollectionConfig = {
               name: 'detailPage',
               label: 'Saját aloldala van',
               type: 'checkbox',
-              admin: { description: 'Bekapcsolva a „Bővebben” a /repertoar/… oldalra visz; kikapcsolva felugró ablakban mutatja a leírást.' },
+              admin: {
+                description:
+                  'Bekapcsolva a „Bővebben” a /repertoar/… oldalra visz; kikapcsolva felugró ablakban mutatja a leírást.',
+              },
             },
           ],
         },
@@ -85,14 +91,18 @@ export const Productions: CollectionConfig = {
           label: 'Leírás és aloldal',
           fields: [
             text('tagline', 'Mottó', { description: 'Egy soros felvezetés a cím alatt az aloldalon.' }),
-            text('descriptionHeading', 'Leírás címe', { description: 'Az aloldalon a leírás fölötti cím, pl. a történet első mondata.' }),
+            text('descriptionHeading', 'Leírás címe', {
+              description: 'Az aloldalon a leírás fölötti cím, pl. a történet első mondata.',
+            }),
             {
               name: 'longDescription',
               label: 'Hosszú leírás',
               type: 'richText',
               editor: paragraphsRichText,
               required: true,
-              admin: { description: 'Bekezdésekre bontva. A „…” idézőjelek közé írt bekezdés kiemelt idézetként jelenik meg.' },
+              admin: {
+                description: 'Bekezdésekre bontva. A „…” idézőjelek közé írt bekezdés kiemelt idézetként jelenik meg.',
+              },
             },
             {
               name: 'highlights',
@@ -117,8 +127,12 @@ export const Productions: CollectionConfig = {
               hasMany: true,
               admin: { description: 'Képek az előadásból.' },
             },
-            image('heroImage', 'Fejléckép', { description: 'Az aloldal tetején. Ha üres, a galéria első képe, végül a plakát.' }),
-            image('heroVideo', 'Fejléc háttérvideó', { description: 'Néma, ismétlődő videó a fejlécben (a fejléckép az állókép).' }),
+            image('heroImage', 'Fejléckép', {
+              description: 'Az aloldal tetején. Ha üres, a galéria első képe, végül a plakát.',
+            }),
+            image('heroVideo', 'Fejléc háttérvideó', {
+              description: 'Néma, ismétlődő videó a fejlécben (a fejléckép az állókép).',
+            }),
             {
               name: 'inviteVideo',
               label: 'Személyes meghívó videó',
@@ -136,9 +150,20 @@ export const Productions: CollectionConfig = {
               label: 'Alkotók',
               labels: { singular: 'Alkotó', plural: 'Alkotók' },
               type: 'array',
-              fields: [{ type: 'row', fields: [text('label', 'Szerep', { required: true, description: 'Pl. „Rendező”' }), text('name', 'Név', { required: true })] }],
+              fields: [
+                {
+                  type: 'row',
+                  fields: [
+                    text('label', 'Szerep', { required: true, description: 'Pl. „Rendező”' }),
+                    text('name', 'Név', { required: true }),
+                  ],
+                },
+              ],
             },
-            text('castLabel', 'A szereposztás címe', { required: true, description: 'Pl. „Szereposztás” vagy „Szereplők”' }),
+            text('castLabel', 'A szereposztás címe', {
+              required: true,
+              description: 'Pl. „Szereposztás” vagy „Szereplők”',
+            }),
             {
               name: 'cast',
               label: 'Szereposztás',
@@ -147,10 +172,7 @@ export const Productions: CollectionConfig = {
               fields: [
                 {
                   type: 'row',
-                  fields: [
-                    text('role', 'Szerep'),
-                    text('roleNote', 'Megjegyzés a szerephez'),
-                  ],
+                  fields: [text('role', 'Szerep'), text('roleNote', 'Megjegyzés a szerephez')],
                 },
                 {
                   name: 'names',
@@ -166,7 +188,12 @@ export const Productions: CollectionConfig = {
         },
       ],
     },
-    { name: 'order', label: 'Sorrend', type: 'number', admin: { position: 'sidebar', description: 'A repertoárban kisebb szám kerül előrébb.' } },
+    {
+      name: 'order',
+      label: 'Sorrend',
+      type: 'number',
+      admin: { position: 'sidebar', description: 'A repertoárban kisebb szám kerül előrébb.' },
+    },
     slug(),
     importId,
   ],
@@ -180,7 +207,8 @@ export const Shows: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['date', 'time', 'production', 'venue', 'label'],
     group: SHOWS,
-    description: 'Az előadások időpontjai. Elöl a legkésőbbi; a múltbeli időpontok másnap automatikusan eltűnnek az oldalról.',
+    description:
+      'Az előadások időpontjai. Elöl a legkésőbbi; a múltbeli időpontok másnap automatikusan eltűnnek az oldalról.',
   },
   defaultSort: '-date',
   hooks: collectionRevalidation('shows'),
@@ -193,7 +221,9 @@ export const Shows: CollectionConfig = {
       type: 'row',
       fields: [
         text('ticketUrl', 'Jegyvásárlás (link)', { description: 'Pl. a Tixa-oldal.' }),
-        text('registrationUrl', 'Regisztráció (link)', { description: 'Ingyenes, regisztrációs előadásnál a jegy helyett.' }),
+        text('registrationUrl', 'Regisztráció (link)', {
+          description: 'Ingyenes, regisztrációs előadásnál a jegy helyett.',
+        }),
       ],
     },
     {
@@ -214,8 +244,13 @@ export const Shows: CollectionConfig = {
         beforeChange: [
           async ({ siblingData, req }) => {
             const id = siblingData.production;
-            const production = id ? await req.payload.findByID({ collection: 'productions', id, depth: 0, draft: true, req, select: { title: true } }).catch(() => null) : null;
-            const day = typeof siblingData.date === 'string' ? siblingData.date.slice(0, 10).replaceAll('-', '. ') + '.' : '';
+            const production = id
+              ? await req.payload
+                  .findByID({ collection: 'productions', id, depth: 0, draft: true, req, select: { title: true } })
+                  .catch(() => null)
+              : null;
+            const day =
+              typeof siblingData.date === 'string' ? `${siblingData.date.slice(0, 10).replaceAll('-', '. ')}.` : '';
             return [production?.title, `${day} ${siblingData.time ?? ''}`.trim()].filter(Boolean).join(' — ');
           },
         ],
@@ -233,7 +268,8 @@ export const LegalPages: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['title', 'slug', 'effectiveDate', '_status'],
     group: 'Oldalak',
-    description: 'Pl. az adatkezelési tájékoztató. Egy oldalon a „Jogi dokumentum” blokkal jelenik meg. Törölni csak adminisztrátor tud.',
+    description:
+      'Pl. az adatkezelési tájékoztató. Egy oldalon a „Jogi dokumentum” blokkal jelenik meg. Törölni csak adminisztrátor tud.',
   },
   defaultSort: 'title',
   versions: { drafts: true, maxPerDoc: 30 },

@@ -37,10 +37,7 @@
       "blockType": "location",
       "eyebrow": "Helyszín",
       "heading": "Az oktatás helyszíne",
-      "addressLines": [
-        "1027 Budapest,",
-        "Frankel Leó út 6."
-      ],
+      "addressLines": ["1027 Budapest,", "Frankel Leó út 6."],
       "text": "Itt tartjuk a kezdő kurzusokat és a szombati Nyitott Műhelyt is."
     },
     {

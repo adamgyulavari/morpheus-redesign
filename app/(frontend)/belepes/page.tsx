@@ -32,7 +32,13 @@ export default async function LoginPage({ searchParams }: Props) {
         </p>
       }
     >
-      {hiba === 'link' && <Notice state={{ error: 'Ez a belépési link érvénytelen, lejárt vagy már felhasználták. Kérj újat, vagy lépj be jelszóval.' }} />}
+      {hiba === 'link' && (
+        <Notice
+          state={{
+            error: 'Ez a belépési link érvénytelen, lejárt vagy már felhasználták. Kérj újat, vagy lépj be jelszóval.',
+          }}
+        />
+      )}
       <Card>
         <LoginForms returnTo={returnTo} />
       </Card>

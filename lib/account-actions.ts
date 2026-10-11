@@ -9,7 +9,14 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createLocalReq, logoutOperation } from 'payload';
 
-import { allow, clientIp, consumeLoginCode, consumeMagicLink, MAGIC_LINK_SENT, requestMagicLink } from '@/payload/magic-link';
+import {
+  allow,
+  clientIp,
+  consumeLoginCode,
+  consumeMagicLink,
+  MAGIC_LINK_SENT,
+  requestMagicLink,
+} from '@/payload/magic-link';
 import { issueSession } from '@/payload/session';
 
 import { clearSessionCookies, getCurrentUser, payloadClient, safeReturnPath, setSessionCookies } from './auth';
@@ -37,11 +44,22 @@ export async function login(_: FormState, form: FormData): Promise<FormState> {
     // Payload's error classes don't survive bundling for `instanceof`; their HTTP status does:
     // 403 = e-mail not verified, 401 = wrong credentials or a locked account
     const status = (err as { status?: number }).status;
-    if (status === 403) return { error: 'Előbb erősítsd meg az e-mail-címed: a regisztrációkor küldött levélben találod a linket.', values };
+    if (status === 403)
+      return {
+        error: 'Előbb erősítsd meg az e-mail-címed: a regisztrációkor küldött levélben találod a linket.',
+        values,
+      };
     if (status === 401) {
-      const user = await payload.db.findOne<{ id: number; lockUntil?: string | null }>({ collection: 'users', where: { email: { equals: email } } });
+      const user = await payload.db.findOne<{ id: number; lockUntil?: string | null }>({
+        collection: 'users',
+        where: { email: { equals: email } },
+      });
       if (user?.lockUntil && new Date(user.lockUntil) > new Date()) {
-        return { error: 'Túl sok sikertelen próbálkozás miatt a fiókot 10 percre zároltuk. Próbáld újra később, vagy kérj belépési linket.', values };
+        return {
+          error:
+            'Túl sok sikertelen próbálkozás miatt a fiókot 10 percre zároltuk. Próbáld újra később, vagy kérj belépési linket.',
+          values,
+        };
       }
       return { error: 'Hibás e-mail-cím vagy jelszó.', values };
     }
@@ -99,15 +117,25 @@ export async function logout(): Promise<void> {
 // ── registration & e-mail verification ─────────────────────────────────────
 
 export async function register(_: FormState, form: FormData): Promise<FormState> {
-  const values = { lastName: str(form, 'lastName'), firstName: str(form, 'firstName'), email: str(form, 'email').toLowerCase(), phone: str(form, 'phone') };
+  const values = {
+    lastName: str(form, 'lastName'),
+    firstName: str(form, 'firstName'),
+    email: str(form, 'email').toLowerCase(),
+    phone: str(form, 'phone'),
+  };
   const password = String(form.get('password') ?? '');
-  const sent: FormState = { done: true, message: 'Elküldtük a megerősítő levelet. Kattints a benne lévő linkre, utána be tudsz lépni.' };
+  const sent: FormState = {
+    done: true,
+    message: 'Elküldtük a megerősítő levelet. Kattints a benne lévő linkre, utána be tudsz lépni.',
+  };
 
   // honeypot: people don't see this field, bots fill it in — they get the same answer, nothing happens
   if (str(form, 'website')) return sent;
-  if (!values.lastName || !values.firstName || !values.email) return { error: 'Töltsd ki a csillaggal jelölt mezőket.', values };
+  if (!values.lastName || !values.firstName || !values.email)
+    return { error: 'Töltsd ki a csillaggal jelölt mezőket.', values };
   if (password.length < MIN_PASSWORD) return { error: `A jelszó legalább ${MIN_PASSWORD} karakter legyen.`, values };
-  if (form.get('privacy') !== 'on') return { error: 'A regisztrációhoz el kell fogadnod az adatkezelési tájékoztatót.', values };
+  if (form.get('privacy') !== 'on')
+    return { error: 'A regisztrációhoz el kell fogadnod az adatkezelési tájékoztatót.', values };
   if (!allow(`register:${clientIp(await headers())}`, 5)) return { error: TOO_MANY, values };
 
   const payload = await payloadClient();
@@ -133,7 +161,8 @@ export async function register(_: FormState, form: FormData): Promise<FormState>
 export async function forgotPassword(_: FormState, form: FormData): Promise<FormState> {
   const email = str(form, 'email').toLowerCase();
   if (!email) return { error: 'Add meg az e-mail-címed.', values: { email } };
-  if (!allow(`forgot:${clientIp(await headers())}`, 10) || !allow(`forgot:${email}`, 3)) return { error: TOO_MANY, values: { email } };
+  if (!allow(`forgot:${clientIp(await headers())}`, 10) || !allow(`forgot:${email}`, 3))
+    return { error: TOO_MANY, values: { email } };
   const payload = await payloadClient();
   try {
     // Payload does nothing (and says nothing) for unknown addresses
@@ -141,7 +170,11 @@ export async function forgotPassword(_: FormState, form: FormData): Promise<Form
   } catch (err) {
     payload.logger.error({ err, msg: 'forgot password failed' });
   }
-  return { done: true, message: 'Ha ezzel az e-mail-címmel van fiók, elküldtük rá a jelszó-visszaállító linket. Nézd meg a postafiókod (a spam mappát is).' };
+  return {
+    done: true,
+    message:
+      'Ha ezzel az e-mail-címmel van fiók, elküldtük rá a jelszó-visszaállító linket. Nézd meg a postafiókod (a spam mappát is).',
+  };
 }
 
 export async function resetPassword(_: FormState, form: FormData): Promise<FormState> {
@@ -152,8 +185,17 @@ export async function resetPassword(_: FormState, form: FormData): Promise<FormS
 
   const payload = await payloadClient();
   try {
-    const { token: session, user } = await payload.resetPassword({ collection: 'users', data: { token, password }, overrideAccess: true });
-    if (session) await setSessionCookies(session, new Date(Date.now() + payload.collections.users.config.auth.tokenExpiration * 1000), user);
+    const { token: session, user } = await payload.resetPassword({
+      collection: 'users',
+      data: { token, password },
+      overrideAccess: true,
+    });
+    if (session)
+      await setSessionCookies(
+        session,
+        new Date(Date.now() + payload.collections.users.config.auth.tokenExpiration * 1000),
+        user,
+      );
   } catch {
     return { error: 'A link érvénytelen vagy lejárt. Kérj újat az „Elfelejtett jelszó” oldalon.' };
   }

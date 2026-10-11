@@ -15,7 +15,10 @@ const converters: JSXConvertersFunction<DefaultNodeTypes> = ({ defaultConverters
     const id = slugify(plainText(node as unknown as TextNode));
     const children = nodesToJSX({ nodes: node.children });
     return node.tag === 'h2' ? (
-      <h2 id={id} className="mb-4 mt-12 scroll-mt-28 font-display text-[32px] leading-tight text-ink first:mt-0 lg:text-[40px]">
+      <h2
+        id={id}
+        className="mb-4 mt-12 scroll-mt-28 font-display text-[32px] leading-tight text-ink first:mt-0 lg:text-[40px]"
+      >
         {children}
       </h2>
     ) : (

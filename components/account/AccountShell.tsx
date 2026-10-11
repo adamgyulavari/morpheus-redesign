@@ -22,7 +22,9 @@ export default function AccountShell({
 }) {
   return (
     <SiteLayout>
-      <section className={`mx-auto flex flex-col gap-8 px-5 pb-16 pt-10 lg:gap-10 lg:px-20 lg:pb-[120px] lg:pt-20 ${wide ? 'max-w-[1120px]' : 'max-w-[680px]'}`}>
+      <section
+        className={`mx-auto flex flex-col gap-8 px-5 pb-16 pt-10 lg:gap-10 lg:px-20 lg:pb-[120px] lg:pt-20 ${wide ? 'max-w-[1120px]' : 'max-w-[680px]'}`}
+      >
         <div className="flex flex-col gap-4 lg:gap-5">
           <Eyebrow>{eyebrow}</Eyebrow>
           <h1 className="text-balance font-display text-[48px] leading-[0.98] lg:text-[72px]">
@@ -38,5 +40,9 @@ export default function AccountShell({
 
 /** The paper card the forms sit in. */
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <div className={`flex flex-col gap-4 rounded-3xl border border-line bg-paper p-6 lg:gap-5 lg:p-10 ${className}`}>{children}</div>;
+  return (
+    <div className={`flex flex-col gap-4 rounded-3xl border border-line bg-paper p-6 lg:gap-5 lg:p-10 ${className}`}>
+      {children}
+    </div>
+  );
 }

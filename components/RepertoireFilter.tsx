@@ -7,7 +7,7 @@
  * each server-rendered section and hides it when filtered out. Only the state is client-side; the
  * cards inside stay server components (passed through as children).
  */
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, type ReactNode, useContext, useState } from 'react';
 
 import type { ProductionGroup } from '@/lib/types';
 
@@ -31,12 +31,15 @@ export default function RepertoireFilter({ children }: { children: ReactNode }) 
 export function FilterChips({ counts }: { counts: Record<Filter, number> }) {
   const { filter, setFilter } = useFilter();
   const labels = useUi().repertoire;
-  const chips = (['all', 'company', 'students'] as const).map((value) => ({ value, label: labels[value], count: counts[value] }));
+  const chips = (['all', 'company', 'students'] as const).map((value) => ({
+    value,
+    label: labels[value],
+    count: counts[value],
+  }));
   return (
-    <div
-      role="group"
+    <fieldset
       aria-label={labels.filter}
-      className="no-scrollbar -mx-5 flex gap-2.5 overflow-x-auto px-5 pb-1 lg:mx-0 lg:mt-2 lg:flex-wrap lg:overflow-visible lg:px-0"
+      className="no-scrollbar -mx-5 flex min-w-0 gap-2.5 overflow-x-auto border-0 px-5 pb-1 lg:mx-0 lg:mt-2 lg:flex-wrap lg:overflow-visible lg:px-0"
     >
       {chips.map((chip) => (
         <button
@@ -52,11 +55,21 @@ export function FilterChips({ counts }: { counts: Record<Filter, number> }) {
           </span>
         </button>
       ))}
-    </div>
+    </fieldset>
   );
 }
 
-export function FilterGroup({ group, id, className, children }: { group: ProductionGroup; id?: string; className: string; children: ReactNode }) {
+export function FilterGroup({
+  group,
+  id,
+  className,
+  children,
+}: {
+  group: ProductionGroup;
+  id?: string;
+  className: string;
+  children: ReactNode;
+}) {
   const { filter } = useFilter();
   return (
     <section id={id} className={className} hidden={filter !== 'all' && filter !== group}>

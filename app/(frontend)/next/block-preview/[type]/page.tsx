@@ -21,7 +21,8 @@ export default async function BlockPreview({ params }: { params: Promise<{ type:
 
   const block = { ...found, spacing: { top: 'none', bottom: 'none' } } as Block;
   let content = <RenderBlocks blocks={[block]} layout={page.layout} ctx={{ path: page.path }} />;
-  if (type === 'repertoire' || (block.blockType === 'pageHero' && block.repertoireFilter)) content = <RepertoireFilter>{content}</RepertoireFilter>;
+  if (type === 'repertoire' || (block.blockType === 'pageHero' && block.repertoireFilter))
+    content = <RepertoireFilter>{content}</RepertoireFilter>;
   // the link-in-bio blocks sit in their narrow column (without the full-height frame)
   return page.layout === 'minimal' ? (
     <div id="block-preview" className="mx-auto flex max-w-[480px] flex-col items-center gap-7 px-5 py-8">

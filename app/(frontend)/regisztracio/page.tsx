@@ -16,7 +16,12 @@ export default async function RegisterPage() {
     <AccountShell
       eyebrow="Fiók"
       heading="*Regisztráció*"
-      intro={<p>Hozd létre a Morpheus-fiókodat. A regisztráció után küldünk egy levelet: a benne lévő linkkel erősítsd meg az e-mail-címed.</p>}
+      intro={
+        <p>
+          Hozd létre a Morpheus-fiókodat. A regisztráció után küldünk egy levelet: a benne lévő linkkel erősítsd meg az
+          e-mail-címed.
+        </p>
+      }
     >
       <Card>
         <RegisterForm />

@@ -57,7 +57,9 @@ export async function UpcomingShows({ block, className }: BlockProps<'upcomingSh
         </div>
       )}
       {shows.length === 0 ? (
-        <p className="border-y border-line py-8 text-[17px] leading-relaxed text-ink2 lg:text-xl lg:leading-[28px]">{ui.shows.empty}</p>
+        <p className="border-y border-line py-8 text-[17px] leading-relaxed text-ink2 lg:text-xl lg:leading-[28px]">
+          {ui.shows.empty}
+        </p>
       ) : byMonth ? (
         [...months].map(([month, list]) => (
           <div key={month} className="flex flex-col gap-4 lg:gap-6">
@@ -109,7 +111,12 @@ export async function NextShowBanner({ block, className }: BlockProps<'nextShowB
 
 /** The productions, one section per group (filterable by the hero's chips). Posters alternate left/right across the list. */
 export async function Repertoire({ block, className }: BlockProps<'repertoire'>) {
-  const [ui, productions, nextShows, settings] = await Promise.all([getUi(), getProductions(), getNextShowByProduction(), getSiteSettings()]);
+  const [ui, productions, nextShows, settings] = await Promise.all([
+    getUi(),
+    getProductions(),
+    getNextShowByProduction(),
+    getSiteSettings(),
+  ]);
   const position = new Map(productions.map((p, i) => [p.id, i]));
   const labels = { onStage: ui.shows.onStage, nextShow: ui.shows.nextShow, more: ui.common.more };
   return block.groups.map((group, gi) => (
@@ -124,7 +131,9 @@ export async function Repertoire({ block, className }: BlockProps<'repertoire'>)
           <Eyebrow>{group.eyebrow}</Eyebrow>
           <h2 className="font-display text-[40px] leading-[1.02] lg:text-[68px]">{group.heading}</h2>
         </div>
-        <p className="text-[15px] leading-relaxed text-ink2 lg:max-w-[420px] lg:text-lg lg:leading-[28px]">{group.intro}</p>
+        <p className="text-[15px] leading-relaxed text-ink2 lg:max-w-[420px] lg:text-lg lg:leading-[28px]">
+          {group.intro}
+        </p>
       </div>
       <PosterFit className="flex flex-col gap-5 lg:gap-9">
         {productions

@@ -30,10 +30,7 @@
       },
       "eyebrow": "Képzések és alkalmak",
       "heading": "Válaszd ki, hogyan kezdenéd.",
-      "courses": [
-        "kezdo",
-        "szakmai"
-      ]
+      "courses": ["kezdo", "szakmai"]
     },
     {
       "blockType": "path",

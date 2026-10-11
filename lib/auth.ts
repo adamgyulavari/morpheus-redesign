@@ -36,7 +36,16 @@ export function safeReturnPath(value: unknown, fallback = '/fiokom'): string {
   return path.startsWith('/') && !path.startsWith('//') && !path.startsWith('/\\') ? path : fallback;
 }
 
-type CookieObject = { name: string; value?: string; expires?: string; domain?: string; path?: string; secure?: boolean; httpOnly?: boolean; sameSite?: string };
+type CookieObject = {
+  name: string;
+  value?: string;
+  expires?: string;
+  domain?: string;
+  path?: string;
+  secure?: boolean;
+  httpOnly?: boolean;
+  sameSite?: string;
+};
 
 const toNext = (c: CookieObject) => ({
   name: c.name,
@@ -60,7 +69,14 @@ export async function setSessionCookies(token: string, expires: Date, user: unkn
   }) as CookieObject;
   const jar = await cookies();
   jar.set(toNext(session));
-  jar.set({ name: SIGNED_IN_COOKIE, value: signedInValue(user), expires, path: '/', sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
+  jar.set({
+    name: SIGNED_IN_COOKIE,
+    value: signedInValue(user),
+    expires,
+    path: '/',
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+  });
 }
 
 export async function clearSessionCookies() {

@@ -35,7 +35,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const [page, settings] = await Promise.all([getPage(path), getSiteSettings()]);
   if (!page) return {};
   const { meta } = page;
-  return pageMetadata({ title: meta.title || `${page.title} — ${settings.name}`, description: meta.description, image: meta.image, path, siteName: settings.name });
+  return pageMetadata({
+    title: meta.title || `${page.title} — ${settings.name}`,
+    description: meta.description,
+    image: meta.image,
+    path,
+    siteName: settings.name,
+  });
 }
 
 /** The repertoire filter state is shared by the hero chips and the production sections. */

@@ -4,7 +4,7 @@
  * A "Bővebben"-style button that opens a popup. The popup content is rendered on the server and
  * passed in as children; this component only owns the open/closed state.
  */
-import { useState, type ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 
 import Dialog from './Dialog';
 
@@ -32,7 +32,9 @@ export default function DetailsDialog({
         className="m-auto w-[min(92vw,720px)] rounded-[22px] border-0 bg-paper p-0 text-ink shadow-[0_30px_60px_-20px_rgba(8,31,34,0.6)] backdrop:bg-night/60 backdrop:backdrop-blur-[2px]"
         closeClassName="bg-paper lg:right-4 lg:top-4"
       >
-        <div className="flex max-h-[85vh] flex-col gap-5 overflow-y-auto px-6 pb-8 pt-6 lg:px-10 lg:pb-10 lg:pt-9">{children}</div>
+        <div className="flex max-h-[85vh] flex-col gap-5 overflow-y-auto px-6 pb-8 pt-6 lg:px-10 lg:pb-10 lg:pt-9">
+          {children}
+        </div>
       </Dialog>
     </>
   );

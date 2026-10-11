@@ -16,11 +16,16 @@ export default async function SiteHeader() {
           <Logo className="h-11 w-11 lg:h-16 lg:w-16" />
           <span className="flex flex-col gap-1 lg:gap-1.5">
             <span className="font-display text-2xl leading-none lg:text-[34px]">Morpheus</span>
-            <span className="text-[10px] font-bold uppercase leading-none tracking-[0.3em] text-teal lg:text-xs lg:leading-[16px]">Színműhely</span>
+            <span className="text-[10px] font-bold uppercase leading-none tracking-[0.3em] text-teal lg:text-xs lg:leading-[16px]">
+              Színműhely
+            </span>
           </span>
         </Link>
         <div className="hidden items-center gap-12 xl:flex">
-          <nav aria-label={ui.common.mainNav} className="flex items-center gap-8 whitespace-nowrap text-[17px] font-medium">
+          <nav
+            aria-label={ui.common.mainNav}
+            className="flex items-center gap-8 whitespace-nowrap text-[17px] font-medium"
+          >
             {nav.map((item) => (
               <NavLink key={item.href} href={item.href} match={item.match} className="link-nav">
                 {item.label}
@@ -28,7 +33,10 @@ export default async function SiteHeader() {
             ))}
           </nav>
           {/* icon only until the header has room for the label */}
-          <AccountLink className="-ml-4 flex items-center gap-2 whitespace-nowrap text-[17px] font-medium" labelClassName="max-[1399px]:sr-only" />
+          <AccountLink
+            className="-ml-4 flex items-center gap-2 whitespace-nowrap text-[17px] font-medium"
+            labelClassName="max-[1399px]:sr-only"
+          />
           <Link href={headerCta.href} className="btn btn-md btn-primary">
             {headerCta.label}
           </Link>

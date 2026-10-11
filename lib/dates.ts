@@ -7,7 +7,9 @@ const TZ = 'Europe/Budapest';
 /** Today's date in Budapest as "YYYY-MM-DD". */
 export function todayInBudapest(now: Date = new Date()): string {
   // en-CA formats as YYYY-MM-DD
-  return new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+  return new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(
+    now,
+  );
 }
 
 /** True while it is still `isoDate` (or earlier) in Budapest — i.e. "until the end of that day". */
@@ -46,11 +48,13 @@ export function showDateLine(isoDate: string, time: string): string {
 /** "2026. október 22–25." / "2026. október 30. – november 2." / across years: full dates on both sides. */
 export function dateRange(start: string, end: string): string {
   if (start === end) return `${year(start)}. ${monthLong(start)} ${dayOfMonth(start)}.`;
-  if (year(start) !== year(end)) return `${year(start)}. ${monthLong(start)} ${dayOfMonth(start)}. – ${year(end)}. ${monthLong(end)} ${dayOfMonth(end)}.`;
+  if (year(start) !== year(end))
+    return `${year(start)}. ${monthLong(start)} ${dayOfMonth(start)}. – ${year(end)}. ${monthLong(end)} ${dayOfMonth(end)}.`;
   if (monthLong(start) !== monthLong(end))
     return `${year(start)}. ${monthLong(start)} ${dayOfMonth(start)}. – ${monthLong(end)} ${dayOfMonth(end)}.`;
   return `${year(start)}. ${monthLong(start)} ${dayOfMonth(start)}–${dayOfMonth(end)}.`;
 }
 
 /** "csütörtök–vasárnap" */
-export const weekdayRange = (start: string, end: string) => (start === end ? weekday(start) : `${weekday(start)}–${weekday(end)}`);
+export const weekdayRange = (start: string, end: string) =>
+  start === end ? weekday(start) : `${weekday(start)}–${weekday(end)}`;

@@ -10,7 +10,9 @@ import SmartLink from './SmartLink';
 /** Small uppercase label above section headings. */
 export function Eyebrow({ children, dark = false }: { children: ReactNode; dark?: boolean }) {
   return (
-    <span className={`text-xs font-bold uppercase tracking-[0.22em] lg:text-[13px] ${dark ? 'text-gold' : 'text-teal'}`}>
+    <span
+      className={`text-xs font-bold uppercase tracking-[0.22em] lg:text-[13px] ${dark ? 'text-gold' : 'text-teal'}`}
+    >
       {children}
     </span>
   );
@@ -49,7 +51,9 @@ export function SectionHeading({
 
 /** Intro paragraph used as the right-hand `aside` of a SectionHeading. */
 export function SectionIntro({ children }: { children: ReactNode }) {
-  return <p className="text-[15.5px] leading-relaxed text-ink2 lg:max-w-[440px] lg:text-lg lg:leading-[28px]">{children}</p>;
+  return (
+    <p className="text-[15.5px] leading-relaxed text-ink2 lg:max-w-[440px] lg:text-lg lg:leading-[28px]">{children}</p>
+  );
 }
 
 /** Button-styled link. `arrow` adds the trailing arrow used on primary calls to action. */
@@ -105,7 +109,10 @@ export function Facts({ facts }: { facts: { label: string; value: string }[] }) 
  * arrangements keep clear of the top-right corner, where the sun sits on every hero, so it stays visible (≥ ⅓ of it). Top-placed
  * photos are a bit smaller, so short heroes stay short.
  */
-const PHOTO: Record<'top' | 'middle' | 'bottom', Record<string, { photo: string; area: string }>> = {
+const PHOTO: Record<
+  'top' | 'middle' | 'bottom',
+  Record<'landscape-sm' | 'landscape-md' | 'landscape-lg' | 'portrait', { photo: string; area: string }>
+> = {
   bottom: {
     'landscape-sm': { photo: 'lg:bottom-6 lg:left-6 lg:h-[310px] lg:w-[74%]', area: 'lg:h-[440px]' },
     'landscape-md': { photo: 'lg:bottom-6 lg:left-0 lg:h-[340px] lg:w-[86%]', area: 'lg:h-[440px]' },
@@ -153,19 +160,27 @@ export function PageHero({
   children?: ReactNode;
 }) {
   const { shape = 'landscape', size = 'md', tilt = -2.5, position = 'bottom' } = layout;
-  const placement = PHOTO[position][shape === 'portrait' ? 'portrait' : `landscape-${size}`]!;
+  const placement = PHOTO[position][shape === 'portrait' ? 'portrait' : (`landscape-${size}` as const)];
   const photo = placement.photo;
   return (
-    <section className={`relative mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)] items-start gap-12 overflow-hidden px-5 pt-8 lg:grid-cols-[7fr_5fr] lg:gap-16 lg:overflow-visible lg:px-20 lg:pt-16 ${className}`}>
+    <section
+      className={`relative mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)] items-start gap-12 overflow-hidden px-5 pt-8 lg:grid-cols-[7fr_5fr] lg:gap-16 lg:overflow-visible lg:px-20 lg:pt-16 ${className}`}
+    >
       <div className="sun absolute -right-24 -top-28 h-48 w-48 rounded-full lg:hidden" aria-hidden="true" />
       <div className="relative flex flex-col gap-5 lg:gap-7">
         {top}
-        <h1 className="font-display text-[64px] leading-[0.95] lg:text-[128px] lg:leading-[0.9] lg:tracking-[-0.01em]">{heading}</h1>
+        <h1 className="font-display text-[64px] leading-[0.95] lg:text-[128px] lg:leading-[0.9] lg:tracking-[-0.01em]">
+          {heading}
+        </h1>
         <p className="text-[17px] leading-relaxed text-ink2 lg:max-w-[620px] lg:text-xl lg:leading-[28px]">{lead}</p>
         {children}
       </div>
       <div className={`relative ${placement.area} ${shape === 'portrait' ? 'h-[360px]' : 'h-[260px] sm:h-[340px]'}`}>
-        <div className="sun absolute hidden rounded-full lg:-right-5 lg:top-0 lg:block lg:h-[300px] lg:w-[300px]" data-hero-sun aria-hidden="true" />
+        <div
+          className="sun absolute hidden rounded-full lg:-right-5 lg:top-0 lg:block lg:h-[300px] lg:w-[300px]"
+          data-hero-sun
+          aria-hidden="true"
+        />
         <Image
           src={image.src}
           alt={image.alt}
@@ -189,7 +204,12 @@ export function HeroButtons({ buttons }: { buttons: HeroButton[] }) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
       {buttons.map((b) => (
-        <ButtonLink key={b.href} link={b} variant={b.variant ?? 'primary'} arrow={(b.variant ?? 'primary') === 'primary'} />
+        <ButtonLink
+          key={b.href}
+          link={b}
+          variant={b.variant ?? 'primary'}
+          arrow={(b.variant ?? 'primary') === 'primary'}
+        />
       ))}
     </div>
   );
@@ -236,14 +256,20 @@ export function CtaBand({
 
 /** Striped placeholder avatar for people without a photo yet (as in the static design). */
 export function PlaceholderAvatar({ className, label }: { className: string; label?: string }) {
+  // with a label it stands for the person (an image); without one it is decoration
+  const a11y = label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': true };
   return (
-    <div
-      className={`ph flex shrink-0 items-center justify-center rounded-full p-0 ${className}`}
-      role={label ? 'img' : undefined}
-      aria-label={label}
-      aria-hidden={label ? undefined : true}
-    >
-      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <div className={`ph flex shrink-0 items-center justify-center rounded-full p-0 ${className}`} {...a11y}>
+      <svg
+        className="h-5 w-5"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.6}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
         <circle cx="12" cy="8" r="4" />
         <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
       </svg>

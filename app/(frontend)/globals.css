@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 /* Design tokens — same names as the inline tailwind.config of the static pages, so every
    utility (bg-teal, text-rust-dark, font-display …) keeps its name. */
@@ -23,8 +23,8 @@
 /* Fonts come from next/font (self-hosted) as CSS variables set on <html>; `inline` makes the
    utilities reference those variables directly. */
 @theme inline {
-  --font-sans: var(--font-figtree), 'Segoe UI', system-ui, sans-serif;
-  --font-display: var(--font-instrument-serif), 'Times New Roman', serif;
+  --font-sans: var(--font-figtree), "Segoe UI", system-ui, sans-serif;
+  --font-display: var(--font-instrument-serif), "Times New Roman", serif;
 }
 
 @layer base {
@@ -43,7 +43,7 @@
   }
   /* Tailwind v4's preflight no longer gives buttons a pointer cursor */
   button:not(:disabled),
-  [role='button']:not(:disabled) {
+  [role="button"]:not(:disabled) {
     cursor: pointer;
   }
 }
@@ -91,7 +91,7 @@
      and on leave draws back to the left */
   .btn::before,
   .btn-icon::before {
-    content: '';
+    content: "";
     position: absolute;
     z-index: -1;
     inset: 0 -0.5rem;
@@ -136,6 +136,7 @@
   .link-arrow {
     @apply inline-flex min-h-[44px] items-center gap-2 font-semibold;
   }
+  /* biome-ignore lint/style/noDescendingSpecificity: a different component than .btn:hover > svg, never on the same element */
   .link-arrow > svg {
     @apply h-[18px] w-[18px] shrink-0 transition-transform duration-200;
   }
@@ -165,7 +166,7 @@
   .chip {
     @apply inline-flex min-h-[48px] shrink-0 items-center gap-2.5 rounded-full border-[1.5px] border-[#cdbda3] px-5 text-[15px] font-semibold whitespace-nowrap transition-colors duration-200 hover:border-rust-dark hover:text-rust-dark;
   }
-  .chip[aria-pressed='true'] {
+  .chip[aria-pressed="true"] {
     @apply border-teal bg-teal text-cream;
   }
 }
@@ -184,8 +185,8 @@ a:hover .link-nav {
   color: var(--link-hover);
   background-size: 100% 2px;
 }
-.link-nav[aria-current='page'],
-a[aria-current='page'] .link-nav {
+.link-nav[aria-current="page"],
+a[aria-current="page"] .link-nav {
   color: var(--color-teal);
   background-size: 100% 2px;
 }

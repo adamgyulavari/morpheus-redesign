@@ -59,7 +59,11 @@ export async function LinkList({ block, className }: BlockProps<'linkList'>) {
   return (
     <nav id={block.anchor} aria-label={ui.common.links} className={`relative flex w-full flex-col gap-3 ${className}`}>
       {block.links.map((link, i) => (
-        <SmartLink key={link.href} href={link.href} className={`btn min-h-[56px] w-full text-[17px] ${i === 0 ? 'btn-primary' : 'btn-outline bg-paper'}`}>
+        <SmartLink
+          key={link.href}
+          href={link.href}
+          className={`btn min-h-[56px] w-full text-[17px] ${i === 0 ? 'btn-primary' : 'btn-outline bg-paper'}`}
+        >
           {link.label}
         </SmartLink>
       ))}
@@ -78,7 +82,10 @@ export async function ContactFooter({ block, className }: BlockProps<'contactFoo
   const settings = await getSiteSettings();
   const person = await getContactPerson(settings.contact.primaryPersonId);
   return (
-    <footer id={block.anchor} className={`relative mt-auto flex flex-col items-center gap-2 text-center text-sm text-ink2 ${className}`}>
+    <footer
+      id={block.anchor}
+      className={`relative mt-auto flex flex-col items-center gap-2 text-center text-sm text-ink2 ${className}`}
+    >
       <a href={`mailto:${settings.contact.email}`} className="flex min-h-[44px] items-center gap-2">
         <MailIcon colour="#b8472a" className="h-[18px] w-[18px]" />
         <span className="link-nav">{settings.contact.email}</span>

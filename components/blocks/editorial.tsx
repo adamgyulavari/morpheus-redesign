@@ -27,7 +27,13 @@ export async function TextSplit({ block, className }: BlockProps<'textSplit'>) {
     >
       <div className="flex flex-col gap-3.5 lg:gap-5">
         <Eyebrow>{block.eyebrow}</Eyebrow>
-        <h2 className={xl ? 'font-display text-[48px] leading-none lg:text-[96px]' : 'font-display text-[42px] leading-[1.02] lg:text-[68px] lg:leading-none'}>
+        <h2
+          className={
+            xl
+              ? 'font-display text-[48px] leading-none lg:text-[96px]'
+              : 'font-display text-[42px] leading-[1.02] lg:text-[68px] lg:leading-none'
+          }
+        >
           <Emph text={block.heading} />
         </h2>
       </div>
@@ -43,7 +49,10 @@ export async function TextSplit({ block, className }: BlockProps<'textSplit'>) {
 export function Statement({ block, className }: BlockProps<'statement'>) {
   return (
     <section id={block.anchor} className={`on-dark relative overflow-hidden bg-deep text-cream ${className}`}>
-      <div className="sun absolute -left-32 -top-32 h-72 w-72 rounded-full opacity-90 lg:-left-48 lg:-top-48 lg:h-[480px] lg:w-[480px]" aria-hidden="true" />
+      <div
+        className="sun absolute -left-32 -top-32 h-72 w-72 rounded-full opacity-90 lg:-left-48 lg:-top-48 lg:h-[480px] lg:w-[480px]"
+        aria-hidden="true"
+      />
       <div className="relative mx-auto flex max-w-[1440px] flex-col gap-6 px-5 py-16 lg:grid lg:grid-cols-[5fr_7fr] lg:gap-16 lg:px-20 lg:py-28">
         <div className="hidden lg:block" aria-hidden="true" />
         <div className="flex flex-col gap-6 lg:gap-8">
@@ -61,7 +70,10 @@ export function Statement({ block, className }: BlockProps<'statement'>) {
 /** Text with an optional quote beside a photo. */
 export function ImageText({ block, className }: BlockProps<'imageText'>) {
   return (
-    <section id={block.anchor} className={`mx-auto grid max-w-[1440px] items-center gap-10 px-5 lg:grid-cols-2 lg:gap-20 lg:px-20 ${className}`}>
+    <section
+      id={block.anchor}
+      className={`mx-auto grid max-w-[1440px] items-center gap-10 px-5 lg:grid-cols-2 lg:gap-20 lg:px-20 ${className}`}
+    >
       <div className="flex flex-col gap-6 lg:gap-8">
         <div className="flex flex-col gap-3.5 lg:gap-5">
           <Eyebrow>{block.eyebrow}</Eyebrow>
@@ -69,7 +81,9 @@ export function ImageText({ block, className }: BlockProps<'imageText'>) {
             <Emph text={block.heading} />
           </h2>
         </div>
-        {block.quote && <p className="font-display text-[26px] italic leading-snug text-deep lg:text-[32px]">{block.quote}</p>}
+        {block.quote && (
+          <p className="font-display text-[26px] italic leading-snug text-deep lg:text-[32px]">{block.quote}</p>
+        )}
         {block.paragraphs.map((p) => (
           <p key={p.slice(0, 24)} className="text-[15.5px] leading-relaxed text-ink2 lg:text-lg lg:leading-[28px]">
             {p}
@@ -91,7 +105,10 @@ export function ImageText({ block, className }: BlockProps<'imageText'>) {
 /** Cards linking to other pages ("Hol kezdenéd?"). */
 export function LinkCards({ block, className }: BlockProps<'linkCards'>) {
   return (
-    <section id={block.anchor} className={`mx-auto flex max-w-[1440px] flex-col gap-7 px-5 lg:gap-12 lg:px-20 ${className}`}>
+    <section
+      id={block.anchor}
+      className={`mx-auto flex max-w-[1440px] flex-col gap-7 px-5 lg:gap-12 lg:px-20 ${className}`}
+    >
       <SectionHeading eyebrow={block.eyebrow} heading={block.heading} />
       <div className="grid gap-5 md:grid-cols-3">
         {block.cards.map((card) => (
@@ -119,7 +136,10 @@ export function LinkCards({ block, className }: BlockProps<'linkCards'>) {
 export function Questions({ block, className }: BlockProps<'questions'>) {
   return (
     <section id={block.anchor} className={`on-dark relative overflow-hidden bg-deep text-cream ${className}`}>
-      <div className="sun absolute -right-28 -top-32 h-64 w-64 rounded-full opacity-90 lg:-right-44 lg:-top-56 lg:h-[520px] lg:w-[520px]" aria-hidden="true" />
+      <div
+        className="sun absolute -right-28 -top-32 h-64 w-64 rounded-full opacity-90 lg:-right-44 lg:-top-56 lg:h-[520px] lg:w-[520px]"
+        aria-hidden="true"
+      />
       <div className="relative mx-auto flex max-w-[1440px] flex-col gap-9 px-5 py-16 lg:gap-16 lg:px-20 lg:py-28">
         <div className="flex max-w-[760px] flex-col gap-4 pr-14 lg:gap-5 lg:pr-0">
           <Eyebrow dark>{block.eyebrow}</Eyebrow>
@@ -130,7 +150,9 @@ export function Questions({ block, className }: BlockProps<'questions'>) {
         <div className="grid gap-7 lg:grid-cols-2 lg:gap-x-20 lg:gap-y-14">
           {block.items.map((item, i) => (
             <div key={item.title} className="flex gap-5 border-t border-[#2b5a5e] pt-6 lg:gap-7 lg:pt-8">
-              <span className="font-display text-[32px] leading-none text-gold lg:text-[44px]">{String(i + 1).padStart(2, '0')}</span>
+              <span className="font-display text-[32px] leading-none text-gold lg:text-[44px]">
+                {String(i + 1).padStart(2, '0')}
+              </span>
               <div className="flex flex-col gap-2 lg:gap-3">
                 <h3 className="text-xl font-semibold leading-tight lg:text-[26px]">{item.title}</h3>
                 <p className="text-base leading-relaxed text-mist lg:text-lg lg:leading-[28px]">{item.text}</p>
@@ -153,7 +175,10 @@ export function Questions({ block, className }: BlockProps<'questions'>) {
 export function Benefits({ block, className }: BlockProps<'benefits'>) {
   return (
     <section id={block.anchor} className={`on-dark relative overflow-hidden bg-deep text-cream ${className}`}>
-      <div className="sun absolute -right-28 -top-32 h-64 w-64 rounded-full opacity-90 lg:-right-44 lg:-top-56 lg:h-[520px] lg:w-[520px]" aria-hidden="true" />
+      <div
+        className="sun absolute -right-28 -top-32 h-64 w-64 rounded-full opacity-90 lg:-right-44 lg:-top-56 lg:h-[520px] lg:w-[520px]"
+        aria-hidden="true"
+      />
       <div className="relative mx-auto flex max-w-[1440px] flex-col gap-9 px-5 py-16 lg:gap-14 lg:px-20 lg:py-28">
         <div className="flex flex-col gap-3.5 lg:gap-5">
           <Eyebrow dark>{block.eyebrow}</Eyebrow>
@@ -161,12 +186,18 @@ export function Benefits({ block, className }: BlockProps<'benefits'>) {
             <Emph text={block.heading} dark />
           </h2>
         </div>
-        {block.text && <p className="max-w-[960px] text-lg leading-relaxed text-mist lg:text-[22px] lg:leading-[1.5]">{block.text}</p>}
+        {block.text && (
+          <p className="max-w-[960px] text-lg leading-relaxed text-mist lg:text-[22px] lg:leading-[1.5]">
+            {block.text}
+          </p>
+        )}
         {block.items && block.items.length > 0 && (
           <div className="grid gap-6 lg:grid-cols-2 lg:gap-x-16 lg:gap-y-10">
             {block.items.map((item, i) => (
               <div key={item} className="flex gap-4 border-t border-[#2b5a5e] pt-6 lg:gap-6 lg:pt-8">
-                <span className="font-display text-[44px] leading-none text-gold lg:text-[56px]">{String(i + 1).padStart(2, '0')}</span>
+                <span className="font-display text-[44px] leading-none text-gold lg:text-[56px]">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
                 <p className="text-lg leading-snug lg:text-[22px]">{item}</p>
               </div>
             ))}
@@ -180,7 +211,10 @@ export function Benefits({ block, className }: BlockProps<'benefits'>) {
 /** Numbered list (+ optional bonus box) beside a sticky photo ("Mit fogsz tanulni?"). */
 export function Curriculum({ block, className }: BlockProps<'curriculum'>) {
   return (
-    <section id={block.anchor} className={`mx-auto grid max-w-[1440px] gap-10 px-5 lg:grid-cols-[7fr_5fr] lg:gap-20 lg:px-20 ${className}`}>
+    <section
+      id={block.anchor}
+      className={`mx-auto grid max-w-[1440px] gap-10 px-5 lg:grid-cols-[7fr_5fr] lg:gap-20 lg:px-20 ${className}`}
+    >
       <div className="flex flex-col gap-6 lg:gap-8">
         <div className="flex flex-col gap-3.5 lg:gap-5">
           <Eyebrow>{block.eyebrow}</Eyebrow>
@@ -191,7 +225,9 @@ export function Curriculum({ block, className }: BlockProps<'curriculum'>) {
         <ol className="flex flex-col border-b border-line">
           {block.items.map((item, i) => (
             <li key={item} className="flex gap-4 border-t border-line py-4 lg:gap-5 lg:py-5">
-              <span className="w-7 shrink-0 font-display text-[26px] leading-none text-rust lg:text-[30px]">{i + 1}</span>
+              <span className="w-7 shrink-0 font-display text-[26px] leading-none text-rust lg:text-[30px]">
+                {i + 1}
+              </span>
               <span className="text-[15.5px] leading-relaxed text-ink2 lg:text-lg lg:leading-[28px]">{item}</span>
             </li>
           ))}
@@ -219,13 +255,23 @@ export function Curriculum({ block, className }: BlockProps<'curriculum'>) {
 /** One or two cards with an eyebrow, a heading or quote, and a paragraph ("Miért a Morpheus?"). */
 export function FeatureCards({ block, className }: BlockProps<'featureCards'>) {
   return (
-    <section id={block.anchor} className={`mx-auto grid max-w-[1440px] gap-5 px-5 lg:px-20 ${block.cards.length > 1 ? 'lg:grid-cols-2' : ''} ${className}`}>
+    <section
+      id={block.anchor}
+      className={`mx-auto grid max-w-[1440px] gap-5 px-5 lg:px-20 ${block.cards.length > 1 ? 'lg:grid-cols-2' : ''} ${className}`}
+    >
       {block.cards.map((card) => (
-        <div key={card.eyebrow} className="flex flex-col gap-4 rounded-3xl border border-line bg-paper p-7 lg:gap-5 lg:p-12">
+        <div
+          key={card.eyebrow}
+          className="flex flex-col gap-4 rounded-3xl border border-line bg-paper p-7 lg:gap-5 lg:p-12"
+        >
           <Eyebrow>{card.eyebrow}</Eyebrow>
           {card.heading && <h2 className="font-display text-[36px] leading-none lg:text-[48px]">{card.heading}</h2>}
-          {card.quote && <p className="font-display text-[30px] italic leading-tight text-deep lg:text-[40px]">{card.quote}</p>}
-          {card.quoteSource && <p className="text-sm font-bold uppercase tracking-[0.12em] text-muted">{card.quoteSource}</p>}
+          {card.quote && (
+            <p className="font-display text-[30px] italic leading-tight text-deep lg:text-[40px]">{card.quote}</p>
+          )}
+          {card.quoteSource && (
+            <p className="text-sm font-bold uppercase tracking-[0.12em] text-muted">{card.quoteSource}</p>
+          )}
           <p className="text-[15.5px] leading-relaxed text-ink2 lg:text-lg lg:leading-[28px]">{card.text}</p>
         </div>
       ))}
@@ -236,7 +282,10 @@ export function FeatureCards({ block, className }: BlockProps<'featureCards'>) {
 /** "What comes next": numbered path steps, or paragraphs with a photo. */
 export function Path({ block, className }: BlockProps<'path'>) {
   return (
-    <section id={block.anchor} className={`mx-auto flex max-w-[1440px] flex-col gap-7 px-5 lg:gap-12 lg:px-20 ${className}`}>
+    <section
+      id={block.anchor}
+      className={`mx-auto flex max-w-[1440px] flex-col gap-7 px-5 lg:gap-12 lg:px-20 ${className}`}
+    >
       <SectionHeading eyebrow={block.eyebrow} heading={block.heading} />
       {block.paragraphs && (
         <div className={`grid items-center gap-8 ${block.image ? 'lg:grid-cols-[7fr_5fr] lg:gap-20' : ''}`}>
@@ -268,8 +317,12 @@ export function Path({ block, className }: BlockProps<'path'>) {
                 key={step.title}
                 className={`relative flex flex-col gap-3 rounded-3xl p-7 lg:p-9 ${first ? 'on-dark bg-teal text-cream' : 'border border-line bg-paper'}`}
               >
-                <span className={`font-display text-[56px] leading-none ${first ? 'text-gold' : 'text-rust'}`}>{i + 1}</span>
-                <span className={`text-xs font-bold uppercase tracking-[0.16em] ${first ? 'text-gold' : 'text-teal'}`}>{step.kicker}</span>
+                <span className={`font-display text-[56px] leading-none ${first ? 'text-gold' : 'text-rust'}`}>
+                  {i + 1}
+                </span>
+                <span className={`text-xs font-bold uppercase tracking-[0.16em] ${first ? 'text-gold' : 'text-teal'}`}>
+                  {step.kicker}
+                </span>
                 <h3 className="font-display text-[34px] leading-none lg:text-[40px]">{step.title}</h3>
                 <p className={`leading-relaxed ${first ? 'text-[#d7e5e2]' : 'text-ink2'}`}>{step.text}</p>
               </div>
@@ -284,13 +337,18 @@ export function Path({ block, className }: BlockProps<'path'>) {
 /** Heading + closing line on the left, a checklist on the right ("Rád is igazak az alábbiak?"). */
 export function Checklist({ block, className }: BlockProps<'checklist'>) {
   return (
-    <section id={block.anchor} className={`mx-auto grid max-w-[1440px] gap-8 px-5 lg:grid-cols-[5fr_7fr] lg:gap-20 lg:px-20 ${className}`}>
+    <section
+      id={block.anchor}
+      className={`mx-auto grid max-w-[1440px] gap-8 px-5 lg:grid-cols-[5fr_7fr] lg:gap-20 lg:px-20 ${className}`}
+    >
       <div className="flex flex-col gap-3.5 lg:gap-5">
         <Eyebrow>{block.eyebrow}</Eyebrow>
         <h2 className="font-display text-[42px] leading-[1.02] lg:text-[68px] lg:leading-none">
           <Emph text={block.heading} />
         </h2>
-        <p className="font-display text-[28px] italic leading-tight text-rust lg:mt-4 lg:text-[36px]">{block.closing}</p>
+        <p className="font-display text-[28px] italic leading-tight text-rust lg:mt-4 lg:text-[36px]">
+          {block.closing}
+        </p>
       </div>
       <ul className="flex flex-col border-b border-line">
         {block.items.map((item) => (
@@ -309,12 +367,17 @@ export function Checklist({ block, className }: BlockProps<'checklist'>) {
 /** Numbered step cards ("Hogyan tudok jelentkezni?"). */
 export function Steps({ block, className }: BlockProps<'steps'>) {
   return (
-    <section id={block.anchor} className={`mx-auto flex max-w-[1440px] flex-col gap-7 px-5 lg:gap-12 lg:px-20 ${className}`}>
+    <section
+      id={block.anchor}
+      className={`mx-auto flex max-w-[1440px] flex-col gap-7 px-5 lg:gap-12 lg:px-20 ${className}`}
+    >
       <SectionHeading eyebrow={block.eyebrow} heading={block.heading} />
       <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
         {block.steps.map((step, i) => (
           <li key={step.title} className="flex flex-col gap-3 rounded-3xl border border-line bg-paper p-6 lg:p-8">
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-teal font-display text-2xl text-cream">{i + 1}</span>
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-teal font-display text-2xl text-cream">
+              {i + 1}
+            </span>
             <h3 className="font-display text-[28px] leading-none lg:text-[32px]">{step.title}</h3>
             <p className="leading-relaxed text-ink2">{step.text}</p>
           </li>
@@ -348,7 +411,14 @@ export function MoodVideo({ block, className }: BlockProps<'moodVideo'>) {
 export function FullImage({ block, className }: BlockProps<'fullImage'>) {
   return (
     <figure id={block.anchor} className={`relative ${className}`}>
-      <Image src={block.image.src} alt={block.image.alt} width={block.image.width} height={block.image.height} sizes="100vw" className="h-[320px] w-full object-cover lg:h-[640px]" />
+      <Image
+        src={block.image.src}
+        alt={block.image.alt}
+        width={block.image.width}
+        height={block.image.height}
+        sizes="100vw"
+        className="h-[320px] w-full object-cover lg:h-[640px]"
+      />
     </figure>
   );
 }

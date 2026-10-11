@@ -46,6 +46,7 @@ export default function EditOverlay() {
   }, []);
 
   // the page's document ("pages/12"), again after each client-side navigation
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pathname is the trigger — re-run after each navigation
   useEffect(() => {
     setDoc(document.querySelector<HTMLElement>('[data-cms-doc]')?.dataset.cmsDoc ?? null);
     setHovered(null);
@@ -86,8 +87,10 @@ export default function EditOverlay() {
   }, [measure]);
 
   const docHref = doc && `${ADMIN}/collections/${doc}`;
+  const docLabel = DOC_LABELS[doc?.split('/')[0] ?? ''] ?? 'Szerkesztés';
   // blocks are rows of a page (productions have a fixed layout)
-  const blockHref = hovered && doc?.startsWith('pages/') ? `${docHref}?blokk=${encodeURIComponent(hovered.blockId)}` : null;
+  const blockHref =
+    hovered && doc?.startsWith('pages/') ? `${docHref}?blokk=${encodeURIComponent(hovered.blockId)}` : null;
 
   return (
     <div ref={root} className="font-sans">
@@ -114,10 +117,13 @@ export default function EditOverlay() {
 
       <div className="fixed bottom-4 left-4 z-[62] flex flex-col items-start gap-2">
         {open && (
-          <div id="cms-edit-menu" className="w-60 rounded-2xl border border-line bg-paper p-2 shadow-[0_18px_40px_-18px_rgba(11,58,63,0.6)]">
+          <div
+            id="cms-edit-menu"
+            className="w-60 rounded-2xl border border-line bg-paper p-2 shadow-[0_18px_40px_-18px_rgba(11,58,63,0.6)]"
+          >
             {docHref && (
               <a href={docHref} target="_blank" rel="noopener" className={menuItem}>
-                {DOC_LABELS[doc!.split('/')[0]!] ?? 'Szerkesztés'}
+                {docLabel}
               </a>
             )}
             <button type="button" onClick={toggleBlocks} className={menuItem} aria-pressed={showBlocks}>

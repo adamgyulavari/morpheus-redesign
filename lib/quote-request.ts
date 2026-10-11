@@ -19,7 +19,11 @@ export type QuoteRequestResult = { kind: 'mailto'; href: string };
 
 export function submitQuoteRequest(
   data: QuoteRequest,
-  options: { recipient: string; subject: string; labels: { company: string; contact: string; email: string; phone: string } },
+  options: {
+    recipient: string;
+    subject: string;
+    labels: { company: string; contact: string; email: string; phone: string };
+  },
 ): QuoteRequestResult {
   const { labels } = options;
   const body = [

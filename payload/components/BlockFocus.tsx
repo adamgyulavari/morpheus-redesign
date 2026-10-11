@@ -21,10 +21,15 @@ export function BlockFocus() {
 
   // open the row (blocks start collapsed)
   useEffect(() => {
-    if (index < 0 || opened.current || !rows) return;
+    const row = rows?.[index];
+    if (!rows || !row || opened.current) return;
     opened.current = true;
-    if (rows[index]!.collapsed !== false) {
-      dispatchFields({ type: 'SET_ROW_COLLAPSED', path: 'blocks', updatedRows: rows.map((r, i) => (i === index ? { ...r, collapsed: false } : r)) });
+    if (row.collapsed !== false) {
+      dispatchFields({
+        type: 'SET_ROW_COLLAPSED',
+        path: 'blocks',
+        updatedRows: rows.map((r, i) => (i === index ? { ...r, collapsed: false } : r)),
+      });
     }
   }, [index, rows, dispatchFields]);
 
@@ -35,9 +40,11 @@ export function BlockFocus() {
   useEffect(() => {
     if (index < 0) return;
     let userMoved = false;
-    const stop = () => (userMoved = true);
+    const stop = () => {
+      userMoved = true;
+    };
     const events = ['wheel', 'touchmove', 'keydown', 'mousedown'] as const;
-    events.forEach((e) => window.addEventListener(e, stop, { passive: true }));
+    for (const e of events) window.addEventListener(e, stop, { passive: true });
     let ticks = 0;
     let highlighted = false;
     const timer = setInterval(() => {
@@ -49,12 +56,14 @@ export function BlockFocus() {
         highlighted = true;
         el.style.transition = 'box-shadow 0.4s';
         el.style.boxShadow = '0 0 0 3px var(--theme-success-500, #0f5f63)';
-        setTimeout(() => (el.style.boxShadow = ''), 3000);
+        setTimeout(() => {
+          el.style.boxShadow = '';
+        }, 3000);
       }
     }, 100);
     return () => {
       clearInterval(timer);
-      events.forEach((e) => window.removeEventListener(e, stop));
+      for (const e of events) window.removeEventListener(e, stop);
     };
   }, [index]);
 

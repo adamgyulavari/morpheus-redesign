@@ -15,7 +15,10 @@ export async function UpcomingWorkshops({ block, className }: BlockProps<'upcomi
   const [ui, upcoming] = await Promise.all([getUi(), getUpcomingWorkshops()]);
   if (upcoming.length === 0) return null;
   return (
-    <section id={block.anchor} className={`mx-auto flex max-w-[1440px] flex-col gap-5 px-3 lg:gap-8 lg:px-20 ${className}`}>
+    <section
+      id={block.anchor}
+      className={`mx-auto flex max-w-[1440px] flex-col gap-5 px-3 lg:gap-8 lg:px-20 ${className}`}
+    >
       {upcoming.map((w) => (
         <WorkshopFeature key={w.id} workshop={w} ui={ui} />
       ))}
@@ -28,7 +31,12 @@ export async function UpcomingWorkshops({ block, className }: BlockProps<'upcomi
  * The anchor (#workshopok) is only applied while no upcoming workshop block has taken it.
  */
 export async function PastWorkshops({ block, className }: BlockProps<'pastWorkshops'>) {
-  const [ui, settings, upcoming, past] = await Promise.all([getUi(), getSiteSettings(), getUpcomingWorkshops(), getPastWorkshops(block.limit)]);
+  const [ui, settings, upcoming, past] = await Promise.all([
+    getUi(),
+    getSiteSettings(),
+    getUpcomingWorkshops(),
+    getPastWorkshops(block.limit),
+  ]);
   const id = upcoming.length === 0 ? block.anchor : undefined;
   if (past.length === 0) {
     if (upcoming.length > 0) return null;
@@ -77,17 +85,30 @@ export async function PastWorkshops({ block, className }: BlockProps<'pastWorksh
 export async function OpenWorkshopSessions({ block, className }: BlockProps<'openWorkshopSessions'>) {
   const [ui, sessions] = await Promise.all([getUi(), getOpenWorkshopSessions(block.limit)]);
   return (
-    <section id={block.anchor} className={`mx-auto flex max-w-[1440px] flex-col gap-7 px-5 lg:gap-12 lg:px-20 ${className}`}>
-      <SectionHeading eyebrow={block.eyebrow} heading={block.heading} aside={<SectionIntro>{block.intro}</SectionIntro>} />
+    <section
+      id={block.anchor}
+      className={`mx-auto flex max-w-[1440px] flex-col gap-7 px-5 lg:gap-12 lg:px-20 ${className}`}
+    >
+      <SectionHeading
+        eyebrow={block.eyebrow}
+        heading={block.heading}
+        aside={<SectionIntro>{block.intro}</SectionIntro>}
+      />
       <div className="flex flex-col border-b border-line">
-        {sessions.length === 0 && <p className="border-t border-line py-5 text-[15.5px] leading-relaxed text-ink2 lg:text-lg lg:leading-[28px]">{ui.sessions.empty}</p>}
+        {sessions.length === 0 && (
+          <p className="border-t border-line py-5 text-[15.5px] leading-relaxed text-ink2 lg:text-lg lg:leading-[28px]">
+            {ui.sessions.empty}
+          </p>
+        )}
         {sessions.map((session) => (
           <div
             key={session.id}
             className="grid grid-cols-[64px_1fr] items-center gap-x-5 gap-y-3 border-t border-line py-5 sm:grid-cols-[88px_1fr_auto] lg:grid-cols-[150px_1fr_1fr_auto] lg:gap-8 lg:py-6"
           >
             <div className="row-span-2 flex flex-col gap-1 sm:row-span-1 lg:flex-row lg:items-center lg:gap-3">
-              <span className="font-display text-[44px] leading-none text-rust lg:text-[64px]">{dayOfMonth(session.date)}</span>
+              <span className="font-display text-[44px] leading-none text-rust lg:text-[64px]">
+                {dayOfMonth(session.date)}
+              </span>
               <span className="text-[13px] font-semibold leading-tight lg:text-[15px]">
                 {monthShort(session.date)}
                 <br />

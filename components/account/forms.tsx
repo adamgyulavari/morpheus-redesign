@@ -5,12 +5,13 @@
  * the fields keep what was typed when the action returns an error.
  */
 import Link from 'next/link';
-import { useActionState, useState, type ReactNode } from 'react';
+import { type ReactNode, useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 
 import { ArrowRight } from '@/components/icons';
 import {
   confirmMagicLink,
+  type FormState,
   forgotPassword,
   login,
   loginWithCode,
@@ -18,7 +19,6 @@ import {
   resetPassword,
   sendMagicLink,
   updateProfile,
-  type FormState,
 } from '@/lib/account-actions';
 
 const initial: FormState = {};
@@ -26,7 +26,12 @@ const initial: FormState = {};
 function Submit({ children }: { children: ReactNode }) {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" className="btn btn-lg btn-primary self-stretch disabled:opacity-60 sm:self-start" disabled={pending} aria-busy={pending}>
+    <button
+      type="submit"
+      className="btn btn-lg btn-primary self-stretch disabled:opacity-60 sm:self-start"
+      disabled={pending}
+      aria-busy={pending}
+    >
       {pending ? 'Egy pillanat…' : children}
       {!pending && <ArrowRight />}
     </button>
@@ -68,7 +73,8 @@ export function LoginForms({ returnTo, info }: { returnTo: string; info?: string
         <h2 className="font-display text-[32px] leading-none lg:text-[40px]">Nézd meg a postafiókod</h2>
         <Notice state={linkState} />
         <p className="text-[15px] leading-relaxed text-ink2">
-          Kattints a levélben lévő gombra, vagy ha a levelet másik eszközön olvasod, írd be ide a benne lévő 6 jegyű kódot.
+          Kattints a levélben lévő gombra, vagy ha a levelet másik eszközön olvasod, írd be ide a benne lévő 6 jegyű
+          kódot.
         </p>
         <Notice state={codeState.error ? codeState : undefined} />
         <input type="hidden" name="email" value={linkState.values?.email ?? ''} />
@@ -99,12 +105,20 @@ export function LoginForms({ returnTo, info }: { returnTo: string; info?: string
       <form action={linkAction} className="flex flex-col gap-4 lg:gap-5">
         <h2 className="font-display text-[32px] leading-none lg:text-[40px]">Belépési link</h2>
         <p className="text-[15px] leading-relaxed text-ink2">
-          Megadod az e-mail-címed, és küldünk egy linket és egy kódot, amellyel jelszó nélkül beléphetsz. 15 percig érvényesek.
+          Megadod az e-mail-címed, és küldünk egy linket és egy kódot, amellyel jelszó nélkül beléphetsz. 15 percig
+          érvényesek.
         </p>
         <Notice state={linkState} />
         <label className="field-label">
           E-mail-cím
-          <input className="field" type="email" name="email" required autoComplete="email" defaultValue={v(linkState, 'email') ?? v(loginState, 'email')} />
+          <input
+            className="field"
+            type="email"
+            name="email"
+            required
+            autoComplete="email"
+            defaultValue={v(linkState, 'email') ?? v(loginState, 'email')}
+          />
         </label>
         <Submit>Belépési link küldése</Submit>
         <button type="button" className="link self-start text-[15px] font-semibold" onClick={() => setMode('password')}>
@@ -121,7 +135,14 @@ export function LoginForms({ returnTo, info }: { returnTo: string; info?: string
       <input type="hidden" name="vissza" value={returnTo} />
       <label className="field-label">
         E-mail-cím
-        <input className="field" type="email" name="email" required autoComplete="email" defaultValue={v(loginState, 'email')} />
+        <input
+          className="field"
+          type="email"
+          name="email"
+          required
+          autoComplete="email"
+          defaultValue={v(loginState, 'email')}
+        />
       </label>
       <label className="field-label">
         Jelszó
@@ -175,17 +196,36 @@ export function RegisterForm() {
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="field-label">
           Vezetéknév *
-          <input className="field" name="lastName" required autoComplete="family-name" defaultValue={v(state, 'lastName')} />
+          <input
+            className="field"
+            name="lastName"
+            required
+            autoComplete="family-name"
+            defaultValue={v(state, 'lastName')}
+          />
         </label>
         <label className="field-label">
           Keresztnév *
-          <input className="field" name="firstName" required autoComplete="given-name" defaultValue={v(state, 'firstName')} />
+          <input
+            className="field"
+            name="firstName"
+            required
+            autoComplete="given-name"
+            defaultValue={v(state, 'firstName')}
+          />
         </label>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="field-label">
           E-mail-cím *
-          <input className="field" type="email" name="email" required autoComplete="email" defaultValue={v(state, 'email')} />
+          <input
+            className="field"
+            type="email"
+            name="email"
+            required
+            autoComplete="email"
+            defaultValue={v(state, 'email')}
+          />
         </label>
         <label className="field-label">
           Telefonszám
@@ -235,7 +275,14 @@ export function ForgotPasswordForm() {
         <>
           <label className="field-label">
             E-mail-cím
-            <input className="field" type="email" name="email" required autoComplete="email" defaultValue={v(state, 'email')} />
+            <input
+              className="field"
+              type="email"
+              name="email"
+              required
+              autoComplete="email"
+              defaultValue={v(state, 'email')}
+            />
           </label>
           <Submit>Visszaállító link küldése</Submit>
         </>
@@ -268,7 +315,11 @@ export function ResetPasswordForm({ token }: { token: string }) {
 
 // ── /fiokom ─────────────────────────────────────────────────────────────────
 
-export function ProfileForm({ user }: { user: { email: string; firstName: string; lastName: string; phone?: string | null } }) {
+export function ProfileForm({
+  user,
+}: {
+  user: { email: string; firstName: string; lastName: string; phone?: string | null };
+}) {
   const [state, action] = useActionState(updateProfile, initial);
   const value = (key: 'firstName' | 'lastName' | 'phone') => v(state, key) ?? user[key] ?? '';
   return (
@@ -278,17 +329,35 @@ export function ProfileForm({ user }: { user: { email: string; firstName: string
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="field-label">
           Vezetéknév
-          <input className="field" name="lastName" required autoComplete="family-name" defaultValue={value('lastName')} />
+          <input
+            className="field"
+            name="lastName"
+            required
+            autoComplete="family-name"
+            defaultValue={value('lastName')}
+          />
         </label>
         <label className="field-label">
           Keresztnév
-          <input className="field" name="firstName" required autoComplete="given-name" defaultValue={value('firstName')} />
+          <input
+            className="field"
+            name="firstName"
+            required
+            autoComplete="given-name"
+            defaultValue={value('firstName')}
+          />
         </label>
       </div>
       <div className="grid gap-4">
         <label className="field-label">
           E-mail-cím
-          <input className="field cursor-not-allowed opacity-70" type="email" value={user.email} readOnly aria-describedby="email-note" />
+          <input
+            className="field cursor-not-allowed opacity-70"
+            type="email"
+            value={user.email}
+            readOnly
+            aria-describedby="email-note"
+          />
           <span id="email-note" className="text-xs font-normal text-muted">
             Ha módosítanád, írj nekünk.
           </span>

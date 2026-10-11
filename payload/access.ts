@@ -36,7 +36,8 @@ export const isAdminField: FieldAccess = ({ req: { user } }) => userIsAdmin(user
 export const isStaffOrAdminField: FieldAccess = ({ req: { user } }) => userIsStaffOrAdmin(user);
 
 /** Staff see drafts; everyone else (visitors and students) only published documents. */
-export const publishedOrStaff: Access = ({ req: { user } }) => (userIsStaffOrAdmin(user) ? true : { _status: { equals: 'published' } });
+export const publishedOrStaff: Access = ({ req: { user } }) =>
+  userIsStaffOrAdmin(user) ? true : { _status: { equals: 'published' } };
 
 /** Content collections: public read, staff/admin write. */
 export const contentAccess = { read: anyone, create: isStaffOrAdmin, update: isStaffOrAdmin, delete: isStaffOrAdmin };

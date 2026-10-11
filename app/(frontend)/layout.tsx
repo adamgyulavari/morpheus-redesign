@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { draftMode } from 'next/headers';
 import { Figtree, Instrument_Serif } from 'next/font/google';
+import { draftMode } from 'next/headers';
 import type { ReactNode } from 'react';
 
 import EditMode from '@/components/edit/EditMode';

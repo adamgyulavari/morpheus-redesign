@@ -32,7 +32,11 @@ export default function Gallery({ images, label }: { images: ImageRef[]; label: 
 
   return (
     <>
-      <div className="lg:rounded-[32px] lg:bg-sand lg:px-8 lg:pb-6 lg:pt-8" aria-roledescription={ui.common.slideshow}>
+      <section
+        className="lg:rounded-[32px] lg:bg-sand lg:px-8 lg:pb-6 lg:pt-8"
+        aria-label={label}
+        aria-roledescription={ui.common.slideshow}
+      >
         <div
           ref={trackRef}
           className="no-scrollbar -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-5 [scroll-padding-left:20px] sm:gap-6 lg:mx-0 lg:px-0 lg:[scroll-padding-left:0px]"
@@ -57,8 +61,14 @@ export default function Gallery({ images, label }: { images: ImageRef[]; label: 
             </button>
           ))}
         </div>
-        <SliderControls pages={pages} current={page} go={go} prevLabel={ui.gallery.previous} nextLabel={ui.gallery.next} />
-      </div>
+        <SliderControls
+          pages={pages}
+          current={page}
+          go={go}
+          prevLabel={ui.gallery.previous}
+          nextLabel={ui.gallery.next}
+        />
+      </section>
       <dialog
         ref={ref}
         aria-label={label}
@@ -81,18 +91,33 @@ export default function Gallery({ images, label }: { images: ImageRef[]; label: 
               className="max-h-[80vh] w-auto rounded-xl object-contain"
             />
             <figcaption className="text-sm text-mist">
-              {index! + 1} / {images.length}
+              {(index ?? 0) + 1} / {images.length}
             </figcaption>
           </figure>
         )}
         <div className="on-dark mt-3 flex justify-center gap-3">
-          <button type="button" aria-label={ui.gallery.previousImage} className="btn-icon border-cream text-cream" onClick={() => step(-1)}>
+          <button
+            type="button"
+            aria-label={ui.gallery.previousImage}
+            className="btn-icon border-cream text-cream"
+            onClick={() => step(-1)}
+          >
             <ArrowLeft />
           </button>
-          <button type="button" aria-label={ui.common.close} className="btn-icon border-cream text-cream" onClick={() => setIndex(null)}>
+          <button
+            type="button"
+            aria-label={ui.common.close}
+            className="btn-icon border-cream text-cream"
+            onClick={() => setIndex(null)}
+          >
             <CloseIcon />
           </button>
-          <button type="button" aria-label={ui.gallery.nextImage} className="btn-icon border-cream text-cream" onClick={() => step(1)}>
+          <button
+            type="button"
+            aria-label={ui.gallery.nextImage}
+            className="btn-icon border-cream text-cream"
+            onClick={() => step(1)}
+          >
             <span className="rotate-180">
               <ArrowLeft />
             </span>

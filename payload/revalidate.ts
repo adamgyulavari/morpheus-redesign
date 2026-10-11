@@ -25,7 +25,7 @@ const SHOWN_BY = blocksShowing;
 
 /** Blocks whose content depends on today's date (upcoming shows, course starts, sessions…). */
 const DATE_DEPENDENT: BlockType[] = [
-  ...SHOWN_BY.shows!,
+  ...(SHOWN_BY.shows ?? []),
   'offerings',
   'courseStarts',
   'courseCompare',
@@ -51,7 +51,13 @@ function revalidate(payload: Payload, path: string, type?: 'page' | 'layout') {
 /** Paths of the pages that contain any of the given block types. */
 async function pagesWith(payload: Payload, types: BlockType[]): Promise<string[]> {
   const wanted = new Set<string>(types);
-  const { docs } = await payload.find({ collection: 'pages', depth: 0, limit: 0, pagination: false, select: { path: true, blocks: true } });
+  const { docs } = await payload.find({
+    collection: 'pages',
+    depth: 0,
+    limit: 0,
+    pagination: false,
+    select: { path: true, blocks: true },
+  });
   return docs.filter((p) => (p.blocks ?? []).some((b) => wanted.has(b.blockType))).map((p) => p.path);
 }
 
@@ -65,7 +71,13 @@ export const revalidateDateDependent = (payload: Payload) => revalidatePagesWith
 
 const skip = (req: PayloadRequest) => Boolean(req.context.disableRevalidate);
 
-type Doc = { _status?: string | null; slug?: string | null; path?: string | null; title?: string | null; production?: unknown };
+type Doc = {
+  _status?: string | null;
+  slug?: string | null;
+  path?: string | null;
+  title?: string | null;
+  production?: unknown;
+};
 
 /** Drafts and autosaves don't change the public site; publishing or unpublishing does. */
 const isPublicChange = (doc: Doc, previousDoc?: Doc) =>

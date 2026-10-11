@@ -20,10 +20,12 @@ const consoleAdapter: EmailAdapter = ({ payload }) => ({
   defaultFromAddress: process.env.EMAIL_FROM || 'noreply@morpheus-szinmuhely.hu',
   defaultFromName: process.env.EMAIL_FROM_NAME || 'Morpheus Színműhely',
   sendEmail: async (message) => {
-    const to = Array.isArray(message.to) ? message.to.join(', ') : String(typeof message.to === 'object' ? message.to?.address : message.to);
+    const to = Array.isArray(message.to)
+      ? message.to.join(', ')
+      : String(typeof message.to === 'object' ? message.to?.address : message.to);
     const home = `${serverUrl()}/`;
     const links = [...String(message.html ?? '').matchAll(/href="([^"]+)"/g)]
-      .map((m) => m[1]!.replace(/&amp;/g, '&'))
+      .map(([, href = '']) => href.replace(/&amp;/g, '&'))
       .filter((href, i, all) => href !== home && all.indexOf(href) === i);
     payload.logger.info(
       [`E-mail (not sent: no SMTP_HOST) to ${to}: ${message.subject}`, ...links.map((l) => `  → ${l}`)].join('\n'),
@@ -51,7 +53,16 @@ export function emailAdapter(): Promise<EmailAdapter> | EmailAdapter {
   });
 }
 
-const C = { cream: '#f7f1e8', paper: '#fffaf2', line: '#e4d8c6', ink: '#10292c', ink2: '#33494c', muted: '#4d6366', teal: '#0f5f63', deep: '#0b3a3f' };
+const C = {
+  cream: '#f7f1e8',
+  paper: '#fffaf2',
+  line: '#e4d8c6',
+  ink: '#10292c',
+  ink2: '#33494c',
+  muted: '#4d6366',
+  teal: '#0f5f63',
+  deep: '#0b3a3f',
+};
 const FONT = "'Segoe UI', Helvetica, Arial, sans-serif";
 
 export const escapeHtml = (s: string) =>
@@ -74,7 +85,8 @@ type Layout = {
 };
 
 export function emailLayout({ preheader, heading, paragraphs, button, code, footnote }: Layout): string {
-  const p = (text: string) => `<p style="margin:0 0 16px;font:16px/1.6 ${FONT};color:${C.ink2}">${escapeHtml(text)}</p>`;
+  const p = (text: string) =>
+    `<p style="margin:0 0 16px;font:16px/1.6 ${FONT};color:${C.ink2}">${escapeHtml(text)}</p>`;
   const cta = button
     ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 24px"><tr><td style="border-radius:999px;background:${C.teal}">
         <a href="${escapeHtml(button.href)}" style="display:inline-block;padding:14px 28px;font:600 16px/1 ${FONT};color:${C.cream};text-decoration:none;border-radius:999px">${escapeHtml(button.label)}</a>
@@ -124,8 +136,14 @@ export const verifyEmail = {
     emailLayout({
       preheader: 'Egy kattintás, és kész a Morpheus-fiókod.',
       heading: 'Erősítsd meg az e-mail-címed',
-      paragraphs: [hello(user), 'Köszönjük, hogy regisztráltál a Morpheus Színműhely oldalán. A fiókod használatához erősítsd meg az e-mail-címed az alábbi gombbal.'],
-      button: { label: 'E-mail-cím megerősítése', href: siteUrl(`/email-megerosites?token=${encodeURIComponent(token)}`) },
+      paragraphs: [
+        hello(user),
+        'Köszönjük, hogy regisztráltál a Morpheus Színműhely oldalán. A fiókod használatához erősítsd meg az e-mail-címed az alábbi gombbal.',
+      ],
+      button: {
+        label: 'E-mail-cím megerősítése',
+        href: siteUrl(`/email-megerosites?token=${encodeURIComponent(token)}`),
+      },
       footnote: 'Ha nem te regisztráltál, nyugodtan hagyd figyelmen kívül ezt a levelet.',
     }),
 };
@@ -136,9 +154,16 @@ export const resetPassword = {
     emailLayout({
       preheader: 'Állíts be új jelszót a Morpheus-fiókodhoz.',
       heading: 'Új jelszó beállítása',
-      paragraphs: [hello(user), 'Valaki (remélhetőleg te) új jelszót kért a Morpheus-fiókodhoz. Az alábbi gombbal állíthatod be.'],
-      button: { label: 'Új jelszó beállítása', href: siteUrl(`/jelszo-visszaallitas?token=${encodeURIComponent(token)}`) },
-      footnote: 'A link egy órán át érvényes. Ha nem te kérted, hagyd figyelmen kívül ezt a levelet: a jelszavad nem változik.',
+      paragraphs: [
+        hello(user),
+        'Valaki (remélhetőleg te) új jelszót kért a Morpheus-fiókodhoz. Az alábbi gombbal állíthatod be.',
+      ],
+      button: {
+        label: 'Új jelszó beállítása',
+        href: siteUrl(`/jelszo-visszaallitas?token=${encodeURIComponent(token)}`),
+      },
+      footnote:
+        'A link egy órán át érvényes. Ha nem te kérted, hagyd figyelmen kívül ezt a levelet: a jelszavad nem változik.',
     }),
 };
 
@@ -150,7 +175,11 @@ export const magicLink = {
       heading: 'Belépés jelszó nélkül',
       paragraphs: [hello(user), 'Az alábbi gombbal jelszó nélkül beléphetsz a Morpheus-fiókodba.'],
       button: { label: 'Belépés', href },
-      code: { intro: 'Ha a belépést egy másik eszközön kérted, ott ezt a kódot írd be:', value: `${code.slice(0, 3)} ${code.slice(3)}` },
-      footnote: 'A link és a kód 15 percig érvényes, és csak egyszer használható. Ha nem te kérted, hagyd figyelmen kívül ezt a levelet.',
+      code: {
+        intro: 'Ha a belépést egy másik eszközön kérted, ott ezt a kódot írd be:',
+        value: `${code.slice(0, 3)} ${code.slice(3)}`,
+      },
+      footnote:
+        'A link és a kód 15 percig érvényes, és csak egyszer használható. Ha nem te kérted, hagyd figyelmen kívül ezt a levelet.',
     }),
 };

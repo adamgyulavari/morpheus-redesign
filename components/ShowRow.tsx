@@ -57,7 +57,11 @@ export default function ShowRow({
       <div className="col-start-2 flex flex-col gap-1 xl:col-start-auto">
         <span className="font-display text-[26px] leading-tight xl:text-[38px]">{production.title}</span>
         <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm text-muted xl:text-base">
-          {show.label && <span className="rounded-full bg-sand px-2.5 py-0.5 text-xs font-bold uppercase tracking-[0.08em] text-deep">{show.label}</span>}
+          {show.label && (
+            <span className="rounded-full bg-sand px-2.5 py-0.5 text-xs font-bold uppercase tracking-[0.08em] text-deep">
+              {show.label}
+            </span>
+          )}
           <span>{production.byline}</span>
         </span>
         {details}

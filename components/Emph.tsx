@@ -10,10 +10,12 @@ export default function Emph({ text, dark = false }: { text: string; dark?: bool
     <>
       {parts.map((part, i) =>
         i % 2 === 1 ? (
+          // biome-ignore lint/suspicious/noArrayIndexKey: parts of one heading, fixed by position
           <em key={i} className={dark ? 'text-gold' : 'text-rust'}>
             {part}
           </em>
         ) : (
+          // biome-ignore lint/suspicious/noArrayIndexKey: parts of one heading, fixed by position
           <Fragment key={i}>{part}</Fragment>
         ),
       )}

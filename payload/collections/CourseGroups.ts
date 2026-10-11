@@ -30,7 +30,8 @@ export const CourseGroups: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['title', 'type', 'startDate', 'endDate', 'studentCount', 'isActive'],
     group: 'Kurzusok',
-    description: 'Az induló és futó csoportok a hallgatóikkal. A hallgatók a fiókjukban (/fiokom) látják a saját csoportjaikat.',
+    description:
+      'Az induló és futó csoportok a hallgatóikkal. A hallgatók a fiókjukban (/fiokom) látják a saját csoportjaikat.',
   },
   defaultSort: '-startDate',
   fields: [
@@ -49,7 +50,9 @@ export const CourseGroups: CollectionConfig = {
             { label: 'Egyéb', value: 'egyeb' },
           ],
         },
-        relationship('course', 'Kurzus (a weboldalon)', 'courses', { description: 'Nem kötelező: melyik kurzus csoportja.' }),
+        relationship('course', 'Kurzus (a weboldalon)', 'courses', {
+          description: 'Nem kötelező: melyik kurzus csoportja.',
+        }),
       ],
     },
     {
@@ -57,11 +60,16 @@ export const CourseGroups: CollectionConfig = {
       fields: [
         date('startDate', 'Kezdés', { required: true }),
         {
-          ...date('endDate', 'Befejezés', { required: true, description: 'Eddig a napig számít aktív hallgatónak, aki a csoportban van.' }),
+          ...date('endDate', 'Befejezés', {
+            required: true,
+            description: 'Eddig a napig számít aktív hallgatónak, aki a csoportban van.',
+          }),
           validate: (value: unknown, { siblingData }: { siblingData: { startDate?: string | null } }) => {
             if (!value) return 'Add meg a befejezés napját.';
             const start = siblingData.startDate;
-            return !start || String(value).slice(0, 10) >= String(start).slice(0, 10) ? true : 'A befejezés nem lehet a kezdés előtt.';
+            return !start || String(value).slice(0, 10) >= String(start).slice(0, 10)
+              ? true
+              : 'A befejezés nem lehet a kezdés előtt.';
           },
         },
       ],
@@ -69,7 +77,13 @@ export const CourseGroups: CollectionConfig = {
     {
       type: 'row',
       fields: [
-        { name: 'monthlyFee', label: 'Havidíj (Ft)', type: 'number', min: 0, admin: { description: 'A havi számlázáshoz (később).' } },
+        {
+          name: 'monthlyFee',
+          label: 'Havidíj (Ft)',
+          type: 'number',
+          min: 0,
+          admin: { description: 'A havi számlázáshoz (később).' },
+        },
         {
           name: 'invoiceDay',
           label: 'Számlázás napja',
@@ -104,7 +118,9 @@ export const CourseGroups: CollectionConfig = {
       virtual: true,
       admin: { readOnly: true, position: 'sidebar', description: 'A csoport hallgatóinak száma.' },
       access: { read: isStaffOrAdminField },
-      hooks: { afterRead: [({ siblingData }) => (Array.isArray(siblingData.students) ? siblingData.students.length : 0)] },
+      hooks: {
+        afterRead: [({ siblingData }) => (Array.isArray(siblingData.students) ? siblingData.students.length : 0)],
+      },
     },
     {
       name: 'isActive',

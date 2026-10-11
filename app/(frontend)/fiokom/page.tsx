@@ -47,7 +47,8 @@ export default async function AccountPage() {
           {groups.length === 0 ? (
             <Card>
               <p className="text-[16px] leading-relaxed text-ink2">
-                Még nem vagy egyik csoportunkban sem. Ha jelentkeztél egy kurzusra, a felvételed után itt találod az időpontokat és a tudnivalókat.
+                Még nem vagy egyik csoportunkban sem. Ha jelentkeztél egy kurzusra, a felvételed után itt találod az
+                időpontokat és a tudnivalókat.
               </p>
             </Card>
           ) : (
@@ -57,7 +58,11 @@ export default async function AccountPage() {
                 <Card key={g.id}>
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <h3 className="font-display text-[28px] leading-tight lg:text-[34px]">{g.title}</h3>
-                    <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${s.className}`}>{s.label}</span>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${s.className}`}
+                    >
+                      {s.label}
+                    </span>
                   </div>
                   <p className="text-[15px] font-semibold text-teal">{dateRange(day(g.startDate), day(g.endDate))}</p>
                   {g.info && (
@@ -73,7 +78,9 @@ export default async function AccountPage() {
 
         <div className="flex flex-col gap-5">
           <Card>
-            <ProfileForm user={{ email: user.email, firstName: user.firstName, lastName: user.lastName, phone: user.phone }} />
+            <ProfileForm
+              user={{ email: user.email, firstName: user.firstName, lastName: user.lastName, phone: user.phone }}
+            />
           </Card>
           {userIsStaffOrAdmin(user) && (
             <a href="/admin" className="btn btn-lg btn-outline self-stretch sm:self-start">

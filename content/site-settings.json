@@ -10,10 +10,7 @@
     {
       "label": "Képzések",
       "href": "/kepzesek",
-      "match": [
-        "/kezdo-kurzus",
-        "/szakmai-kurzus"
-      ]
+      "match": ["/kezdo-kurzus", "/szakmai-kurzus"]
     },
     {
       "label": "Nyitott alkalmak",
@@ -22,9 +19,7 @@
     {
       "label": "Előadások",
       "href": "/repertoar",
-      "match": [
-        "/kozelgo-eloadasok"
-      ]
+      "match": ["/kozelgo-eloadasok"]
     },
     {
       "label": "Csapatépítő",

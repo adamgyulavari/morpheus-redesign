@@ -10,10 +10,10 @@ import {
   InlineToolbarFeature,
   ItalicFeature,
   LinkFeature,
+  lexicalEditor,
   OrderedListFeature,
   ParagraphFeature,
   UnorderedListFeature,
-  lexicalEditor,
 } from '@payloadcms/richtext-lexical';
 import type { ArrayField, DateField, Field, GroupField, RelationshipField, TextField, UploadField } from 'payload';
 
@@ -141,10 +141,17 @@ export const time = (name: string, label: string, opts: Opts = {}): TextField =>
   required: opts.required,
   admin: { description: opts.description ?? 'Óra:perc, pl. 18:00', placeholder: '18:00', width: '50%' },
   validate: (value: unknown) =>
-    value == null || value === '' || /^([01]\d|2[0-3]):[0-5]\d$/.test(String(value)) ? true : 'Óra:perc formában add meg, pl. 18:00',
+    value == null || value === '' || /^([01]\d|2[0-3]):[0-5]\d$/.test(String(value))
+      ? true
+      : 'Óra:perc formában add meg, pl. 18:00',
 });
 
-export const relationship = (name: string, label: string, relationTo: RelationshipField['relationTo'], opts: Opts & { hasMany?: boolean } = {}) =>
+export const relationship = (
+  name: string,
+  label: string,
+  relationTo: RelationshipField['relationTo'],
+  opts: Opts & { hasMany?: boolean } = {},
+) =>
   ({
     name,
     label,

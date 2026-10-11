@@ -14,7 +14,11 @@ import type { BlockProps } from './types';
 
 /** Homepage hero: keywords, heading, buttons, the logo with photos, and the next-show card. */
 export async function HomeHero({ block, className }: BlockProps<'homeHero'>) {
-  const [ui, settings, [nextShow]] = await Promise.all([getUi(), getSiteSettings(), block.nextShow ? getUpcomingShows(1) : []]);
+  const [ui, settings, [nextShow]] = await Promise.all([
+    getUi(),
+    getSiteSettings(),
+    block.nextShow ? getUpcomingShows(1) : [],
+  ]);
   return (
     <section
       id={block.anchor}
@@ -24,7 +28,12 @@ export async function HomeHero({ block, className }: BlockProps<'homeHero'>) {
         <div className="flex items-center justify-center gap-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-teal lg:justify-start lg:gap-3.5 lg:text-[13px]">
           {block.keywords.map((word, i) => (
             <span key={word} className="contents">
-              {i > 0 && <span className={`h-1.5 w-1.5 rounded-full lg:h-2 lg:w-2 ${i === 1 ? 'bg-[#f39a3d]' : 'bg-[#e0603a]'}`} aria-hidden="true" />}
+              {i > 0 && (
+                <span
+                  className={`h-1.5 w-1.5 rounded-full lg:h-2 lg:w-2 ${i === 1 ? 'bg-[#f39a3d]' : 'bg-[#e0603a]'}`}
+                  aria-hidden="true"
+                />
+              )}
               <span>{word}</span>
             </span>
           ))}
@@ -32,7 +41,9 @@ export async function HomeHero({ block, className }: BlockProps<'homeHero'>) {
         <h1 className="text-balance text-center font-display text-[54px] leading-[0.98] lg:text-left lg:text-[108px] lg:leading-[0.95]">
           <Emph text={block.heading} />
         </h1>
-        <p className="text-center text-[17px] leading-relaxed text-ink2 lg:max-w-[540px] lg:text-left lg:text-xl lg:leading-[28px]">{block.lead}</p>
+        <p className="text-center text-[17px] leading-relaxed text-ink2 lg:max-w-[540px] lg:text-left lg:text-xl lg:leading-[28px]">
+          {block.lead}
+        </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start lg:gap-4">
           <ButtonLink link={block.primaryCta} variant="primary" arrow />
           <ButtonLink link={block.secondaryCta} variant="outline" />
@@ -69,7 +80,9 @@ export async function HomeHero({ block, className }: BlockProps<'homeHero'>) {
             href={`${settings.urls.upcomingShows}#eloadas-${nextShow.id}`}
             className="mt-6 flex flex-col gap-1.5 rounded-[18px] border border-line bg-paper px-5 py-4 shadow-[0_18px_40px_-18px_rgba(11,58,63,0.35)] transition-colors hover:border-teal lg:absolute lg:bottom-5 lg:left-0 lg:mt-0 lg:w-[272px] lg:px-[22px] lg:py-5"
           >
-            <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-rust-dark lg:text-xs">{ui.shows.nextShow}</span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-rust-dark lg:text-xs">
+              {ui.shows.nextShow}
+            </span>
             <span className="font-display text-[28px] leading-tight lg:text-[32px]">{nextShow.production.title}</span>
             <span className="text-sm text-ink2 lg:text-[15px]">{showDateLine(nextShow.date, nextShow.time)}</span>
             <span className="text-sm text-muted">
@@ -86,8 +99,18 @@ export async function HomeHero({ block, className }: BlockProps<'homeHero'>) {
  * Segmented switch between sibling pages (e.g. Kezdő kurzus | Szakmai kurzus). Labels default to the
  * referenced pages' titles; the current page is highlighted.
  */
-async function PageSwitcher({ label, pages, current }: { label: string; pages: { path: string; label?: string }[]; current: string }) {
-  const items = await Promise.all(pages.map(async (p) => ({ path: p.path, label: p.label ?? (await getPage(p.path))?.title ?? p.path })));
+async function PageSwitcher({
+  label,
+  pages,
+  current,
+}: {
+  label: string;
+  pages: { path: string; label?: string }[];
+  current: string;
+}) {
+  const items = await Promise.all(
+    pages.map(async (p) => ({ path: p.path, label: p.label ?? (await getPage(p.path))?.title ?? p.path })),
+  );
   return (
     <nav aria-label={label} className="flex self-start rounded-full border-[1.5px] border-[#cdbda3] bg-paper p-1">
       {items.map((item) => {

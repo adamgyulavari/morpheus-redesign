@@ -29,11 +29,13 @@ const MAX_CODE_ATTEMPTS = 5;
 /** Wrong codes per account in 24 hours; then code login is off for it until they age out (links still work). */
 const MAX_CODE_FAILURES_PER_DAY = 10;
 
-export const MAGIC_LINK_SENT = 'Ha ezzel az e-mail-címmel van megerősített fiók, elküldtük rá a belépési linket és kódot. Nézd meg a postafiókod (a spam mappát is).';
+export const MAGIC_LINK_SENT =
+  'Ha ezzel az e-mail-címmel van megerősített fiók, elküldtük rá a belépési linket és kódot. Nézd meg a postafiókod (a spam mappát is).';
 
 const hash = (token: string) => createHash('sha256').update(token).digest('hex');
 /** The code's hash, keyed with the server secret and salted with its token (6 digits are few). */
-const codeHash = (secret: string, tokenHash: string, code: string) => createHmac('sha256', secret).update(`${tokenHash}:${code}`).digest('hex');
+const codeHash = (secret: string, tokenHash: string, code: string) =>
+  createHmac('sha256', secret).update(`${tokenHash}:${code}`).digest('hex');
 
 type Db = { drizzle: { execute: <T>(q: ReturnType<typeof sql>) => Promise<{ rows: T[] }> } };
 const db = (payload: Payload) => payload.db as unknown as Db;
@@ -73,10 +75,16 @@ export type MagicLinkResult = 'sent' | 'rate-limited';
 export async function requestMagicLink(payload: Payload, rawEmail: string, ip: string): Promise<MagicLinkResult> {
   const email = rawEmail.trim().toLowerCase();
   if (!allow(`ip:${ip}`, MAX_PER_IP)) return 'rate-limited';
-  if (!email || !email.includes('@') || !allow(`email:${email}`, MAX_PER_EMAIL)) return 'sent';
+  if (!email.includes('@') || !allow(`email:${email}`, MAX_PER_EMAIL)) return 'sent';
 
   try {
-    const { docs } = await payload.find({ collection: 'users', where: { email: { equals: email } }, limit: 1, depth: 0, showHiddenFields: true });
+    const { docs } = await payload.find({
+      collection: 'users',
+      where: { email: { equals: email } },
+      limit: 1,
+      depth: 0,
+      showHiddenFields: true,
+    });
     const user = docs[0];
     const locked = user?.lockUntil && new Date(user.lockUntil) > new Date();
     if (!user || user._verified === false || locked) return 'sent';
@@ -91,7 +99,12 @@ export async function requestMagicLink(payload: Payload, rawEmail: string, ip: s
     const tokenHash = hash(token);
     await payload.create({
       collection: 'loginTokens',
-      data: { user: user.id, tokenHash, codeHash: codeHash(payload.secret, tokenHash, code), expiresAt: new Date(Date.now() + TOKEN_TTL_MS).toISOString() },
+      data: {
+        user: user.id,
+        tokenHash,
+        codeHash: codeHash(payload.secret, tokenHash, code),
+        expiresAt: new Date(Date.now() + TOKEN_TTL_MS).toISOString(),
+      },
     });
     await payload.sendEmail({
       to: user.email,
@@ -108,7 +121,13 @@ const validToken = (token: string) => /^[A-Za-z0-9_-]{43}$/.test(token);
 
 /** Verified and not locked: may log in with a link or code. */
 async function canLogIn(payload: Payload, userId: number): Promise<{ id: number; email: string } | null> {
-  const user = await payload.findByID({ collection: 'users', id: userId, depth: 0, showHiddenFields: true, disableErrors: true });
+  const user = await payload.findByID({
+    collection: 'users',
+    id: userId,
+    depth: 0,
+    showHiddenFields: true,
+    disableErrors: true,
+  });
   const locked = user?.lockUntil && new Date(user.lockUntil) > new Date();
   return user && user._verified !== false && !locked ? { id: user.id, email: user.email } : null;
 }
@@ -145,7 +164,12 @@ export async function consumeLoginCode(payload: Payload, rawEmail: string, rawCo
   const email = rawEmail.trim().toLowerCase();
   const code = rawCode.replace(/\s/g, '');
   if (!/^\d{6}$/.test(code) || !email) return null;
-  const { rows } = await db(payload).drizzle.execute<{ id: number; token_hash: string; code_hash: string | null; attempts: string | number | null }>(sql`
+  const { rows } = await db(payload).drizzle.execute<{
+    id: number;
+    token_hash: string;
+    code_hash: string | null;
+    attempts: string | number | null;
+  }>(sql`
     SELECT t.id, t.token_hash, t.code_hash, t.attempts FROM login_tokens t JOIN users u ON u.id = t.user_id
     WHERE lower(u.email) = ${email} AND t.used_at IS NULL AND t.expires_at > now()
     ORDER BY t.created_at DESC LIMIT 1`);
@@ -160,7 +184,9 @@ export async function consumeLoginCode(payload: Payload, rawEmail: string, rawCo
   const expected = Buffer.from(row.code_hash, 'hex');
   const given = Buffer.from(codeHash(payload.secret, row.token_hash, code), 'hex');
   if (!timingSafeEqual(expected, given)) {
-    await db(payload).drizzle.execute(sql`UPDATE login_tokens SET attempts = coalesce(attempts, 0) + 1 WHERE id = ${row.id}`);
+    await db(payload).drizzle.execute(
+      sql`UPDATE login_tokens SET attempts = coalesce(attempts, 0) + 1 WHERE id = ${row.id}`,
+    );
     return null;
   }
   const used = await db(payload).drizzle.execute<{ user_id: number | null }>(sql`

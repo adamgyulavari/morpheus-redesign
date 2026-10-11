@@ -1,6 +1,6 @@
 import Emph from '@/components/Emph';
-import SiteLayout from '@/components/layouts/SiteLayout';
 import Logo from '@/components/Logo';
+import SiteLayout from '@/components/layouts/SiteLayout';
 import { ButtonLink, Eyebrow } from '@/components/ui';
 import { getUi } from '@/lib/data';
 

@@ -8,7 +8,15 @@ import Lines from '@/components/Lines';
 import QuoteRequestForm from '@/components/QuoteRequestForm';
 import ReviewSlider from '@/components/ReviewSlider';
 import { ArrowLink, ButtonLink, Eyebrow, SectionHeading } from '@/components/ui';
-import { getContactPeople, getContactPerson, getInstructors, getReviews, getSiteSettings, getTeamBuildingProgrammes, getUi } from '@/lib/data';
+import {
+  getContactPeople,
+  getContactPerson,
+  getInstructors,
+  getReviews,
+  getSiteSettings,
+  getTeamBuildingProgrammes,
+  getUi,
+} from '@/lib/data';
 import { formatPhone } from '@/lib/format';
 
 import type { BlockProps } from './types';
@@ -18,7 +26,11 @@ export async function Reviews({ block, className }: BlockProps<'reviews'>) {
   const reviews = await getReviews();
   const headingId = `${block.anchor ?? 'velemenyek'}-cim`;
   return (
-    <section id={block.anchor} aria-labelledby={headingId} className={`mx-auto flex max-w-[1440px] flex-col gap-6 lg:gap-12 lg:px-20 ${className}`}>
+    <section
+      id={block.anchor}
+      aria-labelledby={headingId}
+      className={`mx-auto flex max-w-[1440px] flex-col gap-6 lg:gap-12 lg:px-20 ${className}`}
+    >
       <div className="flex flex-col gap-3.5 px-5 lg:flex-row lg:items-end lg:justify-between lg:gap-12 lg:px-0">
         <div className="flex flex-col gap-3.5 lg:gap-5">
           <Eyebrow>{block.eyebrow}</Eyebrow>
@@ -26,9 +38,11 @@ export async function Reviews({ block, className }: BlockProps<'reviews'>) {
             <Emph text={block.heading} />
           </h2>
         </div>
-        <p className="text-[15px] text-muted lg:max-w-[380px] lg:pb-2 lg:text-lg lg:leading-relaxed lg:text-ink2">{block.intro}</p>
+        <p className="text-[15px] text-muted lg:max-w-[380px] lg:pb-2 lg:text-lg lg:leading-relaxed lg:text-ink2">
+          {block.intro}
+        </p>
       </div>
-      <ReviewSlider reviews={reviews} />
+      <ReviewSlider reviews={reviews} labelledBy={headingId} />
     </section>
   );
 }
@@ -37,7 +51,10 @@ export async function Reviews({ block, className }: BlockProps<'reviews'>) {
 export async function InstructorRow({ block, className }: BlockProps<'instructorRow'>) {
   const instructors = await getInstructors();
   return (
-    <section id={block.anchor} className={`mx-auto flex max-w-[1440px] flex-col gap-8 px-5 lg:gap-12 lg:px-20 ${className}`}>
+    <section
+      id={block.anchor}
+      className={`mx-auto flex max-w-[1440px] flex-col gap-8 px-5 lg:gap-12 lg:px-20 ${className}`}
+    >
       <SectionHeading
         eyebrow={block.eyebrow}
         heading={block.heading}
@@ -70,7 +87,10 @@ export async function InstructorRow({ block, className }: BlockProps<'instructor
 export async function InstructorGrid({ block, className }: BlockProps<'instructorGrid'>) {
   const [ui, instructors] = await Promise.all([getUi(), getInstructors()]);
   return (
-    <section id={block.anchor} className={`mx-auto grid max-w-[1440px] gap-5 px-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8 lg:px-20 ${className}`}>
+    <section
+      id={block.anchor}
+      className={`mx-auto grid max-w-[1440px] gap-5 px-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8 lg:px-20 ${className}`}
+    >
       {instructors.map((ins) => {
         const titleId = `oktato-${ins.id}`;
         const [first, ...rest] = ins.bio;
@@ -90,9 +110,19 @@ export async function InstructorGrid({ block, className }: BlockProps<'instructo
             </div>
             <p className="line-clamp-5 text-[15.5px] leading-relaxed text-ink2">{first}</p>
             {rest.length > 0 || (first?.length ?? 0) > 300 ? (
-              <DetailsDialog label={ui.common.readMore} titleId={titleId} buttonClassName="link mt-auto min-h-[44px] self-start font-bold text-teal">
+              <DetailsDialog
+                label={ui.common.readMore}
+                titleId={titleId}
+                buttonClassName="link mt-auto min-h-[44px] self-start font-bold text-teal"
+              >
                 <div className="flex items-center gap-4 pr-12">
-                  <Image src={ins.photo.src} alt="" width={80} height={80} className="h-20 w-20 shrink-0 rounded-full border-[3px] border-gold object-cover" />
+                  <Image
+                    src={ins.photo.src}
+                    alt=""
+                    width={80}
+                    height={80}
+                    className="h-20 w-20 shrink-0 rounded-full border-[3px] border-gold object-cover"
+                  />
                   <div className="flex flex-col gap-1">
                     <span className="text-xs font-bold uppercase tracking-[0.16em] text-teal">{ins.role}</span>
                     <h2 id={titleId} className="font-display text-[34px] leading-none lg:text-[40px]">
@@ -101,8 +131,8 @@ export async function InstructorGrid({ block, className }: BlockProps<'instructo
                   </div>
                 </div>
                 <div className="flex flex-col gap-3.5 border-t border-line pt-5 text-[15.5px] leading-relaxed text-ink2 lg:text-[17px]">
-                  {ins.bio.map((para, i) => (
-                    <p key={i}>
+                  {ins.bio.map((para) => (
+                    <p key={para}>
                       <Lines text={para} />
                     </p>
                   ))}
@@ -154,7 +184,10 @@ export async function ContactCard({ block, className }: BlockProps<'contactCard'
               <span className="text-lg font-semibold lg:text-[22px]">{person.name}</span>
             </div>
           </div>
-          <a href={`tel:${person.phone}`} className="flex min-h-[52px] items-center gap-4 border-b border-[#2b5a5e] text-[17px] lg:py-5 lg:text-xl">
+          <a
+            href={`tel:${person.phone}`}
+            className="flex min-h-[52px] items-center gap-4 border-b border-[#2b5a5e] text-[17px] lg:py-5 lg:text-xl"
+          >
             <PhoneIcon colour="#f9c86a" />
             <span className="link-nav">{formatPhone(person.phone)}</span>
           </a>
@@ -190,14 +223,26 @@ const AVATAR = 'h-24 w-24 shrink-0 rounded-full border-[3px] border-gold lg:h-28
 export async function ContactPeople({ block, className }: BlockProps<'contactPeople'>) {
   const [people, settings] = await Promise.all([getContactPeople(), getSiteSettings()]);
   return (
-    <section id={block.anchor} className={`mx-auto grid max-w-[1440px] gap-4 px-5 md:grid-cols-2 lg:grid-cols-3 lg:gap-5 lg:px-20 ${className}`}>
+    <section
+      id={block.anchor}
+      className={`mx-auto grid max-w-[1440px] gap-4 px-5 md:grid-cols-2 lg:grid-cols-3 lg:gap-5 lg:px-20 ${className}`}
+    >
       {people.map((person) => (
         <div key={person.id} className={CARD}>
           <div className="flex items-center gap-5">
             {person.photo ? (
-              <Image src={person.photo.src} alt={person.photo.alt} width={112} height={112} className={`${AVATAR} object-cover`} />
+              <Image
+                src={person.photo.src}
+                alt={person.photo.alt}
+                width={112}
+                height={112}
+                className={`${AVATAR} object-cover`}
+              />
             ) : (
-              <span className={`${AVATAR} flex items-center justify-center bg-teal font-display text-4xl text-cream`} aria-hidden="true">
+              <span
+                className={`${AVATAR} flex items-center justify-center bg-teal font-display text-4xl text-cream`}
+                aria-hidden="true"
+              >
                 {initials(person.name)}
               </span>
             )}
@@ -206,7 +251,10 @@ export async function ContactPeople({ block, className }: BlockProps<'contactPeo
               <span className="font-display text-[32px] leading-none lg:text-[38px]">{person.name}</span>
             </div>
           </div>
-          <a href={`tel:${person.phone}`} className="flex min-h-[48px] items-center gap-3 border-t border-line pt-4 text-lg">
+          <a
+            href={`tel:${person.phone}`}
+            className="flex min-h-[48px] items-center gap-3 border-t border-line pt-4 text-lg"
+          >
             <PhoneIcon colour="#b8472a" />
             <span className="link-nav">{formatPhone(person.phone)}</span>
           </a>
@@ -222,7 +270,10 @@ export async function ContactPeople({ block, className }: BlockProps<'contactPeo
             <span className="font-display text-[32px] leading-none lg:text-[38px]">{block.email.heading}</span>
           </div>
         </div>
-        <a href={`mailto:${settings.contact.email}`} className="flex min-h-[48px] items-center gap-3 border-t border-line pt-4 text-lg">
+        <a
+          href={`mailto:${settings.contact.email}`}
+          className="flex min-h-[48px] items-center gap-3 border-t border-line pt-4 text-lg"
+        >
           <MailIcon colour="#b8472a" />
           <span className="link-nav break-all">{settings.contact.email}</span>
         </a>
@@ -235,7 +286,10 @@ export async function ContactPeople({ block, className }: BlockProps<'contactPeo
 export async function Location({ block, className }: BlockProps<'location'>) {
   const [ui, settings] = await Promise.all([getUi(), getSiteSettings()]);
   return (
-    <section id={block.anchor} className={`mx-auto grid max-w-[1440px] gap-8 px-5 lg:grid-cols-[5fr_7fr] lg:gap-16 lg:px-20 ${className}`}>
+    <section
+      id={block.anchor}
+      className={`mx-auto grid max-w-[1440px] gap-8 px-5 lg:grid-cols-[5fr_7fr] lg:gap-16 lg:px-20 ${className}`}
+    >
       <div className="flex flex-col gap-6 lg:gap-8">
         <div className="flex flex-col gap-3.5 lg:gap-5">
           <Eyebrow>{block.eyebrow}</Eyebrow>
@@ -272,12 +326,20 @@ export async function Location({ block, className }: BlockProps<'location'>) {
 export async function Programmes({ block, className }: BlockProps<'programmes'>) {
   const [ui, programmes] = await Promise.all([getUi(), getTeamBuildingProgrammes()]);
   return (
-    <section id={block.anchor} className={`mx-auto flex max-w-[1440px] flex-col gap-7 px-5 lg:gap-12 lg:px-20 ${className}`}>
+    <section
+      id={block.anchor}
+      className={`mx-auto flex max-w-[1440px] flex-col gap-7 px-5 lg:gap-12 lg:px-20 ${className}`}
+    >
       <SectionHeading eyebrow={block.eyebrow} heading={block.heading} />
       <div className="flex flex-col border-b border-line">
         {programmes.map((programme, i) => (
-          <article key={programme.id} className="grid gap-4 border-t border-line py-7 lg:grid-cols-[80px_5fr_7fr] lg:gap-10 lg:py-10">
-            <span className="font-display text-[44px] leading-none text-rust lg:text-[64px]">{String(i + 1).padStart(2, '0')}</span>
+          <article
+            key={programme.id}
+            className="grid gap-4 border-t border-line py-7 lg:grid-cols-[80px_5fr_7fr] lg:gap-10 lg:py-10"
+          >
+            <span className="font-display text-[44px] leading-none text-rust lg:text-[64px]">
+              {String(i + 1).padStart(2, '0')}
+            </span>
             <div className="flex flex-col gap-4">
               <h3 className="font-display text-[34px] leading-none lg:text-[44px]">{programme.name}</h3>
               <dl className="flex flex-col gap-2 text-[15px]">
@@ -307,7 +369,10 @@ export async function Programmes({ block, className }: BlockProps<'programmes'>)
 export async function QuoteRequest({ block, className }: BlockProps<'quoteRequest'>) {
   const settings = await getSiteSettings();
   return (
-    <section id={block.anchor} className={`mx-auto grid max-w-[1440px] gap-8 px-5 lg:grid-cols-[5fr_7fr] lg:gap-16 lg:px-20 ${className}`}>
+    <section
+      id={block.anchor}
+      className={`mx-auto grid max-w-[1440px] gap-8 px-5 lg:grid-cols-[5fr_7fr] lg:gap-16 lg:px-20 ${className}`}
+    >
       <div className="flex flex-col gap-6 lg:gap-8">
         <div className="flex flex-col gap-3.5 lg:gap-5">
           <Eyebrow>{block.eyebrow}</Eyebrow>

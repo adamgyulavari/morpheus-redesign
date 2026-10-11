@@ -8,8 +8,9 @@
  * the edit overlay. The pages themselves never read the session, and /admin checks the real one,
  * so a forged hint only shows buttons that lead nowhere.
  */
-import { addSessionToUser, generatePayloadCookie } from 'payload/shared';
+
 import { createLocalReq, getFieldsToSign, jwtSign, type Payload, type PayloadRequest, type TypedUser } from 'payload';
+import { addSessionToUser, generatePayloadCookie } from 'payload/shared';
 
 import { userIsStaffOrAdmin } from './access';
 
@@ -35,11 +36,19 @@ export async function issueSession(payload: Payload, userId: number | string) {
   const collectionConfig = payload.collections.users.config;
   const req = await createLocalReq({}, payload);
   // the raw row, as Payload's login uses it: addSessionToUser writes the whole object back
-  const user = (await payload.db.findOne({ collection: 'users', req, where: { id: { equals: userId } } })) as TypedUser | null;
+  const user = (await payload.db.findOne({
+    collection: 'users',
+    req,
+    where: { id: { equals: userId } },
+  })) as TypedUser | null;
   if (!user) throw new Error(`issueSession: no user ${userId}`);
   const { sid } = await addSessionToUser({ collectionConfig, payload, req, user });
   const fieldsToSign = getFieldsToSign({ collectionConfig, email: user.email, sid, user });
-  const { exp, token } = await jwtSign({ fieldsToSign, secret: payload.secret, tokenExpiration: collectionConfig.auth.tokenExpiration });
+  const { exp, token } = await jwtSign({
+    fieldsToSign,
+    secret: payload.secret,
+    tokenExpiration: collectionConfig.auth.tokenExpiration,
+  });
   const cookie = generatePayloadCookie({
     collectionAuthConfig: collectionConfig.auth,
     cookiePrefix: payload.config.cookiePrefix,

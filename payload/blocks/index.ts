@@ -39,12 +39,29 @@ const GROUPS: [string, BlockType[]][] = [
   ['Fejlécek', ['homeHero', 'pageHero']],
   [
     'Szöveg és kép',
-    ['ctaBand', 'textSplit', 'statement', 'imageText', 'linkCards', 'questions', 'benefits', 'curriculum', 'featureCards', 'path', 'checklist', 'steps', 'moodVideo', 'fullImage', 'socialBand'],
+    [
+      'ctaBand',
+      'textSplit',
+      'statement',
+      'imageText',
+      'linkCards',
+      'questions',
+      'benefits',
+      'curriculum',
+      'featureCards',
+      'path',
+      'checklist',
+      'steps',
+      'moodVideo',
+      'fullImage',
+      'socialBand',
+    ],
   ],
   ['Bio oldal', ['bioIntro', 'bioNextShow', 'linkList', 'socialLinks', 'contactFooter']],
 ];
 // everything else renders records from the collections (shows, courses, people…)
-const groupOf = (slug: BlockType) => GROUPS.find(([, slugs]) => slugs.includes(slug))?.[0] ?? 'Gyűjteményekből (előadások, kurzusok, emberek)';
+const groupOf = (slug: BlockType) =>
+  GROUPS.find(([, slugs]) => slugs.includes(slug))?.[0] ?? 'Gyűjteményekből (előadások, kurzusok, emberek)';
 
 const block = ({ slug, label, description, fields = [], lists = [], dependsOn = [] }: Def): Block => ({
   slug,
@@ -56,14 +73,29 @@ const block = ({ slug, label, description, fields = [], lists = [], dependsOn = 
   custom: { lists, dependsOn },
   fields: [
     ...(description || lists.length
-      ? [{ name: 'help', type: 'ui', admin: { components: { Field: '@/payload/components/BlockHelp#BlockHelp' }, custom: { text: description, lists } } } as Field]
+      ? [
+          {
+            name: 'help',
+            type: 'ui',
+            admin: {
+              components: { Field: '@/payload/components/BlockHelp#BlockHelp' },
+              custom: { text: description, lists },
+            },
+          } as Field,
+        ]
       : []),
     ...fields,
     blockBase,
   ],
 });
 
-const cards = <T extends Field[]>(name: string, label: string, singular: string, fields: T, required = true): Field => ({
+const cards = <T extends Field[]>(
+  name: string,
+  label: string,
+  singular: string,
+  fields: T,
+  required = true,
+): Field => ({
   name,
   label,
   labels: { singular, plural: label },
@@ -72,7 +104,10 @@ const cards = <T extends Field[]>(name: string, label: string, singular: string,
   fields,
 });
 
-const titleText = (): Field[] => [text('title', 'Cím', { required: true }), textarea('text', 'Szöveg', { required: true })];
+const titleText = (): Field[] => [
+  text('title', 'Cím', { required: true }),
+  textarea('text', 'Szöveg', { required: true }),
+];
 
 export const blocks: Block[] = [
   // ── heroes
@@ -85,8 +120,20 @@ export const blocks: Block[] = [
       stringList('keywords', 'Kulcsszavak', { required: true, singular: 'Kulcsszó' }),
       emphasised('heading', 'Cím', { required: true }),
       textarea('lead', 'Bevezető', { required: true }),
-      { type: 'row', fields: [link('primaryCta', 'Fő gomb', { required: true }), link('secondaryCta', 'Másodlagos gomb', { required: true })] },
-      { type: 'row', fields: [image('imageLarge', 'Nagy kör alakú fotó', { required: true }), image('imageSmall', 'Kis kör alakú fotó', { required: true })] },
+      {
+        type: 'row',
+        fields: [
+          link('primaryCta', 'Fő gomb', { required: true }),
+          link('secondaryCta', 'Másodlagos gomb', { required: true }),
+        ],
+      },
+      {
+        type: 'row',
+        fields: [
+          image('imageLarge', 'Nagy kör alakú fotó', { required: true }),
+          image('imageSmall', 'Kis kör alakú fotó', { required: true }),
+        ],
+      },
       { name: 'nextShow', label: 'A következő előadás kártyája', type: 'checkbox', defaultValue: true },
     ],
   }),
@@ -107,9 +154,31 @@ export const blocks: Block[] = [
           {
             type: 'row',
             fields: [
-              { name: 'shape', label: 'Forma', type: 'select', options: [{ label: 'Fekvő', value: 'landscape' }, { label: 'Álló', value: 'portrait' }] },
-              { name: 'size', label: 'Méret', type: 'select', options: [{ label: 'Kicsi', value: 'sm' }, { label: 'Közepes', value: 'md' }, { label: 'Nagy', value: 'lg' }] },
-              { name: 'tilt', label: 'Döntés (fok)', type: 'number', admin: { description: 'Negatív: balra, pl. -2.5' } },
+              {
+                name: 'shape',
+                label: 'Forma',
+                type: 'select',
+                options: [
+                  { label: 'Fekvő', value: 'landscape' },
+                  { label: 'Álló', value: 'portrait' },
+                ],
+              },
+              {
+                name: 'size',
+                label: 'Méret',
+                type: 'select',
+                options: [
+                  { label: 'Kicsi', value: 'sm' },
+                  { label: 'Közepes', value: 'md' },
+                  { label: 'Nagy', value: 'lg' },
+                ],
+              },
+              {
+                name: 'tilt',
+                label: 'Döntés (fok)',
+                type: 'number',
+                admin: { description: 'Negatív: balra, pl. -2.5' },
+              },
               {
                 name: 'position',
                 label: 'Helyzet',
@@ -128,10 +197,21 @@ export const blocks: Block[] = [
         name: 'switcher',
         label: 'Oldalváltó a cím fölött',
         type: 'group',
-        admin: { description: 'Testvéroldalak közötti kapcsoló (pl. Kezdő / Szakmai kurzus). Üresen hagyva nem jelenik meg.' },
+        admin: {
+          description: 'Testvéroldalak közötti kapcsoló (pl. Kezdő / Szakmai kurzus). Üresen hagyva nem jelenik meg.',
+        },
         fields: [
           text('label', 'Felirat'),
-          cards('pages', 'Oldalak', 'Oldal', [relationship('page', 'Oldal', 'pages', { required: true }), text('label', 'Felirat', { description: 'Üresen az oldal címe.' })], false),
+          cards(
+            'pages',
+            'Oldalak',
+            'Oldal',
+            [
+              relationship('page', 'Oldal', 'pages', { required: true }),
+              text('label', 'Felirat', { description: 'Üresen az oldal címe.' }),
+            ],
+            false,
+          ),
         ],
       },
       facts(),
@@ -144,7 +224,15 @@ export const blocks: Block[] = [
           {
             type: 'row',
             fields: [
-              { name: 'variant', label: 'Stílus', type: 'select', options: [{ label: 'Kitöltött', value: 'primary' }, { label: 'Körvonalas', value: 'outline' }] },
+              {
+                name: 'variant',
+                label: 'Stílus',
+                type: 'select',
+                options: [
+                  { label: 'Kitöltött', value: 'primary' },
+                  { label: 'Körvonalas', value: 'outline' },
+                ],
+              },
               {
                 name: 'showIf',
                 label: 'Csak ha…',
@@ -156,7 +244,12 @@ export const blocks: Block[] = [
         ],
         false,
       ),
-      { name: 'repertoireFilter', label: 'Repertoár-szűrő gombok', type: 'checkbox', admin: { description: 'Mind / Társulati / Hallgatói — csak a Repertoár oldalon.' } },
+      {
+        name: 'repertoireFilter',
+        label: 'Repertoár-szűrő gombok',
+        type: 'checkbox',
+        admin: { description: 'Mind / Társulati / Hallgatói — csak a Repertoár oldalon.' },
+      },
     ],
   }),
 
@@ -172,26 +265,56 @@ export const blocks: Block[] = [
     label: 'Cím és szöveg',
     fields: [
       ...section(),
-      { name: 'size', label: 'Cím mérete', type: 'select', options: [{ label: 'Közepes', value: 'md' }, { label: 'Nagy', value: 'xl' }] },
+      {
+        name: 'size',
+        label: 'Cím mérete',
+        type: 'select',
+        options: [
+          { label: 'Közepes', value: 'md' },
+          { label: 'Nagy', value: 'xl' },
+        ],
+      },
       textarea('text', 'Szöveg', { required: true }),
       facts(),
     ],
   }),
-  block({ slug: 'statement', label: 'Kiemelt állítás (sötét sáv)', fields: [...section(), textarea('text', 'Szöveg', { required: true })] }),
+  block({
+    slug: 'statement',
+    label: 'Kiemelt állítás (sötét sáv)',
+    fields: [...section(), textarea('text', 'Szöveg', { required: true })],
+  }),
   block({
     slug: 'imageText',
     label: 'Kép és szöveg',
-    fields: [...section(), textarea('quote', 'Idézet'), paragraphs('paragraphs', 'Bekezdések', { required: true }), image('image', 'Kép', { required: true })],
+    fields: [
+      ...section(),
+      textarea('quote', 'Idézet'),
+      paragraphs('paragraphs', 'Bekezdések', { required: true }),
+      image('image', 'Kép', { required: true }),
+    ],
   }),
   block({
     slug: 'linkCards',
     label: 'Link kártyák',
-    fields: [...section(), cards('cards', 'Kártyák', 'Kártya', [eyebrow(), text('title', 'Cím', { required: true }), text('href', 'Link', { required: true }), textarea('text', 'Szöveg', { required: true })])],
+    fields: [
+      ...section(),
+      cards('cards', 'Kártyák', 'Kártya', [
+        eyebrow(),
+        text('title', 'Cím', { required: true }),
+        text('href', 'Link', { required: true }),
+        textarea('text', 'Szöveg', { required: true }),
+      ]),
+    ],
   }),
   block({
     slug: 'questions',
     label: 'Kérdések (sötét sáv)',
-    fields: [...section(), cards('items', 'Kérdések', 'Kérdés', titleText()), emphasised('closing', 'Záró mondat', { required: true }), link('cta', 'Gomb', { required: true })],
+    fields: [
+      ...section(),
+      cards('items', 'Kérdések', 'Kérdés', titleText()),
+      emphasised('closing', 'Záró mondat', { required: true }),
+      link('cta', 'Gomb', { required: true }),
+    ],
   }),
   block({
     slug: 'benefits',
@@ -241,7 +364,11 @@ export const blocks: Block[] = [
   block({
     slug: 'checklist',
     label: 'Ellenőrzőlista',
-    fields: [...section(), stringList('items', 'Pontok', { required: true, singular: 'Pont' }), textarea('closing', 'Záró mondat', { required: true })],
+    fields: [
+      ...section(),
+      stringList('items', 'Pontok', { required: true, singular: 'Pont' }),
+      textarea('closing', 'Záró mondat', { required: true }),
+    ],
   }),
   block({ slug: 'steps', label: 'Lépések', fields: [...section(), cards('steps', 'Lépések', 'Lépés', titleText())] }),
   block({
@@ -259,7 +386,10 @@ export const blocks: Block[] = [
           {
             type: 'row',
             fields: [
-              text('youtubeId', 'YouTube azonosító', { required: true, description: 'A videócím v= utáni része, pl. lOyTSWtWcwY' }),
+              text('youtubeId', 'YouTube azonosító', {
+                required: true,
+                description: 'A videócím v= utáni része, pl. lOyTSWtWcwY',
+              }),
               text('title', 'A videó címe', { required: true }),
             ],
           },
@@ -268,14 +398,19 @@ export const blocks: Block[] = [
     ],
   }),
   block({ slug: 'fullImage', label: 'Teljes szélességű kép', fields: [image('image', 'Kép', { required: true })] }),
-  block({ slug: 'socialBand', label: 'Közösségi média sáv', fields: [text('heading', 'Cím', { required: true }), link('link', 'Link', { required: true })] }),
+  block({
+    slug: 'socialBand',
+    label: 'Közösségi média sáv',
+    fields: [text('heading', 'Cím', { required: true }), link('link', 'Link', { required: true })],
+  }),
 
   // ── driven by collections
   block({
     slug: 'offerings',
     lists: ['instructors'],
     label: 'Kínálat kártyák',
-    description: 'Kártyák a képzésekről. Kurzust választva a kártya a kurzus adataiból készül; különben töltsd ki a mezőket.',
+    description:
+      'Kártyák a képzésekről. Kurzust választva a kártya a kurzus adataiból készül; különben töltsd ki a mezőket.',
     fields: [
       ...section(),
       link('instructorsLink', 'Oktatók link', { required: true }),
@@ -285,12 +420,24 @@ export const blocks: Block[] = [
           type: 'collapsible',
           label: 'Saját kártya (ha nincs kurzus kiválasztva)',
           admin: { condition: (_, sibling) => !sibling?.course },
-          fields: [text('badge', 'Címke'), text('title', 'Cím'), textarea('text', 'Szöveg'), facts(), link('cta', 'Gomb')],
+          fields: [
+            text('badge', 'Címke'),
+            text('title', 'Cím'),
+            textarea('text', 'Szöveg'),
+            facts(),
+            link('cta', 'Gomb'),
+          ],
         },
       ]),
     ],
   }),
-  block({ slug: 'reviews', lists: ['reviews'], label: 'Vélemények', description: 'Az összes vélemény csúszkában.', fields: [...section(), textarea('intro', 'Bevezető', { required: true })] }),
+  block({
+    slug: 'reviews',
+    lists: ['reviews'],
+    label: 'Vélemények',
+    description: 'Az összes vélemény csúszkában.',
+    fields: [...section(), textarea('intro', 'Bevezető', { required: true })],
+  }),
   block({
     slug: 'instructorRow',
     lists: ['instructors'],
@@ -298,7 +445,12 @@ export const blocks: Block[] = [
     description: 'Az oktatók fotói egy sorban, szöveggel és linkkel.',
     fields: [...section(), textarea('text', 'Szöveg', { required: true }), link('link', 'Link', { required: true })],
   }),
-  block({ slug: 'instructorGrid', lists: ['instructors'], label: 'Oktatók (rács)', description: 'Az összes oktató bemutatkozással.' }),
+  block({
+    slug: 'instructorGrid',
+    lists: ['instructors'],
+    label: 'Oktatók (rács)',
+    description: 'Az összes oktató bemutatkozással.',
+  }),
   block({
     slug: 'upcomingShows',
     lists: ['shows', 'productions', 'venues'],
@@ -321,7 +473,13 @@ export const blocks: Block[] = [
       links('links', 'Linkek alul'),
     ],
   }),
-  block({ slug: 'nextShowBanner', lists: ['shows', 'productions', 'venues'], label: 'Következő előadás sáv', description: 'Csak akkor látszik, ha van közelgő előadás.', fields: [link('link', 'Link', { required: true })] }),
+  block({
+    slug: 'nextShowBanner',
+    lists: ['shows', 'productions', 'venues'],
+    label: 'Következő előadás sáv',
+    description: 'Csak akkor látszik, ha van közelgő előadás.',
+    fields: [link('link', 'Link', { required: true })],
+  }),
   block({
     slug: 'repertoire',
     lists: ['shows', 'productions', 'venues'],
@@ -344,11 +502,18 @@ export const blocks: Block[] = [
       ]),
     ],
   }),
-  block({ slug: 'contactCard', lists: ['contactPeople'], label: 'Kapcsolat kártya', description: 'Az elsődleges kapcsolattartó (Beállítások) kártyája.', fields: [...section(), link('cta', 'Gomb', { required: true })] }),
+  block({
+    slug: 'contactCard',
+    lists: ['contactPeople'],
+    label: 'Kapcsolat kártya',
+    description: 'Az elsődleges kapcsolattartó (Beállítások) kártyája.',
+    fields: [...section(), link('cta', 'Gomb', { required: true })],
+  }),
   block({
     slug: 'courseStarts',
     label: 'Induló csoportok',
-    description: 'A kurzus jövőbeli induló csoportjai; ha nincs ilyen, a „folyamatos jelentkezés” szöveg vagy egy üres állapot.',
+    description:
+      'A kurzus jövőbeli induló csoportjai; ha nincs ilyen, a „folyamatos jelentkezés” szöveg vagy egy üres állapot.',
     fields: [
       relationship('course', 'Kurzus', 'courses', { required: true }),
       ...section(),
@@ -366,14 +531,34 @@ export const blocks: Block[] = [
       },
     ],
   }),
-  block({ slug: 'coursePrices', label: 'Kurzus árak', fields: [relationship('course', 'Kurzus', 'courses', { required: true }), ...section(), textarea('intro', 'Bevezető')] }),
-  block({ slug: 'courseCompare', label: 'Kurzusok összehasonlítása', fields: [...section(), relationship('courses', 'Kurzusok', 'courses', { required: true, hasMany: true })] }),
-  block({ slug: 'upcomingWorkshops', lists: ['workshops'], label: 'Közelgő workshopok', description: 'A közelgő workshopok kiemelve; ha nincs ilyen, nem jelenik meg semmi.' }),
+  block({
+    slug: 'coursePrices',
+    label: 'Kurzus árak',
+    fields: [
+      relationship('course', 'Kurzus', 'courses', { required: true }),
+      ...section(),
+      textarea('intro', 'Bevezető'),
+    ],
+  }),
+  block({
+    slug: 'courseCompare',
+    label: 'Kurzusok összehasonlítása',
+    fields: [...section(), relationship('courses', 'Kurzusok', 'courses', { required: true, hasMany: true })],
+  }),
+  block({
+    slug: 'upcomingWorkshops',
+    lists: ['workshops'],
+    label: 'Közelgő workshopok',
+    description: 'A közelgő workshopok kiemelve; ha nincs ilyen, nem jelenik meg semmi.',
+  }),
   block({
     slug: 'pastWorkshops',
     lists: ['workshops'],
     label: 'Korábbi workshopok',
-    fields: [...section(), { name: 'limit', label: 'Legfeljebb ennyi', type: 'number', required: true, defaultValue: 3 }],
+    fields: [
+      ...section(),
+      { name: 'limit', label: 'Legfeljebb ennyi', type: 'number', required: true, defaultValue: 3 },
+    ],
   }),
   block({
     slug: 'openWorkshopSessions',
@@ -391,23 +576,48 @@ export const blocks: Block[] = [
     slug: 'quoteRequest',
     label: 'Árajánlatkérés',
     description: 'Az árajánlatkérő űrlap. Az űrlap szövegei a „Felületi szövegek” között.',
-    fields: [...section(), textarea('text', 'Szöveg', { required: true }), stringList('goals', 'Célok', { required: true, singular: 'Cél' }), image('image', 'Kép', { required: true })],
+    fields: [
+      ...section(),
+      textarea('text', 'Szöveg', { required: true }),
+      stringList('goals', 'Célok', { required: true, singular: 'Cél' }),
+      image('image', 'Kép', { required: true }),
+    ],
   }),
   block({
     slug: 'contactPeople',
     lists: ['contactPeople'],
     label: 'Kapcsolattartók',
-    fields: [{ name: 'email', label: 'E-mail szakasz', type: 'group', fields: [eyebrow(), text('heading', 'Cím', { required: true })] }],
+    fields: [
+      {
+        name: 'email',
+        label: 'E-mail szakasz',
+        type: 'group',
+        fields: [eyebrow(), text('heading', 'Cím', { required: true })],
+      },
+    ],
   }),
   block({
     slug: 'location',
     label: 'Helyszín és térkép',
-    fields: [...section(), stringList('addressLines', 'Cím sorai', { required: true, singular: 'Sor' }), textarea('text', 'Szöveg', { required: true })],
+    fields: [
+      ...section(),
+      stringList('addressLines', 'Cím sorai', { required: true, singular: 'Sor' }),
+      textarea('text', 'Szöveg', { required: true }),
+    ],
   }),
-  block({ slug: 'legalDocument', label: 'Jogi dokumentum', fields: [relationship('document', 'Dokumentum', 'legalPages', { required: true })] }),
+  block({
+    slug: 'legalDocument',
+    label: 'Jogi dokumentum',
+    fields: [relationship('document', 'Dokumentum', 'legalPages', { required: true })],
+  }),
 
   // ── link-in-bio
-  block({ slug: 'bioIntro', lists: ['contactPeople'], label: 'Bio: bemutatkozás', description: 'Logó, név és jelmondat a Beállításokból.' }),
+  block({
+    slug: 'bioIntro',
+    lists: ['contactPeople'],
+    label: 'Bio: bemutatkozás',
+    description: 'Logó, név és jelmondat a Beállításokból.',
+  }),
   block({ slug: 'bioNextShow', lists: ['shows', 'productions', 'venues'], label: 'Bio: következő előadás' }),
   block({ slug: 'linkList', label: 'Bio: linkek', fields: [links('links', 'Linkek', { required: true })] }),
   block({ slug: 'socialLinks', label: 'Bio: közösségi média' }),
@@ -419,9 +629,9 @@ type FieldWithChildren = Field & { fields?: Field[]; tabs?: { fields: Field[] }[
 /** The collections a block's relationship fields point to (a picked course, CTA band…). */
 function relationTargets(fields: Field[], out = new Set<string>()): Set<string> {
   for (const f of fields as FieldWithChildren[]) {
-    if (f.type === 'relationship') [f.relationTo].flat().forEach((slug) => slug && out.add(slug));
+    if (f.type === 'relationship') for (const slug of [f.relationTo].flat()) if (slug) out.add(slug);
     if (f.fields) relationTargets(f.fields, out);
-    f.tabs?.forEach((tab) => relationTargets(tab.fields, out));
+    for (const tab of f.tabs ?? []) relationTargets(tab.fields, out);
   }
   return out;
 }
@@ -433,5 +643,7 @@ function relationTargets(fields: Field[], out = new Set<string>()): Set<string> 
 export const blocksShowing: Record<string, BlockType[]> = {};
 for (const b of blocks) {
   const { lists = [], dependsOn = [] } = (b.custom ?? {}) as { lists?: string[]; dependsOn?: string[] };
-  for (const slug of new Set([...lists, ...dependsOn, ...relationTargets(b.fields)])) (blocksShowing[slug] ??= []).push(b.slug as BlockType);
+  for (const slug of new Set([...lists, ...dependsOn, ...relationTargets(b.fields)])) {
+    blocksShowing[slug] = [...(blocksShowing[slug] ?? []), b.slug as BlockType];
+  }
 }

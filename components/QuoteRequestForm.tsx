@@ -5,10 +5,10 @@
  * handler; the actual "sending" is isolated in lib/quote-request.ts so it can become a Server Action.
  * Its texts come from the UI dictionary (ui.quoteForm).
  */
-import { useState, type FormEvent } from 'react';
+import { type FormEvent, useState } from 'react';
 
 import { fill } from '@/lib/format';
-import { submitQuoteRequest, type QuoteRequest } from '@/lib/quote-request';
+import { type QuoteRequest, submitQuoteRequest } from '@/lib/quote-request';
 
 import { ArrowRight } from './icons';
 import { useUi } from './UiStrings';

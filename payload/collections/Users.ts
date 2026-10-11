@@ -1,4 +1,4 @@
-import { Forbidden, type CollectionConfig } from 'payload';
+import { type CollectionConfig, Forbidden } from 'payload';
 
 import { anyone, isAdmin, isAdminField, isSelfOrStaff, ROLES, userIsAdmin, userIsStaffOrAdmin } from '../access';
 import { resetPassword, verifyEmail } from '../email';
@@ -98,7 +98,8 @@ export const Users: CollectionConfig = {
       access: { create: isAdminField, update: isAdminField },
       admin: {
         position: 'sidebar',
-        description: 'Hallgató: csak a weboldalon lép be. Munkatárs: tartalmat és csoportokat szerkeszt. Adminisztrátor: mindent, a felhasználókat is.',
+        description:
+          'Hallgató: csak a weboldalon lép be. Munkatárs: tartalmat és csoportokat szerkeszt. Adminisztrátor: mindent, a felhasználókat is.',
       },
     },
     {
