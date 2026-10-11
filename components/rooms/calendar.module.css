@@ -192,6 +192,9 @@
   gap: 10px;
   align-self: start;
 }
+.side > .panel {
+  align-self: stretch;
+}
 .panelTitle {
   font-size: 15px;
   font-weight: 700;
