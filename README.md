@@ -21,14 +21,22 @@ npm run dev                   # http://localhost:3000, admin at http://localhost
 | `npm run dev` / `build` / `start` | Next.js. The build needs **no database** (nothing is rendered at build time). |
 | `npm run migrate` | apply pending migrations (`payload/migrations/`) |
 | `npm run migrate:create -- <name>` | generate a migration after changing collections/blocks |
+| `npm run migrate:snapshot` | rebuild the schema snapshot from the config — after merging branches that both added migrations |
 | `npm run seed` | import `content/` + `public/images`, `public/video` into Payload; safe to re-run (updates, no duplicates) |
 | `npm run generate:types` | regenerate `payload-types.ts` after a schema change |
 | `npm run generate:importmap` | regenerate the admin import map after adding an admin component |
 | `npm run typecheck` | |
+| `npm run lint` / `format` | Biome: check / fix lint and formatting (CI runs `biome ci` before deploying) |
 
 **Schema changes always go through migrations**, locally too (`push: false`): edit `payload/`, run
 `npm run migrate:create -- <name>`, review the file, `npm run migrate`, `npm run generate:types`,
 commit the migration. Production applies it on container start.
+
+Next to the newest migration there is one generated `.json`: the schema snapshot `migrate:create`
+diffs against (running migrations never reads it). Only the newest is kept — older ones are deleted
+after each `migrate:create` — and git shows it as a binary file, so reviews show just the `.ts`.
+After merging two branches that each added a migration, run `npm run migrate:snapshot` once, or the
+next `migrate:create` would repeat one side's changes.
 
 Uploads go to `./media` locally and to Leafcloud Object Storage in production (when `S3_BUCKET` is
 set). Deployment, environment variables and backups: see **[DEPLOY.md](DEPLOY.md)**.

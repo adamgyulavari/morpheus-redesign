@@ -13,6 +13,8 @@
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "migrate:create": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:create",
+    "postmigrate:create": "tsx scripts/migration-snapshot.ts --prune",
+    "migrate:snapshot": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/migration-snapshot.ts",
     "migrate": "cross-env NODE_OPTIONS=--no-deprecation payload migrate",
     "seed": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/seed.ts",
     "db:up": "docker compose -f docker-compose.dev.yml up -d",
