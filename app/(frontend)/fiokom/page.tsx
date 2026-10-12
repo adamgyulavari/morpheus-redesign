@@ -85,10 +85,10 @@ export default async function AccountPage() {
             {agenda.length === 0 ? (
               <Empty>Még nincs kiírt alkalom.</Empty>
             ) : (
-              <ul className="flex flex-col divide-y divide-line rounded-3xl border border-line bg-paper">
+              <ul className="flex flex-col border-b border-line">
                 {agenda.map((a) =>
                   a.type === 'session' ? (
-                    <li key={`s${a.s.id}`} className="flex flex-col gap-1 px-5 py-4 lg:px-6">
+                    <li key={`s${a.s.id}`} className="flex flex-col gap-1 border-t border-line py-4 lg:py-5">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <span
                           className={`font-semibold ${a.s.status === 'cancelled' ? 'text-muted line-through' : 'text-ink'}`}
@@ -105,7 +105,7 @@ export default async function AccountPage() {
                       </span>
                     </li>
                   ) : (
-                    <li key={`p${a.b.id}`} className="flex flex-col gap-1 px-5 py-4 lg:px-6">
+                    <li key={`p${a.b.id}`} className="flex flex-col gap-1 border-t border-line py-4 lg:py-5">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <span className="font-semibold text-ink">{a.b.booker}</span>
                         <span className="text-xs font-bold uppercase tracking-[0.12em] text-teal">Gyakorlás</span>
