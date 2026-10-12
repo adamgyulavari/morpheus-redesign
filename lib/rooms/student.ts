@@ -79,35 +79,34 @@ export async function studentOverview(payload: Payload, user: TypedUser) {
           limit: 40,
         })
       : null,
-    groupIds.length
-      ? payload.find({
-          collection: 'roomBookings',
-          where: {
-            and: [
-              { kind: { equals: 'practice' } },
-              { status: { equals: 'confirmed' } },
-              { end: { greater_than: now } },
-              {
-                or: [
-                  { user: { equals: user.id } },
-                  { courseGroup: { in: groupIds } },
-                  ...(productionIds.length ? [{ production: { in: productionIds } }] : []),
-                ],
-              },
+    // my own bookings always (also without a course, with the permission); my groupmates' with a group
+    payload.find({
+      collection: 'roomBookings',
+      where: {
+        and: [
+          { kind: { equals: 'practice' } },
+          { status: { equals: 'confirmed' } },
+          { end: { greater_than: now } },
+          {
+            or: [
+              { user: { equals: user.id } },
+              ...(groupIds.length ? [{ courseGroup: { in: groupIds } }] : []),
+              ...(productionIds.length ? [{ production: { in: productionIds } }] : []),
             ],
           },
-          depth: 1,
-          select: { start: true, end: true, rooms: true, user: true, courseGroup: true, production: true, note: true },
-          populate: {
-            users: { name: true },
-            courseGroups: { title: true },
-            productions: { title: true },
-            rooms: { name: true },
-          },
-          sort: 'start',
-          limit: 60,
-        })
-      : null,
+        ],
+      },
+      depth: 1,
+      select: { start: true, end: true, rooms: true, user: true, courseGroup: true, production: true, note: true },
+      populate: {
+        users: { name: true },
+        courseGroups: { title: true },
+        productions: { title: true },
+        rooms: { name: true },
+      },
+      sort: 'start',
+      limit: 60,
+    }),
     groupIds.length
       ? payload.find({
           collection: 'studentLinks',
@@ -146,6 +145,8 @@ export async function studentOverview(payload: Payload, user: TypedUser) {
 
   return {
     active: groups.length > 0,
+    /** May book rooms: an active group, or staff's permission. */
+    mayBook: groups.length > 0 || Boolean(user.roomBooking),
     groups: groups.map((g) => ({
       id: g.id,
       title: g.title,

@@ -38,7 +38,9 @@ export const baseOptions: CalendarOptions = {
 /** What is happening, in one line: "Keddi szakmai II.", "Gyakorlás — Teszt Anna · Az ördög". */
 export function eventLabel(e: ScheduleEvent, ownLabel = 'Saját foglalás'): { title: string; meta?: string } {
   if (e.kind === 'practice') {
-    return { title: e.own ? ownLabel : `${BOOKING_KINDS.practice} — ${e.booker ?? ''}`, meta: e.owner?.title };
+    // the booker's note: only the booker and staff get it (getRoomSchedule)
+    const meta = [e.owner?.title, e.note && `„${e.note}”`].filter(Boolean).join(' · ');
+    return { title: e.own ? ownLabel : `${BOOKING_KINDS.practice} — ${e.booker ?? ''}`, meta: meta || undefined };
   }
   if (e.kind === 'session') {
     return {

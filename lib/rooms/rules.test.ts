@@ -18,6 +18,7 @@ const iroda: RoomInfo = { id: 3, name: 'Iroda', active: true, studentBookable: f
 const closedRoom: RoomInfo = { id: 4, name: 'Pince', active: false, studentBookable: true };
 const student: StudentContext = {
   activeGroups: [{ id: 1, endDate: '2027-06-30' }],
+  permitted: false,
   linkableProductionIds: [10],
   minutesBookedInWeek: 0,
 };
@@ -46,10 +47,19 @@ describe('checkPractice', () => {
     expect(reason(check(practice('2026-12-03', '10:00', '12:00')))).toContain('Legfeljebb 30 nappal előre');
   });
 
-  it('refuses someone without an active course', () => {
-    expect(reason(check(practice('2026-11-20', '10:00', '12:00'), { activeGroups: [] }))).toBe(
-      'Termet csak aktív kurzusú hallgató foglalhat.',
+  it('refuses someone without an active course or a permission', () => {
+    expect(reason(check(practice('2026-11-20', '10:00', '12:00'), { activeGroups: [] }))).toContain(
+      'Teremfoglalásra most nincs jogosultságod',
     );
+  });
+
+  it('a permission allows booking without a course, with no end date', () => {
+    expect(
+      check(practice('2026-11-20', '10:00', '12:00'), { activeGroups: [], linkableProductionIds: [], permitted: true })
+        .ok,
+    ).toBe(true);
+    const ended = { activeGroups: [{ id: 1, endDate: '2026-11-10' }], permitted: true };
+    expect(check(practice('2026-11-20', '10:00', '12:00'), ended).ok).toBe(true);
   });
 
   it('only links the own course or its productions', () => {

@@ -1,6 +1,15 @@
 import { type CollectionConfig, Forbidden } from 'payload';
 
-import { anyone, isAdmin, isAdminField, isSelfOrStaff, ROLES, userIsAdmin, userIsStaffOrAdmin } from '../access';
+import {
+  anyone,
+  isAdmin,
+  isAdminField,
+  isSelfOrStaff,
+  isStaffOrAdminField,
+  ROLES,
+  userIsAdmin,
+  userIsStaffOrAdmin,
+} from '../access';
 import { resetPassword, verifyEmail } from '../email';
 import { text } from '../fields';
 import { magicLinkEndpoint } from '../magic-link';
@@ -85,6 +94,19 @@ export const Users: CollectionConfig = {
       label: 'Név',
       type: 'text',
       admin: { readOnly: true, hidden: true },
+    },
+    {
+      // lib/rooms/rules.ts: students of an active course may book anyway; this is for everyone else
+      name: 'roomBooking',
+      label: 'Teremfoglalás engedélyezve',
+      type: 'checkbox',
+      defaultValue: false,
+      access: { create: isStaffOrAdminField, update: isStaffOrAdminField },
+      admin: {
+        position: 'sidebar',
+        description:
+          'Aktív kurzus nélkül is foglalhat termet gyakorláshoz (pl. kurzusok között), kurzus-végdátum nélkül. Az aktív kurzusok hallgatói enélkül is foglalhatnak.',
+      },
     },
     {
       name: 'roles',

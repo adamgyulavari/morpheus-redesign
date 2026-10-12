@@ -25056,6 +25056,13 @@
           "primaryKey": false,
           "notNull": false
         },
+        "room_booking": {
+          "name": "room_booking",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp(3) with time zone",
@@ -30828,6 +30835,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "eff98376-9a31-4fbc-867d-4ccf4a0f40f6",
+  "id": "854ceb6d-df5b-475b-98e0-f6a69f816e8b",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

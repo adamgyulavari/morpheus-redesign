@@ -6,6 +6,7 @@ import { payloadClient, requireUser } from '@/lib/auth';
 import type { BookingSettings } from '@/lib/rooms/rules';
 import { loadSettings, roomsById } from '@/lib/rooms/server';
 import { studentOverview } from '@/lib/rooms/student';
+import { userIsStaffOrAdmin } from '@/payload/access';
 
 // per visitor, never cached or prerendered (the build has no database)
 export const dynamic = 'force-dynamic';
@@ -39,12 +40,12 @@ export default async function RoomBookingPage() {
 
   return (
     <AccountShell eyebrow="Fiókom" heading="*Teremfoglalás*" wide>
-      <AccountNav active={o.active} />
-      {!o.active ? (
+      <AccountNav canBook={o.mayBook} isStaff={userIsStaffOrAdmin(user)} />
+      {!o.mayBook ? (
         <Card>
           <p className="text-[16px] leading-relaxed text-ink2">
-            Termet a futó kurzusaink hallgatói foglalhatnak. Ha jelentkeztél egy kurzusra, a felvételed után itt
-            foglalhatsz.
+            Termet a futó kurzusaink hallgatói foglalhatnak, és akinek a munkatársaink engedélyt adtak. Ha szükséged van
+            rá, szólj nekünk.
           </p>
         </Card>
       ) : (

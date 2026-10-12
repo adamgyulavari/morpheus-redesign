@@ -1,6 +1,11 @@
 /**
  * Student room-booking rules, as pure functions (no database, no clock): the server gathers the
- * facts (the student's active groups, their bookings this week, the settings, now) and asks here.
+ * facts (the student's active groups, their permission, their bookings this week, the settings,
+ * now) and asks here.
+ *
+ * Who may book: a student of an active course group (automatically, until the latest group's last
+ * day), or anyone staff gave the "Teremfoglalás engedélyezve" permission (e.g. between courses —
+ * no end date then). Registering alone never allows it.
  * Staff and admins are not bound by these; the clash guarantee (occupancy.ts) applies to everyone.
  */
 import { addDays, clockMinutes, dayOf, minutesOf } from './time';
@@ -59,6 +64,8 @@ export type RoomInfo = { id: number; name: string; active: boolean; studentBooka
 export type StudentContext = {
   /** The student's groups whose last day hasn't passed (id, last day "YYYY-MM-DD"). */
   activeGroups: { id: number; endDate: string }[];
+  /** Staff allowed room booking for this user regardless of courses (`users.roomBooking`). */
+  permitted: boolean;
   /** Productions linked to those groups (their rehearsals; practice may be "for" them). */
   linkableProductionIds: number[];
   /** Minutes of the student's other confirmed practice in the booking's week. */
@@ -88,7 +95,11 @@ export function checkPractice(
   s: BookingSettings,
   now: Date,
 ): RuleResult {
-  if (!student.activeGroups.length) return refuse('Termet csak aktív kurzusú hallgató foglalhat.');
+  if (!student.activeGroups.length && !student.permitted) {
+    return refuse(
+      'Teremfoglalásra most nincs jogosultságod: aktív kurzusod nincs, és engedélyt sem kaptál. Ha szükséged van rá, szólj nekünk.',
+    );
+  }
   if (!req.rooms.length) return refuse('Válassz termet.');
   for (const room of req.rooms) {
     if (!room.active) return refuse(`${room.name} jelenleg nem foglalható.`);
@@ -126,12 +137,13 @@ export function checkPractice(
     return refuse(`A heti keret ${num(s.weeklyQuotaHours)} óra; erre a hétre még ${num(left)} óra maradt.`);
   }
 
+  // allowed through a course only: until its last day (a permission has no end date)
   const lastCourseDay =
     student.activeGroups
       .map((g) => g.endDate)
       .sort()
       .at(-1) ?? '';
-  if (dayOf(new Date(req.end.getTime() - 1)) > lastCourseDay) {
+  if (!student.permitted && dayOf(new Date(req.end.getTime() - 1)) > lastCourseDay) {
     return refuse(`A kurzusod végéig (${huDay(lastCourseDay)}) foglalhatsz.`);
   }
 

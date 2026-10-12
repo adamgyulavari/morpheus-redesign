@@ -134,6 +134,7 @@ export default function StudentRoomBooking({ rooms, groups, productions, booking
                     · {b.rooms}
                     {b.owner && ` · ${b.owner}`}
                   </span>
+                  {b.note && <span className="mt-1 block text-[14px] italic text-muted">„{b.note}”</span>}
                 </span>
                 <button
                   type="button"

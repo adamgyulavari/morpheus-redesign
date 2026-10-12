@@ -61,13 +61,21 @@ export async function loadSettings(payload: Payload): Promise<BookingSettings> {
   );
 }
 
+/** A student of an active group, or someone staff allowed room booking (`users.roomBooking`). */
+export async function mayBookRooms(payload: Payload, user: TypedUser | null): Promise<boolean> {
+  if (!user) return false;
+  if (user.roomBooking) return true;
+  return (await studentGroups(payload, user.id)).groups.length > 0;
+}
+
 /** Facts for the student rules, for a booking starting at `start` (excluding `except`). */
 export async function studentContext(
   payload: Payload,
-  userId: number,
+  user: TypedUser,
   start: Date,
   except?: number,
 ): Promise<StudentContext> {
+  const userId = user.id;
   const { groups, productions } = await studentGroups(payload, userId);
   const monday = mondayOf(dayOf(start));
   const { docs: week } = await payload.find({
@@ -88,6 +96,7 @@ export async function studentContext(
   });
   return {
     activeGroups: groups.map((g) => ({ id: g.id, endDate: dayOf(new Date(g.endDate)) })),
+    permitted: Boolean(user.roomBooking),
     linkableProductionIds: productions.map((p) => p.id),
     minutesBookedInWeek: week.reduce(
       (sum, b) => sum + (new Date(b.end).getTime() - new Date(b.start).getTime()) / 60_000,
@@ -136,7 +145,7 @@ export type ScheduleEvent = {
 };
 
 /**
- * Everything in the given rooms and range, for staff and active students (null for anyone else).
+ * Everything in the given rooms and range, for staff and those who may book rooms (null for anyone else).
  * Staff notes are never included.
  */
 export async function getRoomSchedule(
@@ -148,7 +157,7 @@ export async function getRoomSchedule(
 ): Promise<ScheduleEvent[] | null> {
   if (!viewer) return null;
   const staff = isStaff(viewer);
-  if (!staff && !(await studentGroups(payload, viewer.id)).groups.length) return null;
+  if (!staff && !(await mayBookRooms(payload, viewer))) return null;
 
   const { docs } = await payload.find({
     collection: 'roomBookings',
@@ -234,7 +243,7 @@ export async function bookPractice(
     return { ok: false, reason: 'Érvénytelen időpont.' };
   const [settings, ctx, rooms] = await Promise.all([
     loadSettings(payload),
-    studentContext(payload, user.id, start),
+    studentContext(payload, user, start),
     roomsById(payload, input.roomIds),
   ]);
   if (rooms.length !== new Set(input.roomIds).size) return { ok: false, reason: 'Ismeretlen terem.' };

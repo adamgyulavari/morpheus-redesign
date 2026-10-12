@@ -21,6 +21,10 @@ export const generateMetadata = () => accountMetadata('Fiókom');
 
 const day = (iso: string) => iso.slice(0, 10);
 
+/** The first name; accounts migrated from a one-word name have "-" there (then the whole name). */
+const greetingName = (u: { firstName?: string | null; name?: string | null }) =>
+  u.firstName && u.firstName !== '-' ? u.firstName : (u.name ?? '');
+
 function Section({ title, children, action }: { title: string; children: ReactNode; action?: ReactNode }) {
   return (
     <section className="flex flex-col gap-4">
@@ -45,20 +49,24 @@ export default async function AccountPage() {
   const o = await studentOverview(await payloadClient(), user);
 
   return (
-    <AccountShell eyebrow="Fiókom" heading={`Szia, *${user.firstName}!*`} wide>
-      <AccountNav active={o.active} />
-      {userIsStaffOrAdmin(user) && (
-        <a href="/admin" className="btn btn-md btn-outline self-start">
-          Admin felület
-          <ArrowRight />
-        </a>
-      )}
+    <AccountShell eyebrow="Fiókom" heading={`Szia, *${greetingName(user)}!*`} wide>
+      <AccountNav canBook={o.mayBook} isStaff={userIsStaffOrAdmin(user)} />
 
       {!o.active ? (
         <Card>
           <p className="text-[16px] leading-relaxed text-ink2">
             Most nem vagy egyik futó csoportunkban sem. Ha jelentkeztél egy kurzusra, a felvételed után itt találod az
-            időpontokat, a tudnivalókat és a teremfoglalást. Az adataidat az{' '}
+            időpontokat és a tudnivalókat.{' '}
+            {o.mayBook && (
+              <>
+                Termet a{' '}
+                <Link href="/fiokom/terem" className="link font-semibold text-ink">
+                  Teremfoglalás
+                </Link>{' '}
+                fülön foglalhatsz.{' '}
+              </>
+            )}
+            Az adataidat az{' '}
             <Link href="/fiokom/adatok" className="link font-semibold text-ink">
               Adataim
             </Link>{' '}
@@ -137,6 +145,7 @@ export default async function AccountPage() {
                         · {b.rooms}
                         {b.owner && ` · ${b.owner}`}
                       </span>
+                      {b.note && <span className="mt-1 block text-[14px] italic text-muted">„{b.note}”</span>}
                     </li>
                   ))}
                 </ul>

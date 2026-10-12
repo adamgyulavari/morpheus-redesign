@@ -2061,6 +2061,10 @@ export interface User {
   phone?: string | null;
   name?: string | null;
   /**
+   * Aktív kurzus nélkül is foglalhat termet gyakorláshoz (pl. kurzusok között), kurzus-végdátum nélkül. Az aktív kurzusok hallgatói enélkül is foglalhatnak.
+   */
+  roomBooking?: boolean | null;
+  /**
    * Hallgató: csak a weboldalon lép be. Munkatárs: tartalmat és csoportokat szerkeszt. Adminisztrátor: mindent, a felhasználókat is.
    */
   roles: ('admin' | 'staff' | 'student')[];
@@ -4094,6 +4098,7 @@ export interface UsersSelect<T extends boolean = true> {
   firstName?: T;
   phone?: T;
   name?: T;
+  roomBooking?: T;
   roles?: T;
   courseGroups?: T;
   updatedAt?: T;
