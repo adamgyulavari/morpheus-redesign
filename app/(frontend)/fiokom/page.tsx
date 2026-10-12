@@ -41,7 +41,7 @@ const Empty = ({ children }: { children: ReactNode }) => <p className="text-[15p
 
 /**
  * The student area's overview. Left: what's coming — the sessions of my groups and their productions,
- * with my groupmates' practice (marked, quieter) in between. Right: my courses, my own bookings,
+ * with my groupmates' practice in between. Right: my courses, my own bookings,
  * links. Fresh on every request.
  * Phase 3 adds "Foglalásaim" and "Számláim" sections (and tabs) here.
  */
@@ -85,7 +85,7 @@ export default async function AccountPage() {
             {agenda.length === 0 ? (
               <Empty>Még nincs kiírt alkalom.</Empty>
             ) : (
-              <ul className="flex flex-col divide-y divide-line self-start rounded-3xl border border-line bg-paper">
+              <ul className="flex flex-col divide-y divide-line rounded-3xl border border-line bg-paper">
                 {agenda.map((a) =>
                   a.type === 'session' ? (
                     <li key={`s${a.s.id}`} className="flex flex-col gap-1 px-5 py-4 lg:px-6">
@@ -105,13 +105,12 @@ export default async function AccountPage() {
                       </span>
                     </li>
                   ) : (
-                    // a groupmate's practice: optional, so quieter than the group's own dates
-                    <li key={`p${a.b.id}`} className="flex flex-col gap-1 bg-cream/60 px-5 py-3 lg:px-6">
+                    <li key={`p${a.b.id}`} className="flex flex-col gap-1 px-5 py-4 lg:px-6">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-[15px] text-ink2">Gyakorlás — {a.b.booker}</span>
-                        <span className="text-xs font-bold uppercase tracking-[0.12em] text-muted">Gyakorlás</span>
+                        <span className="font-semibold text-ink">{a.b.booker}</span>
+                        <span className="text-xs font-bold uppercase tracking-[0.12em] text-teal">Gyakorlás</span>
                       </div>
-                      <span className="text-[14px] text-muted">
+                      <span className="text-[15px] text-ink2">
                         {whenText(a.b.start, a.b.end, 'long')} · {a.b.rooms}
                         {a.b.owner && ` · ${a.b.owner}`}
                       </span>

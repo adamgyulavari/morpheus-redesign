@@ -7,7 +7,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { CalendarIcon, GearIcon, HomeIcon, LogoutIcon, PersonIcon } from '@/components/icons';
+import { CalendarIcon, HomeIcon, LogoutIcon, PersonIcon, WrenchIcon } from '@/components/icons';
 import { logout } from '@/lib/account-actions';
 
 export default function AccountNav({ canBook, isStaff }: { canBook: boolean; isStaff: boolean }) {
@@ -21,12 +21,7 @@ export default function AccountNav({ canBook, isStaff }: { canBook: boolean; isS
     <div className="no-scrollbar -mx-5 flex items-center gap-2 overflow-x-auto px-5 lg:mx-0 lg:px-0">
       <nav aria-label="Fiók" className="flex gap-2">
         {tabs.map((t) => (
-          <Link
-            key={t.href}
-            href={t.href}
-            aria-current={pathname === t.href ? 'page' : undefined}
-            className="chip"
-          >
+          <Link key={t.href} href={t.href} aria-current={pathname === t.href ? 'page' : undefined} className="chip">
             <t.Icon className="h-[18px] w-[18px]" />
             {t.label}
           </Link>
@@ -35,7 +30,7 @@ export default function AccountNav({ canBook, isStaff }: { canBook: boolean; isS
       <div className="ml-auto flex shrink-0 gap-2 pl-4">
         {isStaff && (
           <a href="/admin" className="chip">
-            <GearIcon className="h-[18px] w-[18px]" />
+            <WrenchIcon className="h-[18px] w-[18px]" />
             Admin felület
           </a>
         )}

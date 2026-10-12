@@ -82,11 +82,10 @@ export function CalendarIcon({ className = 'h-[18px] w-[18px]' }: IconProps) {
   );
 }
 
-export function GearIcon({ className = 'h-[18px] w-[18px]' }: IconProps) {
+export function WrenchIcon({ className = 'h-[18px] w-[18px]' }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" strokeWidth={1.8} {...stroke} aria-hidden="true">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8" />
+      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z" />
     </svg>
   );
 }
