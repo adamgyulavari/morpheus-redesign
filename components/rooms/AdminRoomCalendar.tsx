@@ -26,9 +26,10 @@ import {
   updateBooking,
   updateSession,
 } from '@/lib/rooms/admin-actions';
+import { whenText } from '@/lib/rooms/format';
 import { BOOKING_KINDS, LOCATION_TYPES, type LocationType, SESSION_KINDS, type SessionKind } from '@/lib/rooms/labels';
 import type { ScheduleEvent } from '@/lib/rooms/server';
-import { addDays, at, clockOf, dayOf, TZ } from '@/lib/rooms/time';
+import { addDays, at, clockOf, dayOf } from '@/lib/rooms/time';
 
 import s from './calendar.module.css';
 import RoomCalendar from './RoomCalendar';
@@ -36,16 +37,7 @@ import RoomCalendar from './RoomCalendar';
 type Options = NonNullable<Awaited<ReturnType<typeof calendarOptions>>>;
 type Unplaced = NonNullable<Awaited<ReturnType<typeof adminSchedule>>>['unplaced'];
 
-const when = (start: string | Date, end: string | Date) => {
-  const a = new Date(start);
-  const date = new Intl.DateTimeFormat('hu-HU', {
-    timeZone: TZ,
-    month: 'short',
-    day: 'numeric',
-    weekday: 'short',
-  }).format(a);
-  return `${date} ${clockOf(a)}–${clockOf(new Date(end))}`;
-};
+const when = (start: string | Date, end: string | Date) => whenText(start, end);
 const duration = (start: string, end: string) => {
   const m = Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60_000);
   return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
