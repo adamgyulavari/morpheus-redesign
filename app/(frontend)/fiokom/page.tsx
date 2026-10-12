@@ -107,12 +107,12 @@ export default async function AccountPage() {
                   ) : (
                     <li key={`p${a.b.id}`} className="flex flex-col gap-1 border-t border-line py-4 lg:py-5">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-semibold text-ink">{a.b.booker}</span>
+                        <span className="font-semibold text-ink">{a.b.owner ?? a.b.booker}</span>
                         <span className="text-xs font-bold uppercase tracking-[0.12em] text-teal">Gyakorlás</span>
                       </div>
                       <span className="text-[15px] text-ink2">
                         {whenText(a.b.start, a.b.end, 'long')} · {a.b.rooms}
-                        {a.b.owner && ` · ${a.b.owner}`}
+                        {a.b.owner && ` · ${a.b.booker}`}
                       </span>
                     </li>
                   ),
