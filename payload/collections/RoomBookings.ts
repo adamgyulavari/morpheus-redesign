@@ -1,6 +1,7 @@
 import { type CollectionConfig, type PayloadRequest, ValidationError } from 'payload';
 
 import { BOOKING_KINDS, options } from '@/lib/rooms/labels';
+import { notifyPractice } from '@/lib/rooms/notify';
 import { clashMessage, findClashes, syncOccupancy } from '@/lib/rooms/occupancy';
 
 import { isAdminField, userIsAdmin } from '../access';
@@ -108,7 +109,7 @@ export const RoomBookings: CollectionConfig = {
       },
     ],
     afterChange: [
-      async ({ doc, req }) => {
+      async ({ doc, previousDoc, operation, req }) => {
         const b = doc as BookingDoc & { id: number };
         const rooms = relIds(b.rooms);
         const start = new Date(b.start ?? '');
@@ -141,6 +142,8 @@ export const RoomBookings: CollectionConfig = {
             return docs.map((r) => r.name).join(', ');
           },
         );
+        // the student hears about their practice (confirmed, changed, cancelled — with the reason)
+        await notifyPractice(req, doc, operation === 'update' ? previousDoc : undefined, operation);
         return doc;
       },
     ],

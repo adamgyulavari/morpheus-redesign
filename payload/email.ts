@@ -82,11 +82,27 @@ type Layout = {
   code?: { intro: string; value: string };
   /** Small print under the button, e.g. "the link expires in 15 minutes". */
   footnote?: string;
+  /** Label / value rows under the paragraphs ("Mikor", "Hol"…); `was` shows a crossed-out old value. */
+  details?: { label: string; value: string; was?: string }[];
 };
 
-export function emailLayout({ preheader, heading, paragraphs, button, code, footnote }: Layout): string {
+export function emailLayout({ preheader, heading, paragraphs, button, code, footnote, details }: Layout): string {
   const p = (text: string) =>
     `<p style="margin:0 0 16px;font:16px/1.6 ${FONT};color:${C.ink2}">${escapeHtml(text)}</p>`;
+  const rows = details?.length
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;width:100%;border-top:1px solid ${C.line}">${details
+        .map(
+          (d) => `<tr>
+        <td style="padding:10px 12px 10px 0;border-bottom:1px solid ${C.line};font:600 14px/1.5 ${FONT};color:${C.muted};vertical-align:top;white-space:nowrap">${escapeHtml(d.label)}</td>
+        <td style="padding:10px 0;border-bottom:1px solid ${C.line};font:16px/1.5 ${FONT};color:${C.ink}">${escapeHtml(d.value)}${
+          d.was
+            ? `<br><span style="font-size:14px;color:${C.muted};text-decoration:line-through">${escapeHtml(d.was)}</span>`
+            : ''
+        }</td>
+      </tr>`,
+        )
+        .join('')}</table>`
+    : '';
   const cta = button
     ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 24px"><tr><td style="border-radius:999px;background:${C.teal}">
         <a href="${escapeHtml(button.href)}" style="display:inline-block;padding:14px 28px;font:600 16px/1 ${FONT};color:${C.cream};text-decoration:none;border-radius:999px">${escapeHtml(button.label)}</a>
@@ -114,6 +130,7 @@ export function emailLayout({ preheader, heading, paragraphs, button, code, foot
     <tr><td style="background:${C.paper};border:1px solid ${C.line};border-radius:24px;padding:32px 28px">
       <h1 style="margin:0 0 20px;font:400 32px/1.1 Georgia, 'Times New Roman', serif;color:${C.ink}">${escapeHtml(heading)}</h1>
       ${paragraphs.map(p).join('\n      ')}
+      ${rows}
       ${cta}
       ${codeBlock}
       ${note}

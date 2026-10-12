@@ -1,6 +1,7 @@
 import { type CollectionConfig, type PayloadRequest, ValidationError } from 'payload';
 
 import { LOCATION_TYPES, options, SESSION_KINDS } from '@/lib/rooms/labels';
+import { notifySessionChange } from '@/lib/rooms/notify';
 import { clashMessage, findClashes } from '@/lib/rooms/occupancy';
 
 import { isAdminField } from '../access';
@@ -148,7 +149,7 @@ export const Sessions: CollectionConfig = {
       },
     ],
     afterChange: [
-      async ({ doc, req }) => {
+      async ({ doc, previousDoc, operation, req }) => {
         const s = doc as SessionDoc & { id: number };
         const bookingId = relId(s.booking);
         if (s.locationType === 'room' && s.status === 'scheduled') {
@@ -183,6 +184,8 @@ export const Sessions: CollectionConfig = {
           await releaseBooking(req, s.id, bookingId);
           s.booking = null;
         }
+        // its students hear about a cancellation, a new time or a new place
+        await notifySessionChange(req, s, operation === 'update' ? previousDoc : undefined, operation);
         return s;
       },
     ],
