@@ -152,7 +152,7 @@ export default async function AccountPage() {
               )}
             </Section>
 
-            <Section title="Csoporttársak gyakorlásai">
+            <Section title="Csoport foglalások">
               {o.groupPractice.length === 0 ? (
                 <Empty>Most senki nem foglalt termet a csoportjaidhoz.</Empty>
               ) : (
