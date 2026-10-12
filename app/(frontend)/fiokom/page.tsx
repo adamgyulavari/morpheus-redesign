@@ -41,17 +41,17 @@ const Empty = ({ children }: { children: ReactNode }) => <p className="text-[15p
 
 /**
  * The student area's overview. Left: what's coming — the sessions of my groups and their productions,
- * with my groupmates' practice in between. Right: my courses, my own bookings,
+ * with the practice bookings (my groupmates' and mine) in between. Right: my courses, my own bookings,
  * links. Fresh on every request.
  * Phase 3 adds "Foglalásaim" and "Számláim" sections (and tabs) here.
  */
 export default async function AccountPage() {
   const user = await requireUser('/fiokom');
   const o = await studentOverview(await payloadClient(), user);
-  // the group's sessions and the groupmates' practice, in one chronological list
+  // the group's sessions and its practice bookings (mine too), in one chronological list
   const agenda = [
     ...o.sessions.map((s) => ({ type: 'session' as const, start: s.start, s })),
-    ...o.groupPractice.map((b) => ({ type: 'practice' as const, start: b.start, b })),
+    ...[...o.ownPractice, ...o.groupPractice].map((b) => ({ type: 'practice' as const, start: b.start, b })),
   ].sort((a, b) => a.start.localeCompare(b.start));
 
   return (
