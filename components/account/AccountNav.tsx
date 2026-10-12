@@ -7,14 +7,15 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import { CalendarIcon, GearIcon, HomeIcon, LogoutIcon, PersonIcon } from '@/components/icons';
 import { logout } from '@/lib/account-actions';
 
 export default function AccountNav({ canBook, isStaff }: { canBook: boolean; isStaff: boolean }) {
   const pathname = usePathname();
   const tabs = [
-    { href: '/fiokom', label: 'Áttekintés' },
-    ...(canBook ? [{ href: '/fiokom/terem', label: 'Teremfoglalás' }] : []),
-    { href: '/fiokom/adatok', label: 'Adataim' },
+    { href: '/fiokom', label: 'Áttekintés', Icon: HomeIcon },
+    ...(canBook ? [{ href: '/fiokom/terem', label: 'Teremfoglalás', Icon: CalendarIcon }] : []),
+    { href: '/fiokom/adatok', label: 'Adataim', Icon: PersonIcon },
   ];
   return (
     <div className="no-scrollbar -mx-5 flex items-center gap-2 overflow-x-auto px-5 lg:mx-0 lg:px-0">
@@ -24,8 +25,9 @@ export default function AccountNav({ canBook, isStaff }: { canBook: boolean; isS
             key={t.href}
             href={t.href}
             aria-current={pathname === t.href ? 'page' : undefined}
-            className="chip aria-[current=page]:border-teal aria-[current=page]:bg-teal aria-[current=page]:text-cream"
+            className="chip"
           >
+            <t.Icon className="h-[18px] w-[18px]" />
             {t.label}
           </Link>
         ))}
@@ -33,11 +35,13 @@ export default function AccountNav({ canBook, isStaff }: { canBook: boolean; isS
       <div className="ml-auto flex shrink-0 gap-2 pl-4">
         {isStaff && (
           <a href="/admin" className="chip">
+            <GearIcon className="h-[18px] w-[18px]" />
             Admin felület
           </a>
         )}
         <form action={logout}>
           <button type="submit" className="chip">
+            <LogoutIcon className="h-[18px] w-[18px]" />
             Kilépés
           </button>
         </form>

@@ -40,13 +40,19 @@ function Section({ title, children, action }: { title: string; children: ReactNo
 const Empty = ({ children }: { children: ReactNode }) => <p className="text-[15px] text-muted">{children}</p>;
 
 /**
- * The student area's overview: my courses, what's coming (sessions of my groups and their
- * productions), my groupmates' practice, links, my own bookings. Fresh on every request.
+ * The student area's overview. Left: what's coming — the sessions of my groups and their productions,
+ * with my groupmates' practice (marked, quieter) in between. Right: my courses, my own bookings,
+ * links. Fresh on every request.
  * Phase 3 adds "Foglalásaim" and "Számláim" sections (and tabs) here.
  */
 export default async function AccountPage() {
   const user = await requireUser('/fiokom');
   const o = await studentOverview(await payloadClient(), user);
+  // the group's sessions and the groupmates' practice, in one chronological list
+  const agenda = [
+    ...o.sessions.map((s) => ({ type: 'session' as const, start: s.start, s })),
+    ...o.groupPractice.map((b) => ({ type: 'practice' as const, start: b.start, b })),
+  ].sort((a, b) => a.start.localeCompare(b.start));
 
   return (
     <AccountShell eyebrow="Fiókom" heading={`Szia, *${greetingName(user)}!*`} wide>
@@ -75,6 +81,47 @@ export default async function AccountPage() {
         </Card>
       ) : (
         <div className="grid gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+          <Section title="Közelgő alkalmak">
+            {agenda.length === 0 ? (
+              <Empty>Még nincs kiírt alkalom.</Empty>
+            ) : (
+              <ul className="flex flex-col divide-y divide-line self-start rounded-3xl border border-line bg-paper">
+                {agenda.map((a) =>
+                  a.type === 'session' ? (
+                    <li key={`s${a.s.id}`} className="flex flex-col gap-1 px-5 py-4 lg:px-6">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span
+                          className={`font-semibold ${a.s.status === 'cancelled' ? 'text-muted line-through' : 'text-ink'}`}
+                        >
+                          {a.s.title}
+                        </span>
+                        <span className="text-xs font-bold uppercase tracking-[0.12em] text-teal">
+                          {a.s.status === 'cancelled' ? 'Elmarad' : SESSION_KINDS[a.s.kind]}
+                        </span>
+                      </div>
+                      <span className="text-[15px] text-ink2">
+                        {whenText(a.s.start, a.s.end, 'long')} ·{' '}
+                        {a.s.place ?? <em className="not-italic text-muted">helyszín egyeztetés alatt</em>}
+                      </span>
+                    </li>
+                  ) : (
+                    // a groupmate's practice: optional, so quieter than the group's own dates
+                    <li key={`p${a.b.id}`} className="flex flex-col gap-1 bg-cream/60 px-5 py-3 lg:px-6">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-[15px] text-ink2">Gyakorlás — {a.b.booker}</span>
+                        <span className="text-xs font-bold uppercase tracking-[0.12em] text-muted">Gyakorlás</span>
+                      </div>
+                      <span className="text-[14px] text-muted">
+                        {whenText(a.b.start, a.b.end, 'long')} · {a.b.rooms}
+                        {a.b.owner && ` · ${a.b.owner}`}
+                      </span>
+                    </li>
+                  ),
+                )}
+              </ul>
+            )}
+          </Section>
+
           <div className="flex flex-col gap-10">
             <Section title="Kurzusaim">
               {o.groups.map((g) => (
@@ -95,35 +142,6 @@ export default async function AccountPage() {
               ))}
             </Section>
 
-            <Section title="Közelgő alkalmak">
-              {o.sessions.length === 0 ? (
-                <Empty>Még nincs kiírt alkalom.</Empty>
-              ) : (
-                <ul className="flex flex-col divide-y divide-line rounded-3xl border border-line bg-paper">
-                  {o.sessions.map((s) => (
-                    <li key={s.id} className="flex flex-col gap-1 px-5 py-4 lg:px-6">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span
-                          className={`font-semibold ${s.status === 'cancelled' ? 'text-muted line-through' : 'text-ink'}`}
-                        >
-                          {s.title}
-                        </span>
-                        <span className="text-xs font-bold uppercase tracking-[0.12em] text-teal">
-                          {s.status === 'cancelled' ? 'Elmarad' : SESSION_KINDS[s.kind]}
-                        </span>
-                      </div>
-                      <span className="text-[15px] text-ink2">
-                        {whenText(s.start, s.end, 'long')} ·{' '}
-                        {s.place ?? <em className="not-italic text-muted">helyszín egyeztetés alatt</em>}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Section>
-          </div>
-
-          <div className="flex flex-col gap-10">
             <Section
               title="Saját foglalásaim"
               action={
@@ -146,25 +164,6 @@ export default async function AccountPage() {
                         {b.owner && ` · ${b.owner}`}
                       </span>
                       {b.note && <span className="mt-1 block text-[14px] italic text-muted">„{b.note}”</span>}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Section>
-
-            <Section title="Csoport foglalások">
-              {o.groupPractice.length === 0 ? (
-                <Empty>Most senki nem foglalt termet a csoportjaidhoz.</Empty>
-              ) : (
-                <ul className="flex flex-col gap-2">
-                  {o.groupPractice.map((b) => (
-                    <li key={b.id} className="rounded-2xl border border-line bg-paper px-4 py-3 text-[15px]">
-                      <span className="font-semibold text-ink">{b.booker}</span>
-                      <span className="text-ink2">
-                        {' '}
-                        · {whenText(b.start, b.end)} · {b.rooms}
-                        {b.owner && ` · ${b.owner}`}
-                      </span>
                     </li>
                   ))}
                 </ul>
