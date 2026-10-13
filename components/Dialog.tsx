@@ -4,11 +4,14 @@
  * Modal built on the native <dialog> element (as in the static pages): showModal() gives focus
  * trapping, Esc to close and an inert background for free. Closes on Esc, the × button and a
  * click on the backdrop. Client component: it drives the element imperatively.
+ *
+ * Also used outside the site's frame (the admin's room calendar): pass `closeLabel` and
+ * `closeButtonClassName` there (no UI dictionary, no Tailwind).
  */
 import { type ReactNode, useEffect, useRef } from 'react';
 
 import { CloseIcon } from './icons';
-import { useUi } from './UiStrings';
+import { useUiOptional } from './UiStrings';
 
 export default function Dialog({
   open,
@@ -16,6 +19,8 @@ export default function Dialog({
   labelledBy,
   className,
   closeClassName = 'bg-paper',
+  closeButtonClassName,
+  closeLabel,
   children,
 }: {
   open: boolean;
@@ -23,10 +28,13 @@ export default function Dialog({
   labelledBy: string;
   className: string;
   closeClassName?: string;
+  /** Replaces the close button's classes entirely. */
+  closeButtonClassName?: string;
+  closeLabel?: string;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
-  const ui = useUi();
+  const ui = useUiOptional();
 
   useEffect(() => {
     const dialog = ref.current;
@@ -49,8 +57,8 @@ export default function Dialog({
       {open && children}
       <button
         type="button"
-        aria-label={ui.common.close}
-        className={`btn-icon absolute right-3 top-3 h-10 w-10 ${closeClassName}`}
+        aria-label={closeLabel ?? ui?.common.close ?? 'Bezárás'}
+        className={closeButtonClassName ?? `btn-icon absolute right-3 top-3 h-10 w-10 ${closeClassName}`}
         onClick={onClose}
       >
         <CloseIcon />

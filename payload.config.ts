@@ -15,6 +15,9 @@ import { LoginTokens } from './payload/collections/LoginTokens';
 import { Media } from './payload/collections/Media';
 import { Pages } from './payload/collections/Pages';
 import { LegalPages, Productions, Shows } from './payload/collections/productions';
+import { RoomBookings } from './payload/collections/RoomBookings';
+import { Rooms, StudentLinks } from './payload/collections/Rooms';
+import { Sessions } from './payload/collections/Sessions';
 import {
   ContactPeople,
   Courses,
@@ -28,7 +31,7 @@ import {
 } from './payload/collections/simple';
 import { Users } from './payload/collections/Users';
 import { emailAdapter } from './payload/email';
-import { SiteSettings, Ui } from './payload/globals';
+import { RoomBookingSettings, SiteSettings, Ui } from './payload/globals';
 import { migrations } from './payload/migrations';
 import { redirectsConfig, redirectsTranslationsHu } from './payload/redirects';
 import { generateDescription, generateImage, generateTitle, generateURL, seoFields } from './payload/seo';
@@ -86,6 +89,11 @@ export default buildConfig({
         Icon: '@/payload/components/Graphics#AdminIcon',
       },
       providers: ['@/payload/components/AdminTheme#AdminTheme'],
+      beforeNavLinks: ['@/payload/components/RoomCalendarNav#RoomCalendarNav'],
+      views: {
+        // the room calendar (lib/rooms, components/rooms)
+        teremnaptar: { Component: '@/payload/views/RoomCalendarView#RoomCalendarView', path: '/teremnaptar' },
+      },
     },
     dateFormat: 'yyyy. MM. dd. HH:mm',
     livePreview: {
@@ -112,11 +120,15 @@ export default buildConfig({
     Reviews,
     ContactPeople,
     CourseGroups,
+    StudentLinks,
+    Sessions,
+    RoomBookings,
+    Rooms,
     Media,
     Users,
     LoginTokens,
   ],
-  globals: [SiteSettings, Ui],
+  globals: [SiteSettings, Ui, RoomBookingSettings],
   editor: lexicalEditor(),
   // SMTP when SMTP_HOST is set; otherwise e-mails (with their links) are written to the console
   email: emailAdapter(),

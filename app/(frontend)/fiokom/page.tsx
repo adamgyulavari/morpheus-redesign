@@ -1,13 +1,18 @@
 import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical';
 import { RichText } from '@payloadcms/richtext-lexical/react';
+import Link from 'next/link';
+import type { ReactNode } from 'react';
 
+import AccountNav from '@/components/account/AccountNav';
 import AccountShell, { Card } from '@/components/account/AccountShell';
-import { ProfileForm } from '@/components/account/forms';
 import { accountMetadata } from '@/components/account/meta';
+import { upcomingItems } from '@/components/account/upcoming/items';
+import UpcomingList from '@/components/account/upcoming/UpcomingList';
 import { ArrowRight } from '@/components/icons';
-import { logout } from '@/lib/account-actions';
+import OwnBooking from '@/components/rooms/OwnBooking';
 import { payloadClient, requireUser } from '@/lib/auth';
-import { dateRange, todayInBudapest } from '@/lib/dates';
+import { dateRange } from '@/lib/dates';
+import { studentOverview } from '@/lib/rooms/student';
 import { userIsStaffOrAdmin } from '@/payload/access';
 
 // per visitor, never cached or prerendered (the build has no database)
@@ -17,84 +22,129 @@ export const generateMetadata = () => accountMetadata('Fiókom');
 
 const day = (iso: string) => iso.slice(0, 10);
 
-function status(start: string, end: string): { label: string; className: string } {
-  const today = todayInBudapest();
-  if (end < today) return { label: 'Lezárult', className: 'bg-sand text-muted' };
-  if (start > today) return { label: 'Hamarosan indul', className: 'bg-gold/40 text-ink' };
-  return { label: 'Folyamatban', className: 'bg-teal text-cream' };
+/** The first name; accounts migrated from a one-word name have "-" there (then the whole name). */
+const greetingName = (u: { firstName?: string | null; name?: string | null }) =>
+  u.firstName && u.firstName !== '-' ? u.firstName : (u.name ?? '');
+
+function Section({ title, children, action }: { title: string; children: ReactNode; action?: ReactNode }) {
+  return (
+    <section className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <h2 className="font-display text-[32px] leading-none lg:text-[40px]">{title}</h2>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
 }
 
-/** The logged-in user's page: own data, own course groups, logout. Fresh on every request. */
+const Empty = ({ children }: { children: ReactNode }) => <p className="text-[15px] text-muted">{children}</p>;
+
+/**
+ * The student area's overview. Left: what's coming — the sessions of my groups and their productions,
+ * with the practice bookings (my groupmates' and mine) in between. Right: my courses, my own bookings,
+ * links. Fresh on every request.
+ * Phase 3 adds "Foglalásaim" and "Számláim" sections (and tabs) here.
+ */
 export default async function AccountPage() {
   const user = await requireUser('/fiokom');
-  const payload = await payloadClient();
-  // the groups this user is a student of (staff could read all groups; this lists only their own),
-  // without the student list
-  const { docs: groups } = await payload.find({
-    collection: 'courseGroups',
-    where: { students: { in: [user.id] } },
-    select: { title: true, startDate: true, endDate: true, info: true },
-    sort: '-startDate',
-    depth: 0,
-    limit: 50,
-  });
+  const o = await studentOverview(await payloadClient(), user);
+  const agenda = upcomingItems(o);
 
   return (
-    <AccountShell eyebrow="Fiókom" heading={`Szia, *${user.firstName}!*`} wide>
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10">
-        <div className="flex flex-col gap-5">
-          <h2 className="font-display text-[36px] leading-none lg:text-[48px]">Kurzusaim</h2>
-          {groups.length === 0 ? (
-            <Card>
-              <p className="text-[16px] leading-relaxed text-ink2">
-                Még nem vagy egyik csoportunkban sem. Ha jelentkeztél egy kurzusra, a felvételed után itt találod az
-                időpontokat és a tudnivalókat.
-              </p>
-            </Card>
-          ) : (
-            groups.map((g) => {
-              const s = status(day(g.startDate), day(g.endDate));
-              return (
+    <AccountShell eyebrow="Fiókom" heading={`Szia, *${greetingName(user)}!*`} wide>
+      <AccountNav canBook={o.mayBook} isStaff={userIsStaffOrAdmin(user)} />
+
+      {!o.active ? (
+        <Card>
+          <p className="text-[16px] leading-relaxed text-ink2">
+            Most nem vagy egyik futó csoportunkban sem. Ha jelentkeztél egy kurzusra, a felvételed után itt találod az
+            időpontokat és a tudnivalókat.{' '}
+            {o.mayBook && (
+              <>
+                Termet a{' '}
+                <Link href="/fiokom/terem" className="link font-semibold text-ink">
+                  Teremfoglalás
+                </Link>{' '}
+                fülön foglalhatsz.{' '}
+              </>
+            )}
+            Az adataidat az{' '}
+            <Link href="/fiokom/adatok" className="link font-semibold text-ink">
+              Adataim
+            </Link>{' '}
+            fülön módosíthatod.
+          </p>
+        </Card>
+      ) : (
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+          <Section title="Közelgő alkalmak">
+            {agenda.length === 0 ? <Empty>Még nincs kiírt alkalom.</Empty> : <UpcomingList items={agenda} />}
+          </Section>
+
+          <div className="flex flex-col gap-10">
+            <Section title="Kurzusaim">
+              {o.groups.map((g) => (
                 <Card key={g.id}>
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h3 className="font-display text-[28px] leading-tight lg:text-[34px]">{g.title}</h3>
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${s.className}`}
-                    >
-                      {s.label}
-                    </span>
-                  </div>
-                  <p className="text-[15px] font-semibold text-teal">{dateRange(day(g.startDate), day(g.endDate))}</p>
+                  <h3 className="font-display text-[26px] leading-tight lg:text-[30px]">{g.title}</h3>
+                  <p className="text-[15px] font-semibold text-teal">
+                    {dateRange(day(g.startDate), day(g.endDate))}
+                    {g.instructors.length > 0 && (
+                      <span className="font-normal text-ink2"> · {g.instructors.join(', ')}</span>
+                    )}
+                  </p>
                   {g.info && (
-                    <div className="text-[16px] leading-[1.7] text-ink2 [&_a]:underline [&_h2]:mb-3 [&_h2]:mt-6 [&_h2]:font-display [&_h2]:text-[26px] [&_h2]:text-ink [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:font-bold [&_h3]:text-ink [&_li]:mb-1 [&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:mb-3 [&_strong]:font-bold [&_strong]:text-ink [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-6">
+                    <div className="text-[16px] leading-[1.7] text-ink2 [&_a]:underline [&_h2]:mb-3 [&_h2]:mt-6 [&_h2]:font-display [&_h2]:text-[24px] [&_h2]:text-ink [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:font-bold [&_h3]:text-ink [&_li]:mb-1 [&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:mb-3 [&_strong]:font-bold [&_strong]:text-ink [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-6">
                       <RichText data={g.info as SerializedEditorState} disableContainer />
                     </div>
                   )}
                 </Card>
-              );
-            })
-          )}
-        </div>
+              ))}
+            </Section>
 
-        <div className="flex flex-col gap-5">
-          <Card>
-            <ProfileForm
-              user={{ email: user.email, firstName: user.firstName, lastName: user.lastName, phone: user.phone }}
-            />
-          </Card>
-          {userIsStaffOrAdmin(user) && (
-            <a href="/admin" className="btn btn-lg btn-outline self-stretch sm:self-start">
-              Admin felület
-              <ArrowRight />
-            </a>
-          )}
-          <form action={logout}>
-            <button type="submit" className="link text-[15px] font-semibold">
-              Kilépés
-            </button>
-          </form>
+            {/* only for those who may book (or still have bookings from before) */}
+            {(o.mayBook || o.ownPractice.length > 0) && (
+              <Section
+                title="Saját foglalásaim"
+                action={
+                  o.mayBook && (
+                    <Link href="/fiokom/terem" className="link-arrow link text-[15px] text-teal">
+                      Terem foglalása
+                      <ArrowRight />
+                    </Link>
+                  )
+                }
+              >
+                {o.ownPractice.length === 0 ? (
+                  <Empty>Nincs közelgő teremfoglalásod.</Empty>
+                ) : (
+                  <ul className="flex flex-col gap-2">
+                    {o.ownPractice.map((b) => (
+                      <OwnBooking key={b.id} booking={b} />
+                    ))}
+                  </ul>
+                )}
+              </Section>
+            )}
+
+            {o.links.length > 0 && (
+              <Section title="Linkek">
+                <ul className="flex flex-col gap-2">
+                  {o.links.map((l) => (
+                    <li key={l.id}>
+                      <a href={l.url} className="link-arrow link text-[16px] text-ink" target="_blank" rel="noopener">
+                        {l.title}
+                        <ArrowRight />
+                      </a>
+                      {l.description && <p className="text-[14px] text-muted">{l.description}</p>}
+                    </li>
+                  ))}
+                </ul>
+              </Section>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </AccountShell>
   );
 }

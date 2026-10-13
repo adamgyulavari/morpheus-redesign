@@ -65,6 +65,39 @@ export function PencilIcon({ className = 'h-[18px] w-[18px]' }: IconProps) {
   );
 }
 
+export function HomeIcon({ className = 'h-[18px] w-[18px]' }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" strokeWidth={1.8} {...stroke} aria-hidden="true">
+      <path d="M4 11l8-7 8 7M6 9.5V20h12V9.5M10 20v-5h4v5" />
+    </svg>
+  );
+}
+
+export function CalendarIcon({ className = 'h-[18px] w-[18px]' }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" strokeWidth={1.8} {...stroke} aria-hidden="true">
+      <rect x="4" y="5.5" width="16" height="14.5" rx="2" />
+      <path d="M4 10h16M8.5 3.5v4M15.5 3.5v4" />
+    </svg>
+  );
+}
+
+export function WrenchIcon({ className = 'h-[18px] w-[18px]' }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" strokeWidth={1.8} {...stroke} aria-hidden="true">
+      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z" />
+    </svg>
+  );
+}
+
+export function LogoutIcon({ className = 'h-[18px] w-[18px]' }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" strokeWidth={1.8} {...stroke} aria-hidden="true">
+      <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l-4-4 4-4M6 12h10" />
+    </svg>
+  );
+}
+
 export function PlayIcon({ className = 'h-7 w-7 lg:h-9 lg:w-9' }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

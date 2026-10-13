@@ -209,6 +209,32 @@ work in `/admin`; `student`s log in on the public site only (`/admin` refuses th
   (`payload/email.ts`). Without `SMTP_HOST` e-mails are printed to the console; locally, Mailpit
   from `docker-compose.dev.yml` catches them at http://localhost:8025.
 
+## Room calendar and student area
+
+Replaces the room-planning sheet. **Sessions** (`sessions`: course meetings, rehearsals, exams,
+shows) say *what* and *when*; **room bookings** (`roomBookings`) say *where*. A session belongs to a
+course group or a production and has one place: a booking it owns, an external place, or none yet
+("Helyszín nélkül"). Bookings without a session: student practice, rentals, other.
+
+- **Clash guarantee in the database:** `room_occupancy` (one row per room of each confirmed
+  booking, written in the booking's transaction) with `EXCLUDE USING gist (room_id WITH =, period
+  WITH &&)` — overlapping bookings of a room are impossible, even for simultaneous requests
+  (`lib/rooms/occupancy.ts`). Placing a session somewhere taken is refused; if only its time changes
+  into a clash, it keeps the time and becomes unplaced.
+- **Staff:** `/admin/teremnaptar` (FullCalendar, all rooms in one week view; drag to create, move,
+  place unplaced sessions; "Hónap feltöltése" from the groups' weekly schedules, with a tickable
+  preview; idempotent). Admins can override clashing student practice (it is cancelled, the student
+  is told why).
+- **Students:** `/fiokom` (courses, upcoming sessions, groupmates' practice, links),
+  `/fiokom/terem` (book practice — rules in `lib/rooms/rules.ts`, settings in
+  *Teremnaptár → Teremfoglalási szabályok*), `/fiokom/adatok`. Only active students (a group whose
+  end date hasn't passed); room data is never readable by students through the API.
+- **E-mails** (`lib/rooms/notify.ts`): practice confirmed (.ics) / changed / cancelled; session
+  cancelled, moved or placed elsewhere — one per student per save, not for fill month, not for
+  changes more than 30 days ahead.
+- Times are stored in UTC; rules and display use Budapest time (`lib/rooms/time.ts`, DST-safe).
+  `npm test` runs the rule, generator and .ics tests (Vitest).
+
 ## Edit buttons for staff
 
 Logged-in staff get a **Szerkesztés** button (bottom left) on the live site: this page (or

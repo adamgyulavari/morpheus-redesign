@@ -11,3 +11,6 @@ coolify.env
 /media/
 /media-copy/
 dev.dump
+
+# in-app-prototype runtime (never committed)
+/dev/Prototype.tsx

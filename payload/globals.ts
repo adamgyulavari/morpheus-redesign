@@ -1,7 +1,7 @@
 import type { Field, GlobalConfig } from 'payload';
 
 import { anyone, isStaffOrAdmin } from './access';
-import { link, links, relationship, text, textarea } from './fields';
+import { date, link, links, relationship, text, textarea, time } from './fields';
 import { globalRevalidation } from './revalidate';
 
 const access = { read: anyone, update: isStaffOrAdmin };
@@ -313,4 +313,105 @@ export const Ui: GlobalConfig = {
   },
   hooks: globalRevalidation(),
   fields: uiFields(UI),
+};
+
+/** Rules of student room booking (lib/rooms/rules.ts). Staff and admins are not bound by them. */
+export const RoomBookingSettings: GlobalConfig = {
+  slug: 'roomBookingSettings',
+  label: 'Teremfoglalási szabályok',
+  access: { read: isStaffOrAdmin, update: isStaffOrAdmin },
+  admin: {
+    group: 'Teremnaptár',
+    description:
+      'A diákok teremfoglalásának szabályai. A munkatársakra nem vonatkoznak (az ütközés tilalma mindenkire igen).',
+  },
+  fields: [
+    {
+      type: 'row',
+      fields: [
+        time('studentHoursFrom', 'Foglalható ettől', { description: 'Üresen: éjjel-nappal.' }),
+        time('studentHoursTo', 'Foglalható eddig', { description: 'Üresen: éjjel-nappal.' }),
+      ],
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'slotMinutes',
+          label: 'Időegység (perc)',
+          type: 'select',
+          required: true,
+          defaultValue: '30',
+          options: ['15', '30', '60'],
+          admin: { description: 'A foglalás eleje és vége erre kerekedik.' },
+        },
+        {
+          name: 'maxHours',
+          label: 'Leghosszabb foglalás (óra)',
+          type: 'number',
+          required: true,
+          min: 0.5,
+          defaultValue: 8,
+        },
+      ],
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'horizonDays',
+          label: 'Előre foglalható (nap)',
+          type: 'number',
+          required: true,
+          min: 1,
+          defaultValue: 30,
+        },
+        {
+          name: 'minNoticeHours',
+          label: 'Legalább ennyivel előre (óra)',
+          type: 'number',
+          required: true,
+          min: 0,
+          defaultValue: 0,
+        },
+      ],
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'weeklyQuotaHours',
+          label: 'Heti keret diákonként (óra)',
+          type: 'number',
+          min: 0,
+          admin: { description: 'Üresen: korlátlan.' },
+        },
+        {
+          name: 'cancelHoursBefore',
+          label: 'Lemondható a kezdés előtt (óra)',
+          type: 'number',
+          required: true,
+          min: 0,
+          defaultValue: 0,
+          admin: { description: '0: egészen a kezdésig.' },
+        },
+      ],
+    },
+    {
+      name: 'closedDates',
+      label: 'Zárva tartó napok',
+      labels: { singular: 'Nap', plural: 'Napok' },
+      type: 'array',
+      admin: { description: 'Ezekre a napokra a „Hónap feltöltése” nem hoz létre alkalmat (ünnepek, szünetek).' },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            { ...date('date', 'Nap', { required: true }), index: false },
+            text('note', 'Megjegyzés', { description: 'Pl. „Mindenszentek”' }),
+          ],
+        },
+      ],
+    },
+  ],
 };

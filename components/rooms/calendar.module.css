@@ -1,0 +1,379 @@
+/*
+ * Room calendar styles, shared by the admin (/admin/teremnaptar, Payload's dark theme, no Tailwind)
+ * and the student area (/fiokom/terem, the site's light theme). Plain CSS so it works in both;
+ * FullCalendar is themed through its CSS variables.
+ */
+
+.site {
+  --cal-bg: #fffaf2;
+  --cal-panel: #fffaf2;
+  --cal-text: #10292c;
+  --cal-muted: #4d6366;
+  --cal-line: #e4d8c6;
+  --cal-accent: #0f5f63;
+  --cal-accent-text: #f7f1e8;
+  --cal-soft: #efe5d6;
+  --cal-danger: #b8472a;
+  --cal-radius: 16px;
+  font-family: inherit;
+}
+
+.admin {
+  --cal-bg: var(--theme-elevation-0, #0b1a1c);
+  --cal-panel: var(--theme-elevation-50, #142629);
+  --cal-text: var(--theme-text, #f7f1e8);
+  --cal-muted: var(--theme-elevation-500, #9bb0b2);
+  --cal-line: var(--theme-elevation-150, #2b3f42);
+  --cal-accent: #f9c86a;
+  --cal-accent-text: #0b3a3f;
+  --cal-soft: var(--theme-elevation-100, #1d3235);
+  --cal-danger: #e0603a;
+  --cal-radius: 8px;
+}
+
+.root {
+  color: var(--cal-text);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.root :global(.fc) {
+  --fc-border-color: var(--cal-line);
+  --fc-button-bg-color: var(--cal-panel);
+  --fc-button-border-color: var(--cal-line);
+  --fc-button-text-color: var(--cal-text);
+  --fc-button-hover-bg-color: var(--cal-soft);
+  --fc-button-hover-border-color: var(--cal-accent);
+  --fc-button-active-bg-color: var(--cal-accent);
+  --fc-button-active-border-color: var(--cal-accent);
+  --fc-page-bg-color: var(--cal-bg);
+  --fc-neutral-bg-color: var(--cal-soft);
+  --fc-today-bg-color: color-mix(in srgb, var(--cal-accent) 8%, transparent);
+  --fc-highlight-color: color-mix(in srgb, var(--cal-accent) 25%, transparent);
+  --fc-event-bg-color: var(--cal-accent);
+  --fc-event-border-color: var(--cal-accent);
+  --fc-event-text-color: var(--cal-accent-text);
+  --fc-now-indicator-color: var(--cal-danger);
+  --fc-small-font-size: 0.8em;
+  font-size: 13px;
+  background: var(--cal-bg);
+}
+.root :global(.fc .fc-timegrid-slot) {
+  height: 22px;
+}
+.root :global(.fc .fc-col-header-cell-cushion),
+.root :global(.fc .fc-daygrid-day-number) {
+  color: var(--cal-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+.root :global(.fc .fc-timegrid-slot-label-cushion) {
+  color: var(--cal-muted);
+}
+.root :global(.fc-event) {
+  cursor: pointer;
+  border-radius: 6px;
+  border-width: 0;
+  padding: 1px 3px;
+}
+.root :global(.fc .fc-button) {
+  font-weight: 600;
+  text-transform: none;
+}
+.root :global(.fc .fc-button-active) {
+  color: var(--cal-accent-text);
+}
+.root :global(.fc .fc-toolbar-title) {
+  font-size: 18px;
+}
+.root :global(.fc-timegrid-event .fc-event-main) {
+  overflow: hidden;
+}
+.root :global(.fc-event.is-own) {
+  outline: 2px solid var(--cal-text);
+  outline-offset: -2px;
+}
+
+/* buttons in panels and dialogs */
+.group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.btn {
+  border: 1px solid var(--cal-line);
+  background: var(--cal-panel);
+  color: var(--cal-text);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1.2;
+  text-decoration: none;
+}
+.btn:hover {
+  border-color: var(--cal-accent);
+}
+.btn[aria-pressed="true"],
+.primary {
+  background: var(--cal-accent);
+  border-color: var(--cal-accent);
+  color: var(--cal-accent-text);
+}
+.danger {
+  border-color: var(--cal-danger);
+  color: var(--cal-danger);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex: none;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 13px;
+  color: var(--cal-muted);
+}
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.eventTitle {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.eventMeta {
+  opacity: 0.85;
+  font-size: 0.92em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* side panel, sheets and dialogs */
+.layout {
+  display: grid;
+  gap: 16px;
+}
+@media (min-width: 1100px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 280px;
+  }
+}
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-self: start;
+  min-width: 0;
+}
+.panel {
+  background: var(--cal-panel);
+  border: 1px solid var(--cal-line);
+  border-radius: var(--cal-radius);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-self: start;
+}
+.side > .panel {
+  align-self: stretch;
+}
+.panelTitle {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+}
+.chip {
+  border: 1px dashed var(--cal-danger);
+  border-radius: 10px;
+  padding: 8px 10px;
+  cursor: grab;
+  background: var(--cal-bg);
+  font-size: 13px;
+}
+.muted {
+  color: var(--cal-muted);
+  font-size: 13px;
+  margin: 0;
+}
+.error {
+  color: var(--cal-danger);
+  font-weight: 600;
+  font-size: 14px;
+  margin: 0;
+}
+.notice {
+  font-size: 14px;
+  margin: 0;
+}
+
+.dialog {
+  position: relative;
+  border: 1px solid var(--cal-line);
+  border-radius: var(--cal-radius);
+  background: var(--cal-panel);
+  color: var(--cal-text);
+  padding: 20px;
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  overflow: auto;
+}
+.close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid var(--cal-line);
+  background: var(--cal-bg);
+  color: var(--cal-text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.close:hover {
+  border-color: var(--cal-accent);
+}
+.dialog::backdrop {
+  background: rgb(8 31 34 / 0.6);
+}
+.dialog h2 {
+  font-size: 20px;
+  margin: 0 48px 12px 0;
+}
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  color: var(--cal-muted);
+}
+.steps [aria-current="step"] {
+  color: var(--cal-text);
+  font-weight: 700;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--cal-line);
+  padding-top: 12px;
+}
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+/* a group of checkboxes laid out like a field */
+.fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.field input,
+.field select,
+.field textarea {
+  font: inherit;
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--cal-text);
+  background: var(--cal-bg);
+  border: 1px solid var(--cal-line);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.check {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 14px;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.table td,
+.table th {
+  text-align: left;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--cal-line);
+  vertical-align: top;
+}
+.clash {
+  color: var(--cal-danger);
+}
+
+/* open / close: a short fade and rise (native <dialog>, no script) */
+@media (prefers-reduced-motion: no-preference) {
+  .dialog {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease,
+      overlay 0.2s allow-discrete,
+      display 0.2s allow-discrete;
+  }
+  .dialog[open] {
+    opacity: 1;
+    transform: none;
+  }
+  @starting-style {
+    .dialog[open] {
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+    }
+  }
+  .dialog::backdrop {
+    background-color: transparent;
+    transition:
+      background-color 0.2s ease,
+      overlay 0.2s allow-discrete,
+      display 0.2s allow-discrete;
+  }
+  .dialog[open]::backdrop {
+    background-color: rgb(8 31 34 / 0.6);
+  }
+  @starting-style {
+    .dialog[open]::backdrop {
+      background-color: transparent;
+    }
+  }
+}

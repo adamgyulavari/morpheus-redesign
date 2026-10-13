@@ -1,9 +1,10 @@
 import type { CollectionConfig, Where } from 'payload';
 
 import { todayInBudapest } from '@/lib/dates';
-
+import { WEEKDAYS } from '@/lib/rooms/labels';
 import { isStaffOrAdmin, isStaffOrAdminField, userIsStaffOrAdmin } from '../access';
-import { date, fullRichText, relationship, text } from '../fields';
+
+import { date, fullRichText, relationship, text, time } from '../fields';
 
 /**
  * A concrete course group: dates, enrolled students, instructors (e.g. "Kezdő kurzus, 2026 ősz").
@@ -101,6 +102,49 @@ export const CourseGroups: CollectionConfig = {
       type: 'richText',
       editor: fullRichText,
       admin: { description: 'Általános információk a csoportról; a hallgatók a fiókjukban látják.' },
+    },
+    {
+      name: 'defaultSchedule',
+      label: 'Órarend',
+      labels: { singular: 'Időpont', plural: 'Időpontok' },
+      type: 'array',
+      admin: {
+        description:
+          'A heti órák. A Teremnaptár „Hónap feltöltése” gombja ezekből hozza létre az alkalmakat a kezdés és a befejezés között.',
+      },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'weekday',
+              label: 'Nap',
+              type: 'select',
+              required: true,
+              options: WEEKDAYS.map((label, i) => ({ label, value: String(i + 1) })),
+              admin: { width: '34%' },
+            },
+            { ...time('startTime', 'Kezdés', { required: true }), admin: { width: '33%', placeholder: '18:00' } },
+            { ...time('endTime', 'Vége', { required: true }), admin: { width: '33%', placeholder: '21:00' } },
+          ],
+        },
+        relationship('rooms', 'Termek', 'rooms', { hasMany: true, required: true }),
+      ],
+    },
+    {
+      name: 'fillMonth',
+      type: 'ui',
+      admin: { components: { Field: '@/payload/components/FillMonthLink#FillMonthLink' } },
+    },
+    {
+      name: 'sessions',
+      label: 'Alkalmak',
+      type: 'join',
+      collection: 'sessions',
+      on: 'courseGroup',
+      defaultSort: 'start',
+      access: { read: isStaffOrAdminField },
+      admin: { defaultColumns: ['displayTitle', 'kind', 'start', 'locationType', 'status'] },
     },
     {
       ...relationship('instructors', 'Oktatók', 'users', { hasMany: true }),

@@ -9,7 +9,7 @@
  *                              changes). Only valid while the config matches the migrations.
  *   --prune                    delete the older snapshots (runs after every migrate:create)
  */
-import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 const dir = path.resolve('payload/migrations');
@@ -21,9 +21,17 @@ const newestMigration = files
   ?.replace(/\.ts$/, '');
 if (!newestMigration) throw new Error(`no migrations in ${dir}`);
 
-const keep = `${newestMigration}.json`;
+// prune keeps the newest snapshot there is (the one migrate:create reads — a hand-written migration
+// has none); a rebuild writes the newest migration's
+const rebuild = !process.argv.includes('--prune');
+const keep = rebuild
+  ? `${newestMigration}.json`
+  : files
+      .filter((f) => f.endsWith('.json'))
+      .sort()
+      .at(-1);
 
-if (!process.argv.includes('--prune')) {
+if (rebuild) {
   // the same snapshot migrate:create writes (Payload's Drizzle schema → drizzle-kit JSON)
   const { getPayload } = await import('payload');
   const { default: config } = await import('@payload-config');
@@ -34,10 +42,14 @@ if (!process.argv.includes('--prune')) {
   };
   const json = (await db.requireDrizzleKit().generateDrizzleJson(db.schema)) as { id?: string };
   // keep the existing snapshot's (random) id, so an unchanged schema leaves the file unchanged
-  const target = path.join(dir, keep);
-  if (existsSync(target)) json.id = (JSON.parse(readFileSync(target, 'utf8')) as { id?: string }).id ?? json.id;
+  const target = path.join(dir, `${newestMigration}.json`);
+  const previous = files
+    .filter((f) => f.endsWith('.json'))
+    .sort()
+    .at(-1);
+  if (previous) json.id = (JSON.parse(readFileSync(path.join(dir, previous), 'utf8')) as { id?: string }).id ?? json.id;
   writeFileSync(target, JSON.stringify(json, null, 2));
-  console.log(`rebuilt ${keep}`);
+  console.log(`rebuilt ${path.basename(target)}`);
 }
 
 for (const f of files) {

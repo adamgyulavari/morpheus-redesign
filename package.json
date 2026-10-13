@@ -7,6 +7,7 @@
     "build": "cross-env NODE_OPTIONS=--no-deprecation next build",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "lint": "biome check",
     "format": "biome check --write",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
@@ -22,6 +23,13 @@
     "upload-media": "tsx --env-file=.env scripts/upload-media.ts"
   },
   "dependencies": {
+    "@date-fns/tz": "1.5.0",
+    "@fullcalendar/core": "6.1.21",
+    "@fullcalendar/daygrid": "6.1.21",
+    "@fullcalendar/interaction": "6.1.21",
+    "@fullcalendar/luxon3": "6.1.21",
+    "@fullcalendar/react": "6.1.21",
+    "@fullcalendar/timegrid": "6.1.21",
     "@payloadcms/db-postgres": "3.90.2",
     "@payloadcms/email-nodemailer": "3.90.2",
     "@payloadcms/live-preview-react": "3.90.2",
@@ -32,6 +40,7 @@
     "@payloadcms/storage-s3": "3.90.2",
     "@payloadcms/translations": "3.90.2",
     "graphql": "^16.14.2",
+    "luxon": "3.7.2",
     "next": "^16.3.8",
     "payload": "3.90.2",
     "react": "^19.3.0",
@@ -42,6 +51,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
     "@tailwindcss/postcss": "^4.3.3",
+    "@types/luxon": "3.7.6",
     "@types/node": "^24.19.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
@@ -50,7 +60,8 @@
     "puppeteer-core": "^25.12.0",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.15",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "5.0.3"
   },
   "type": "module",
   "engines": {
