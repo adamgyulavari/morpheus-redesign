@@ -184,6 +184,18 @@ export default buildConfig({
           return { output: {} };
         },
       },
+      {
+        // Nyitott Műhely: at the cutoff (48 h before) the date runs or is cancelled (lib/applications)
+        slug: 'workshopCutoff',
+        label: 'Nyitott Műhely: döntés az indulásról',
+        schedule: [{ cron: '*/5 * * * *', queue: 'schedules' }],
+        retries: 2,
+        handler: async ({ req }) => {
+          const { runWorkshopCutoffs } = await import('./lib/applications/server');
+          const decided = await runWorkshopCutoffs(req.payload);
+          return { output: { decided: decided.length } };
+        },
+      },
     ],
     autoRun: [{ cron: '* * * * *', queue: 'schedules' }],
     // only inside the web server — not in CLI runs (migrate, seed)

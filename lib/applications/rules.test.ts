@@ -6,9 +6,11 @@ import {
   type ApplicationRules,
   type CourseFacts,
   canCancel,
+  canCancelCourse,
   canMove,
   canSignUpCourse,
   canSignUpWorkshop,
+  canWithdraw,
   courseSignupState,
   cutoffAt,
   cutoffOutcome,
@@ -192,5 +194,20 @@ describe('course sign-up', () => {
   it('capacity only for beginner courses', () => {
     expect(reason(canSignUpCourse(course({ taken: 14 }), now))).toBe('Ez a kurzus megtelt.');
     expect(canSignUpCourse(course({ kind: 'professional', taken: 99 }), now).ok).toBe(true);
+  });
+});
+
+describe('cancelling a course sign-up, withdrawing an application', () => {
+  it('a beginner sign-up until the course starts', () => {
+    const first = at('2026-11-05', '18:00');
+    expect(canCancelCourse(first, at('2026-11-05', '17:59')).ok).toBe(true);
+    expect(canCancelCourse(first, first).ok).toBe(false);
+  });
+
+  it('a professional application while it is being reviewed', () => {
+    expect(canWithdraw('new').ok).toBe(true);
+    expect(canWithdraw('interview').ok).toBe(true);
+    expect(canWithdraw('accepted').ok).toBe(false);
+    expect(canWithdraw('rejected').ok).toBe(false);
   });
 });

@@ -31476,7 +31476,8 @@
       "schema": "public",
       "values": [
         "inline",
-        "revalidateDates"
+        "revalidateDates",
+        "workshopCutoff"
       ]
     },
     "public.enum_payload_jobs_log_state": {
@@ -31492,7 +31493,8 @@
       "schema": "public",
       "values": [
         "inline",
-        "revalidateDates"
+        "revalidateDates",
+        "workshopCutoff"
       ]
     },
     "public.enum_room_booking_settings_slot_minutes": {
@@ -31515,6 +31517,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "75a59075-4633-4b44-baa0-2d0bde46d98b",
+  "id": "f56e162c-b5a8-4722-bf0d-8b224916fc2a",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

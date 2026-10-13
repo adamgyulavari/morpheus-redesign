@@ -156,5 +156,15 @@ export function canSignUpCourse(c: CourseFacts, now: Date): RuleResult {
   return OK;
 }
 
+/** A beginner sign-up may be cancelled until the course starts. */
+export function canCancelCourse(courseStart: Date, now: Date): RuleResult {
+  return now < courseStart ? OK : refuse('A kurzus már elkezdődött; a lemondáshoz írj nekünk.');
+}
+
+/** A professional application may be withdrawn while it is being reviewed. */
+export function canWithdraw(status: ApplicationStatus): RuleResult {
+  return status === 'new' || status === 'interview' ? OK : refuse('Ezt a jelentkezést már nem lehet visszavonni.');
+}
+
 /** A professional application's motivation: required, at least this long (after trimming). */
 export const MIN_MOTIVATION = 100;

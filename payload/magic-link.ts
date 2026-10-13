@@ -30,7 +30,7 @@ const MAX_CODE_ATTEMPTS = 5;
 const MAX_CODE_FAILURES_PER_DAY = 10;
 
 export const MAGIC_LINK_SENT =
-  'Ha ezzel az e-mail-címmel van megerősített fiók, elküldtük rá a belépési linket és kódot. Nézd meg a postafiókod (a spam mappát is).';
+  'Ha ezzel az e-mail-címmel van fiók, elküldtük rá a belépési linket és kódot. Nézd meg a postafiókod (a spam mappát is).';
 
 const hash = (token: string) => createHash('sha256').update(token).digest('hex');
 /** The code's hash, keyed with the server secret and salted with its token (6 digits are few). */
@@ -87,29 +87,13 @@ export async function requestMagicLink(payload: Payload, rawEmail: string, ip: s
     });
     const user = docs[0];
     const locked = user?.lockUntil && new Date(user.lockUntil) > new Date();
-    if (!user || user._verified === false || locked) return 'sent';
-
-    // older links of this account stop working when a new one is sent. They are kept for a day
-    // (their wrong-code counts make up the daily cap), then deleted.
-    await db(payload).drizzle.execute(sql`
-      UPDATE login_tokens SET expires_at = now() WHERE user_id = ${user.id} AND used_at IS NULL AND expires_at > now()`);
-    await db(payload).drizzle.execute(sql`DELETE FROM login_tokens WHERE created_at < now() - interval '24 hours'`);
-    const token = randomBytes(32).toString('base64url');
-    const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
-    const tokenHash = hash(token);
-    await payload.create({
-      collection: 'loginTokens',
-      data: {
-        user: user.id,
-        tokenHash,
-        codeHash: codeHash(payload.secret, tokenHash, code),
-        expiresAt: new Date(Date.now() + TOKEN_TTL_MS).toISOString(),
-      },
-    });
+    // unverified accounts too: using the link proves the address (and verifies it)
+    if (!user || locked) return 'sent';
+    const { url, code } = await createLoginLink(payload, user.id, { ttlMs: TOKEN_TTL_MS, withCode: true });
     await payload.sendEmail({
       to: user.email,
       subject: magicLink.subject,
-      html: magicLink.html(siteUrl(`/belepes/link?token=${token}`), code, user),
+      html: magicLink.html(url, code ?? '', user),
     });
   } catch (err) {
     payload.logger.error({ err, msg: 'magic link: sending failed' });
@@ -117,9 +101,43 @@ export async function requestMagicLink(payload: Payload, rawEmail: string, ip: s
   return 'sent';
 }
 
+/**
+ * A new login link for the account (older unused ones stop working), optionally with a 6-digit
+ * code. The "Belépési link" e-mail's lasts 15 minutes; the ones in application e-mails a week.
+ */
+export async function createLoginLink(
+  payload: Payload,
+  userId: number,
+  { ttlMs, withCode = false }: { ttlMs: number; withCode?: boolean },
+): Promise<{ url: string; code?: string }> {
+  // older links of this account stop working when a new one is sent. They are kept for a day
+  // (their wrong-code counts make up the daily cap), then deleted.
+  await db(payload).drizzle.execute(sql`
+    UPDATE login_tokens SET expires_at = now() WHERE user_id = ${userId} AND used_at IS NULL AND expires_at > now()`);
+  await db(payload).drizzle.execute(
+    sql`DELETE FROM login_tokens WHERE created_at < now() - interval '24 hours' AND expires_at < now()`,
+  );
+  const token = randomBytes(32).toString('base64url');
+  const code = withCode ? String(randomInt(0, 1_000_000)).padStart(6, '0') : undefined;
+  const tokenHash = hash(token);
+  await payload.create({
+    collection: 'loginTokens',
+    data: {
+      user: userId,
+      tokenHash,
+      codeHash: code ? codeHash(payload.secret, tokenHash, code) : null,
+      expiresAt: new Date(Date.now() + ttlMs).toISOString(),
+    },
+  });
+  return { url: siteUrl(`/belepes/link?token=${token}`), code };
+}
+
+/** A week: for the links in application e-mails (sign-up confirmations, admission). */
+export const APPLICATION_LINK_TTL_MS = 7 * 86_400_000;
+
 const validToken = (token: string) => /^[A-Za-z0-9_-]{43}$/.test(token);
 
-/** Verified and not locked: may log in with a link or code. */
+/** Not locked: may log in with a link or code (both came by e-mail, so they prove the address). */
 async function canLogIn(payload: Payload, userId: number): Promise<{ id: number; email: string } | null> {
   const user = await payload.findByID({
     collection: 'users',
@@ -129,7 +147,16 @@ async function canLogIn(payload: Payload, userId: number): Promise<{ id: number;
     disableErrors: true,
   });
   const locked = user?.lockUntil && new Date(user.lockUntil) > new Date();
-  return user && user._verified !== false && !locked ? { id: user.id, email: user.email } : null;
+  return user && !locked ? { id: user.id, email: user.email } : null;
+}
+
+/** A used link or code proves the address: accounts made by a sign-up form become verified. */
+async function loggedInWith(payload: Payload, userId: number | null | undefined): Promise<number | null> {
+  if (!userId || !(await canLogIn(payload, userId))) return null;
+  await db(payload).drizzle.execute(
+    sql`UPDATE users SET _verified = true WHERE id = ${userId} AND _verified IS NOT TRUE`,
+  );
+  return userId;
 }
 
 /** Looks at a link without using it up: whose is it, if it is still valid (for the confirm page). */
@@ -152,8 +179,7 @@ export async function consumeMagicLink(payload: Payload, token: string): Promise
     UPDATE login_tokens SET used_at = now()
     WHERE token_hash = ${hash(token)} AND used_at IS NULL AND expires_at > now() AND coalesce(attempts, 0) < ${MAX_CODE_ATTEMPTS}
     RETURNING user_id`);
-  const userId = rows[0]?.user_id;
-  return userId && (await canLogIn(payload, userId)) ? userId : null;
+  return loggedInWith(payload, rows[0]?.user_id);
 }
 
 /**
@@ -193,8 +219,7 @@ export async function consumeLoginCode(payload: Payload, rawEmail: string, rawCo
     UPDATE login_tokens SET used_at = now()
     WHERE id = ${row.id} AND used_at IS NULL AND expires_at > now()
     RETURNING user_id`);
-  const userId = used.rows[0]?.user_id;
-  return userId && (await canLogIn(payload, userId)) ? userId : null;
+  return loggedInWith(payload, used.rows[0]?.user_id);
 }
 
 /** POST /api/users/magic-link { email } */

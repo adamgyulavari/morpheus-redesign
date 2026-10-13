@@ -167,6 +167,7 @@ export interface Config {
   jobs: {
     tasks: {
       revalidateDates: TaskRevalidateDates;
+      workshopCutoff: TaskWorkshopCutoff;
       inline: {
         input: unknown;
         output: unknown;
@@ -2582,7 +2583,7 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'revalidateDates';
+        taskSlug: 'inline' | 'revalidateDates' | 'workshopCutoff';
         taskID: string;
         input?:
           | {
@@ -2615,7 +2616,7 @@ export interface PayloadJob {
         id?: string | null;
       }[]
     | null;
-  taskSlug?: ('inline' | 'revalidateDates') | null;
+  taskSlug?: ('inline' | 'revalidateDates' | 'workshopCutoff') | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
@@ -5075,6 +5076,14 @@ export interface CollectionsWidget {
  * via the `definition` "TaskRevalidateDates".
  */
 export interface TaskRevalidateDates {
+  input?: unknown;
+  output?: unknown;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskWorkshopCutoff".
+ */
+export interface TaskWorkshopCutoff {
   input?: unknown;
   output?: unknown;
 }
