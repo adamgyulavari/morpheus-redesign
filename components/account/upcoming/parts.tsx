@@ -1,6 +1,7 @@
 /** Building blocks of the "Közelgő alkalmak" list: the next item's card, a day's date, a two-line entry. */
 import { PinIcon } from '@/components/icons';
 
+import ApplicationActions from './ApplicationActions';
 import type { UpcomingItem } from './items';
 import { dateParts, timeRange } from './items';
 import { CANCELLED, KIND_STYLE, KindBadge, KindLabel, NoPlace } from './kinds';
@@ -30,6 +31,11 @@ export function NextCard({ item }: { item: UpcomingItem }) {
           {item.place ?? <NoPlace />}
         </span>
         {item.booker && <span className="text-muted">Foglalta: {item.booker}</span>}
+        {item.application && (
+          <span className="ml-auto">
+            <Actions item={item} />
+          </span>
+        )}
       </div>
     </article>
   );
@@ -81,7 +87,24 @@ export function Entry({ item }: { item: UpcomingItem }) {
     <div className="flex min-h-12 items-center gap-3.5">
       <KindBadge kind={item.kind} cancelled={item.cancelled} />
       <EntryText item={item} />
+      {item.application && <Actions item={item} />}
     </div>
+  );
+}
+
+/** "Lemondás" / "Áthelyezés" on the person's own Nyitott Műhely date. */
+function Actions({ item }: { item: UpcomingItem }) {
+  const a = item.application;
+  if (!a) return null;
+  const d = dateParts(item.start);
+  return (
+    <ApplicationActions
+      applicationId={a.id}
+      title={`${item.title} — ${d.month} ${d.dayNumber}., ${d.weekday} ${timeRange(item)}`}
+      canCancel={a.canCancel}
+      canMove={a.canMove}
+      moveTargets={a.moveTargets}
+    />
   );
 }
 

@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
 /**
  * The link from the "Belépési link" e-mail. Opening it only shows whose login it is; the button
  * (a POST) logs in. Mail scanners open links, but don't press buttons, so they can't use it up.
- * `next`: where to go afterwards (e.g. /fiokom/jelentkezeseim from an application e-mail).
+ * `next`: where to go afterwards (e.g. /fiokom from an application e-mail).
  */
 export default async function MagicLinkPage({ searchParams }: Props) {
   const { token = '', next } = await searchParams;

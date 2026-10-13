@@ -1,6 +1,6 @@
 /**
  * The e-mails of sign-ups and applications, in the shared layout (payload/email.ts). Every
- * applicant e-mail leads to /fiokom/jelentkezeseim — with a week-long login link when it goes to
+ * applicant e-mail leads to /fiokom (the overview lists them) — with a week-long login link when it goes to
  * someone who may not be logged in. A failed e-mail never fails what caused it; it is logged.
  */
 import type { Payload } from 'payload';
@@ -33,7 +33,7 @@ export type TargetInfo = {
   cutoff?: Date;
 };
 
-const MY_APPLICATIONS = '/fiokom/jelentkezeseim';
+const MY_ACCOUNT = '/fiokom';
 const hello = (a: Applicant) => (a.firstName?.trim() ? `Kedves ${a.firstName.trim()}!` : 'Kedves Jelentkezőnk!');
 const intro = (texts: EmailTexts, key: keyof EmailTexts, fallback: string) => texts[key] ?? fallback;
 
@@ -58,15 +58,15 @@ async function send(payload: Payload, to: string | string[], subject: string, ht
   }
 }
 
-/** The "Jelentkezéseim" button: a login link for those who may not be logged in, else the page. */
+/** The "Fiókom" button: a login link for those who may not be logged in, else the page. */
 async function myApplicationsButton(payload: Payload, userId: number, login: boolean) {
-  if (!login) return { label: 'Jelentkezéseim', href: siteUrl(MY_APPLICATIONS) };
+  if (!login) return { label: 'Fiókom', href: siteUrl(MY_ACCOUNT) };
   try {
     const { url } = await createLoginLink(payload, userId, { ttlMs: APPLICATION_LINK_TTL_MS });
-    return { label: 'Jelentkezéseim', href: `${url}&next=${encodeURIComponent(MY_APPLICATIONS)}` };
+    return { label: 'Fiókom', href: `${url}&next=${encodeURIComponent(MY_ACCOUNT)}` };
   } catch (err) {
     payload.logger.error({ err, msg: 'application e-mail: login link failed' });
-    return { label: 'Jelentkezéseim', href: siteUrl(MY_APPLICATIONS) };
+    return { label: 'Fiókom', href: siteUrl(MY_ACCOUNT) };
   }
 }
 const LINK_NOTE = 'A gomb egy hétig belépteti a fiókodba. Később a belépés oldalon kérhetsz új belépési linket.';
@@ -99,7 +99,7 @@ export async function sendReceived(
       : [
           hello(a),
           intro(s.texts, 'signupReceived', 'Köszönjük a jelentkezésed, rögzítettük a helyed.'),
-          'A fizetés részleteit Fruzsi hamarosan e-mailben küldi.',
+          'A fizetés részleteit hamarosan e-mailben küldjük.',
           ...(kind === 'workshop' && t.minParticipants && t.cutoff
             ? [
                 `Az alkalom legalább ${t.minParticipants} jelentkezővel indul; ez ${momentText(t.cutoff)}-kor dől el, és e-mailben értesítünk róla.`,
@@ -137,7 +137,7 @@ export async function sendMoved(payload: Payload, a: Applicant, from: TargetInfo
         { label: 'Mikor', value: to.when ?? '', was: from.when },
         ...(to.place ? [{ label: 'Hol', value: to.place }] : []),
       ],
-      button: { label: 'Jelentkezéseim', href: siteUrl(MY_APPLICATIONS) },
+      button: { label: 'Fiókom', href: siteUrl(MY_ACCOUNT) },
     }),
   );
 }
@@ -164,7 +164,7 @@ export async function sendCancellation(
           : 'A jelentkezésed lemondtuk. Ha kérdésed van, írj nekünk.',
       ],
       details: details(t),
-      button: { label: 'Jelentkezéseim', href: siteUrl(MY_APPLICATIONS) },
+      button: { label: 'Fiókom', href: siteUrl(MY_ACCOUNT) },
     }),
   );
 }
@@ -277,7 +277,7 @@ export async function sendMessage(payload: Payload, a: Applicant, t: TargetInfo,
           .filter(Boolean),
       ],
       details: details(t),
-      button: { label: 'Jelentkezéseim', href: siteUrl(MY_APPLICATIONS) },
+      button: { label: 'Fiókom', href: siteUrl(MY_ACCOUNT) },
     }),
   );
 }

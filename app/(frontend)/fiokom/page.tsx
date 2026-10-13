@@ -6,10 +6,12 @@ import type { ReactNode } from 'react';
 import AccountNav from '@/components/account/AccountNav';
 import AccountShell, { Card } from '@/components/account/AccountShell';
 import { accountMetadata } from '@/components/account/meta';
+import ApplicationActions from '@/components/account/upcoming/ApplicationActions';
 import { upcomingItems } from '@/components/account/upcoming/items';
 import UpcomingList from '@/components/account/upcoming/UpcomingList';
 import { ArrowRight } from '@/components/icons';
 import OwnBooking from '@/components/rooms/OwnBooking';
+import { myApplications } from '@/lib/applications/overview';
 import { payloadClient, requireUser } from '@/lib/auth';
 import { dateRange } from '@/lib/dates';
 import { studentOverview } from '@/lib/rooms/student';
@@ -48,14 +50,22 @@ const Empty = ({ children }: { children: ReactNode }) => <p className="text-[15p
  */
 export default async function AccountPage() {
   const user = await requireUser('/fiokom');
-  const o = await studentOverview(await payloadClient(), user);
-  const agenda = upcomingItems(o);
+  const payload = await payloadClient();
+  const o = await studentOverview(payload, user);
+  const mine = await myApplications(
+    payload,
+    user,
+    o.groups.map((g) => g.id),
+  );
+  const agenda = upcomingItems(o, mine);
+  // workshop-only visitors and applicants see their dates and applications too
+  const hasAnything = o.active || mine.workshops.length > 0 || mine.pending.length > 0;
 
   return (
     <AccountShell eyebrow="Fiókom" heading={`Szia, *${greetingName(user)}!*`} wide>
       <AccountNav canBook={o.mayBook} isStaff={userIsStaffOrAdmin(user)} />
 
-      {!o.active ? (
+      {!hasAnything ? (
         <Card>
           <p className="text-[16px] leading-relaxed text-ink2">
             Most nem vagy egyik futó csoportunkban sem. Ha jelentkeztél egy kurzusra, a felvételed után itt találod az
@@ -83,24 +93,49 @@ export default async function AccountPage() {
           </Section>
 
           <div className="flex flex-col gap-10">
-            <Section title="Kurzusaim">
-              {o.groups.map((g) => (
-                <Card key={g.id}>
-                  <h3 className="font-display text-[26px] leading-tight lg:text-[30px]">{g.title}</h3>
-                  <p className="text-[15px] font-semibold text-teal">
-                    {dateRange(day(g.startDate), day(g.endDate))}
-                    {g.instructors.length > 0 && (
-                      <span className="font-normal text-ink2"> · {g.instructors.join(', ')}</span>
-                    )}
-                  </p>
-                  {g.info && (
-                    <div className="text-[16px] leading-[1.7] text-ink2 [&_a]:underline [&_h2]:mb-3 [&_h2]:mt-6 [&_h2]:font-display [&_h2]:text-[24px] [&_h2]:text-ink [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:font-bold [&_h3]:text-ink [&_li]:mb-1 [&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:mb-3 [&_strong]:font-bold [&_strong]:text-ink [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-6">
-                      <RichText data={g.info as SerializedEditorState} disableContainer />
+            {(o.groups.length > 0 || mine.pending.length > 0) && (
+              <Section title="Kurzusaim">
+                {mine.pending.map((p) => (
+                  <Card key={`a${p.applicationId}`} className="border-dashed">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <span className="rounded-full bg-sand px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-teal">
+                        {p.status}
+                      </span>
+                      <ApplicationActions
+                        applicationId={p.applicationId}
+                        title={p.title}
+                        canCancel={p.canCancel}
+                        canMove={false}
+                        cancelLabel={p.kind === 'professional' ? 'Visszavonás' : undefined}
+                      />
                     </div>
-                  )}
-                </Card>
-              ))}
-            </Section>
+                    <h3 className="font-display text-[26px] leading-tight lg:text-[30px]">{p.title}</h3>
+                    {p.when && <p className="text-[15px] font-semibold text-teal">{p.when}</p>}
+                    <p className="text-[15px] leading-relaxed text-ink2">
+                      {p.kind === 'professional'
+                        ? 'Megkaptuk a jelentkezésed; hamarosan jelentkezünk az interjú részleteivel.'
+                        : 'Megkaptuk a jelentkezésed. A fizetés részleteit hamarosan e-mailben küldjük; a felvételed után itt találod a csoport időpontjait.'}
+                    </p>
+                  </Card>
+                ))}
+                {o.groups.map((g) => (
+                  <Card key={g.id}>
+                    <h3 className="font-display text-[26px] leading-tight lg:text-[30px]">{g.title}</h3>
+                    <p className="text-[15px] font-semibold text-teal">
+                      {dateRange(day(g.startDate), day(g.endDate))}
+                      {g.instructors.length > 0 && (
+                        <span className="font-normal text-ink2"> · {g.instructors.join(', ')}</span>
+                      )}
+                    </p>
+                    {g.info && (
+                      <div className="text-[16px] leading-[1.7] text-ink2 [&_a]:underline [&_h2]:mb-3 [&_h2]:mt-6 [&_h2]:font-display [&_h2]:text-[24px] [&_h2]:text-ink [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:font-bold [&_h3]:text-ink [&_li]:mb-1 [&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:mb-3 [&_strong]:font-bold [&_strong]:text-ink [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-6">
+                        <RichText data={g.info as SerializedEditorState} disableContainer />
+                      </div>
+                    )}
+                  </Card>
+                ))}
+              </Section>
+            )}
 
             {/* only for those who may book (or still have bookings from before) */}
             {(o.mayBook || o.ownPractice.length > 0) && (

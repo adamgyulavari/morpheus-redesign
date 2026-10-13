@@ -48,9 +48,9 @@ function Submit({ children }: { children: ReactNode }) {
 
 const DONE: Record<Kind, string> = {
   workshop:
-    'Köszönjük, megkaptuk a jelentkezésed! Visszaigazolást küldtünk e-mailben; a fizetés részleteit Fruzsi hamarosan elküldi.',
+    'Köszönjük, megkaptuk a jelentkezésed! Visszaigazolást küldtünk e-mailben. A fizetés részleteit hamarosan e-mailben küldjük.',
   beginner:
-    'Köszönjük, megkaptuk a jelentkezésed! Visszaigazolást küldtünk e-mailben; a fizetés részleteit Fruzsi hamarosan elküldi.',
+    'Köszönjük, megkaptuk a jelentkezésed! Visszaigazolást küldtünk e-mailben. A fizetés részleteit hamarosan e-mailben küldjük.',
   professional:
     'Köszönjük a jelentkezésed! Visszaigazolást küldtünk e-mailben, és hamarosan jelentkezünk az interjú részleteivel.',
 };
@@ -128,8 +128,8 @@ function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string
           </p>
           <p className="text-[15px] leading-relaxed text-ink2">
             A jelentkezésed a fiókodban követheted:{' '}
-            <Link href="/fiokom/jelentkezeseim" className="link font-semibold text-ink">
-              Jelentkezéseim
+            <Link href="/fiokom" className="link font-semibold text-ink">
+              Fiókom
             </Link>
             {me ? '' : ' (a belépéshez szükséges linket az e-mailben küldtük)'}.
           </p>

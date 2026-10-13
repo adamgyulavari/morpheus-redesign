@@ -104,7 +104,7 @@ export const Applications: CollectionConfig = {
     group: 'Jelentkezések',
     listSearchableFields: ['name', 'email', 'target'],
     description:
-      'Minden jelentkezés: Nyitott Műhely alkalmak, kezdő kurzusok, szakmai pályázatok. A résztvevők a fiókjukban (/fiokom/jelentkezeseim) követik.',
+      'Minden jelentkezés: Nyitott Műhely alkalmak, kezdő kurzusok, szakmai pályázatok. A résztvevők a fiókjuk áttekintőjén (/fiokom) követik.',
   },
   defaultSort: '-createdAt',
   hooks: {
