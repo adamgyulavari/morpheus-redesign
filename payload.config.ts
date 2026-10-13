@@ -89,10 +89,15 @@ export default buildConfig({
         Icon: '@/payload/components/Graphics#AdminIcon',
       },
       providers: ['@/payload/components/AdminTheme#AdminTheme'],
-      beforeNavLinks: ['@/payload/components/RoomCalendarNav#RoomCalendarNav'],
+      beforeNavLinks: [
+        '@/payload/components/RoomCalendarNav#RoomCalendarNav',
+        '@/payload/components/ApplicationsNav#ApplicationsNav',
+      ],
       views: {
         // the room calendar (lib/rooms, components/rooms)
         teremnaptar: { Component: '@/payload/views/RoomCalendarView#RoomCalendarView', path: '/teremnaptar' },
+        // payments, admissions, reviews (lib/applications, components/applications)
+        jelentkezesek: { Component: '@/payload/views/ApplicationsView#ApplicationsView', path: '/jelentkezesek' },
       },
     },
     dateFormat: 'yyyy. MM. dd. HH:mm',

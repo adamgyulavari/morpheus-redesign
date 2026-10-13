@@ -14,6 +14,7 @@ import {
   addParticipant,
   admit,
   cancelByStaff,
+  dashboard,
   messageParticipants,
   participants,
   review,
@@ -70,4 +71,15 @@ export async function reviewAction(id: number, status: 'interview' | 'rejected')
     await review(await payloadClient(), id, status),
     status === 'interview' ? 'Interjú állapotba téve.' : 'Elutasítva (e-mail nem ment).',
   );
+}
+
+export async function dashboardData() {
+  if (!(await staff())) return null;
+  return dashboard(await payloadClient());
+}
+
+export async function setPaymentNoteAction(id: number, note: string): Promise<Result> {
+  if (!(await staff())) return denied;
+  await (await payloadClient()).update({ collection: 'applications', id, data: { paymentNote: note.trim() || null } });
+  return { ok: true };
 }

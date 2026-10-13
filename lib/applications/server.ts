@@ -807,3 +807,124 @@ export async function participants(payload: Payload, sessionId: number) {
     })),
   };
 }
+
+// ── the admin dashboard ("Jelentkezések") ────────────────────────────────────
+
+export type DashboardApplication = {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  status: ApplicationStatus;
+  paidOffline: boolean;
+  paymentNote: string;
+  message: string;
+  createdAt: string;
+  group?: { id: number; title: string };
+};
+
+const toDashboard = (a: {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string | null;
+  status?: ApplicationStatus | null;
+  paidOffline?: boolean | null;
+  paymentNote?: string | null;
+  message?: string | null;
+  createdAt: string;
+  courseGroup?: unknown;
+}): DashboardApplication => {
+  const g = a.courseGroup && typeof a.courseGroup === 'object' ? (a.courseGroup as CourseGroup) : null;
+  return {
+    id: a.id,
+    name: a.name,
+    email: a.email,
+    phone: a.phone ?? '',
+    status: a.status ?? 'registered',
+    paidOffline: Boolean(a.paidOffline),
+    paymentNote: a.paymentNote ?? '',
+    message: a.message ?? '',
+    createdAt: a.createdAt,
+    group: g ? { id: g.id, title: g.title } : undefined,
+  };
+};
+
+/**
+ * What staff act on: the upcoming Nyitott Műhely dates with their participants (payment), the
+ * beginner sign-ups not yet in their group (admission), the professional applications under review.
+ */
+export async function dashboard(payload: Payload, now = new Date()) {
+  const settings = await applicationSettings(payload);
+  const [{ docs: dates }, { docs: courseApps }, { docs: groups }] = await Promise.all([
+    payload.find({
+      collection: 'sessions',
+      where: { and: [{ kind: { equals: 'workshop' } }, { end: { greater_than: now.toISOString() } }] },
+      depth: 0,
+      sort: 'start',
+      limit: 30,
+    }),
+    payload.find({
+      collection: 'applications',
+      where: {
+        or: [
+          { and: [{ kind: { equals: 'beginner' } }, { status: { equals: 'registered' } }] },
+          { and: [{ kind: { equals: 'professional' } }, { status: { in: ['new', 'interview'] } }] },
+        ],
+      },
+      depth: 1,
+      sort: 'createdAt',
+      ...all,
+    }),
+    payload.find({
+      collection: 'courseGroups',
+      where: { endDate: { greater_than_equal: now.toISOString() } },
+      depth: 0,
+      sort: 'startDate',
+      select: { title: true, type: true, students: true, signup: true, startDate: true },
+      ...all,
+    }),
+  ]);
+  const { docs: participants } = dates.length
+    ? await payload.find({
+        collection: 'applications',
+        where: { session: { in: dates.map((d) => d.id) } },
+        depth: 0,
+        sort: 'createdAt',
+        ...all,
+      })
+    : { docs: [] };
+  const studentsOf = new Map(groups.map((g) => [g.id, relIds(g.students)]));
+  const beginners = courseApps.filter(
+    (a) => a.kind === 'beginner' && !(studentsOf.get(relId(a.courseGroup) ?? 0) ?? []).includes(relId(a.user) ?? 0),
+  );
+  return {
+    workshops: dates.map((s) => {
+      const list = participants.filter((p) => relId(p.session) === s.id);
+      const taken = list.filter((p) => (COUNTED_STATUSES as readonly string[]).includes(p.status ?? '')).length;
+      return {
+        id: s.id,
+        when: whenText(s.start, s.end, 'long'),
+        status: s.status === 'cancelled' ? ('cancelled' as const) : (s.workshop?.workshopStatus ?? 'open'),
+        min: s.workshop?.minParticipants ?? 5,
+        max: s.workshop?.maxParticipants ?? null,
+        price: huf(s.workshop?.price),
+        taken,
+        cutoff: momentText(cutoffAt(new Date(s.start), settings.workshopCutoffHours)),
+        participants: list.map(toDashboard),
+      };
+    }),
+    beginners: beginners.map(toDashboard),
+    professionals: courseApps.filter((a) => a.kind === 'professional').map(toDashboard),
+    /** For "Felvétel és csoportba helyezés": the running and upcoming professional groups. */
+    professionalGroups: groups
+      .filter((g) => signupKindOf(g as CourseGroup) === 'professional')
+      .map((g) => ({ id: g.id, title: g.title })),
+  };
+}
+
+/** For the nav link: course applications waiting for a decision. */
+export async function countWaiting(payload: Payload): Promise<number> {
+  const d = await dashboard(payload);
+  return d.beginners.length + d.professionals.filter((p) => p.status === 'new').length;
+}

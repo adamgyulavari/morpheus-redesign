@@ -23,8 +23,10 @@ import { FillMonthLink as FillMonthLink_3e10b527e91a7be1977956b871d79c02 } from 
 import { AdminIcon as AdminIcon_c7cc1027a67379fab4ede5a29a5bee3b } from '@/payload/components/Graphics'
 import { AdminLogo as AdminLogo_c7cc1027a67379fab4ede5a29a5bee3b } from '@/payload/components/Graphics'
 import { RoomCalendarNav as RoomCalendarNav_f110d0bc0bd33b6f55f8fe48dc5f0145 } from '@/payload/components/RoomCalendarNav'
+import { ApplicationsNav as ApplicationsNav_ca69f763a588bf24827689b55ccbb728 } from '@/payload/components/ApplicationsNav'
 import { AdminTheme as AdminTheme_d51e05e162859c3d161662d24fe628c0 } from '@/payload/components/AdminTheme'
 import { RoomCalendarView as RoomCalendarView_222f16c347eac7557592e1fadc58105d } from '@/payload/views/RoomCalendarView'
+import { ApplicationsView as ApplicationsView_450f8a77033934c042a8d851a1db2341 } from '@/payload/views/ApplicationsView'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 
@@ -55,8 +57,10 @@ export const importMap = {
   "@/payload/components/Graphics#AdminIcon": AdminIcon_c7cc1027a67379fab4ede5a29a5bee3b,
   "@/payload/components/Graphics#AdminLogo": AdminLogo_c7cc1027a67379fab4ede5a29a5bee3b,
   "@/payload/components/RoomCalendarNav#RoomCalendarNav": RoomCalendarNav_f110d0bc0bd33b6f55f8fe48dc5f0145,
+  "@/payload/components/ApplicationsNav#ApplicationsNav": ApplicationsNav_ca69f763a588bf24827689b55ccbb728,
   "@/payload/components/AdminTheme#AdminTheme": AdminTheme_d51e05e162859c3d161662d24fe628c0,
   "@/payload/views/RoomCalendarView#RoomCalendarView": RoomCalendarView_222f16c347eac7557592e1fadc58105d,
+  "@/payload/views/ApplicationsView#ApplicationsView": ApplicationsView_450f8a77033934c042a8d851a1db2341,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24
 }
