@@ -44,8 +44,7 @@ export default async function RoomBookingPage() {
       {!o.mayBook ? (
         <Card>
           <p className="text-[16px] leading-relaxed text-ink2">
-            Termet a futó kurzusaink hallgatói foglalhatnak, és akinek a munkatársaink engedélyt adtak. Ha szükséged van
-            rá, szólj nekünk.
+            Termet gyakorláshoz az foglalhat, akinek a munkatársaink engedélyt adtak. Ha szükséged van rá, szólj nekünk.
           </p>
         </Card>
       ) : (

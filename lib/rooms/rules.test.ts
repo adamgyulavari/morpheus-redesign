@@ -17,8 +17,8 @@ const nagyterem: RoomInfo = { id: 1, name: 'Nagyterem', active: true, studentBoo
 const iroda: RoomInfo = { id: 3, name: 'Iroda', active: true, studentBookable: false };
 const closedRoom: RoomInfo = { id: 4, name: 'Pince', active: false, studentBookable: true };
 const student: StudentContext = {
-  activeGroups: [{ id: 1, endDate: '2027-06-30' }],
-  permitted: false,
+  permitted: true,
+  groupIds: [1],
   linkableProductionIds: [10],
   minutesBookedInWeek: 0,
 };
@@ -47,19 +47,14 @@ describe('checkPractice', () => {
     expect(reason(check(practice('2026-12-03', '10:00', '12:00')))).toContain('Legfeljebb 30 nappal előre');
   });
 
-  it('refuses someone without an active course or a permission', () => {
-    expect(reason(check(practice('2026-11-20', '10:00', '12:00'), { activeGroups: [] }))).toContain(
-      'Teremfoglalásra most nincs jogosultságod',
+  it('refuses anyone without the permission, even in a running course', () => {
+    expect(reason(check(practice('2026-11-20', '10:00', '12:00'), { permitted: false }))).toBe(
+      'Teremfoglalásra nincs engedélyed. Ha szükséged van rá, szólj nekünk.',
     );
   });
 
-  it('a permission allows booking without a course, with no end date', () => {
-    expect(
-      check(practice('2026-11-20', '10:00', '12:00'), { activeGroups: [], linkableProductionIds: [], permitted: true })
-        .ok,
-    ).toBe(true);
-    const ended = { activeGroups: [{ id: 1, endDate: '2026-11-10' }], permitted: true };
-    expect(check(practice('2026-11-20', '10:00', '12:00'), ended).ok).toBe(true);
+  it('the permission is enough without a course', () => {
+    expect(check(practice('2026-11-20', '10:00', '12:00'), { groupIds: [], linkableProductionIds: [] }).ok).toBe(true);
   });
 
   it('only links the own course or its productions', () => {
@@ -123,14 +118,6 @@ describe('checkPractice', () => {
         { hoursFrom: '08:00', hoursTo: '00:00' },
       ).ok,
     ).toBe(true);
-  });
-
-  it('only until the end of the student’s latest course', () => {
-    const ctx = { activeGroups: [{ id: 1, endDate: '2026-11-10' }] };
-    expect(check(practice('2026-11-10', '10:00', '12:00'), ctx).ok).toBe(true);
-    expect(reason(check(practice('2026-11-11', '10:00', '12:00'), ctx))).toBe(
-      'A kurzusod végéig (2026. 11. 10.) foglalhatsz.',
-    );
   });
 
   it('measures length in real time across the autumn DST change', () => {

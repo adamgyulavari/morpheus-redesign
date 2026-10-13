@@ -96,7 +96,7 @@ export const Users: CollectionConfig = {
       admin: { readOnly: true, hidden: true },
     },
     {
-      // lib/rooms/rules.ts: students of an active course may book anyway; this is for everyone else
+      // the only way to room booking (lib/rooms/rules.ts)
       name: 'roomBooking',
       label: 'Teremfoglalás engedélyezve',
       type: 'checkbox',
@@ -105,7 +105,7 @@ export const Users: CollectionConfig = {
       admin: {
         position: 'sidebar',
         description:
-          'Aktív kurzus nélkül is foglalhat termet gyakorláshoz (pl. kurzusok között), kurzus-végdátum nélkül. Az aktív kurzusok hallgatói enélkül is foglalhatnak.',
+          'Foglalhat termet gyakorláshoz a Fiókom → Teremfoglalás oldalon. Csak ezzel lehet foglalni; a kurzus-tagság önmagában nem ad jogot.',
       },
     },
     {

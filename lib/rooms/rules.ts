@@ -1,11 +1,10 @@
 /**
  * Student room-booking rules, as pure functions (no database, no clock): the server gathers the
- * facts (the student's active groups, their permission, their bookings this week, the settings,
- * now) and asks here.
+ * facts (their permission, their groups, their bookings this week, the settings, now) and asks here.
  *
- * Who may book: a student of an active course group (automatically, until the latest group's last
- * day), or anyone staff gave the "Teremfoglalás engedélyezve" permission (e.g. between courses —
- * no end date then). Registering alone never allows it.
+ * Who may book: only those staff gave the "Teremfoglalás engedélyezve" permission (`users.roomBooking`).
+ * Being in a course doesn't allow it, nor does registering; the groups only decide what practice
+ * may be "for".
  * Staff and admins are not bound by these; the clash guarantee (occupancy.ts) applies to everyone.
  */
 import { addDays, clockMinutes, dayOf, minutesOf } from './time';
@@ -62,10 +61,10 @@ export function settingsFrom(doc: Record<string, unknown> | null | undefined): B
 export type RoomInfo = { id: number; name: string; active: boolean; studentBookable: boolean };
 
 export type StudentContext = {
-  /** The student's groups whose last day hasn't passed (id, last day "YYYY-MM-DD"). */
-  activeGroups: { id: number; endDate: string }[];
-  /** Staff allowed room booking for this user regardless of courses (`users.roomBooking`). */
+  /** Staff allowed room booking for this user (`users.roomBooking`) — the only way to book. */
   permitted: boolean;
+  /** The student's groups that haven't ended (practice may be "for" them). */
+  groupIds: number[];
   /** Productions linked to those groups (their rehearsals; practice may be "for" them). */
   linkableProductionIds: number[];
   /** Minutes of the student's other confirmed practice in the booking's week. */
@@ -95,10 +94,8 @@ export function checkPractice(
   s: BookingSettings,
   now: Date,
 ): RuleResult {
-  if (!student.activeGroups.length && !student.permitted) {
-    return refuse(
-      'Teremfoglalásra most nincs jogosultságod: aktív kurzusod nincs, és engedélyt sem kaptál. Ha szükséged van rá, szólj nekünk.',
-    );
+  if (!student.permitted) {
+    return refuse('Teremfoglalásra nincs engedélyed. Ha szükséged van rá, szólj nekünk.');
   }
   if (!req.rooms.length) return refuse('Válassz termet.');
   for (const room of req.rooms) {
@@ -137,18 +134,8 @@ export function checkPractice(
     return refuse(`A heti keret ${num(s.weeklyQuotaHours)} óra; erre a hétre még ${num(left)} óra maradt.`);
   }
 
-  // allowed through a course only: until its last day (a permission has no end date)
-  const lastCourseDay =
-    student.activeGroups
-      .map((g) => g.endDate)
-      .sort()
-      .at(-1) ?? '';
-  if (!student.permitted && dayOf(new Date(req.end.getTime() - 1)) > lastCourseDay) {
-    return refuse(`A kurzusod végéig (${huDay(lastCourseDay)}) foglalhatsz.`);
-  }
-
   if (req.courseGroup && req.production) return refuse('Csoportot vagy előadást válassz — csak az egyiket.');
-  if (req.courseGroup && !student.activeGroups.some((g) => g.id === req.courseGroup)) {
+  if (req.courseGroup && !student.groupIds.includes(req.courseGroup)) {
     return refuse('Csak a saját kurzusodhoz gyakorolhatsz.');
   }
   if (req.production && !student.linkableProductionIds.includes(req.production)) {

@@ -60,13 +60,8 @@ export async function loadSettings(payload: Payload): Promise<BookingSettings> {
   );
 }
 
-/** May book rooms: in a group that hasn't ended, or allowed by staff (`users.roomBooking`). */
-export const canBookRooms = (user: TypedUser, activeGroups: number) => activeGroups > 0 || Boolean(user.roomBooking);
-
-export async function mayBookRooms(payload: Payload, user: TypedUser | null): Promise<boolean> {
-  if (!user) return false;
-  return user.roomBooking ? true : canBookRooms(user, (await studentGroups(payload, user.id)).groups.length);
-}
+/** May book rooms: only those staff allowed it (`users.roomBooking`) — being in a course doesn't. */
+export const mayBookRooms = (user: TypedUser | null | undefined): boolean => Boolean(user?.roomBooking);
 
 /** Facts for the student rules, for a booking starting at `start` (excluding `except`). */
 export async function studentContext(
@@ -95,8 +90,8 @@ export async function studentContext(
     ...all,
   });
   return {
-    activeGroups: groups.map((g) => ({ id: g.id, endDate: dayOf(new Date(g.endDate)) })),
-    permitted: Boolean(user.roomBooking),
+    permitted: mayBookRooms(user),
+    groupIds: groups.map((g) => g.id),
     linkableProductionIds: productions.map((p) => p.id),
     minutesBookedInWeek: week.reduce(
       (sum, b) => sum + (new Date(b.end).getTime() - new Date(b.start).getTime()) / 60_000,
@@ -156,7 +151,7 @@ export async function getRoomSchedule(
 ): Promise<ScheduleEvent[] | null> {
   if (!viewer) return null;
   const staff = userIsStaffOrAdmin(viewer);
-  if (!staff && !(await mayBookRooms(payload, viewer))) return null;
+  if (!staff && !mayBookRooms(viewer)) return null;
 
   const { docs } = await payload.find({
     collection: 'roomBookings',

@@ -2061,7 +2061,7 @@ export interface User {
   phone?: string | null;
   name?: string | null;
   /**
-   * Aktív kurzus nélkül is foglalhat termet gyakorláshoz (pl. kurzusok között), kurzus-végdátum nélkül. Az aktív kurzusok hallgatói enélkül is foglalhatnak.
+   * Foglalhat termet gyakorláshoz a Fiókom → Teremfoglalás oldalon. Csak ezzel lehet foglalni; a kurzus-tagság önmagában nem ad jogot.
    */
   roomBooking?: boolean | null;
   /**

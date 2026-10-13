@@ -102,25 +102,30 @@ export default async function AccountPage() {
               ))}
             </Section>
 
-            <Section
-              title="Saját foglalásaim"
-              action={
-                <Link href="/fiokom/terem" className="link-arrow link text-[15px] text-teal">
-                  Terem foglalása
-                  <ArrowRight />
-                </Link>
-              }
-            >
-              {o.ownPractice.length === 0 ? (
-                <Empty>Nincs közelgő teremfoglalásod.</Empty>
-              ) : (
-                <ul className="flex flex-col gap-2">
-                  {o.ownPractice.map((b) => (
-                    <OwnBooking key={b.id} booking={b} />
-                  ))}
-                </ul>
-              )}
-            </Section>
+            {/* only for those who may book (or still have bookings from before) */}
+            {(o.mayBook || o.ownPractice.length > 0) && (
+              <Section
+                title="Saját foglalásaim"
+                action={
+                  o.mayBook && (
+                    <Link href="/fiokom/terem" className="link-arrow link text-[15px] text-teal">
+                      Terem foglalása
+                      <ArrowRight />
+                    </Link>
+                  )
+                }
+              >
+                {o.ownPractice.length === 0 ? (
+                  <Empty>Nincs közelgő teremfoglalásod.</Empty>
+                ) : (
+                  <ul className="flex flex-col gap-2">
+                    {o.ownPractice.map((b) => (
+                      <OwnBooking key={b.id} booking={b} />
+                    ))}
+                  </ul>
+                )}
+              </Section>
+            )}
 
             {o.links.length > 0 && (
               <Section title="Linkek">
