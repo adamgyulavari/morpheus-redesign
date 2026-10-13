@@ -10,7 +10,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import luxonPlugin from '@fullcalendar/luxon3';
 import timeGridPlugin from '@fullcalendar/timegrid';
 
-import { BOOKING_KINDS, KIND_COLORS, SESSION_KINDS } from '@/lib/rooms/labels';
+import { BOOKING_KINDS, KIND_PALETTE, SESSION_KINDS } from '@/lib/rooms/labels';
 import type { ScheduleEvent } from '@/lib/rooms/server';
 import { TZ } from '@/lib/rooms/time';
 
@@ -57,8 +57,8 @@ export function toCalendarEvent(
 ): EventInput {
   const kindColor =
     e.kind === 'session'
-      ? KIND_COLORS[e.sessionKind ?? 'other']
-      : KIND_COLORS[e.kind as 'practice' | 'rental' | 'other'];
+      ? KIND_PALETTE[e.sessionKind ?? 'other'].fill
+      : KIND_PALETTE[e.kind as 'practice' | 'rental' | 'other'].fill;
   const roomColor = opts.colorByRoom?.get(e.roomIds[0] ?? -1);
   const color = roomColor ?? kindColor;
   return {

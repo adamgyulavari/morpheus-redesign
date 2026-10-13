@@ -1,10 +1,10 @@
 /**
- * How each kind of upcoming item looks: its label, an icon, a text colour that reads on cream (AA)
- * and a light tint for backgrounds. Hues follow the room calendar's (lib/rooms/labels.ts KIND_COLORS).
+ * How each kind of upcoming item looks: its label, an icon and its colours (lib/rooms/labels.ts
+ * KIND_PALETTE, shared with the room calendars).
  */
 import type { ReactNode } from 'react';
 
-import { SESSION_KINDS } from '@/lib/rooms/labels';
+import { BOOKING_KINDS, KIND_PALETTE, SESSION_KINDS } from '@/lib/rooms/labels';
 
 import type { UpcomingKind } from './items';
 
@@ -65,15 +65,15 @@ export const KIND_STYLE: Record<
   UpcomingKind,
   { label: string; Icon: (p: IconProps) => ReactNode; ink: string; tint: string }
 > = {
-  course: { label: SESSION_KINDS.course, Icon: ClassIcon, ink: '#0f5f63', tint: '#e1ecea' },
-  rehearsal: { label: SESSION_KINDS.rehearsal, Icon: RehearsalIcon, ink: '#5c3f8a', tint: '#ebe4f3' },
-  show: { label: SESSION_KINDS.show, Icon: ShowIcon, ink: '#b8472a', tint: '#f6e2d9' },
-  exam: { label: SESSION_KINDS.exam, Icon: ExamIcon, ink: '#9a3b22', tint: '#f3dfd6' },
-  practice: { label: 'Gyakorlás', Icon: PracticeIcon, ink: '#8a6414', tint: '#f6ead0' },
-  other: { label: SESSION_KINDS.other, Icon: OtherIcon, ink: '#4d6366', tint: '#e9e6df' },
+  course: { label: SESSION_KINDS.course, Icon: ClassIcon, ...KIND_PALETTE.course },
+  rehearsal: { label: SESSION_KINDS.rehearsal, Icon: RehearsalIcon, ...KIND_PALETTE.rehearsal },
+  show: { label: SESSION_KINDS.show, Icon: ShowIcon, ...KIND_PALETTE.show },
+  exam: { label: SESSION_KINDS.exam, Icon: ExamIcon, ...KIND_PALETTE.exam },
+  practice: { label: BOOKING_KINDS.practice, Icon: PracticeIcon, ...KIND_PALETTE.practice },
+  other: { label: SESSION_KINDS.other, Icon: OtherIcon, ...KIND_PALETTE.other },
 };
 
-export const CANCELLED = { label: 'Elmarad', ink: '#9a3b22', tint: '#efe5d6' };
+export const CANCELLED = { label: 'Elmarad', ink: KIND_PALETTE.exam.ink, tint: 'var(--color-sand)' };
 
 /** The kind as a small coloured label with its icon ("Elmarad" when cancelled). */
 export function KindLabel({ kind, cancelled }: { kind: UpcomingKind; cancelled?: boolean }) {
@@ -95,7 +95,7 @@ export function KindBadge({ kind, cancelled }: { kind: UpcomingKind; cancelled?:
   return (
     <span
       className="grid h-9 w-9 shrink-0 place-items-center rounded-full"
-      style={{ background: cancelled ? CANCELLED.tint : k.tint, color: cancelled ? '#4d6366' : k.ink }}
+      style={{ background: cancelled ? CANCELLED.tint : k.tint, color: cancelled ? 'var(--color-muted)' : k.ink }}
       title={k.label}
     >
       <k.Icon className="h-[18px] w-[18px]" />

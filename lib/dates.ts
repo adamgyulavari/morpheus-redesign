@@ -2,7 +2,7 @@
  * Date helpers. All content dates are Budapest calendar dates; these work the same on a server
  * running in UTC and in a visitor's browser, so "today" and deadlines don't shift by time zone.
  */
-const TZ = 'Europe/Budapest';
+export const TZ = 'Europe/Budapest';
 
 /** Today's date in Budapest as "YYYY-MM-DD". */
 export function todayInBudapest(now: Date = new Date()): string {

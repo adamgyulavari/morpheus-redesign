@@ -9,12 +9,13 @@
  * A failed e-mail never fails the save; it is logged.
  */
 import type { PayloadRequest } from 'payload';
-import { relId, relIds } from '@/payload/collections/RoomBookings';
 import { emailLayout, siteUrl } from '@/payload/email';
+import { relId, relIds } from '@/payload/rel';
 
 import { whenText } from './format';
 import { icsFile } from './ics';
 import { BOOKING_KINDS } from './labels';
+import { roomNames } from './occupancy';
 
 const HORIZON_MS = 30 * 86_400_000;
 const STUDIO = 'Morpheus Színműhely';
@@ -23,22 +24,6 @@ type Doc = Record<string, unknown>;
 type Recipient = { id: number; email: string; firstName?: string | null };
 
 const hello = (u: Recipient) => (u.firstName ? `Kedves ${u.firstName}!` : 'Kedves Hallgatónk!');
-
-async function roomNames(req: PayloadRequest, ids: number[]): Promise<string> {
-  if (!ids.length) return '';
-  const { docs } = await req.payload.find({
-    collection: 'rooms',
-    where: { id: { in: ids } },
-    depth: 0,
-    req,
-    limit: 0,
-    pagination: false,
-  });
-  return ids
-    .map((id) => docs.find((r) => r.id === id)?.name)
-    .filter(Boolean)
-    .join(', ');
-}
 
 async function send(
   req: PayloadRequest,
@@ -89,7 +74,7 @@ export async function notifyPractice(
 
     const start = new Date(String(doc.start));
     const end = new Date(String(doc.end));
-    const rooms = await roomNames(req, relIds(doc.rooms));
+    const rooms = await roomNames(req.payload, relIds(doc.rooms), req);
     const ownerId = relId(doc.courseGroup) ?? relId(doc.production);
     const owner = ownerId
       ? (
@@ -164,7 +149,7 @@ export async function notifyPractice(
         String(previous?.end) !== String(doc.end) ||
         relIds(previous?.rooms).join() !== relIds(doc.rooms).join());
     if (moved && previous) {
-      const oldRooms = await roomNames(req, relIds(previous.rooms));
+      const oldRooms = await roomNames(req.payload, relIds(previous.rooms), req);
       const oldWhen = whenText(new Date(String(previous.start)), new Date(String(previous.end)), 'long');
       return await send(req, [user], (u) => ({
         subject: 'Teremfoglalás módosítva',
@@ -193,7 +178,7 @@ export async function notifyPractice(
 // ── sessions ────────────────────────────────────────────────────────────────
 
 async function placeOf(req: PayloadRequest, s: Doc): Promise<string> {
-  if (s.locationType === 'room') return roomNames(req, relIds(s.rooms));
+  if (s.locationType === 'room') return roomNames(req.payload, relIds(s.rooms), req);
   if (s.locationType === 'external') return String(s.externalLocation ?? '');
   return 'Helyszín egyeztetés alatt';
 }

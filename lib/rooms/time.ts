@@ -4,7 +4,9 @@
  */
 import { TZDate } from '@date-fns/tz';
 
-export const TZ = 'Europe/Budapest';
+import { TZ } from '@/lib/dates';
+
+export { TZ };
 
 /** "YYYY-MM-DD" in Budapest. */
 export function dayOf(moment: Date): string {

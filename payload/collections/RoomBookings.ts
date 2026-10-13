@@ -1,18 +1,13 @@
-import { type CollectionConfig, type PayloadRequest, ValidationError } from 'payload';
+import type { CollectionConfig, PayloadRequest } from 'payload';
 
 import { BOOKING_KINDS, options } from '@/lib/rooms/labels';
 import { notifyPractice } from '@/lib/rooms/notify';
-import { clashMessage, findClashes, syncOccupancy } from '@/lib/rooms/occupancy';
+import { clashMessage, findClashes, roomNames, syncOccupancy } from '@/lib/rooms/occupancy';
 
-import { isAdminField, userIsAdmin } from '../access';
 import { dateTime, relationship, text, textarea } from '../fields';
+import { type Rel, relId, relIds } from '../rel';
+import { blockingClashes, failer, mayOverridePractice, overridePracticeField } from './placement';
 import { ROOMS_GROUP, staffOnly } from './Rooms';
-
-type Rel = number | { id: number } | null | undefined;
-export const relId = (v: unknown): number | null =>
-  v == null ? null : typeof v === 'object' ? Number((v as { id: number }).id) : Number(v);
-export const relIds = (v: unknown): number[] =>
-  Array.isArray(v) ? v.map(relId).filter((x): x is number => x !== null) : [];
 
 type BookingDoc = {
   id?: number;
@@ -30,9 +25,7 @@ type BookingDoc = {
   overridePractice?: boolean;
 };
 
-const fail = (path: string, message: string, req: PayloadRequest): never => {
-  throw new ValidationError({ collection: 'roomBookings', errors: [{ path, message }] }, req.t);
-};
+const fail = failer('roomBookings');
 
 /** "Gyakorlás — Teszt Anna", the rental's title, or the session's (passed in by the session). */
 async function titleOf(b: BookingDoc, req: PayloadRequest): Promise<string> {
@@ -50,13 +43,6 @@ async function titleOf(b: BookingDoc, req: PayloadRequest): Promise<string> {
   }
   return BOOKING_KINDS[b.kind ?? 'other'];
 }
-
-/**
- * Admins may cancel clashing student practice when placing something (the "Ütköző diákfoglalások
- * felülírása" box, or `req.context.overridePractice` from the calendar). Sessions and rentals always block.
- */
-export const mayOverridePractice = (req: PayloadRequest, data?: { overridePractice?: boolean }) =>
-  userIsAdmin(req.user) && Boolean(data?.overridePractice || req.context.overridePractice);
 
 /**
  * One or more rooms for a time range: a session's place, a student's practice, a rental, other.
@@ -97,13 +83,8 @@ export const RoomBookings: CollectionConfig = {
         data.displayTitle = await titleOf(b, req);
 
         if (b.status !== 'cancelled') {
-          const own = (originalDoc as BookingDoc | undefined)?.id;
-          const clashes = await findClashes(req.payload, req, rooms, start, end, own ? [own] : []);
-          const overridable =
-            clashes.length > 0 && clashes.every((c) => c.kind === 'practice') && mayOverridePractice(req, b);
-          if (clashes.length && !overridable) {
-            fail('rooms', clashMessage(clashes), req);
-          }
+          const clashes = await blockingClashes(req, rooms, start, end, (originalDoc as BookingDoc | undefined)?.id, b);
+          if (clashes.length) fail('rooms', clashMessage(clashes), req);
         }
         return data;
       },
@@ -131,16 +112,7 @@ export const RoomBookings: CollectionConfig = {
           req.payload,
           req,
           { id: b.id, rooms, start, end, confirmed: b.status === 'confirmed' },
-          async () => {
-            const { docs } = await req.payload.find({
-              collection: 'rooms',
-              where: { id: { in: rooms } },
-              depth: 0,
-              req,
-              pagination: false,
-            });
-            return docs.map((r) => r.name).join(', ');
-          },
+          () => roomNames(req.payload, rooms, req),
         );
         // the student hears about their practice (confirmed, changed, cancelled — with the reason)
         await notifyPractice(req, doc, operation === 'update' ? previousDoc : undefined, operation);
@@ -244,17 +216,8 @@ export const RoomBookings: CollectionConfig = {
       },
     },
     textarea('notes', 'Belső megjegyzés', { description: 'Csak a munkatársak látják.' }),
-    {
-      name: 'overridePractice',
-      label: 'Ütköző diákfoglalások felülírása',
-      type: 'checkbox',
-      virtual: true,
-      access: { create: isAdminField, update: isAdminField, read: isAdminField },
-      admin: {
-        position: 'sidebar',
-        description:
-          'Csak adminisztrátor: az ütköző diák-gyakorlásokat lemondja (a diákok e-mailt kapnak). Alkalommal és bérléssel ütközni nem lehet.',
-      },
-    },
+    overridePracticeField(
+      'Csak adminisztrátor: az ütköző diák-gyakorlásokat lemondja (a diákok e-mailt kapnak). Alkalommal és bérléssel ütközni nem lehet.',
+    ),
   ],
 };

@@ -7,6 +7,7 @@
 import type { TypedUser } from 'payload';
 
 import { getCurrentUser, payloadClient } from '@/lib/auth';
+import { userIsStaffOrAdmin } from '@/payload/access';
 
 import type { LocationType, SessionKind } from './labels';
 import {
@@ -15,7 +16,6 @@ import {
   deleteGenerated,
   errorMessage,
   getRoomSchedule,
-  isStaff,
   monthGroups,
   previewFill,
   roomsById,
@@ -27,7 +27,7 @@ type Result<T = object> = ({ ok: true } & T) | { ok: false; reason: string };
 
 async function staff(): Promise<TypedUser | null> {
   const user = await getCurrentUser();
-  return user && isStaff(user) ? user : null;
+  return user && userIsStaffOrAdmin(user) ? user : null;
 }
 const denied = { ok: false as const, reason: 'Ehhez munkatársi jogosultság kell.' };
 

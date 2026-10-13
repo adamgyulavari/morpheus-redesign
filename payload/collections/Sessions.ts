@@ -1,15 +1,14 @@
-import { type CollectionConfig, type PayloadRequest, ValidationError } from 'payload';
+import type { CollectionConfig, PayloadRequest } from 'payload';
 
 import { LOCATION_TYPES, options, SESSION_KINDS } from '@/lib/rooms/labels';
 import { notifySessionChange } from '@/lib/rooms/notify';
-import { clashMessage, findClashes } from '@/lib/rooms/occupancy';
+import { clashMessage } from '@/lib/rooms/occupancy';
 
-import { isAdminField } from '../access';
 import { dateTime, relationship, text, textarea } from '../fields';
-import { mayOverridePractice, relId, relIds } from './RoomBookings';
+import { type Rel, relId, relIds } from '../rel';
+import { blockingClashes, failer, mayOverridePractice, overridePracticeField } from './placement';
 import { ROOMS_GROUP, staffOnly } from './Rooms';
 
-type Rel = number | { id: number } | null | undefined;
 export type SessionDoc = {
   id?: number;
   title?: string | null;
@@ -29,9 +28,7 @@ export type SessionDoc = {
   overridePractice?: boolean;
 };
 
-const fail = (path: string, message: string, req: PayloadRequest): never => {
-  throw new ValidationError({ collection: 'sessions', errors: [{ path, message }] }, req.t);
-};
+const fail = failer('sessions');
 
 /** The title, or the group's / production's name ("Keddi szakmai II." / "Az ördög — próba"). */
 async function titleOf(s: SessionDoc, req: PayloadRequest): Promise<string> {
@@ -132,11 +129,8 @@ export const Sessions: CollectionConfig = {
         if (s.locationType === 'room' && s.status !== 'cancelled') {
           const rooms = relIds(s.rooms);
           if (!rooms.length) fail('rooms', 'Válassz termet, vagy állítsd a helyszínt „Helyszín nélkül”-re.', req);
-          const own = relId(before.booking);
-          const clashes = await findClashes(req.payload, req, rooms, start, end, own ? [own] : []);
-          const overridable =
-            clashes.length > 0 && clashes.every((c) => c.kind === 'practice') && mayOverridePractice(req, s);
-          if (clashes.length && !overridable) {
+          const clashes = await blockingClashes(req, rooms, start, end, relId(before.booking), s);
+          if (clashes.length) {
             const placing = operation === 'create' || before.locationType !== 'room' || !sameIds(before.rooms, s.rooms);
             if (placing && !req.context.generating) {
               fail('rooms', clashMessage(clashes), req);
@@ -277,17 +271,7 @@ export const Sessions: CollectionConfig = {
         description: 'A hónap újbóli feltöltése és a generált alkalmak törlése nem nyúl hozzá.',
       },
     },
-    {
-      name: 'overridePractice',
-      label: 'Ütköző diákfoglalások felülírása',
-      type: 'checkbox',
-      virtual: true,
-      access: { create: isAdminField, update: isAdminField, read: isAdminField },
-      admin: {
-        position: 'sidebar',
-        description: 'Csak adminisztrátor: az ütköző diák-gyakorlásokat lemondja (a diákok e-mailt kapnak).',
-      },
-    },
+    overridePracticeField('Csak adminisztrátor: az ütköző diák-gyakorlásokat lemondja (a diákok e-mailt kapnak).'),
   ],
 };
 

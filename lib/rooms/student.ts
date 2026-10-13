@@ -6,10 +6,10 @@
  */
 import type { Payload, TypedUser } from 'payload';
 
-import { relId, relIds } from '@/payload/collections/RoomBookings';
+import { relId, relIds } from '@/payload/rel';
 
 import type { SessionKind } from './labels';
-import { studentGroups } from './server';
+import { canBookRooms, studentGroups } from './server';
 
 const all = { limit: 0, pagination: false } as const;
 
@@ -145,7 +145,7 @@ export async function studentOverview(payload: Payload, user: TypedUser) {
   return {
     active: groups.length > 0,
     /** May book rooms: an active group, or staff's permission. */
-    mayBook: groups.length > 0 || Boolean(user.roomBooking),
+    mayBook: canBookRooms(user, groups.length),
     groups: groups.map((g) => ({
       id: g.id,
       title: g.title,

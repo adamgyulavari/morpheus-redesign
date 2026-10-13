@@ -4,10 +4,10 @@
  * reads and writes happen here, after these checks, never through the raw API.
  */
 
-import type { Payload, TypedUser } from 'payload';
+import type { Payload, TypedUser, Where } from 'payload';
+import { todayInBudapest } from '@/lib/dates';
 import { userIsStaffOrAdmin } from '@/payload/access';
-import { relId, relIds } from '@/payload/collections/RoomBookings';
-
+import { relId, relIds } from '@/payload/rel';
 import { generatedKey, groupsInMonth, type PlannedSession, planMonth, type ScheduleGroup } from './generate';
 import { BOOKING_KINDS, type BookingKind, SESSION_KINDS, type SessionKind } from './labels';
 import { describeClash, findClashes } from './occupancy';
@@ -20,6 +20,7 @@ import {
   type StudentContext,
   settingsFrom,
 } from './rules';
+
 import { addDays, at, dayOf, daysOfMonth, mondayOf } from './time';
 
 type Doc = Record<string, unknown> & { id: number };
@@ -27,11 +28,9 @@ const all = { limit: 0, pagination: false } as const;
 
 // ── who is asking ───────────────────────────────────────────────────────────
 
-export const isStaff = (user: unknown) => userIsStaffOrAdmin(user);
-
 /** The student's groups that haven't ended, and the productions linked to them. */
 export async function studentGroups(payload: Payload, userId: number) {
-  const today = dayOf(new Date());
+  const today = todayInBudapest();
   const { docs: groups } = await payload.find({
     collection: 'courseGroups',
     where: { and: [{ students: { in: [userId] } }, { endDate: { greater_than_equal: `${today}T00:00:00.000Z` } }] },
@@ -61,11 +60,12 @@ export async function loadSettings(payload: Payload): Promise<BookingSettings> {
   );
 }
 
-/** A student of an active group, or someone staff allowed room booking (`users.roomBooking`). */
+/** May book rooms: in a group that hasn't ended, or allowed by staff (`users.roomBooking`). */
+export const canBookRooms = (user: TypedUser, activeGroups: number) => activeGroups > 0 || Boolean(user.roomBooking);
+
 export async function mayBookRooms(payload: Payload, user: TypedUser | null): Promise<boolean> {
   if (!user) return false;
-  if (user.roomBooking) return true;
-  return (await studentGroups(payload, user.id)).groups.length > 0;
+  return user.roomBooking ? true : canBookRooms(user, (await studentGroups(payload, user.id)).groups.length);
 }
 
 /** Facts for the student rules, for a booking starting at `start` (excluding `except`). */
@@ -155,7 +155,7 @@ export async function getRoomSchedule(
   to: Date,
 ): Promise<ScheduleEvent[] | null> {
   if (!viewer) return null;
-  const staff = isStaff(viewer);
+  const staff = userIsStaffOrAdmin(viewer);
   if (!staff && !(await mayBookRooms(payload, viewer))) return null;
 
   const { docs } = await payload.find({
@@ -316,6 +316,16 @@ export type FillPreviewItem = {
   clashes: string[];
 };
 
+/** Sessions fill month made for the month's days (of the groups, or of any group). */
+const generatedIn = (year: number, month: number, groupIds: number[] | null): Where[] => {
+  const days = daysOfMonth(year, month);
+  return [
+    { 'generatedFrom.courseGroup': groupIds?.length ? { in: groupIds } : { exists: true } },
+    { 'generatedFrom.day': { greater_than_equal: days[0] } },
+    { 'generatedFrom.day': { less_than_equal: days.at(-1) } },
+  ];
+};
+
 async function scheduleGroups(payload: Payload, ids: number[] | null): Promise<ScheduleGroup[]> {
   const { docs } = await payload.find({
     collection: 'courseGroups',
@@ -350,17 +360,10 @@ export async function planFill(payload: Payload, year: number, month: number, gr
     ? await scheduleGroups(payload, groupIds)
     : groupsInMonth(await scheduleGroups(payload, null), year, month);
   const ids = groups.map((g) => g.id);
-  const days = daysOfMonth(year, month);
   const { docs: generated } = ids.length
     ? await payload.find({
         collection: 'sessions',
-        where: {
-          and: [
-            { 'generatedFrom.courseGroup': { in: ids } },
-            { 'generatedFrom.day': { greater_than_equal: days[0] } },
-            { 'generatedFrom.day': { less_than_equal: days.at(-1) } },
-          ],
-        },
+        where: { and: generatedIn(year, month, ids) },
         depth: 0,
         select: { generatedFrom: true },
         ...all,
@@ -455,14 +458,11 @@ export async function applyFill(
 
 /** The month's generated sessions that "Generált alkalmak törlése" may delete: future, not hand-edited. */
 export async function deletableGenerated(payload: Payload, year: number, month: number, groupIds: number[] | null) {
-  const days = daysOfMonth(year, month);
   const { docs } = await payload.find({
     collection: 'sessions',
     where: {
       and: [
-        { 'generatedFrom.courseGroup': groupIds?.length ? { in: groupIds } : { exists: true } },
-        { 'generatedFrom.day': { greater_than_equal: days[0] } },
-        { 'generatedFrom.day': { less_than_equal: days.at(-1) } },
+        ...generatedIn(year, month, groupIds),
         { customized: { not_equals: true } },
         { start: { greater_than: new Date().toISOString() } },
       ],
@@ -498,16 +498,14 @@ export async function deleteGenerated(
 
 // ── staff: sessions without a place ─────────────────────────────────────────
 
+/** Sessions that will happen but have no place yet. */
+const UNPLACED: Where[] = [{ locationType: { equals: 'unplaced' } }, { status: { equals: 'scheduled' } }];
+
 export async function unplacedSessions(payload: Payload, from: Date, to: Date) {
   const { docs } = await payload.find({
     collection: 'sessions',
     where: {
-      and: [
-        { locationType: { equals: 'unplaced' } },
-        { status: { equals: 'scheduled' } },
-        { start: { less_than: to.toISOString() } },
-        { end: { greater_than: from.toISOString() } },
-      ],
+      and: [...UNPLACED, { start: { less_than: to.toISOString() } }, { end: { greater_than: from.toISOString() } }],
     },
     depth: 0,
     select: {
@@ -536,12 +534,6 @@ export const countUnplaced = async (payload: Payload) =>
   (
     await payload.count({
       collection: 'sessions',
-      where: {
-        and: [
-          { locationType: { equals: 'unplaced' } },
-          { status: { equals: 'scheduled' } },
-          { start: { greater_than: new Date().toISOString() } },
-        ],
-      },
+      where: { and: [...UNPLACED, { start: { greater_than: new Date().toISOString() } }] },
     })
   ).totalDocs;

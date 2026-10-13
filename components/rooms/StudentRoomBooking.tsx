@@ -17,6 +17,7 @@ import { bookPracticeAction, cancelPracticeAction, loadSchedule } from '@/lib/ro
 import { at, clockOf, dayOf } from '@/lib/rooms/time';
 
 import type { CalRoom } from './calendar-core';
+import OwnBooking from './OwnBooking';
 import RoomCalendar from './RoomCalendar';
 
 type Props = {
@@ -123,29 +124,21 @@ export default function StudentRoomBooking({ rooms, groups, productions, booking
         ) : (
           <ul className="flex flex-col gap-2">
             {bookings.map((b) => (
-              <li
+              <OwnBooking
                 key={b.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-paper px-4 py-3"
-              >
-                <span className="text-[15px]">
-                  <span className="font-semibold text-ink">{whenText(b.start, b.end, 'long')}</span>
-                  <span className="text-ink2">
-                    {' '}
-                    · {b.rooms}
-                    {b.owner && ` · ${b.owner}`}
-                  </span>
-                  {b.note && <span className="mt-1 block text-[14px] italic text-muted">„{b.note}”</span>}
-                </span>
-                <button
-                  type="button"
-                  className="link text-[15px] font-semibold text-rust-dark"
-                  onClick={() =>
-                    open({ mode: 'cancel', id: b.id, when: whenText(b.start, b.end, 'long'), rooms: b.rooms })
-                  }
-                >
-                  Lemondás
-                </button>
-              </li>
+                booking={b}
+                action={
+                  <button
+                    type="button"
+                    className="link text-[15px] font-semibold text-rust-dark"
+                    onClick={() =>
+                      open({ mode: 'cancel', id: b.id, when: whenText(b.start, b.end, 'long'), rooms: b.rooms })
+                    }
+                  >
+                    Lemondás
+                  </button>
+                }
+              />
             ))}
           </ul>
         )}

@@ -2,9 +2,11 @@
  * The overview's "Közelgő alkalmak": the group's sessions and the practice bookings in one shape, in
  * time order, with the date parts the list shows (Budapest time).
  */
+
+import { dayOfMonth, monthShort, todayInBudapest, weekday } from '@/lib/dates';
 import type { SessionKind } from '@/lib/rooms/labels';
 import type { StudentOverview } from '@/lib/rooms/student';
-import { addDays, clockOf, dayOf, TZ } from '@/lib/rooms/time';
+import { addDays, clockOf, dayOf } from '@/lib/rooms/time';
 
 export type UpcomingKind = SessionKind | 'practice';
 
@@ -50,21 +52,14 @@ export function upcomingItems(o: StudentOverview): UpcomingItem[] {
   ].sort((a, b) => a.start.localeCompare(b.start));
 }
 
-const part = (d: Date, o: Intl.DateTimeFormatOptions) =>
-  new Intl.DateTimeFormat('hu-HU', { timeZone: TZ, ...o }).format(d);
-
 /** Day number, month, weekday of a moment, and "Ma" / "Holnap" when it is today or tomorrow. */
-export function dateParts(iso: string, now = new Date()) {
-  const d = new Date(iso);
-  const day = dayOf(d);
-  const today = dayOf(now);
+export function dateParts(iso: string) {
+  const day = dayOf(new Date(iso));
+  const today = todayInBudapest();
   return {
-    day,
-    dayNumber: part(d, { day: 'numeric' }).replace('.', ''),
-    month: part(d, { month: 'short' }),
-    weekday: part(d, { weekday: 'long' }),
-    /** H, K, Sze, Cs, P, Szo, V */
-    weekdayShort: part(d, { weekday: 'short' }),
+    dayNumber: dayOfMonth(day),
+    month: monthShort(day),
+    weekday: weekday(day),
     relative: day === today ? 'Ma' : day === addDays(today, 1) ? 'Holnap' : undefined,
   };
 }

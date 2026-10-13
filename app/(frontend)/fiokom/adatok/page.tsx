@@ -3,7 +3,7 @@ import AccountShell, { Card } from '@/components/account/AccountShell';
 import { ProfileForm } from '@/components/account/forms';
 import { accountMetadata } from '@/components/account/meta';
 import { payloadClient, requireUser } from '@/lib/auth';
-import { studentGroups } from '@/lib/rooms/server';
+import { mayBookRooms } from '@/lib/rooms/server';
 import { userIsStaffOrAdmin } from '@/payload/access';
 
 // per visitor, never cached or prerendered (the build has no database)
@@ -14,10 +14,10 @@ export const generateMetadata = () => accountMetadata('Adataim');
 /** Own name and phone. */
 export default async function ProfilePage() {
   const user = await requireUser('/fiokom/adatok');
-  const { groups } = await studentGroups(await payloadClient(), user.id);
+  const canBook = await mayBookRooms(await payloadClient(), user);
   return (
     <AccountShell eyebrow="Fiókom" heading="*Adataim*" wide>
-      <AccountNav canBook={groups.length > 0 || Boolean(user.roomBooking)} isStaff={userIsStaffOrAdmin(user)} />
+      <AccountNav canBook={canBook} isStaff={userIsStaffOrAdmin(user)} />
       <div className="grid max-w-[640px] gap-5">
         <Card>
           <ProfileForm

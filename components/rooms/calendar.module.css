@@ -294,6 +294,13 @@
   font-size: 13px;
   font-weight: 600;
 }
+/* a group of checkboxes laid out like a field */
+.fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
 .field input,
 .field select,
 .field textarea {

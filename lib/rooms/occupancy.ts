@@ -10,6 +10,8 @@
 import { sql } from '@payloadcms/db-postgres';
 import { APIError, type Payload, type PayloadRequest } from 'payload';
 
+import { monthDayShort } from '@/lib/dates';
+
 import { whenText } from './format';
 import { clockOf, dayOf } from './time';
 
@@ -73,13 +75,27 @@ export async function findClashes(
   }));
 }
 
+/** "Nagyterem, Próbaterem" — the rooms' names, in the given order. */
+export async function roomNames(payload: Payload, ids: number[], req?: PayloadRequest): Promise<string> {
+  if (!ids.length) return '';
+  const { docs } = await payload.find({
+    collection: 'rooms',
+    where: { id: { in: ids } },
+    depth: 0,
+    select: { name: true },
+    limit: 0,
+    pagination: false,
+    req,
+  });
+  return ids
+    .map((id) => docs.find((r) => r.id === id)?.name)
+    .filter(Boolean)
+    .join(', ');
+}
+
 /** "Nagyterem, nov. 4. 18:00–21:00: Keddi szakmai II." */
 export function describeClash(c: Clash): string {
-  const [, m, d] = dayOf(c.start).split('-').map(Number) as [number, number, number];
-  const month = new Intl.DateTimeFormat('hu-HU', { month: 'short', timeZone: 'UTC' }).format(
-    new Date(Date.UTC(2000, m - 1, 1)),
-  );
-  return `${c.roomName}, ${month} ${d}. ${clockOf(c.start)}–${clockOf(c.end)}${c.title ? `: ${c.title}` : ''}`;
+  return `${c.roomName}, ${monthDayShort(dayOf(c.start))} ${clockOf(c.start)}–${clockOf(c.end)}${c.title ? `: ${c.title}` : ''}`;
 }
 
 /** "Ütközik: Nagyterem, nov. 4. 18:00–21:00: … (és még 2)" — for a non-empty list. */

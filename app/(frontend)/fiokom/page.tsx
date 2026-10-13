@@ -9,9 +9,9 @@ import { accountMetadata } from '@/components/account/meta';
 import { upcomingItems } from '@/components/account/upcoming/items';
 import UpcomingList from '@/components/account/upcoming/UpcomingList';
 import { ArrowRight } from '@/components/icons';
+import OwnBooking from '@/components/rooms/OwnBooking';
 import { payloadClient, requireUser } from '@/lib/auth';
 import { dateRange } from '@/lib/dates';
-import { whenText } from '@/lib/rooms/format';
 import { studentOverview } from '@/lib/rooms/student';
 import { userIsStaffOrAdmin } from '@/payload/access';
 
@@ -116,15 +116,7 @@ export default async function AccountPage() {
               ) : (
                 <ul className="flex flex-col gap-2">
                   {o.ownPractice.map((b) => (
-                    <li key={b.id} className="rounded-2xl border border-line bg-paper px-4 py-3 text-[15px]">
-                      <span className="font-semibold text-ink">{whenText(b.start, b.end)}</span>
-                      <span className="text-ink2">
-                        {' '}
-                        · {b.rooms}
-                        {b.owner && ` · ${b.owner}`}
-                      </span>
-                      {b.note && <span className="mt-1 block text-[14px] italic text-muted">„{b.note}”</span>}
-                    </li>
+                    <OwnBooking key={b.id} booking={b} />
                   ))}
                 </ul>
               )}

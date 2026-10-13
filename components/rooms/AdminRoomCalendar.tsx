@@ -13,6 +13,7 @@ import { useSearchParams } from 'next/navigation';
 import { type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
 import Dialog from '@/components/Dialog';
+import { todayInBudapest } from '@/lib/dates';
 import {
   adminSchedule,
   calendarOptions,
@@ -38,7 +39,6 @@ import RoomCalendar from './RoomCalendar';
 type Options = NonNullable<Awaited<ReturnType<typeof calendarOptions>>>;
 type Unplaced = NonNullable<Awaited<ReturnType<typeof adminSchedule>>>['unplaced'];
 
-const when = (start: string | Date, end: string | Date) => whenText(start, end);
 const duration = (start: string, end: string) => {
   const m = Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60_000);
   return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
@@ -201,7 +201,7 @@ export default function AdminRoomCalendar({ isAdmin }: { isAdmin: boolean }) {
                   >
                     <strong>{u.title}</strong>
                     <div className={s.muted}>
-                      {when(u.start, u.end)} · {SESSION_KINDS[u.kind]}
+                      {whenText(u.start, u.end)} · {SESSION_KINDS[u.kind]}
                     </div>
                   </div>
                 ))}
@@ -428,7 +428,7 @@ function EntryForm({
       )}
 
       {(!isNew || what === 'booking' || location !== 'external') && (
-        <fieldset className={s.field} style={{ border: 0, padding: 0, margin: 0 }}>
+        <fieldset className={`${s.field} ${s.fieldset}`}>
           <legend>Termek</legend>
           <div className={s.row}>
             {opts.rooms.map((r) => (
@@ -509,7 +509,7 @@ function EntryForm({
 
 type Row = { id: string; title: string; start: string; end: string; detail?: ReactNode; warn?: boolean };
 
-const nextMonth = () => addDays(dayOf(new Date()), 31).slice(0, 7);
+const nextMonth = () => addDays(todayInBudapest(), 31).slice(0, 7);
 
 /**
  * Both month actions in three steps: 1. month and groups → 2. the list, each row tickable →
@@ -647,7 +647,7 @@ function MonthDialog({
               Hónap
               <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
             </label>
-            <fieldset className={s.field} style={{ border: 0, padding: 0, margin: 0 }}>
+            <fieldset className={`${s.field} ${s.fieldset}`}>
               <legend>Csoportok, amelyek abban a hónapban futnak</legend>
               {groups.length === 0 && <p className={s.muted}>Ebben a hónapban nincs futó csoport.</p>}
               {groups.map((g) => (
@@ -707,12 +707,12 @@ function MonthDialog({
                       <td>
                         <input
                           type="checkbox"
-                          aria-label={`${r.title} ${when(r.start, r.end)}`}
+                          aria-label={`${r.title} ${whenText(r.start, r.end)}`}
                           checked={ticked.has(r.id)}
                           onChange={() => toggle(r.id)}
                         />
                       </td>
-                      <td>{when(r.start, r.end)}</td>
+                      <td>{whenText(r.start, r.end)}</td>
                       <td>
                         {r.title}
                         {r.detail && <div className={r.warn ? undefined : s.muted}>{r.detail}</div>}

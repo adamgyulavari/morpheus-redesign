@@ -12,7 +12,7 @@ export function NextCard({ item }: { item: UpcomingItem }) {
   return (
     <article
       className="flex flex-col gap-5 rounded-3xl border p-6 lg:p-8"
-      style={{ background: `color-mix(in srgb, ${k.tint} 55%, #fffaf2)`, borderColor: k.tint }}
+      style={{ background: `color-mix(in srgb, ${k.tint} 55%, var(--color-paper))`, borderColor: k.tint }}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <KindLabel kind={item.kind} />

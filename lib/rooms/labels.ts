@@ -26,15 +26,21 @@ export type LocationType = keyof typeof LOCATION_TYPES;
 
 export const WEEKDAYS = ['Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat', 'Vasárnap'] as const;
 
-/** Calendar colours by what is happening (site palette). */
-export const KIND_COLORS: Record<SessionKind | Exclude<BookingKind, 'session'>, string> = {
-  course: '#0f5f63',
-  rehearsal: '#6b4c9a',
-  exam: '#b8472a',
-  show: '#c24e2c',
-  other: '#4d6366',
-  practice: '#d9a441',
-  rental: '#33494c',
+/**
+ * Colours by what is happening (site palette): `fill` behind white text (the calendars' events),
+ * `ink` for text and icons on cream (AA), `tint` for light backgrounds.
+ */
+export const KIND_PALETTE: Record<
+  SessionKind | Exclude<BookingKind, 'session'>,
+  { fill: string; ink: string; tint: string }
+> = {
+  course: { fill: '#0f5f63', ink: '#0f5f63', tint: '#e1ecea' },
+  rehearsal: { fill: '#6b4c9a', ink: '#5c3f8a', tint: '#ebe4f3' },
+  exam: { fill: '#b8472a', ink: '#9a3b22', tint: '#f3dfd6' },
+  show: { fill: '#c24e2c', ink: '#b8472a', tint: '#f6e2d9' },
+  other: { fill: '#4d6366', ink: '#4d6366', tint: '#e9e6df' },
+  practice: { fill: '#d9a441', ink: '#8a6414', tint: '#f6ead0' },
+  rental: { fill: '#33494c', ink: '#33494c', tint: '#e4e8e7' },
 };
 
 export const options = (labels: Record<string, string>) =>
