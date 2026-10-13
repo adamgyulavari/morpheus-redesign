@@ -6,11 +6,12 @@ import type { ReactNode } from 'react';
 import AccountNav from '@/components/account/AccountNav';
 import AccountShell, { Card } from '@/components/account/AccountShell';
 import { accountMetadata } from '@/components/account/meta';
+import { upcomingItems } from '@/components/account/upcoming/items';
+import UpcomingList from '@/components/account/upcoming/UpcomingList';
 import { ArrowRight } from '@/components/icons';
 import { payloadClient, requireUser } from '@/lib/auth';
 import { dateRange } from '@/lib/dates';
 import { whenText } from '@/lib/rooms/format';
-import { SESSION_KINDS } from '@/lib/rooms/labels';
 import { studentOverview } from '@/lib/rooms/student';
 import { userIsStaffOrAdmin } from '@/payload/access';
 
@@ -48,11 +49,7 @@ const Empty = ({ children }: { children: ReactNode }) => <p className="text-[15p
 export default async function AccountPage() {
   const user = await requireUser('/fiokom');
   const o = await studentOverview(await payloadClient(), user);
-  // the group's sessions and its practice bookings (mine too), in one chronological list
-  const agenda = [
-    ...o.sessions.map((s) => ({ type: 'session' as const, start: s.start, s })),
-    ...[...o.ownPractice, ...o.groupPractice].map((b) => ({ type: 'practice' as const, start: b.start, b })),
-  ].sort((a, b) => a.start.localeCompare(b.start));
+  const agenda = upcomingItems(o);
 
   return (
     <AccountShell eyebrow="Fiókom" heading={`Szia, *${greetingName(user)}!*`} wide>
@@ -82,43 +79,7 @@ export default async function AccountPage() {
       ) : (
         <div className="grid gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
           <Section title="Közelgő alkalmak">
-            {agenda.length === 0 ? (
-              <Empty>Még nincs kiírt alkalom.</Empty>
-            ) : (
-              <ul className="flex flex-col border-b border-line">
-                {agenda.map((a) =>
-                  a.type === 'session' ? (
-                    <li key={`s${a.s.id}`} className="flex flex-col gap-1 border-t border-line py-4 lg:py-5">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span
-                          className={`font-semibold ${a.s.status === 'cancelled' ? 'text-muted line-through' : 'text-ink'}`}
-                        >
-                          {a.s.title}
-                        </span>
-                        <span className="text-xs font-bold uppercase tracking-[0.12em] text-teal">
-                          {a.s.status === 'cancelled' ? 'Elmarad' : SESSION_KINDS[a.s.kind]}
-                        </span>
-                      </div>
-                      <span className="text-[15px] text-ink2">
-                        {whenText(a.s.start, a.s.end, 'long')} ·{' '}
-                        {a.s.place ?? <em className="not-italic text-muted">helyszín egyeztetés alatt</em>}
-                      </span>
-                    </li>
-                  ) : (
-                    <li key={`p${a.b.id}`} className="flex flex-col gap-1 border-t border-line py-4 lg:py-5">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-semibold text-ink">{a.b.owner ?? a.b.booker}</span>
-                        <span className="text-xs font-bold uppercase tracking-[0.12em] text-teal">Gyakorlás</span>
-                      </div>
-                      <span className="text-[15px] text-ink2">
-                        {whenText(a.b.start, a.b.end, 'long')} · {a.b.rooms}
-                        {a.b.owner && ` · ${a.b.booker}`}
-                      </span>
-                    </li>
-                  ),
-                )}
-              </ul>
-            )}
+            {agenda.length === 0 ? <Empty>Még nincs kiírt alkalom.</Empty> : <UpcomingList items={agenda} />}
           </Section>
 
           <div className="flex flex-col gap-10">
