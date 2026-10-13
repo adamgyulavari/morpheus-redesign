@@ -16,14 +16,14 @@ export default function AccountShell({
   /** `*…*` marks the highlighted part, as in the CMS headings. */
   heading: string;
   intro?: ReactNode;
-  /** The account page uses a wider column. */
+  /** The /fiokom pages use the site's full width (as the header and footer). */
   wide?: boolean;
   children: ReactNode;
 }) {
   return (
     <SiteLayout>
       <section
-        className={`mx-auto flex flex-col gap-8 px-5 pb-16 pt-10 lg:gap-10 lg:px-20 lg:pb-[120px] lg:pt-20 ${wide ? 'max-w-[1120px]' : 'max-w-[680px]'}`}
+        className={`mx-auto flex flex-col gap-8 px-5 pb-16 pt-10 lg:gap-10 lg:px-20 lg:pb-[120px] lg:pt-20 ${wide ? 'max-w-[1440px]' : 'max-w-[680px]'}`}
       >
         <div className="flex flex-col gap-4 lg:gap-5">
           <Eyebrow>{eyebrow}</Eyebrow>
