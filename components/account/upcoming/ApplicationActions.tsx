@@ -9,9 +9,12 @@ import { useId, useState, useTransition } from 'react';
 
 import Dialog from '@/components/Dialog';
 import { cancelApplicationAction, moveApplicationAction } from '@/lib/applications/actions';
+import { cancelPracticeAction } from '@/lib/rooms/student-actions';
 
 type Props = {
+  /** An application — or, with `practice`, a practice room booking. */
   applicationId: number;
+  practice?: boolean;
   /** What it is, for the dialog: "Nyitott Műhely — okt. 17., szombat". */
   title: string;
   canCancel: boolean;
@@ -24,6 +27,7 @@ type Props = {
 const linkButton = 'link text-[14px] font-semibold';
 
 export default function ApplicationActions({
+  practice,
   applicationId,
   title,
   canCancel,
@@ -44,7 +48,9 @@ export default function ApplicationActions({
       setError('');
       const r =
         mode === 'cancel'
-          ? await cancelApplicationAction(applicationId)
+          ? practice
+            ? await cancelPracticeAction(applicationId)
+            : await cancelApplicationAction(applicationId)
           : target
             ? await moveApplicationAction(applicationId, target)
             : { ok: false, reason: 'Válassz időpontot.' };

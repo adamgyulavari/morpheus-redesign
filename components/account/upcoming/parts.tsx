@@ -31,7 +31,7 @@ export function NextCard({ item }: { item: UpcomingItem }) {
           {item.place ?? <NoPlace />}
         </span>
         {item.booker && <span className="text-muted">Foglalta: {item.booker}</span>}
-        {item.application && (
+        {(item.application || item.practice) && (
           <span className="ml-auto">
             <Actions item={item} />
           </span>
@@ -87,20 +87,31 @@ export function Entry({ item }: { item: UpcomingItem }) {
     <div className="flex min-h-12 items-center gap-3.5">
       <KindBadge kind={item.kind} cancelled={item.cancelled} />
       <EntryText item={item} />
-      {item.application && <Actions item={item} />}
+      {(item.application || item.practice) && <Actions item={item} />}
     </div>
   );
 }
 
-/** "Lemondás" / "Áthelyezés" on the person's own Nyitott Műhely date. */
+/** "Lemondás" / "Áthelyezés" on the person's own Nyitott Műhely date or practice booking. */
 function Actions({ item }: { item: UpcomingItem }) {
+  const d = dateParts(item.start);
+  const title = `${item.title} — ${d.month} ${d.dayNumber}., ${d.weekday} ${timeRange(item)}`;
+  if (item.practice)
+    return (
+      <ApplicationActions
+        practice
+        applicationId={item.practice.bookingId}
+        title={`Gyakorlás: ${title}${item.place ? ` · ${item.place}` : ''}`}
+        canCancel={item.practice.canCancel}
+        canMove={false}
+      />
+    );
   const a = item.application;
   if (!a) return null;
-  const d = dateParts(item.start);
   return (
     <ApplicationActions
       applicationId={a.id}
-      title={`${item.title} — ${d.month} ${d.dayNumber}., ${d.weekday} ${timeRange(item)}`}
+      title={title}
       canCancel={a.canCancel}
       canMove={a.canMove}
       moveTargets={a.moveTargets}

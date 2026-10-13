@@ -14,6 +14,8 @@ import OwnBooking from '@/components/rooms/OwnBooking';
 import { myApplications } from '@/lib/applications/overview';
 import { payloadClient, requireUser } from '@/lib/auth';
 import { dateRange } from '@/lib/dates';
+import { checkCancel } from '@/lib/rooms/rules';
+import { loadSettings } from '@/lib/rooms/server';
 import { studentOverview } from '@/lib/rooms/student';
 import { userIsStaffOrAdmin } from '@/payload/access';
 
@@ -57,9 +59,11 @@ export default async function AccountPage() {
     user,
     o.groups.map((g) => g.id),
   );
-  const agenda = upcomingItems(o, mine);
-  // workshop-only visitors and applicants see their dates and applications too
-  const hasAnything = o.active || mine.workshops.length > 0 || mine.pending.length > 0;
+  const bookingRules = await loadSettings(payload);
+  const now = new Date();
+  const agenda = upcomingItems(o, mine, (start) => checkCancel(new Date(start), bookingRules, now).ok);
+  // workshop-only visitors, applicants and those booking rooms without a course see theirs too
+  const hasAnything = o.active || mine.workshops.length > 0 || mine.pending.length > 0 || o.ownPractice.length > 0;
 
   return (
     <AccountShell eyebrow="Fiókom" heading={`Szia, *${greetingName(user)}!*`} wide>

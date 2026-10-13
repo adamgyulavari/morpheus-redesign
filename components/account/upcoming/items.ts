@@ -23,11 +23,19 @@ export type UpcomingItem = {
   /** Who booked the practice. */
   booker?: string;
   cancelled: boolean;
+  /** The person's own practice booking, and whether it may still be cancelled. */
+  practice?: { bookingId: number; canCancel: boolean };
   /** The person's own Nyitott Műhely sign-up: what they may do with it. */
   application?: { id: number; canCancel: boolean; canMove: boolean; moveTargets: { id: number; label: string }[] };
 };
 
-export function upcomingItems(o: StudentOverview, mine: MyApplications): UpcomingItem[] {
+export function upcomingItems(
+  o: StudentOverview,
+  mine: MyApplications,
+  /** May an own practice booking starting then still be cancelled (the room booking rules)? */
+  canCancelPractice: (start: string) => boolean,
+): UpcomingItem[] {
+  const own = new Set(o.ownPractice.map((b) => b.id));
   return [
     ...o.sessions.map(
       (s): UpcomingItem => ({
@@ -50,6 +58,7 @@ export function upcomingItems(o: StudentOverview, mine: MyApplications): Upcomin
         place: b.rooms,
         booker: b.owner ? b.booker : undefined,
         cancelled: false,
+        practice: own.has(b.id) ? { bookingId: b.id, canCancel: canCancelPractice(b.start) } : undefined,
       }),
     ),
     ...mine.workshops.map(
