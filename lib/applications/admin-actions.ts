@@ -4,7 +4,6 @@
  * The admin's application actions (the participant panel on a workshop session, the buttons on an
  * application). Staff only.
  */
-import { revalidatePath } from 'next/cache';
 import type { TypedUser } from 'payload';
 
 import { getCurrentUser, payloadClient } from '@/lib/auth';
@@ -30,7 +29,6 @@ async function staff(): Promise<TypedUser | null> {
 }
 const done = (r: { ok: boolean; reason?: string }, message?: string): Result => {
   if (!r.ok) return { ok: false, reason: r.reason ?? 'Hiba történt.' };
-  revalidatePath('/', 'layout');
   return { ok: true, message };
 };
 

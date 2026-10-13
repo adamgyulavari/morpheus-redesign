@@ -74,7 +74,6 @@ export interface Config {
     shows: Show;
     venues: Venue;
     courses: Course;
-    openWorkshopSessions: OpenWorkshopSession;
     workshops: Workshop;
     teamBuildingProgrammes: TeamBuildingProgramme;
     instructors: Instructor;
@@ -119,7 +118,6 @@ export interface Config {
     shows: ShowsSelect<false> | ShowsSelect<true>;
     venues: VenuesSelect<false> | VenuesSelect<true>;
     courses: CoursesSelect<false> | CoursesSelect<true>;
-    openWorkshopSessions: OpenWorkshopSessionsSelect<false> | OpenWorkshopSessionsSelect<true>;
     workshops: WorkshopsSelect<false> | WorkshopsSelect<true>;
     teamBuildingProgrammes: TeamBuildingProgrammesSelect<false> | TeamBuildingProgrammesSelect<true>;
     instructors: InstructorsSelect<false> | InstructorsSelect<true>;
@@ -1558,6 +1556,9 @@ export interface Course {
    * Pl. /kezdo-kurzus
    */
   url: string;
+  /**
+   * Csak „Külső link” módban használjuk.
+   */
   signupUrl: string;
   /**
    * Pl. „heti 1×2 óra”
@@ -1567,6 +1568,10 @@ export interface Course {
    * Pl. „20 alkalom (+2)”
    */
   length: string;
+  /**
+   * Kezdőnél az oldal a kurzushoz tartozó, jelentkezésre nyitott csoportokat mutatja (Csoportok → Jelentkezés a weboldalon).
+   */
+  signupMode: 'external' | 'beginner' | 'professional';
   /**
    * Pl. „előzetes tapasztalat nélkül” — a Képzések összehasonlításban.
    */
@@ -1579,22 +1584,8 @@ export interface Course {
     text: string;
     ctaLabel: string;
   };
-  starts?:
-    | {
-        date: string;
-        /**
-         * Óra:perc, pl. 18:00
-         */
-        startTime: string;
-        /**
-         * Óra:perc, pl. 18:00
-         */
-        endTime: string;
-        id?: string | null;
-      }[]
-    | null;
   /**
-   * Ha nincs konkrét csoport, csak a hónapot jelezzük, pl. 2026. szeptember.
+   * Ha nincs jelentkezésre nyitott csoport, csak a hónapot jelezzük, pl. 2026. szeptember.
    */
   nextIntake?: string | null;
   prices: {
@@ -2267,33 +2258,6 @@ export interface Venue {
   createdAt: string;
 }
 /**
- * Szombati alkalmak. A múltbeli alkalmak automatikusan eltűnnek az oldalról.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "openWorkshopSessions".
- */
-export interface OpenWorkshopSession {
-  id: number;
-  date: string;
-  /**
-   * Óra:perc, pl. 18:00
-   */
-  startTime: string;
-  /**
-   * Óra:perc, pl. 18:00
-   */
-  endTime: string;
-  price: number;
-  bookingUrl: string;
-  /**
-   * A foglalás e nap végén zárul.
-   */
-  bookingDeadline: string;
-  importId?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
  * A közelgő workshopok kiemelve jelennek meg; a lezajlottak a „Korábbi workshopok” közé kerülnek.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2666,10 +2630,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'courses';
         value: number | Course;
-      } | null)
-    | ({
-        relationTo: 'openWorkshopSessions';
-        value: number | OpenWorkshopSession;
       } | null)
     | ({
         relationTo: 'workshops';
@@ -3850,6 +3810,7 @@ export interface CoursesSelect<T extends boolean = true> {
   signupUrl?: T;
   rhythm?: T;
   length?: T;
+  signupMode?: T;
   admission?: T;
   card?:
     | T
@@ -3857,14 +3818,6 @@ export interface CoursesSelect<T extends boolean = true> {
         badge?: T;
         text?: T;
         ctaLabel?: T;
-      };
-  starts?:
-    | T
-    | {
-        date?: T;
-        startTime?: T;
-        endTime?: T;
-        id?: T;
       };
   nextIntake?: T;
   prices?:
@@ -3877,21 +3830,6 @@ export interface CoursesSelect<T extends boolean = true> {
         highlighted?: T;
         id?: T;
       };
-  importId?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "openWorkshopSessions_select".
- */
-export interface OpenWorkshopSessionsSelect<T extends boolean = true> {
-  date?: T;
-  startTime?: T;
-  endTime?: T;
-  price?: T;
-  bookingUrl?: T;
-  bookingDeadline?: T;
   importId?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -4569,8 +4507,10 @@ export interface Ui {
   sessions: {
     book: string;
     closed: string;
-    open: string;
-    closedText: string;
+    needed: string;
+    confirmed: string;
+    full: string;
+    left: string;
     empty: string;
   };
   teamBuilding: {
@@ -4931,8 +4871,10 @@ export interface UiSelect<T extends boolean = true> {
     | {
         book?: T;
         closed?: T;
-        open?: T;
-        closedText?: T;
+        needed?: T;
+        confirmed?: T;
+        full?: T;
+        left?: T;
         empty?: T;
       };
   teamBuilding?:

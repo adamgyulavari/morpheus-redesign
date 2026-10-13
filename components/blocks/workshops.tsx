@@ -1,12 +1,11 @@
 import Image from 'next/image';
-
-import SessionStatus from '@/components/SessionStatus';
 import SmartLink from '@/components/SmartLink';
+import SignupDialog from '@/components/signup/SignupDialog';
 import { SectionHeading, SectionIntro } from '@/components/ui';
 import WorkshopFeature from '@/components/WorkshopFeature';
 import { getOpenWorkshopSessions, getPastWorkshops, getSiteSettings, getUi, getUpcomingWorkshops } from '@/lib/data';
-import { dateRange, dayOfMonth, isOnOrBeforeInBudapest, monthDayShort, monthShort, weekday } from '@/lib/dates';
-import { fill, formatHuf } from '@/lib/format';
+import { dateRange, dayOfMonth, monthDayShort, monthShort, weekday } from '@/lib/dates';
+import { fill } from '@/lib/format';
 
 import type { BlockProps } from './types';
 
@@ -81,9 +80,11 @@ export async function PastWorkshops({ block, className }: BlockProps<'pastWorksh
   );
 }
 
-/** The next Nyitott Műhely sessions with their booking status (re-checked in the browser). */
+/** The next Nyitott Műhely dates: live places and state, "Jelentkezem" opens the sign-up form. */
 export async function OpenWorkshopSessions({ block, className }: BlockProps<'openWorkshopSessions'>) {
   const [ui, sessions] = await Promise.all([getUi(), getOpenWorkshopSessions(block.limit)]);
+  const leftText = (left: number | null) =>
+    left == null ? undefined : fill(ui.sessions.left, { count: String(left) });
   return (
     <section
       id={block.anchor}
@@ -100,38 +101,66 @@ export async function OpenWorkshopSessions({ block, className }: BlockProps<'ope
             {ui.sessions.empty}
           </p>
         )}
-        {sessions.map((session) => (
-          <div
-            key={session.id}
-            className="grid grid-cols-[64px_1fr] items-center gap-x-5 gap-y-3 border-t border-line py-5 sm:grid-cols-[88px_1fr_auto] lg:grid-cols-[150px_1fr_1fr_auto] lg:gap-8 lg:py-6"
-          >
-            <div className="row-span-2 flex flex-col gap-1 sm:row-span-1 lg:flex-row lg:items-center lg:gap-3">
-              <span className="font-display text-[44px] leading-none text-rust lg:text-[64px]">
-                {dayOfMonth(session.date)}
-              </span>
-              <span className="text-[13px] font-semibold leading-tight lg:text-[15px]">
-                {monthShort(session.date)}
-                <br />
-                {weekday(session.date)}
-              </span>
+        {sessions.map((session) => {
+          const { state } = session;
+          const status =
+            state.state === 'open'
+              ? {
+                  text: fill(ui.sessions.needed, { count: String(state.needed) }),
+                  sub: leftText(state.left),
+                  tone: 'text-ink2',
+                }
+              : state.state === 'confirmed'
+                ? { text: ui.sessions.confirmed, sub: leftText(state.left), tone: 'text-teal' }
+                : state.state === 'full'
+                  ? { text: ui.sessions.full, tone: 'text-rust-dark' }
+                  : { text: ui.sessions.closed, tone: 'text-muted' };
+          const bookable = state.state === 'open' || state.state === 'confirmed';
+          const when = `${monthDayShort(session.date)}, ${weekday(session.date)} · ${session.startTime}–${session.endTime}`;
+          return (
+            <div
+              key={session.id}
+              className="grid grid-cols-[64px_1fr] items-center gap-x-5 gap-y-3 border-t border-line py-5 sm:grid-cols-[88px_1fr_auto] lg:grid-cols-[150px_1fr_1fr_auto] lg:gap-8 lg:py-6"
+            >
+              <div className="row-span-2 flex flex-col gap-1 sm:row-span-1 lg:flex-row lg:items-center lg:gap-3">
+                <span className="font-display text-[44px] leading-none text-rust lg:text-[64px]">
+                  {dayOfMonth(session.date)}
+                </span>
+                <span className="text-[13px] font-semibold leading-tight lg:text-[15px]">
+                  {monthShort(session.date)}
+                  <br />
+                  {weekday(session.date)}
+                </span>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="font-display text-[26px] leading-tight lg:text-[32px]">{block.title}</span>
+                <span className="text-sm text-muted lg:text-base">
+                  {[`${session.startTime}–${session.endTime}`, session.place, session.price]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </span>
+              </div>
+              <div className="col-start-2 flex flex-col gap-0.5 sm:col-start-auto">
+                <span className={`text-[15px] font-semibold lg:text-base ${status.tone}`}>{status.text}</span>
+                {status.sub && <span className="text-sm text-muted">{status.sub}</span>}
+              </div>
+              <div className="col-start-2 sm:col-start-auto">
+                {bookable && (
+                  <SignupDialog
+                    label={ui.sessions.book}
+                    buttonClassName="btn btn-md btn-primary"
+                    target={{
+                      kind: 'workshop',
+                      sessionId: session.id,
+                      title: `${block.title} — ${monthDayShort(session.date)}`,
+                      details: [when, session.place, session.price, session.description].filter(Boolean) as string[],
+                    }}
+                  />
+                )}
+              </div>
             </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="font-display text-[26px] leading-tight lg:text-[32px]">{block.title}</span>
-              <span className="text-sm text-muted lg:text-base">
-                {session.startTime}–{session.endTime} · {formatHuf(session.price)}
-              </span>
-            </div>
-            <SessionStatus
-              bookingDeadline={session.bookingDeadline}
-              initiallyOpen={isOnOrBeforeInBudapest(session.bookingDeadline)}
-              openText={fill(ui.sessions.open, { deadline: monthDayShort(session.bookingDeadline) })}
-              closedText={ui.sessions.closedText}
-              bookLabel={ui.sessions.book}
-              closedLabel={ui.sessions.closed}
-              bookingUrl={session.bookingUrl}
-            />
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

@@ -16,6 +16,7 @@ import { isStaffOrAdmin, userIsStaffOrAdmin } from '../access';
 import { dbOf } from '../db';
 import { relationship, text, textarea } from '../fields';
 import { type Rel, relId } from '../rel';
+import { collectionRevalidation } from '../revalidate';
 import { failer } from './placement';
 
 type ApplicationDoc = {
@@ -107,6 +108,8 @@ export const Applications: CollectionConfig = {
   },
   defaultSort: '-createdAt',
   hooks: {
+    // the places left on the public pages
+    ...collectionRevalidation('applications'),
     beforeChange: [
       async ({ data, originalDoc, operation, req }) => {
         const before = (originalDoc ?? {}) as ApplicationDoc;

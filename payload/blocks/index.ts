@@ -512,8 +512,10 @@ export const blocks: Block[] = [
   block({
     slug: 'courseStarts',
     label: 'Induló csoportok',
+    lists: ['courseGroups'],
+    dependsOn: ['applications'],
     description:
-      'A kurzus jövőbeli induló csoportjai; ha nincs ilyen, a „folyamatos jelentkezés” szöveg vagy egy üres állapot.',
+      'A kurzushoz tartozó, jelentkezésre nyitott csoportok (Csoportok → Jelentkezés a weboldalon), szabad helyekkel; ha nincs ilyen, a „folyamatos jelentkezés” szöveg vagy egy üres állapot.',
     fields: [
       relationship('course', 'Kurzus', 'courses', { required: true }),
       ...section(),
@@ -534,6 +536,7 @@ export const blocks: Block[] = [
   block({
     slug: 'coursePrices',
     label: 'Kurzus árak',
+    dependsOn: ['courseGroups', 'applications'],
     fields: [
       relationship('course', 'Kurzus', 'courses', { required: true }),
       ...section(),
@@ -543,6 +546,7 @@ export const blocks: Block[] = [
   block({
     slug: 'courseCompare',
     label: 'Kurzusok összehasonlítása',
+    dependsOn: ['courseGroups', 'applications'],
     fields: [...section(), relationship('courses', 'Kurzusok', 'courses', { required: true, hasMany: true })],
   }),
   block({
@@ -562,7 +566,9 @@ export const blocks: Block[] = [
   }),
   block({
     slug: 'openWorkshopSessions',
-    lists: ['openWorkshopSessions'],
+    lists: ['sessions'],
+    dependsOn: ['applications'],
+    description: 'A Nyitott Műhely alkalmak (Alkalmak, „Nyitott Műhely” típus) szabad helyekkel és jelentkezéssel.',
     label: 'Nyitott Műhely időpontok',
     fields: [
       ...section(),

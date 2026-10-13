@@ -5,7 +5,6 @@
  * area's buttons. Bots: a honeypot field and rate limits per IP and per address (in memory, one
  * server process — like the login links).
  */
-import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 
 import { getCurrentUser, payloadClient } from '@/lib/auth';
@@ -55,8 +54,7 @@ export async function signUpAction(_: SignUpState, form: FormData): Promise<Sign
     message: values.message,
   });
   if (!r.ok) return { error: r.reason, values };
-  // the places left change
-  revalidatePath('/', 'layout');
+  // (the pages showing the places left re-render from the applications' hooks)
   return { done: true };
 }
 
@@ -64,14 +62,23 @@ export async function cancelApplicationAction(id: number): Promise<{ ok: boolean
   const user = await getCurrentUser();
   if (!user) return { ok: false, reason: 'Jelentkezz be újra.' };
   const r = await cancelOwn(await payloadClient(), user, id);
-  if (r.ok) revalidatePath('/', 'layout');
   return r.ok ? { ok: true } : r;
 }
 
-export async function moveApplicationAction(id: number, toSessionId: number): Promise<{ ok: boolean; reason?: string }> {
+export async function moveApplicationAction(
+  id: number,
+  toSessionId: number,
+): Promise<{ ok: boolean; reason?: string }> {
   const user = await getCurrentUser();
   if (!user) return { ok: false, reason: 'Jelentkezz be újra.' };
   const r = await moveOwn(await payloadClient(), user, id, toSessionId);
-  if (r.ok) revalidatePath('/', 'layout');
   return r.ok ? { ok: true } : r;
+}
+
+/** For prefilling the form: the logged-in person, or null (the pages themselves are cached). */
+export async function whoAmI(): Promise<{ name: string; email: string; phone: string } | null> {
+  const user = await getCurrentUser();
+  return user
+    ? { name: user.name ?? `${user.lastName} ${user.firstName}`, email: user.email, phone: user.phone ?? '' }
+    : null;
 }

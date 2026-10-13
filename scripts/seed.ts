@@ -241,19 +241,8 @@ async function seed() {
   await each('course', 'courses', await json<Any[]>('courses.json'), (c) => ({
     ...c,
     id: undefined,
-    starts: (c.starts as Obj[]).map((s) => ({
-      date: day(s.date as string),
-      startTime: s.startTime,
-      endTime: s.endTime,
-    })),
     nextIntake: c.nextIntake ? day(c.nextIntake as string) : null,
     prices: (c.prices as Obj[]).map(({ id: _, ...p }) => p),
-  }));
-  await each('session', 'openWorkshopSessions', await json<Any[]>('open-workshop-sessions.json'), (s) => ({
-    ...s,
-    id: undefined,
-    date: day(s.date as string),
-    bookingDeadline: day(s.bookingDeadline as string),
   }));
   await each('workshop', 'workshops', await json<Any[]>('workshops.json'), async (w) => ({
     ...w,

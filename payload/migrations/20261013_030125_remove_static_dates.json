@@ -20847,115 +20847,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.courses_starts": {
-      "name": "courses_starts",
-      "schema": "",
-      "columns": {
-        "_order": {
-          "name": "_order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "date": {
-          "name": "date",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "start_time": {
-          "name": "start_time",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "end_time": {
-          "name": "end_time",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "courses_starts_order_idx": {
-          "name": "courses_starts_order_idx",
-          "columns": [
-            {
-              "expression": "_order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "courses_starts_parent_id_idx": {
-          "name": "courses_starts_parent_id_idx",
-          "columns": [
-            {
-              "expression": "_parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "courses_starts_date_idx": {
-          "name": "courses_starts_date_idx",
-          "columns": [
-            {
-              "expression": "date",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "courses_starts_parent_id_fk": {
-          "name": "courses_starts_parent_id_fk",
-          "tableFrom": "courses_starts",
-          "tableTo": "courses",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.courses_prices": {
       "name": "courses_prices",
       "schema": "",
@@ -21108,6 +20999,14 @@
           "primaryKey": false,
           "notNull": true
         },
+        "signup_mode": {
+          "name": "signup_mode",
+          "type": "enum_courses_signup_mode",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'external'"
+        },
         "admission": {
           "name": "admission",
           "type": "varchar",
@@ -21192,157 +21091,6 @@
         },
         "courses_created_at_idx": {
           "name": "courses_created_at_idx",
-          "columns": [
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.open_workshop_sessions": {
-      "name": "open_workshop_sessions",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "date": {
-          "name": "date",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "start_time": {
-          "name": "start_time",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "end_time": {
-          "name": "end_time",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "price": {
-          "name": "price",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "booking_url": {
-          "name": "booking_url",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "booking_deadline": {
-          "name": "booking_deadline",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "import_id": {
-          "name": "import_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "open_workshop_sessions_date_idx": {
-          "name": "open_workshop_sessions_date_idx",
-          "columns": [
-            {
-              "expression": "date",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "open_workshop_sessions_booking_deadline_idx": {
-          "name": "open_workshop_sessions_booking_deadline_idx",
-          "columns": [
-            {
-              "expression": "booking_deadline",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "open_workshop_sessions_import_id_idx": {
-          "name": "open_workshop_sessions_import_id_idx",
-          "columns": [
-            {
-              "expression": "import_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "open_workshop_sessions_updated_at_idx": {
-          "name": "open_workshop_sessions_updated_at_idx",
-          "columns": [
-            {
-              "expression": "updated_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "open_workshop_sessions_created_at_idx": {
-          "name": "open_workshop_sessions_created_at_idx",
           "columns": [
             {
               "expression": "created_at",
@@ -26650,12 +26398,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "open_workshop_sessions_id": {
-          "name": "open_workshop_sessions_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
         "workshops_id": {
           "name": "workshops_id",
           "type": "integer",
@@ -26888,21 +26630,6 @@
           "columns": [
             {
               "expression": "courses_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "payload_locked_documents_rels_open_workshop_sessions_id_idx": {
-          "name": "payload_locked_documents_rels_open_workshop_sessions_id_idx",
-          "columns": [
-            {
-              "expression": "open_workshop_sessions_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -27237,19 +26964,6 @@
           "tableTo": "courses",
           "columnsFrom": [
             "courses_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "payload_locked_documents_rels_open_workshop_sessions_fk": {
-          "name": "payload_locked_documents_rels_open_workshop_sessions_fk",
-          "tableFrom": "payload_locked_documents_rels",
-          "tableTo": "open_workshop_sessions",
-          "columnsFrom": [
-            "open_workshop_sessions_id"
           ],
           "columnsTo": [
             "id"
@@ -28727,14 +28441,26 @@
           "primaryKey": false,
           "notNull": true
         },
-        "sessions_open": {
-          "name": "sessions_open",
+        "sessions_needed": {
+          "name": "sessions_needed",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
-        "sessions_closed_text": {
-          "name": "sessions_closed_text",
+        "sessions_confirmed": {
+          "name": "sessions_confirmed",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sessions_full": {
+          "name": "sessions_full",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sessions_left": {
+          "name": "sessions_left",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
@@ -31329,6 +31055,15 @@
         "published"
       ]
     },
+    "public.enum_courses_signup_mode": {
+      "name": "enum_courses_signup_mode",
+      "schema": "public",
+      "values": [
+        "external",
+        "beginner",
+        "professional"
+      ]
+    },
     "public.enum_course_groups_default_schedule_weekday": {
       "name": "enum_course_groups_default_schedule_weekday",
       "schema": "public",
@@ -31517,6 +31252,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "f56e162c-b5a8-4722-bf0d-8b224916fc2a",
+  "id": "bf841832-da0c-4ee1-b75a-773f0c591c02",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

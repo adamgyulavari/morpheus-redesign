@@ -183,7 +183,10 @@ export const Courses: CollectionConfig = {
               type: 'row',
               fields: [
                 text('url', 'Kurzus oldala', { required: true, description: 'Pl. /kezdo-kurzus' }),
-                text('signupUrl', 'Jelentkezési link', { required: true }),
+                text('signupUrl', 'Jelentkezési link', {
+                  required: true,
+                  description: 'Csak „Külső link” módban használjuk.',
+                }),
               ],
             },
             {
@@ -192,6 +195,22 @@ export const Courses: CollectionConfig = {
                 text('rhythm', 'Ritmus', { required: true, description: 'Pl. „heti 1×2 óra”' }),
                 text('length', 'Hossz', { required: true, description: 'Pl. „20 alkalom (+2)”' }),
               ],
+            },
+            {
+              name: 'signupMode',
+              label: 'Jelentkezés módja',
+              type: 'select',
+              required: true,
+              defaultValue: 'external',
+              options: [
+                { label: 'Külső link (Jelentkezési link)', value: 'external' },
+                { label: 'Kezdő: jelentkezés a csoportokra', value: 'beginner' },
+                { label: 'Szakmai: pályázat (űrlap)', value: 'professional' },
+              ],
+              admin: {
+                description:
+                  'Kezdőnél az oldal a kurzushoz tartozó, jelentkezésre nyitott csoportokat mutatja (Csoportok → Jelentkezés a weboldalon).',
+              },
             },
             text('admission', 'Felvétel', {
               required: true,
@@ -210,31 +229,16 @@ export const Courses: CollectionConfig = {
           ],
         },
         {
-          label: 'Induló csoportok',
-          description: 'A múltbeli időpontok automatikusan eltűnnek az oldalról.',
+          label: 'Indulás',
+          description:
+            'Az induló csoportok a Csoportoknál vannak: amelyik ehhez a kurzushoz tartozik és jelentkezést fogad, megjelenik az oldalon.',
           fields: [
-            {
-              name: 'starts',
-              label: 'Induló csoportok',
-              labels: { singular: 'Csoport', plural: 'Csoportok' },
-              type: 'array',
-              fields: [
-                date('date', 'Első alkalom', { required: true }),
-                {
-                  type: 'row',
-                  fields: [
-                    time('startTime', 'Kezdés', { required: true }),
-                    time('endTime', 'Vége', { required: true }),
-                  ],
-                },
-              ],
-            },
             {
               name: 'nextIntake',
               label: 'Következő indulás hónapja (folyamatos jelentkezésnél)',
               type: 'date',
               admin: {
-                description: 'Ha nincs konkrét csoport, csak a hónapot jelezzük, pl. 2026. szeptember.',
+                description: 'Ha nincs jelentkezésre nyitott csoport, csak a hónapot jelezzük, pl. 2026. szeptember.',
                 date: { pickerAppearance: 'monthOnly', displayFormat: 'yyyy. MMMM' },
               },
             },
@@ -271,31 +275,6 @@ export const Courses: CollectionConfig = {
         },
       ],
     },
-    importId,
-  ],
-};
-
-export const OpenWorkshopSessions: CollectionConfig = {
-  slug: 'openWorkshopSessions',
-  labels: { singular: 'Nyitott Műhely alkalom', plural: 'Nyitott Műhely alkalmak' },
-  access: contentAccess,
-  admin: {
-    useAsTitle: 'date',
-    defaultColumns: ['date', 'startTime', 'price', 'bookingDeadline'],
-    group: PROGRAMMES,
-    description: 'Szombati alkalmak. A múltbeli alkalmak automatikusan eltűnnek az oldalról.',
-  },
-  defaultSort: '-date',
-  hooks: collectionRevalidation('openWorkshopSessions'),
-  fields: [
-    date('date', 'Dátum', { required: true }),
-    {
-      type: 'row',
-      fields: [time('startTime', 'Kezdés', { required: true }), time('endTime', 'Vége', { required: true })],
-    },
-    { name: 'price', label: 'Ár (Ft)', type: 'number', required: true },
-    text('bookingUrl', 'Foglalási link', { required: true }),
-    date('bookingDeadline', 'Foglalási határidő', { required: true, description: 'A foglalás e nap végén zárul.' }),
     importId,
   ],
 };

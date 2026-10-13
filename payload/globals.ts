@@ -248,10 +248,12 @@ const UI: Spec = {
   sessions: [
     'Nyitott Műhely',
     {
-      book: 'Foglalok gomb',
+      book: 'Jelentkezem gomb',
       closed: 'Lezárult',
-      open: 'Foglalási határidő — {deadline} = dátum',
-      closedText: 'Lezárult foglalás',
+      needed: 'Még kell jelentkező — {count} = szám',
+      confirmed: 'Biztosan indul',
+      full: 'Megtelt',
+      left: 'Szabad helyek — {count} = szám',
       empty: 'Nincs időpont',
     },
   ],

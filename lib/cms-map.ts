@@ -12,6 +12,7 @@ import type {
   Block,
   ContactPerson,
   Course,
+  CourseStart,
   CtaBand,
   ImageRef,
   Instructor,
@@ -29,8 +30,11 @@ import type {
   Workshop,
 } from '@/lib/types';
 import type * as P from '@/payload-types';
-
+import type { CourseSignupState } from './applications/rules';
+import type { OpenWorkshop } from './applications/server';
 import { todayInBudapest } from './dates';
+import { formatHuf } from './format';
+import { clockOf, dayOf, weekdayOf } from './rooms/time';
 
 type Size = keyof NonNullable<P.Media['sizes']>;
 type Rel<T> = number | T | null | undefined;
@@ -197,21 +201,17 @@ export const contactPerson = (c: P.ContactPerson): ContactPerson => ({
   photo: img(c.photo, 'card'),
 });
 
-export const course = (c: P.Course): Course => ({
+export const course = (c: P.Course, starts: CourseStart[]): Course => ({
   id: String(c.id),
   slug: c.slug,
   title: c.title,
   url: c.url,
+  signupMode: c.signupMode ?? 'external',
   signupUrl: c.signupUrl,
   rhythm: c.rhythm,
   length: c.length,
   card: { badge: c.card.badge, text: c.card.text, ctaLabel: c.card.ctaLabel },
-  starts: (c.starts ?? []).map((s) => ({
-    id: s.id ?? s.date,
-    date: day(s.date),
-    startTime: s.startTime,
-    endTime: s.endTime,
-  })),
+  starts,
   admission: c.admission,
   nextIntake: c.nextIntake ? day(c.nextIntake).slice(0, 7) : undefined,
   prices: c.prices.map((p) => ({
@@ -224,14 +224,37 @@ export const course = (c: P.Course): Course => ({
   })),
 });
 
-export const openWorkshopSession = (s: P.OpenWorkshopSession): OpenWorkshopSession => ({
-  id: String(s.id),
-  date: day(s.date),
-  startTime: s.startTime,
-  endTime: s.endTime,
-  price: s.price,
-  bookingUrl: s.bookingUrl,
-  bookingDeadline: day(s.bookingDeadline),
+/** A course group open for sign-up, with its state (lib/applications/rules courseSignupState). */
+export const courseStart = (g: P.CourseGroup, s: CourseSignupState): CourseStart => {
+  const first = dayOf(new Date(g.startDate));
+  const schedule = g.defaultSchedule ?? [];
+  const entry = schedule.find((e) => Number(e.weekday) === weekdayOf(first)) ?? schedule[0];
+  return {
+    id: String(g.id),
+    groupId: g.id,
+    title: g.title,
+    date: first,
+    startTime: entry?.startTime ?? undefined,
+    endTime: entry?.endTime ?? undefined,
+    signup: {
+      state: s.state,
+      left: s.state === 'open' ? s.left : null,
+      opensAt: s.state === 'notYet' ? s.opensAt.toISOString() : undefined,
+      price: g.signup?.priceLabel || (g.signup?.price != null ? formatHuf(g.signup.price) : undefined),
+    },
+  };
+};
+
+export const openWorkshopSession = (w: OpenWorkshop): OpenWorkshopSession => ({
+  id: w.id,
+  title: w.title,
+  description: opt(w.description),
+  date: dayOf(new Date(w.start)),
+  startTime: clockOf(new Date(w.start)),
+  endTime: clockOf(new Date(w.end)),
+  place: w.place,
+  price: w.price,
+  state: w.state,
 });
 
 export const workshop = (w: P.Workshop): Workshop => ({

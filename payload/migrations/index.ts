@@ -10,6 +10,8 @@ import * as migration_20261011_215504_booking_note from './20261011_215504_booki
 import * as migration_20261012_061100_room_booking_permission from './20261012_061100_room_booking_permission';
 import * as migration_20261013_014650_applications from './20261013_014650_applications';
 import * as migration_20261013_021132_workshop_cutoff_job from './20261013_021132_workshop_cutoff_job';
+import * as migration_20261013_025650_signup_pages from './20261013_025650_signup_pages';
+import * as migration_20261013_030125_remove_static_dates from './20261013_030125_remove_static_dates';
 
 export const migrations = [
   {
@@ -70,6 +72,16 @@ export const migrations = [
   {
     up: migration_20261013_021132_workshop_cutoff_job.up,
     down: migration_20261013_021132_workshop_cutoff_job.down,
-    name: '20261013_021132_workshop_cutoff_job'
+    name: '20261013_021132_workshop_cutoff_job',
+  },
+  {
+    up: migration_20261013_025650_signup_pages.up,
+    down: migration_20261013_025650_signup_pages.down,
+    name: '20261013_025650_signup_pages',
+  },
+  {
+    up: migration_20261013_030125_remove_static_dates.up,
+    down: migration_20261013_030125_remove_static_dates.down,
+    name: '20261013_030125_remove_static_dates'
   },
 ];

@@ -9,6 +9,7 @@ import { isStaffOrAdminField } from '@/payload/access';
 
 import { dateTime, relationship, text, textarea } from '../fields';
 import { type Rel, relId, relIds } from '../rel';
+import { collectionRevalidation } from '../revalidate';
 import { blockingClashes, failer, mayOverridePractice, overridePracticeField } from './placement';
 import { ROOMS_GROUP, staffOnly } from './Rooms';
 
@@ -33,6 +34,7 @@ export type SessionDoc = {
 };
 
 const fail = failer('sessions');
+const revalidation = collectionRevalidation('sessions');
 
 /** The title, or the group's / production's name ("Keddi szakmai II." / "Az ördög — próba"). */
 async function titleOf(s: SessionDoc, req: PayloadRequest): Promise<string> {
@@ -192,12 +194,15 @@ export const Sessions: CollectionConfig = {
         await notifySessionChange(req, s, operation === 'update' ? previousDoc : undefined, operation);
         return s;
       },
+      // the Nyitott Műhely dates are on the public site
+      ...(revalidation.afterChange ?? []),
     ],
     afterDelete: [
       async ({ doc, req }) => {
         const bookingId = relId((doc as SessionDoc).booking);
         if (bookingId) await releaseBooking(req, (doc as { id: number }).id, bookingId, false);
       },
+      ...(revalidation.afterDelete ?? []),
     ],
   },
   fields: [

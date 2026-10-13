@@ -4,6 +4,7 @@ import { Fragment } from 'react';
 import { ArrowRight } from '@/components/icons';
 import OfferingCard from '@/components/OfferingCard';
 import SmartLink from '@/components/SmartLink';
+import CourseSignup from '@/components/signup/CourseSignup';
 import { ButtonLink, Eyebrow, PlaceholderAvatar, SectionHeading, SectionIntro } from '@/components/ui';
 import { getCourse, getInstructors, getUi } from '@/lib/data';
 import { dayOfMonth, monthLong, todayInBudapest, weekday, year } from '@/lib/dates';
@@ -88,7 +89,6 @@ export async function Offerings({ block, className }: BlockProps<'offerings'>) {
 /** Upcoming groups of a course; rolling enrolment (next intake month + how to enquire); or an empty state. */
 export async function CourseStarts({ block, className }: BlockProps<'courseStarts'>) {
   const [ui, course] = await Promise.all([getUi(), getCourse(block.course)]);
-  const signup = { label: ui.common.signup, href: course.signupUrl };
   // Rolling-enrolment courses show the next intake month until it has passed.
   const nextIntake =
     course.nextIntake && course.nextIntake >= todayInBudapest().slice(0, 7) ? course.nextIntake : undefined;
@@ -119,14 +119,28 @@ export async function CourseStarts({ block, className }: BlockProps<'courseStart
                     {year(start.date)}. {monthLong(start.date)}
                   </span>
                   <span className="text-lg font-semibold lg:text-xl">
-                    {weekday(start.date)} · {start.startTime}–{start.endTime}
+                    {weekday(start.date)}
+                    {start.startTime && ` · ${start.startTime}–${start.endTime}`}
                   </span>
+                  {start.signup.state === 'open' && start.signup.left != null && (
+                    <span className="text-[15px] text-ink2">{start.signup.left} szabad hely</span>
+                  )}
+                  {start.signup.state === 'full' && (
+                    <span className="text-[15px] font-semibold text-rust-dark">Megtelt</span>
+                  )}
                 </span>
-                <ButtonLink link={signup} variant="outline" size="md" className="hidden sm:inline-flex lg:mt-2" />
+                <CourseSignup
+                  course={course}
+                  start={start}
+                  label={ui.common.signup}
+                  variant="outline"
+                  size="md"
+                  className="hidden sm:inline-flex lg:mt-2"
+                />
               </div>
             ))}
           </div>
-          <ButtonLink link={signup} variant="primary" arrow className="sm:hidden" />
+          <CourseSignup course={course} label={ui.common.signup} variant="primary" arrow className="sm:hidden" />
         </>
       ) : rolling ? (
         <div
@@ -160,7 +174,7 @@ export async function CourseStarts({ block, className }: BlockProps<'courseStart
               <p className="rounded-2xl bg-sand p-4 text-[15px] leading-relaxed text-ink2 lg:p-5">{rolling.note}</p>
             )}
             <div className="flex flex-col gap-3 sm:flex-row">
-              <ButtonLink link={signup} variant="primary" arrow />
+              <CourseSignup course={course} label={ui.common.signup} variant="primary" arrow />
               <ButtonLink link={rolling.inquiry} variant="outline" />
             </div>
           </div>
@@ -212,8 +226,9 @@ export async function CoursePrices({ block, className }: BlockProps<'coursePrice
           </div>
         ))}
       </div>
-      <ButtonLink
-        link={{ label: ui.common.signup, href: course.signupUrl }}
+      <CourseSignup
+        course={course}
+        label={ui.common.signup}
         variant="primary"
         arrow
         className="self-stretch sm:self-start"
@@ -283,10 +298,7 @@ export async function CourseCompare({ block, className }: BlockProps<'courseComp
                   variant={dark ? 'gold' : 'primary'}
                   arrow
                 />
-                <ButtonLink
-                  link={{ label: ui.common.signup, href: course.signupUrl }}
-                  variant={dark ? 'outline-cream' : 'outline'}
-                />
+                <CourseSignup course={course} label={ui.common.signup} variant={dark ? 'outline-cream' : 'outline'} />
               </div>
             </article>
           );

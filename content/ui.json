@@ -85,10 +85,12 @@
     "followUs": "Kövess minket a Facebookon"
   },
   "sessions": {
-    "book": "Foglalok",
+    "book": "Jelentkezem",
     "closed": "Lezárult",
-    "open": "Foglalás {deadline}, csütörtök éjfélig",
-    "closedText": "A foglalás erre az alkalomra lezárult",
+    "needed": "Még {count} jelentkező kell az induláshoz",
+    "confirmed": "Biztosan indul",
+    "full": "Megtelt",
+    "left": "{count} szabad hely",
     "empty": "Hamarosan új időpontokkal jelentkezünk."
   },
   "teamBuilding": {

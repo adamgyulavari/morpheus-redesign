@@ -6,6 +6,7 @@ import { WEEKDAYS } from '@/lib/rooms/labels';
 import { isStaffOrAdmin, isStaffOrAdminField, userIsStaffOrAdmin } from '../access';
 
 import { date, dateTime, fullRichText, relationship, text, time } from '../fields';
+import { collectionRevalidation } from '../revalidate';
 
 /**
  * A concrete course group: dates, enrolled students, instructors (e.g. "Kezdő kurzus, 2026 ősz").
@@ -37,6 +38,8 @@ export const CourseGroups: CollectionConfig = {
   },
   defaultSort: '-startDate',
   hooks: {
+    // groups open for sign-up are on the course pages
+    ...collectionRevalidation('courseGroups'),
     beforeChange: [
       // the sign-up kind follows the group's type unless set (kezdő → beginner, szakmai → professional)
       ({ data, originalDoc }) => {

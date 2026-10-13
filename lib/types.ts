@@ -103,7 +103,20 @@ export type ContactPerson = { id: string; name: string; role: string; phone: str
 
 // ── Courses & events ────────────────────────────────────────────────────────
 
-export type CourseStart = { id: string; date: string; startTime: string; endTime: string };
+/** A course group open for sign-up on the site (courseGroups → "Jelentkezés a weboldalon"). */
+export type CourseStart = {
+  id: string;
+  groupId: number;
+  title: string;
+  /** First day, "YYYY-MM-DD". */
+  date: string;
+  /** From the group's weekly schedule (the first day's entry), when it has one. */
+  startTime?: string;
+  endTime?: string;
+  signup: { state: 'open' | 'full' | 'notYet' | 'closed'; left: number | null; opensAt?: string; price?: string };
+};
+
+export type SignupMode = 'external' | 'beginner' | 'professional';
 
 export type PriceOption = {
   id: string;
@@ -122,6 +135,8 @@ export type Course = {
   title: string;
   /** Route of the course page, or the old site's URL until the page is rebuilt. */
   url: string;
+  /** How people sign up: the external link, or on the site (lib/applications). */
+  signupMode: SignupMode;
   signupUrl: string;
   /** e.g. "heti 1×2 óra" */
   rhythm: string;
@@ -137,15 +152,23 @@ export type Course = {
   prices: PriceOption[];
 };
 
+/** A Nyitott Műhely date (a `workshop` session) as the public page shows it. */
 export type OpenWorkshopSession = {
-  id: string;
+  id: number;
+  title: string;
+  description?: string;
+  /** Budapest day "YYYY-MM-DD" and clock times. */
   date: string;
   startTime: string;
   endTime: string;
-  price: number;
-  bookingUrl: string;
-  /** Booking closes at the end of this day (Budapest time). */
-  bookingDeadline: string;
+  place?: string;
+  price?: string;
+  state:
+    | { state: 'open'; needed: number; left: number | null }
+    | { state: 'confirmed'; left: number | null }
+    | { state: 'full' }
+    | { state: 'cancelled' }
+    | { state: 'closed' };
 };
 
 export type Workshop = {
@@ -291,9 +314,12 @@ export type UiStrings = {
   sessions: {
     book: string;
     closed: string;
-    /** "Foglalás {deadline}, csütörtök éjfélig" */
-    open: string;
-    closedText: string;
+    /** "Még {count} jelentkező kell az induláshoz" */
+    needed: string;
+    confirmed: string;
+    full: string;
+    /** "{count} szabad hely" */
+    left: string;
     empty: string;
   };
   teamBuilding: { duration: string; venue: string };

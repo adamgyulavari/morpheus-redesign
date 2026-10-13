@@ -36,8 +36,7 @@ Rules that keep it CMS-friendly:
 | **Productions** | `productions.json` | slug, group (`company`/`students`), title, genre, byline, summary, longDescription[], credits[], castLabel, cast[] (`names[]` for double casts), poster; detail-page extras (tagline, descriptionHeading, heroImage, heroVideo, highlights, audienceQuotes, videoUrl, inviteVideo, gallery), `detailPage` | — |
 | **Shows** | `shows.json` | date, time, label?, ticketUrl / registrationUrl, info[] | → production, → venue |
 | **Venues** | `venues.json` | name, shortName | — |
-| **Courses** | `courses.json` | title, url, signupUrl, rhythm, length, admission, card {badge, text, ctaLabel}, starts[] **or** nextIntake (rolling enrolment), prices[] | — |
-| **Open workshop sessions** | `open-workshop-sessions.json` | date, times, price, bookingUrl, bookingDeadline | — |
+| **Courses** | `courses.json` | title, url, signupMode (`external` / `beginner` / `professional`), signupUrl, rhythm, length, admission, card {badge, text, ctaLabel}, nextIntake (rolling enrolment), prices[]. The starts are the course groups open for sign-up (admin, not seeded) | — |
 | **Workshops** | `workshops.json` | kind, title, subtitle, dates, daily hours, intro, summary, leader {name, bio}, closing, signupUrl, image, gallery | — |
 | **Team-building programmes** | `team-building-programmes.json` | name, duration, venue, description[] | — |
 | **Reviews** | `reviews.json` | name, label, quote, fullText[], photo? | — |
