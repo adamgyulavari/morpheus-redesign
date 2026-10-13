@@ -22,6 +22,8 @@ export type UpcomingItem = {
   place?: string;
   /** Who booked the practice. */
   booker?: string;
+  /** The person's own note on their practice booking. */
+  note?: string;
   cancelled: boolean;
   /** The person's own practice booking, and whether it may still be cancelled. */
   practice?: { bookingId: number; canCancel: boolean };
@@ -58,6 +60,7 @@ export function upcomingItems(
         place: b.rooms,
         booker: b.owner ? b.booker : undefined,
         cancelled: false,
+        note: b.note,
         practice: own.has(b.id) ? { bookingId: b.id, canCancel: canCancelPractice(b.start) } : undefined,
       }),
     ),

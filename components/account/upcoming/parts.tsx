@@ -31,6 +31,7 @@ export function NextCard({ item }: { item: UpcomingItem }) {
           {item.place ?? <NoPlace />}
         </span>
         {item.booker && <span className="text-muted">Foglalta: {item.booker}</span>}
+        {item.note && <span className="italic text-muted">„{item.note}”</span>}
         {(item.application || item.practice) && (
           <span className="ml-auto">
             <Actions item={item} />
@@ -76,6 +77,7 @@ function EntryText({ item }: { item: UpcomingItem }) {
       <p className={`truncate text-[15px] leading-6 ${item.cancelled ? 'text-muted' : 'text-ink2'}`}>
         {item.title} · {item.place ?? <NoPlace />}
         {item.booker && <span className="text-muted"> · {item.booker}</span>}
+        {item.note && <span className="italic text-muted"> · „{item.note}”</span>}
       </p>
     </div>
   );

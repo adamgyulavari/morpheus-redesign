@@ -10,7 +10,6 @@ import ApplicationActions from '@/components/account/upcoming/ApplicationActions
 import { upcomingItems } from '@/components/account/upcoming/items';
 import UpcomingList from '@/components/account/upcoming/UpcomingList';
 import { ArrowRight } from '@/components/icons';
-import OwnBooking from '@/components/rooms/OwnBooking';
 import { myApplications } from '@/lib/applications/overview';
 import { payloadClient, requireUser } from '@/lib/auth';
 import { dateRange } from '@/lib/dates';
@@ -46,8 +45,8 @@ const Empty = ({ children }: { children: ReactNode }) => <p className="text-[15p
 
 /**
  * The student area's overview. Left: what's coming — the sessions of my groups and their productions,
- * with the practice bookings (my groupmates' and mine) in between. Right: my courses, my own bookings,
- * links. Fresh on every request.
+ * the practice bookings (my groupmates' and mine, with my note and "Lemondás") and my Nyitott Műhely
+ * dates. Right: my courses (with pending applications), links. Fresh on every request.
  * Phase 3 adds "Foglalásaim" and "Számláim" sections (and tabs) here.
  */
 export default async function AccountPage() {
@@ -138,31 +137,6 @@ export default async function AccountPage() {
                     )}
                   </Card>
                 ))}
-              </Section>
-            )}
-
-            {/* only for those who may book (or still have bookings from before) */}
-            {(o.mayBook || o.ownPractice.length > 0) && (
-              <Section
-                title="Saját foglalásaim"
-                action={
-                  o.mayBook && (
-                    <Link href="/fiokom/terem" className="link-arrow link text-[15px] text-teal">
-                      Terem foglalása
-                      <ArrowRight />
-                    </Link>
-                  )
-                }
-              >
-                {o.ownPractice.length === 0 ? (
-                  <Empty>Nincs közelgő teremfoglalásod.</Empty>
-                ) : (
-                  <ul className="flex flex-col gap-2">
-                    {o.ownPractice.map((b) => (
-                      <OwnBooking key={b.id} booking={b} />
-                    ))}
-                  </ul>
-                )}
               </Section>
             )}
 
