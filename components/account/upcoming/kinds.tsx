@@ -59,6 +59,14 @@ const PracticeIcon = svg(
     <path d="M14.5 12h.01" strokeWidth={2.6} />
   </>,
 );
+/** an open door: an open workshop anyone can join */
+const WorkshopIcon = svg(
+  <>
+    <path d="M4 21h16M7 21V5l7-2v18" />
+    <path d="M14 5h3a1 1 0 0 1 1 1v15" />
+    <path d="M11 12h.01" strokeWidth={2.6} />
+  </>,
+);
 const OtherIcon = svg(<circle cx="12" cy="12" r="3.5" />);
 
 export const KIND_STYLE: Record<
@@ -69,6 +77,7 @@ export const KIND_STYLE: Record<
   rehearsal: { label: SESSION_KINDS.rehearsal, Icon: RehearsalIcon, ...KIND_PALETTE.rehearsal },
   show: { label: SESSION_KINDS.show, Icon: ShowIcon, ...KIND_PALETTE.show },
   exam: { label: SESSION_KINDS.exam, Icon: ExamIcon, ...KIND_PALETTE.exam },
+  workshop: { label: SESSION_KINDS.workshop, Icon: WorkshopIcon, ...KIND_PALETTE.workshop },
   practice: { label: BOOKING_KINDS.practice, Icon: PracticeIcon, ...KIND_PALETTE.practice },
   other: { label: SESSION_KINDS.other, Icon: OtherIcon, ...KIND_PALETTE.other },
 };

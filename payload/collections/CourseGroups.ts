@@ -1,10 +1,11 @@
 import type { CollectionConfig, Where } from 'payload';
 
+import { SIGNUP_KIND_OF_TYPE } from '@/lib/applications/labels';
 import { todayInBudapest } from '@/lib/dates';
 import { WEEKDAYS } from '@/lib/rooms/labels';
 import { isStaffOrAdmin, isStaffOrAdminField, userIsStaffOrAdmin } from '../access';
 
-import { date, fullRichText, relationship, text, time } from '../fields';
+import { date, dateTime, fullRichText, relationship, text, time } from '../fields';
 
 /**
  * A concrete course group: dates, enrolled students, instructors (e.g. "Kezdő kurzus, 2026 ősz").
@@ -35,6 +36,16 @@ export const CourseGroups: CollectionConfig = {
       'Az induló és futó csoportok a hallgatóikkal. A hallgatók a fiókjukban (/fiokom) látják a saját csoportjaikat.',
   },
   defaultSort: '-startDate',
+  hooks: {
+    beforeChange: [
+      // the sign-up kind follows the group's type unless set (kezdő → beginner, szakmai → professional)
+      ({ data, originalDoc }) => {
+        const type = data.type ?? originalDoc?.type;
+        if (data.signup && !data.signup.kind) data.signup.kind = SIGNUP_KIND_OF_TYPE[type] ?? 'beginner';
+        return data;
+      },
+    ],
+  },
   fields: [
     text('title', 'Név', { required: true, description: 'Pl. „Kezdő kurzus — 2026 ősz, csütörtök”' }),
     {
@@ -95,6 +106,64 @@ export const CourseGroups: CollectionConfig = {
           admin: { description: 'A hónap hányadik napján (1–28).' },
         },
       ],
+    },
+    {
+      name: 'signup',
+      label: 'Jelentkezés a weboldalon',
+      type: 'group',
+      admin: {
+        description:
+          'A kurzus oldalán (a fenti „Kurzus” oldalán) ez a csoport jelenik meg induló csoportként, jelentkezési gombbal.',
+      },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            { name: 'enabled', label: 'Jelentkezés engedélyezve', type: 'checkbox', defaultValue: false },
+            {
+              name: 'kind',
+              label: 'Jelentkezés módja',
+              type: 'select',
+              options: [
+                { label: 'Kezdő: jelentkezés (helyfoglalás)', value: 'beginner' },
+                { label: 'Szakmai: pályázat, interjú', value: 'professional' },
+              ],
+              admin: { description: 'Üresen a típusból: kezdő → kezdő, szakmai → szakmai.' },
+            },
+          ],
+        },
+        {
+          type: 'row',
+          fields: [
+            { name: 'price', label: 'Ár (Ft)', type: 'number', min: 0 },
+            text('priceLabel', 'Ár felirata', { description: 'Pl. „45 000 Ft / hó” — ha üres, az ár.' }),
+            {
+              name: 'capacity',
+              label: 'Férőhely',
+              type: 'number',
+              min: 1,
+              admin: { description: 'Csak kezdőnél számít. Üresen: nincs korlát.' },
+            },
+          ],
+        },
+        {
+          type: 'row',
+          fields: [
+            dateTime('opensAt', 'Jelentkezés kezdete', { description: 'Üresen: azonnal.' }),
+            dateTime('closesAt', 'Jelentkezés vége', { description: 'Üresen: a kurzus kezdéséig.' }),
+          ],
+        },
+      ],
+    },
+    {
+      name: 'applications',
+      label: 'Jelentkezések',
+      type: 'join',
+      collection: 'applications',
+      on: 'courseGroup',
+      defaultSort: '-createdAt',
+      access: { read: isStaffOrAdminField },
+      admin: { defaultColumns: ['name', 'email', 'kind', 'status', 'paidOffline', 'createdAt'] },
     },
     {
       name: 'info',

@@ -11,19 +11,10 @@ import { sql } from '@payloadcms/db-postgres';
 import { APIError, type Payload, type PayloadRequest } from 'payload';
 
 import { monthDayShort } from '@/lib/dates';
+import { dbOf } from '@/payload/db';
 
 import { whenText } from './format';
 import { clockOf, dayOf } from './time';
-
-type Row = Record<string, unknown>;
-type Executor = { execute: (q: ReturnType<typeof sql>) => Promise<{ rows: Row[] }> };
-
-/** The Drizzle instance of the request's transaction (as Payload's own adapter does), else the pool. */
-async function dbOf(payload: Payload, req?: Partial<PayloadRequest>): Promise<Executor> {
-  const adapter = payload.db as unknown as { drizzle: Executor; sessions?: Record<string, { db: Executor }> };
-  const id = req?.transactionID ? await req.transactionID : undefined;
-  return (id !== undefined && adapter.sessions?.[String(id)]?.db) || adapter.drizzle;
-}
 
 export type Clash = {
   bookingId: number;

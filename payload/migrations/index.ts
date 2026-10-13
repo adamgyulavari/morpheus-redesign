@@ -8,6 +8,7 @@ import * as migration_20261011_190535_login_codes from './20261011_190535_login_
 import * as migration_20261011_214820_rooms_sessions from './20261011_214820_rooms_sessions';
 import * as migration_20261011_215504_booking_note from './20261011_215504_booking_note';
 import * as migration_20261012_061100_room_booking_permission from './20261012_061100_room_booking_permission';
+import * as migration_20261013_014650_applications from './20261013_014650_applications';
 
 export const migrations = [
   {
@@ -58,6 +59,11 @@ export const migrations = [
   {
     up: migration_20261012_061100_room_booking_permission.up,
     down: migration_20261012_061100_room_booking_permission.down,
-    name: '20261012_061100_room_booking_permission'
+    name: '20261012_061100_room_booking_permission',
+  },
+  {
+    up: migration_20261013_014650_applications.up,
+    down: migration_20261013_014650_applications.down,
+    name: '20261013_014650_applications'
   },
 ];

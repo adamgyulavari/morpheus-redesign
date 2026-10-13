@@ -81,6 +81,7 @@ export interface Config {
     reviews: Review;
     contactPeople: ContactPerson;
     courseGroups: CourseGroup;
+    applications: Application;
     studentLinks: StudentLink;
     sessions: Session;
     roomBookings: RoomBooking;
@@ -100,7 +101,11 @@ export interface Config {
       sessions: 'sessions';
     };
     courseGroups: {
+      applications: 'applications';
       sessions: 'sessions';
+    };
+    sessions: {
+      applications: 'applications';
     };
     users: {
       courseGroups: 'courseGroups';
@@ -121,6 +126,7 @@ export interface Config {
     reviews: ReviewsSelect<false> | ReviewsSelect<true>;
     contactPeople: ContactPeopleSelect<false> | ContactPeopleSelect<true>;
     courseGroups: CourseGroupsSelect<false> | CourseGroupsSelect<true>;
+    applications: ApplicationsSelect<false> | ApplicationsSelect<true>;
     studentLinks: StudentLinksSelect<false> | StudentLinksSelect<true>;
     sessions: SessionsSelect<false> | SessionsSelect<true>;
     roomBookings: RoomBookingsSelect<false> | RoomBookingsSelect<true>;
@@ -143,12 +149,14 @@ export interface Config {
     siteSettings: SiteSetting;
     ui: Ui;
     roomBookingSettings: RoomBookingSetting;
+    applicationSettings: ApplicationSetting;
     'payload-jobs-stats': PayloadJobsStat;
   };
   globalsSelect: {
     siteSettings: SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     ui: UiSelect<false> | UiSelect<true>;
     roomBookingSettings: RoomBookingSettingsSelect<false> | RoomBookingSettingsSelect<true>;
+    applicationSettings: ApplicationSettingsSelect<false> | ApplicationSettingsSelect<true>;
     'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
   };
   locale: null;
@@ -1880,6 +1888,38 @@ export interface CourseGroup {
    */
   invoiceDay?: number | null;
   /**
+   * A kurzus oldalán (a fenti „Kurzus” oldalán) ez a csoport jelenik meg induló csoportként, jelentkezési gombbal.
+   */
+  signup?: {
+    enabled?: boolean | null;
+    /**
+     * Üresen a típusból: kezdő → kezdő, szakmai → szakmai.
+     */
+    kind?: ('beginner' | 'professional') | null;
+    price?: number | null;
+    /**
+     * Pl. „45 000 Ft / hó” — ha üres, az ár.
+     */
+    priceLabel?: string | null;
+    /**
+     * Csak kezdőnél számít. Üresen: nincs korlát.
+     */
+    capacity?: number | null;
+    /**
+     * Üresen: azonnal.
+     */
+    opensAt?: string | null;
+    /**
+     * Üresen: a kurzus kezdéséig.
+     */
+    closesAt?: string | null;
+  };
+  applications?: {
+    docs?: (number | Application)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  /**
    * Általános információk a csoportról; a hallgatók a fiókjukban látják.
    */
   info?: {
@@ -1928,123 +1968,42 @@ export interface CourseGroup {
   createdAt: string;
 }
 /**
- * A termek. Inaktív teremre nem lehet foglalni; diákok csak a „Diákok foglalhatják” termeket foglalhatják.
+ * Minden jelentkezés: Nyitott Műhely alkalmak, kezdő kurzusok, szakmai pályázatok. A résztvevők a fiókjukban (/fiokom/jelentkezeseim) követik.
  *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "rooms".
+ * via the `definition` "applications".
  */
-export interface Room {
-  id: number;
-  name: string;
-  slug: string;
-  description?: string | null;
-  capacity?: number | null;
-  /**
-   * Hex színkód, pl. #0f5f63
-   */
-  color: string;
-  photo?: (number | null) | Media;
-  active?: boolean | null;
-  studentBookable?: boolean | null;
-  /**
-   * Kisebb szám előrébb.
-   */
-  order?: number | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Órák, próbák, vizsgák, előadások. A helyszín: terem (foglalással), külső helyszín vagy még nincs.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "sessions".
- */
-export interface Session {
+export interface Application {
   id: number;
   displayTitle?: string | null;
+  kind: 'workshop' | 'beginner' | 'professional';
   /**
-   * Üresen a csoport vagy az előadás nevéből készül.
+   * Nyitott Műhely és kezdő: Jelentkezett / Lemondva / Áthelyezve. Szakmai: Új / Interjú / Felvéve / Elutasítva / Visszavonta.
    */
-  title?: string | null;
-  kind: 'course' | 'rehearsal' | 'exam' | 'show' | 'other';
-  status: 'scheduled' | 'cancelled';
-  /**
-   * Óránál kötelező.
-   */
-  courseGroup?: (number | null) | CourseGroup;
-  /**
-   * Próbánál kötelező.
-   */
-  production?: (number | null) | Production;
-  start: string;
-  end: string;
-  locationType: 'room' | 'external' | 'unplaced';
-  /**
-   * Ahol lesz. „Helyszín nélkül” állapotban ezeket a termeket próbálja meg újra, amikor elhelyezed.
-   */
-  rooms?: (number | Room)[] | null;
-  externalLocation?: string | null;
-  /**
-   * Automatikus: az alkalom ideje és termei szerint.
-   */
-  booking?: (number | null) | RoomBooking;
-  /**
-   * Csak a munkatársak látják.
-   */
-  notes?: string | null;
-  generatedFrom?: {
-    courseGroup?: (number | null) | CourseGroup;
-    entry?: number | null;
-    day?: string | null;
-  };
-  /**
-   * A hónap újbóli feltöltése és a generált alkalmak törlése nem nyúl hozzá.
-   */
-  customized?: boolean | null;
-  /**
-   * Csak adminisztrátor: az ütköző diák-gyakorlásokat lemondja (a diákok e-mailt kapnak).
-   */
-  overridePractice?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Ki és mi foglal termet. Az alkalmak (órák, próbák) foglalását az alkalom kezeli; itt a bérléseket, egyéb foglalásokat és a diákok gyakorlásait látod.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "roomBookings".
- */
-export interface RoomBooking {
-  id: number;
-  displayTitle?: string | null;
-  kind: 'session' | 'practice' | 'rental' | 'other';
-  status: 'confirmed' | 'cancelled';
-  rooms: (number | Room)[];
-  start: string;
-  end: string;
-  title?: string | null;
-  /**
-   * Az alkalom kezeli ezt a foglalást.
-   */
+  status?: ('registered' | 'cancelled' | 'moved' | 'new' | 'interview' | 'accepted' | 'rejected' | 'withdrawn') | null;
+  user: number | User;
   session?: (number | null) | Session;
-  user?: (number | null) | User;
   courseGroup?: (number | null) | CourseGroup;
-  production?: (number | null) | Production;
-  cancelledBy?: (number | null) | User;
-  cancelledAt?: string | null;
-  cancelReason?: string | null;
+  target?: string | null;
+  name: string;
+  email: string;
+  phone?: string | null;
   /**
-   * A diák írja foglaláskor; csak ő és a munkatársak látják.
+   * Szakmainál: motiváció és tapasztalat.
    */
-  note?: string | null;
+  message?: string | null;
+  movedTo?: (number | null) | Application;
+  cancelReason?: string | null;
+  cancelledAt?: string | null;
+  /**
+   * Átutalás / készpénz (az online fizetésig).
+   */
+  paidOffline?: boolean | null;
+  paymentNote?: string | null;
   /**
    * Csak a munkatársak látják.
    */
-  notes?: string | null;
-  /**
-   * Csak adminisztrátor: az ütköző diák-gyakorlásokat lemondja (a diákok e-mailt kapnak). Alkalommal és bérléssel ütközni nem lehet.
-   */
-  overridePractice?: boolean | null;
+  staffNotes?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2094,6 +2053,156 @@ export interface User {
     | null;
   password?: string | null;
   collection: 'users';
+}
+/**
+ * Órák, próbák, vizsgák, előadások. A helyszín: terem (foglalással), külső helyszín vagy még nincs.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sessions".
+ */
+export interface Session {
+  id: number;
+  displayTitle?: string | null;
+  /**
+   * Üresen a csoport vagy az előadás nevéből készül.
+   */
+  title?: string | null;
+  kind: 'course' | 'rehearsal' | 'exam' | 'show' | 'workshop' | 'other';
+  status: 'scheduled' | 'cancelled';
+  /**
+   * Óránál kötelező.
+   */
+  courseGroup?: (number | null) | CourseGroup;
+  /**
+   * Próbánál kötelező.
+   */
+  production?: (number | null) | Production;
+  start: string;
+  end: string;
+  locationType: 'room' | 'external' | 'unplaced';
+  /**
+   * Ahol lesz. „Helyszín nélkül” állapotban ezeket a termeket próbálja meg újra, amikor elhelyezed.
+   */
+  rooms?: (number | Room)[] | null;
+  externalLocation?: string | null;
+  /**
+   * Automatikus: az alkalom ideje és termei szerint.
+   */
+  booking?: (number | null) | RoomBooking;
+  /**
+   * Csak a munkatársak látják.
+   */
+  notes?: string | null;
+  /**
+   * Jelentkezés a weboldalon (/nyitott-alkalmak). A határidőkor a rendszer dönt: elég jelentkező esetén biztosan indul, különben elmarad.
+   */
+  workshop?: {
+    price?: number | null;
+    minParticipants?: number | null;
+    maxParticipants?: number | null;
+    /**
+     * Kikapcsolva nem jelenik meg jelentkezhetőként.
+     */
+    bookable?: boolean | null;
+    /**
+     * A határidőkor automatikusan változik.
+     */
+    workshopStatus?: ('open' | 'confirmed' | 'cancelled') | null;
+    /**
+     * Rövid szöveg a jelentkezéshez (miről szól az alkalom).
+     */
+    description?: string | null;
+    /**
+     * A kezdés előtt ennyivel (Jelentkezési beállítások) dől el, hogy indul-e.
+     */
+    cutoffAt?: string | null;
+  };
+  applications?: {
+    docs?: (number | Application)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  generatedFrom?: {
+    courseGroup?: (number | null) | CourseGroup;
+    entry?: number | null;
+    day?: string | null;
+  };
+  /**
+   * A hónap újbóli feltöltése és a generált alkalmak törlése nem nyúl hozzá.
+   */
+  customized?: boolean | null;
+  /**
+   * Csak adminisztrátor: az ütköző diák-gyakorlásokat lemondja (a diákok e-mailt kapnak).
+   */
+  overridePractice?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * A termek. Inaktív teremre nem lehet foglalni; diákok csak a „Diákok foglalhatják” termeket foglalhatják.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rooms".
+ */
+export interface Room {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  capacity?: number | null;
+  /**
+   * Hex színkód, pl. #0f5f63
+   */
+  color: string;
+  photo?: (number | null) | Media;
+  active?: boolean | null;
+  studentBookable?: boolean | null;
+  /**
+   * Kisebb szám előrébb.
+   */
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Ki és mi foglal termet. Az alkalmak (órák, próbák) foglalását az alkalom kezeli; itt a bérléseket, egyéb foglalásokat és a diákok gyakorlásait látod.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "roomBookings".
+ */
+export interface RoomBooking {
+  id: number;
+  displayTitle?: string | null;
+  kind: 'session' | 'practice' | 'rental' | 'other';
+  status: 'confirmed' | 'cancelled';
+  rooms: (number | Room)[];
+  start: string;
+  end: string;
+  title?: string | null;
+  /**
+   * Az alkalom kezeli ezt a foglalást.
+   */
+  session?: (number | null) | Session;
+  user?: (number | null) | User;
+  courseGroup?: (number | null) | CourseGroup;
+  production?: (number | null) | Production;
+  cancelledBy?: (number | null) | User;
+  cancelledAt?: string | null;
+  cancelReason?: string | null;
+  /**
+   * A diák írja foglaláskor; csak ő és a munkatársak látják.
+   */
+  note?: string | null;
+  /**
+   * Csak a munkatársak látják.
+   */
+  notes?: string | null;
+  /**
+   * Csak adminisztrátor: az ütköző diák-gyakorlásokat lemondja (a diákok e-mailt kapnak). Alkalommal és bérléssel ütközni nem lehet.
+   */
+  overridePractice?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * Az előadások időpontjai. Elöl a legkésőbbi; a múltbeli időpontok másnap automatikusan eltűnnek az oldalról.
@@ -2584,6 +2693,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'courseGroups';
         value: number | CourseGroup;
+      } | null)
+    | ({
+        relationTo: 'applications';
+        value: number | Application;
       } | null)
     | ({
         relationTo: 'studentLinks';
@@ -3899,6 +4012,18 @@ export interface CourseGroupsSelect<T extends boolean = true> {
   endDate?: T;
   monthlyFee?: T;
   invoiceDay?: T;
+  signup?:
+    | T
+    | {
+        enabled?: T;
+        kind?: T;
+        price?: T;
+        priceLabel?: T;
+        capacity?: T;
+        opensAt?: T;
+        closesAt?: T;
+      };
+  applications?: T;
   info?: T;
   defaultSchedule?:
     | T
@@ -3914,6 +4039,31 @@ export interface CourseGroupsSelect<T extends boolean = true> {
   students?: T;
   studentCount?: T;
   isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "applications_select".
+ */
+export interface ApplicationsSelect<T extends boolean = true> {
+  displayTitle?: T;
+  kind?: T;
+  status?: T;
+  user?: T;
+  session?: T;
+  courseGroup?: T;
+  target?: T;
+  name?: T;
+  email?: T;
+  phone?: T;
+  message?: T;
+  movedTo?: T;
+  cancelReason?: T;
+  cancelledAt?: T;
+  paidOffline?: T;
+  paymentNote?: T;
+  staffNotes?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3950,6 +4100,18 @@ export interface SessionsSelect<T extends boolean = true> {
   externalLocation?: T;
   booking?: T;
   notes?: T;
+  workshop?:
+    | T
+    | {
+        price?: T;
+        minParticipants?: T;
+        maxParticipants?: T;
+        bookable?: T;
+        workshopStatus?: T;
+        description?: T;
+        cutoffAt?: T;
+      };
+  applications?: T;
   generatedFrom?:
     | T
     | {
@@ -4506,6 +4668,60 @@ export interface RoomBookingSetting {
   createdAt?: string | null;
 }
 /**
+ * Kik kapnak értesítést az új jelentkezésekről, a Nyitott Műhely határidői és az e-mailek bevezetői.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "applicationSettings".
+ */
+export interface ApplicationSetting {
+  id: number;
+  /**
+   * Ide megy minden új jelentkezés és lemondás.
+   */
+  notifyEmails?:
+    | {
+        email: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * A Nyitott Műhely ennyi órával a kezdés előtt dől el: elég jelentkező esetén indul, különben elmarad.
+   */
+  workshopCutoffHours: number;
+  /**
+   * A résztvevő eddig mondhatja le a jelentkezését a fiókjában.
+   */
+  userCancelHours: number;
+  texts?: {
+    /**
+     * Nyitott Műhely és kezdő kurzus. Üresen az alapszöveg megy.
+     */
+    signupReceived?: string | null;
+    /**
+     *  Üresen az alapszöveg megy.
+     */
+    applicationReceived?: string | null;
+    /**
+     * A Nyitott Műhely résztvevőinek a határidőkor. Üresen az alapszöveg megy.
+     */
+    confirmed?: string | null;
+    /**
+     * A következő időpontok listája automatikus. Üresen az alapszöveg megy.
+     */
+    cancelledMinimum?: string | null;
+    /**
+     *  Üresen az alapszöveg megy.
+     */
+    cancellation?: string | null;
+    /**
+     * A belépési link automatikus. Üresen az alapszöveg megy.
+     */
+    accepted?: string | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-jobs-stats".
  */
@@ -4802,6 +5018,33 @@ export interface RoomBookingSettingsSelect<T extends boolean = true> {
         date?: T;
         note?: T;
         id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "applicationSettings_select".
+ */
+export interface ApplicationSettingsSelect<T extends boolean = true> {
+  notifyEmails?:
+    | T
+    | {
+        email?: T;
+        id?: T;
+      };
+  workshopCutoffHours?: T;
+  userCancelHours?: T;
+  texts?:
+    | T
+    | {
+        signupReceived?: T;
+        applicationReceived?: T;
+        confirmed?: T;
+        cancelledMinimum?: T;
+        cancellation?: T;
+        accepted?: T;
       };
   updatedAt?: T;
   createdAt?: T;

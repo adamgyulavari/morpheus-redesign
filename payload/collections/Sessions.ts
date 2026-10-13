@@ -1,8 +1,11 @@
 import type { CollectionConfig, PayloadRequest } from 'payload';
-
+import { WORKSHOP_STATUSES } from '@/lib/applications/labels';
+import { cutoffAt } from '@/lib/applications/rules';
+import { applicationSettings } from '@/lib/applications/settings';
 import { LOCATION_TYPES, options, SESSION_KINDS } from '@/lib/rooms/labels';
 import { notifySessionChange } from '@/lib/rooms/notify';
 import { clashMessage } from '@/lib/rooms/occupancy';
+import { isStaffOrAdminField } from '@/payload/access';
 
 import { dateTime, relationship, text, textarea } from '../fields';
 import { type Rel, relId, relIds } from '../rel';
@@ -26,6 +29,7 @@ export type SessionDoc = {
   generatedFrom?: { courseGroup?: Rel; entry?: number | null; day?: string | null } | null;
   customized?: boolean;
   overridePractice?: boolean;
+  workshop?: { minParticipants?: number | null; maxParticipants?: number | null } | null;
 };
 
 const fail = failer('sessions');
@@ -115,6 +119,12 @@ export const Sessions: CollectionConfig = {
           );
         }
         if (owners > 1) fail('production', 'Csoport vagy előadás — csak az egyik.', req);
+        if (s.kind === 'workshop') {
+          if (owners) fail('courseGroup', 'A nyitott műhely alkalom nem tartozik csoporthoz vagy előadáshoz.', req);
+          const w = s.workshop ?? {};
+          if (w.maxParticipants != null && w.minParticipants != null && w.maxParticipants < w.minParticipants)
+            fail('workshop.maxParticipants', 'A maximum ne legyen kisebb a minimumnál.', req);
+        }
         if (s.locationType === 'external' && !s.externalLocation?.trim())
           fail('externalLocation', 'Add meg a külső helyszínt.', req);
 
@@ -250,6 +260,83 @@ export const Sessions: CollectionConfig = {
       admin: { readOnly: true, position: 'sidebar', description: 'Automatikus: az alkalom ideje és termei szerint.' },
     },
     textarea('notes', 'Belső megjegyzés', { description: 'Csak a munkatársak látják.' }),
+    {
+      name: 'workshop',
+      label: 'Nyitott Műhely',
+      type: 'group',
+      admin: {
+        condition: (_, s) => s?.kind === 'workshop',
+        description:
+          'Jelentkezés a weboldalon (/nyitott-alkalmak). A határidőkor a rendszer dönt: elég jelentkező esetén biztosan indul, különben elmarad.',
+      },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            { name: 'price', label: 'Ár (Ft)', type: 'number', min: 0 },
+            { name: 'minParticipants', label: 'Minimum létszám', type: 'number', min: 1, defaultValue: 5 },
+            { name: 'maxParticipants', label: 'Maximum létszám', type: 'number', min: 1, defaultValue: 16 },
+          ],
+        },
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'bookable',
+              label: 'Jelentkezni lehet',
+              type: 'checkbox',
+              defaultValue: true,
+              admin: { description: 'Kikapcsolva nem jelenik meg jelentkezhetőként.' },
+            },
+            {
+              name: 'workshopStatus',
+              label: 'Indulás',
+              type: 'select',
+              defaultValue: 'open',
+              index: true,
+              options: options(WORKSHOP_STATUSES),
+              admin: { description: 'A határidőkor automatikusan változik.' },
+            },
+          ],
+        },
+        textarea('description', 'Leírás', { description: 'Rövid szöveg a jelentkezéshez (miről szól az alkalom).' }),
+        {
+          name: 'cutoffAt',
+          label: 'Döntés az indulásról',
+          type: 'date',
+          virtual: true,
+          admin: {
+            readOnly: true,
+            date: { pickerAppearance: 'dayAndTime', displayFormat: 'yyyy. MM. dd. HH:mm' },
+            description: 'A kezdés előtt ennyivel (Jelentkezési beállítások) dől el, hogy indul-e.',
+          },
+          hooks: {
+            afterRead: [
+              async ({ data, req }) =>
+                data?.kind === 'workshop' && data.start
+                  ? cutoffAt(
+                      new Date(String(data.start)),
+                      (await applicationSettings(req)).workshopCutoffHours,
+                    ).toISOString()
+                  : null,
+            ],
+          },
+        },
+      ],
+    },
+    {
+      name: 'applications',
+      label: 'Jelentkezők',
+      type: 'join',
+      collection: 'applications',
+      on: 'session',
+      defaultSort: 'createdAt',
+      access: { read: isStaffOrAdminField },
+      admin: {
+        condition: (_, s) => s?.kind === 'workshop',
+        defaultColumns: ['name', 'email', 'phone', 'status', 'paidOffline'],
+      },
+    },
     {
       name: 'generatedFrom',
       label: 'Hónap feltöltéséből',

@@ -10,6 +10,7 @@ import { hu } from '@payloadcms/translations/languages/hu';
 import { buildConfig, type Payload } from 'payload';
 import sharp from 'sharp';
 import { serverUrl } from './lib/env';
+import { Applications } from './payload/collections/Applications';
 import { CourseGroups } from './payload/collections/CourseGroups';
 import { LoginTokens } from './payload/collections/LoginTokens';
 import { Media } from './payload/collections/Media';
@@ -31,7 +32,7 @@ import {
 } from './payload/collections/simple';
 import { Users } from './payload/collections/Users';
 import { emailAdapter } from './payload/email';
-import { RoomBookingSettings, SiteSettings, Ui } from './payload/globals';
+import { ApplicationSettings, RoomBookingSettings, SiteSettings, Ui } from './payload/globals';
 import { migrations } from './payload/migrations';
 import { redirectsConfig, redirectsTranslationsHu } from './payload/redirects';
 import { generateDescription, generateImage, generateTitle, generateURL, seoFields } from './payload/seo';
@@ -120,6 +121,7 @@ export default buildConfig({
     Reviews,
     ContactPeople,
     CourseGroups,
+    Applications,
     StudentLinks,
     Sessions,
     RoomBookings,
@@ -128,7 +130,7 @@ export default buildConfig({
     Users,
     LoginTokens,
   ],
-  globals: [SiteSettings, Ui, RoomBookingSettings],
+  globals: [SiteSettings, Ui, RoomBookingSettings, ApplicationSettings],
   editor: lexicalEditor(),
   // SMTP when SMTP_HOST is set; otherwise e-mails (with their links) are written to the console
   email: emailAdapter(),

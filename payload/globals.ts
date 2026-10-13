@@ -415,3 +415,66 @@ export const RoomBookingSettings: GlobalConfig = {
     },
   ],
 };
+
+const emailText = (name: string, label: string, description: string): Field =>
+  textarea(name, label, { description: `${description} Üresen az alapszöveg megy.` });
+
+export const ApplicationSettings: GlobalConfig = {
+  slug: 'applicationSettings',
+  label: 'Jelentkezési beállítások',
+  access: { read: isStaffOrAdmin, update: isStaffOrAdmin },
+  admin: {
+    group: 'Jelentkezések',
+    description: 'Kik kapnak értesítést az új jelentkezésekről, a Nyitott Műhely határidői és az e-mailek bevezetői.',
+  },
+  fields: [
+    {
+      name: 'notifyEmails',
+      label: 'Értesítendő címek',
+      labels: { singular: 'Cím', plural: 'Címek' },
+      type: 'array',
+      defaultValue: [{ email: 'info@morpheus-szinmuhely.hu' }],
+      admin: { description: 'Ide megy minden új jelentkezés és lemondás.' },
+      fields: [{ name: 'email', label: 'E-mail-cím', type: 'email', required: true }],
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'workshopCutoffHours',
+          label: 'Döntés az indulásról (óra)',
+          type: 'number',
+          required: true,
+          min: 1,
+          defaultValue: 48,
+          admin: {
+            description:
+              'A Nyitott Műhely ennyi órával a kezdés előtt dől el: elég jelentkező esetén indul, különben elmarad.',
+          },
+        },
+        {
+          name: 'userCancelHours',
+          label: 'Lemondási határidő (óra)',
+          type: 'number',
+          required: true,
+          min: 0,
+          defaultValue: 24,
+          admin: { description: 'A résztvevő eddig mondhatja le a jelentkezését a fiókjában.' },
+        },
+      ],
+    },
+    {
+      name: 'texts',
+      label: 'E-mailek bevezető bekezdése',
+      type: 'group',
+      fields: [
+        emailText('signupReceived', 'Jelentkezés visszaigazolása', 'Nyitott Műhely és kezdő kurzus.'),
+        emailText('applicationReceived', 'Szakmai jelentkezés visszaigazolása', ''),
+        emailText('confirmed', 'Biztosan indul', 'A Nyitott Műhely résztvevőinek a határidőkor.'),
+        emailText('cancelledMinimum', 'Elmarad (nincs elég jelentkező)', 'A következő időpontok listája automatikus.'),
+        emailText('cancellation', 'Lemondás visszaigazolása', ''),
+        emailText('accepted', 'Felvétel a kurzusba', 'A belépési link automatikus.'),
+      ],
+    },
+  ],
+};
