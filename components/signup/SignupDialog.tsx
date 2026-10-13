@@ -21,8 +21,10 @@ export type SignupTarget = {
   kind: Kind;
   /** The dialog's heading, e.g. "Nyitott Műhely — okt. 17., szombat". */
   title: string;
-  /** Under the heading: time, place, price… */
+  /** Under the heading: time, place… */
   details?: string[];
+  /** Shown highlighted next to the details, e.g. "5000 Ft" or "45 000 Ft / hó". */
+  price?: string;
   sessionId?: number;
   courseGroupId?: number;
   /** The open groups to choose from (a select when there are several). */
@@ -108,6 +110,12 @@ function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string
             {d}
           </p>
         ))}
+        {target.price && (
+          <p className="mt-2 self-start rounded-2xl bg-sand px-4 py-2.5">
+            <span className="mr-2 text-xs font-bold uppercase tracking-[0.14em] text-teal">Részvételi díj</span>
+            <span className="font-display text-[26px] leading-none text-ink">{target.price}</span>
+          </p>
+        )}
       </div>
 
       {state.done ? (

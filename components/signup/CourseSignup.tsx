@@ -24,7 +24,6 @@ const groupLabel = (s: CourseStart) => `${s.title} — indul: ${monthDayShort(s.
 const startDetails = (s: CourseStart) =>
   [
     `Indul: ${monthDayShort(s.date)}, ${weekday(s.date)}${s.startTime ? ` · ${s.startTime}–${s.endTime}` : ''}`,
-    s.signup.price,
     s.signup.left != null ? `${s.signup.left} szabad hely` : undefined,
   ].filter(Boolean) as string[];
 
@@ -70,7 +69,13 @@ export default function CourseSignup({ course, label, variant, size = 'lg', arro
       <SignupDialog
         label={label}
         buttonClassName={buttonClassName}
-        target={{ kind: 'beginner', title: start.title, courseGroupId: start.groupId, details: startDetails(start) }}
+        target={{
+          kind: 'beginner',
+          title: start.title,
+          courseGroupId: start.groupId,
+          details: startDetails(start),
+          price: start.signup.price,
+        }}
       />
     );
   }
@@ -85,6 +90,7 @@ export default function CourseSignup({ course, label, variant, size = 'lg', arro
         title: only ? only.title : course.title,
         courseGroupId: only?.groupId,
         details: only ? startDetails(only) : undefined,
+        price: only?.signup.price,
         groups: only ? undefined : open.map((s) => ({ id: s.groupId, label: groupLabel(s) })),
       }}
     />

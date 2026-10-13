@@ -153,7 +153,8 @@ export async function OpenWorkshopSessions({ block, className }: BlockProps<'ope
                       kind: 'workshop',
                       sessionId: session.id,
                       title: `${block.title} — ${monthDayShort(session.date)}`,
-                      details: [when, session.place, session.price, session.description].filter(Boolean) as string[],
+                      details: [when, session.place, session.description].filter(Boolean) as string[],
+                      price: session.price,
                     }}
                   />
                 )}
