@@ -23,6 +23,7 @@ import {
   fillMonthApply,
   fillMonthPreview,
   generatedPreview,
+  groupsOfMonth,
   updateBooking,
   updateSession,
 } from '@/lib/rooms/admin-actions';
@@ -77,7 +78,7 @@ export default function AdminRoomCalendar({ isAdmin }: { isAdmin: boolean }) {
   };
 
   const load = useCallback(async (from: string, to: string) => {
-    const r = await adminSchedule(null, from, to);
+    const r = await adminSchedule(from, to);
     if (!r) return null;
     setUnplaced(r.unplaced);
     return r.events;
@@ -542,11 +543,11 @@ function MonthDialog({
     if (!mode) return;
     setStep(1);
     setResult('');
-    fillMonthPreview(y, m, null).then((p) => {
-      if (!p) return;
-      setGroups(p.groups);
+    groupsOfMonth(y, m).then((list) => {
+      if (!list) return;
+      setGroups(list);
       setSelectedGroups(
-        initialGroup && p.groups.some((g) => g.id === initialGroup) ? [initialGroup] : p.groups.map((g) => g.id),
+        initialGroup && list.some((g) => g.id === initialGroup) ? [initialGroup] : list.map((g) => g.id),
       );
     });
   }, [mode, month]);

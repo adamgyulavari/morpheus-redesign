@@ -8,7 +8,7 @@ import type { Payload, TypedUser } from 'payload';
 
 import { relId, relIds } from '@/payload/collections/RoomBookings';
 
-import type { LocationType, SessionKind } from './labels';
+import type { SessionKind } from './labels';
 import { studentGroups } from './server';
 
 const all = { limit: 0, pagination: false } as const;
@@ -20,7 +20,6 @@ export type OverviewSession = {
   start: string;
   end: string;
   status: 'scheduled' | 'cancelled';
-  locationType: LocationType;
   /** Room names, or the external place. */
   place?: string;
 };
@@ -166,7 +165,6 @@ export async function studentOverview(payload: Payload, user: TypedUser) {
         start: s.start,
         end: s.end,
         status: s.status as OverviewSession['status'],
-        locationType: s.locationType as LocationType,
         place:
           s.locationType === 'room'
             ? relIds(s.rooms)

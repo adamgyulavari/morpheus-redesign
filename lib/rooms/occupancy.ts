@@ -10,6 +10,7 @@
 import { sql } from '@payloadcms/db-postgres';
 import { APIError, type Payload, type PayloadRequest } from 'payload';
 
+import { whenText } from './format';
 import { clockOf, dayOf } from './time';
 
 type Row = Record<string, unknown>;
@@ -108,7 +109,7 @@ export async function syncOccupancy(
   } catch (err) {
     // 23P01 = exclusion_violation: someone booked the same room in the meantime
     if ((err as { cause?: { code?: string } }).cause?.code === '23P01' || (err as { code?: string }).code === '23P01') {
-      const when = `${dayOf(booking.start)} ${clockOf(booking.start)}–${clockOf(booking.end)}`;
+      const when = whenText(booking.start, booking.end);
       throw new APIError(
         `Ez az időpont időközben foglalt lett (${await roomNames()}, ${when}). Válassz másikat.`,
         409,
@@ -118,19 +119,4 @@ export async function syncOccupancy(
     }
     throw err;
   }
-}
-
-/** Raw occupancy rows of a range, for the schedule (all rooms or some). */
-export async function occupancyIn(
-  payload: Payload,
-  rooms: (number | string)[] | null,
-  from: Date,
-  to: Date,
-): Promise<{ bookingId: number; roomId: number }[]> {
-  const db = await dbOf(payload);
-  const roomFilter = rooms?.length ? sql`AND room_id IN (${ids(rooms)})` : sql``;
-  const { rows } = await db.execute(sql`
-    SELECT booking_id, room_id FROM room_occupancy
-    WHERE period && tstzrange(${from.toISOString()}::timestamptz, ${to.toISOString()}::timestamptz, '[)') ${roomFilter}`);
-  return rows.map((r) => ({ bookingId: Number(r.booking_id), roomId: Number(r.room_id) }));
 }

@@ -7,7 +7,6 @@ import type { CalendarOptions, EventInput } from '@fullcalendar/core';
 import huLocale from '@fullcalendar/core/locales/hu';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import listPlugin from '@fullcalendar/list';
 import luxonPlugin from '@fullcalendar/luxon3';
 import timeGridPlugin from '@fullcalendar/timegrid';
 
@@ -18,7 +17,7 @@ import { TZ } from '@/lib/rooms/time';
 export type CalRoom = { id: number; name: string; color?: string; studentBookable?: boolean };
 
 export const baseOptions: CalendarOptions = {
-  plugins: [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin, luxonPlugin],
+  plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, luxonPlugin],
   locale: huLocale,
   timeZone: TZ,
   firstDay: 1,

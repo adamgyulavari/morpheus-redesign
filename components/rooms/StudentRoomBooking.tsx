@@ -42,7 +42,7 @@ export default function StudentRoomBooking({ rooms, groups, productions, booking
   const [notice, setNotice] = useState('');
   const bookable = rooms.filter((r) => r.studentBookable);
 
-  const load = useCallback((from: string, to: string) => loadSchedule(null, from, to), []);
+  const load = useCallback((from: string, to: string) => loadSchedule(from, to), []);
   const done = (text: string) => {
     setSheet(null);
     setError('');

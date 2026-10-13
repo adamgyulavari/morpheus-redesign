@@ -16,6 +16,7 @@ import {
   errorMessage,
   getRoomSchedule,
   isStaff,
+  monthGroups,
   previewFill,
   roomsById,
   type ScheduleEvent,
@@ -42,7 +43,7 @@ export async function calendarOptions() {
       sort: 'title',
       limit: 0,
       pagination: false,
-      select: { title: true, endDate: true },
+      select: { title: true },
     }),
     payload.find({
       collection: 'productions',
@@ -56,13 +57,12 @@ export async function calendarOptions() {
   ]);
   return {
     rooms: rooms.filter((r) => r.active),
-    groups: groups.docs.map((g) => ({ id: g.id, title: g.title, endDate: g.endDate })),
+    groups: groups.docs.map((g) => ({ id: g.id, title: g.title })),
     productions: productions.docs.map((p) => ({ id: p.id, title: p.title })),
   };
 }
 
 export async function adminSchedule(
-  roomIds: number[] | null,
   from: string,
   to: string,
 ): Promise<{ events: ScheduleEvent[]; unplaced: Awaited<ReturnType<typeof unplacedSessions>> } | null> {
@@ -70,7 +70,7 @@ export async function adminSchedule(
   if (!user) return null;
   const payload = await payloadClient();
   const [events, unplaced] = await Promise.all([
-    getRoomSchedule(payload, user, roomIds, new Date(from), new Date(to)),
+    getRoomSchedule(payload, user, new Date(from), new Date(to)),
     unplacedSessions(payload, new Date(from), new Date(to)),
   ]);
   return { events: events ?? [], unplaced };
@@ -209,6 +209,12 @@ export async function updateBooking(
 }
 
 // ── fill month ──────────────────────────────────────────────────────────────
+
+/** The groups running in the month. */
+export async function groupsOfMonth(year: number, month: number) {
+  if (!(await staff())) return null;
+  return monthGroups(await payloadClient(), year, month);
+}
 
 export async function fillMonthPreview(year: number, month: number, groupIds: number[] | null) {
   if (!(await staff())) return null;

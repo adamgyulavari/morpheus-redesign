@@ -9,13 +9,9 @@ import { getCurrentUser, payloadClient } from '@/lib/auth';
 import type { RuleResult } from './rules';
 import { bookPractice, cancelPractice, getRoomSchedule, type PracticeInput, type ScheduleEvent } from './server';
 
-export async function loadSchedule(
-  roomIds: number[] | null,
-  from: string,
-  to: string,
-): Promise<ScheduleEvent[] | null> {
+export async function loadSchedule(from: string, to: string): Promise<ScheduleEvent[] | null> {
   const user = await getCurrentUser();
-  return getRoomSchedule(await payloadClient(), user, roomIds, new Date(from), new Date(to));
+  return getRoomSchedule(await payloadClient(), user, new Date(from), new Date(to));
 }
 
 export async function bookPracticeAction(input: PracticeInput): Promise<RuleResult & { bookingId?: number }> {

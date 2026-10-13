@@ -5,12 +5,12 @@
  */
 
 import type { Payload, TypedUser } from 'payload';
-import { userIsAdmin, userIsStaffOrAdmin } from '@/payload/access';
+import { userIsStaffOrAdmin } from '@/payload/access';
 import { relId, relIds } from '@/payload/collections/RoomBookings';
 
 import { generatedKey, groupsInMonth, type PlannedSession, planMonth, type ScheduleGroup } from './generate';
 import { BOOKING_KINDS, type BookingKind, SESSION_KINDS, type SessionKind } from './labels';
-import { type Clash, describeClash, findClashes } from './occupancy';
+import { describeClash, findClashes } from './occupancy';
 import {
   type BookingSettings,
   checkCancel,
@@ -105,7 +105,7 @@ export async function studentContext(
   };
 }
 
-export async function roomsById(payload: Payload, ids?: number[]): Promise<RoomInfo[] & { color?: string }[]> {
+export async function roomsById(payload: Payload, ids?: number[]): Promise<(RoomInfo & { color?: string })[]> {
   const { docs } = await payload.find({
     collection: 'rooms',
     where: ids?.length ? { id: { in: ids } } : undefined,
@@ -145,13 +145,12 @@ export type ScheduleEvent = {
 };
 
 /**
- * Everything in the given rooms and range, for staff and those who may book rooms (null for anyone else).
+ * Everything in the range, for staff and those who may book rooms (null for anyone else).
  * Staff notes are never included.
  */
 export async function getRoomSchedule(
   payload: Payload,
   viewer: TypedUser | null,
-  roomIds: number[] | null,
   from: Date,
   to: Date,
 ): Promise<ScheduleEvent[] | null> {
@@ -166,7 +165,6 @@ export async function getRoomSchedule(
         { status: { equals: 'confirmed' } },
         { start: { less_than: to.toISOString() } },
         { end: { greater_than: from.toISOString() } },
-        ...(roomIds?.length ? [{ rooms: { in: roomIds } }] : []),
       ],
     },
     depth: 2,
@@ -339,6 +337,11 @@ async function scheduleGroups(payload: Payload, ids: number[] | null): Promise<S
       rooms: relIds(e.rooms),
     })),
   }));
+}
+
+/** The groups running in the month (for the month dialog's first step). */
+export async function monthGroups(payload: Payload, year: number, month: number) {
+  return groupsInMonth(await scheduleGroups(payload, null), year, month).map((g) => ({ id: g.id, title: g.title }));
 }
 
 /** What fill month would create for the month (and which would end up without a place). */
@@ -542,6 +545,3 @@ export const countUnplaced = async (payload: Payload) =>
       },
     })
   ).totalDocs;
-
-export type { Clash };
-export { userIsAdmin };
