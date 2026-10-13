@@ -12,13 +12,11 @@ import { userIsStaffOrAdmin } from '@/payload/access';
 import {
   type ApplicantInput,
   addParticipant,
-  admit,
-  cancelByStaff,
+  type Decision,
   dashboard,
+  decide,
   messageParticipants,
   participants,
-  review,
-  setPaid,
 } from './server';
 
 type Result = { ok: true; message?: string } | { ok: false; reason: string };
@@ -43,34 +41,10 @@ export async function addParticipantAction(sessionId: number, input: ApplicantIn
   return done(await addParticipant(await payloadClient(), sessionId, input), 'Hozzáadva.');
 }
 
-export async function cancelParticipantAction(id: number): Promise<Result> {
-  if (!(await staff())) return denied;
-  return done(await cancelByStaff(await payloadClient(), id), 'Lemondva.');
-}
-
-export async function setPaidAction(id: number, paid: boolean): Promise<Result> {
-  if (!(await staff())) return denied;
-  return done(await setPaid(await payloadClient(), id, paid));
-}
-
 export async function messageParticipantsAction(sessionId: number, subject: string, message: string): Promise<Result> {
   if (!(await staff())) return denied;
   const r = await messageParticipants(await payloadClient(), sessionId, subject, message);
   return r.ok ? { ok: true, message: `Elküldve ${r.sent} résztvevőnek.` } : r;
-}
-
-export async function admitAction(id: number, groupId?: number | null): Promise<Result> {
-  const user = await staff();
-  if (!user) return denied;
-  return done(await admit(await payloadClient(), user, id, groupId), 'Felvéve a kurzusba; az üdvözlő levél elment.');
-}
-
-export async function reviewAction(id: number, status: 'interview' | 'rejected'): Promise<Result> {
-  if (!(await staff())) return denied;
-  return done(
-    await review(await payloadClient(), id, status),
-    status === 'interview' ? 'Interjú állapotba téve.' : 'Elutasítva (e-mail nem ment).',
-  );
 }
 
 export async function dashboardData() {
@@ -78,8 +52,13 @@ export async function dashboardData() {
   return dashboard(await payloadClient());
 }
 
-export async function setPaymentNoteAction(id: number, note: string): Promise<Result> {
-  if (!(await staff())) return denied;
-  await (await payloadClient()).update({ collection: 'applications', id, data: { paymentNote: note.trim() || null } });
-  return { ok: true };
+/** The dashboard dialog's one button: payment fields, then the decision (lib/applications/server decide). */
+export async function decideAction(
+  id: number,
+  input: { decision: Decision; paid?: boolean; paymentNote?: string; groupId?: number | null },
+): Promise<Result> {
+  const user = await staff();
+  if (!user) return denied;
+  const r = await decide(await payloadClient(), user, id, input);
+  return r.ok ? { ok: true, message: r.message } : r;
 }

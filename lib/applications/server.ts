@@ -735,10 +735,6 @@ export async function cancelByStaff(payload: Payload, id: number): Promise<Resul
   return { ok: true };
 }
 
-export async function setPaid(payload: Payload, id: number, paid: boolean): Promise<Result> {
-  await payload.update({ collection: 'applications', id, data: { paidOffline: paid } });
-  return { ok: true };
-}
 
 /** "E-mail a résztvevőknek": a free-text message to everyone registered for the date. */
 export async function messageParticipants(
@@ -927,4 +923,64 @@ export async function dashboard(payload: Payload, now = new Date()) {
 export async function countWaiting(payload: Payload): Promise<number> {
   const d = await dashboard(payload);
   return d.beginners.length + d.professionals.filter((p) => p.status === 'new').length;
+}
+
+export type Decision = 'save' | 'admit' | 'interview' | 'reject' | 'cancel';
+
+/**
+ * One staff decision on an application, from the dashboard's dialog: the payment fields are saved
+ * first, then the decision — in this order, in one call, so they can't race.
+ * - admit: "Felvétel" (kezdő) / "Felvétel és csoportba helyezés" (szakmai, `groupId`)
+ * - interview, reject: szakmai; reject on a kezdő sign-up archives it (no e-mail either way)
+ * - cancel: a Nyitott Műhely participant (they get an e-mail)
+ */
+export async function decide(
+  payload: Payload,
+  staff: TypedUser,
+  id: number,
+  input: { decision: Decision; paid?: boolean; paymentNote?: string; groupId?: number | null },
+): Promise<Result<{ message: string }>> {
+  const a = await payload.findByID({ collection: 'applications', id, depth: 0, disableErrors: true });
+  if (!a) return { ok: false, reason: 'Nincs ilyen jelentkezés.' };
+  if (input.paid !== undefined || input.paymentNote !== undefined) {
+    await payload.update({
+      collection: 'applications',
+      id,
+      data: {
+        ...(input.paid !== undefined ? { paidOffline: input.paid } : {}),
+        ...(input.paymentNote !== undefined ? { paymentNote: input.paymentNote.trim() || null } : {}),
+      },
+    });
+  }
+  const saved = { ok: true as const, message: 'Mentve.' };
+  switch (input.decision) {
+    case 'save':
+      return saved;
+    case 'admit': {
+      const r = await admit(payload, staff, id, input.groupId);
+      return r.ok ? { ok: true, message: 'Felvéve a csoportba; az üdvözlő levél elment.' } : r;
+    }
+    case 'interview': {
+      const r = await review(payload, id, 'interview');
+      return r.ok ? { ok: true, message: 'Interjú állapotba téve.' } : r;
+    }
+    case 'reject': {
+      if (a.kind === 'professional') {
+        const r = await review(payload, id, 'rejected');
+        return r.ok ? { ok: true, message: 'Elutasítva (e-mail nem ment).' } : r;
+      }
+      if (a.kind !== 'beginner' || a.status !== 'registered')
+        return { ok: false, reason: 'Ez a jelentkezés már le van zárva.' };
+      await payload.update({
+        collection: 'applications',
+        id,
+        data: { status: 'cancelled', cancelReason: 'A munkatársak elutasították.' },
+      });
+      return { ok: true, message: 'Elutasítva, lekerült a listáról (e-mail nem ment).' };
+    }
+    case 'cancel': {
+      const r = await cancelByStaff(payload, id);
+      return r.ok ? { ok: true, message: 'Lemondva; a résztvevő e-mailt kapott.' } : r;
+    }
+  }
 }
