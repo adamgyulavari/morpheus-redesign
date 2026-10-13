@@ -69,6 +69,8 @@ export default function AdminApplications() {
         </p>
       )}
 
+      <Legend />
+
       <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <h2 style={{ margin: 0 }}>Kezdő kurzus ({data.beginners.length})</h2>
         <p className={s.muted} style={{ margin: 0 }}>
@@ -91,9 +93,7 @@ export default function AdminApplications() {
             <tbody>
               {data.beginners.map((a) => (
                 <tr key={a.id}>
-                  <td>
-                    <a href={`/admin/collections/applications/${a.id}`}>{a.name}</a>
-                  </td>
+                  <td>{nameCell(a, 'beginner')}</td>
                   <td>
                     {a.email}
                     <div className={s.muted}>{a.phone}</div>
@@ -103,7 +103,7 @@ export default function AdminApplications() {
                   <td>
                     <PaidText app={a} />
                   </td>
-                  <td>{manage(a, 'beginner', a.group?.title ?? '')}</td>
+                  <td style={right}>{manage(a, 'beginner', a.group?.title ?? '')}</td>
                 </tr>
               ))}
             </tbody>
@@ -121,9 +121,7 @@ export default function AdminApplications() {
         {data.professionals.map((a) => (
           <div key={a.id} className={s.panel} style={{ gap: 10, alignSelf: 'stretch' }}>
             <div className={s.row} style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <strong>
-                <a href={`/admin/collections/applications/${a.id}`}>{a.name}</a>
-              </strong>
+              <strong>{nameCell(a, 'professional')}</strong>
               <span className={s.row} style={{ alignItems: 'center' }}>
                 <span className={s.muted}>
                   {APPLICATION_STATUSES[a.status]} · {date(a.createdAt)}
@@ -163,6 +161,88 @@ export default function AdminApplications() {
     </div>
   );
 }
+
+/** What the row needs: amber = something to do, teal = ready for the next step, grey = done. */
+function stateOf(app: App, kind: Kind): { tone: 'todo' | 'ready' | 'done'; text: string } {
+  if (kind === 'professional')
+    return app.status === 'new'
+      ? { tone: 'todo', text: 'Új jelentkezés — elbírálásra vár' }
+      : { tone: 'ready', text: 'Interjú — döntésre vár' };
+  if (!app.paidOffline) return { tone: 'todo', text: 'A fizetés nincs rögzítve' };
+  return kind === 'beginner' ? { tone: 'ready', text: 'Fizetett — felvehető' } : { tone: 'done', text: 'Fizetve' };
+}
+const TONES = {
+  todo: { bg: '#f9c86a', fg: '#0b3a3f', mark: '!' },
+  ready: { bg: '#3fb8a8', fg: '#0b3a3f', mark: '→' },
+  done: { bg: 'var(--cal-soft)', fg: 'var(--cal-muted)', mark: '✓' },
+} as const;
+
+function StateIcon({ app, kind }: { app: App; kind: Kind }) {
+  const { tone, text } = stateOf(app, kind);
+  const t = TONES[tone];
+  return (
+    <span
+      title={text}
+      aria-label={text}
+      role="img"
+      style={{
+        display: 'inline-grid',
+        placeItems: 'center',
+        width: 22,
+        height: 22,
+        borderRadius: 999,
+        background: t.bg,
+        color: t.fg,
+        fontWeight: 800,
+        fontSize: 13,
+        flexShrink: 0,
+      }}
+    >
+      {t.mark}
+    </span>
+  );
+}
+
+function Legend() {
+  return (
+    <p className={s.muted} style={{ margin: 0, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+      {(
+        [
+          ['todo', 'teendő (fizetés / elbírálás)'],
+          ['ready', 'következő lépés (felvétel / döntés)'],
+          ['done', 'rendben'],
+        ] as const
+      ).map(([tone, text]) => (
+        <span key={tone} style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+          <span
+            style={{
+              display: 'inline-grid',
+              placeItems: 'center',
+              width: 18,
+              height: 18,
+              borderRadius: 999,
+              background: TONES[tone].bg,
+              color: TONES[tone].fg,
+              fontWeight: 800,
+              fontSize: 11,
+            }}
+          >
+            {TONES[tone].mark}
+          </span>
+          {text}
+        </span>
+      ))}
+    </p>
+  );
+}
+
+const nameCell = (app: App, kind: Kind) => (
+  <span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
+    <StateIcon app={app} kind={kind} />
+    <a href={`/admin/collections/applications/${app.id}`}>{app.name}</a>
+  </span>
+);
+const right = { textAlign: 'right' as const, whiteSpace: 'nowrap' as const };
 
 const PaidText = ({ app }: { app: App }) =>
   app.paidOffline ? (
@@ -347,7 +427,13 @@ function Workshop({ w, busy, act, manage }: { w: Data['workshops'][number]; busy
             {w.participants.map((p) => (
               <tr key={p.id} style={p.status === 'registered' ? undefined : { opacity: 0.55 }}>
                 <td>
-                  <a href={`/admin/collections/applications/${p.id}`}>{p.name}</a>
+                  {p.status === 'registered' ? (
+                    nameCell(p, 'workshop')
+                  ) : (
+                    <a href={`/admin/collections/applications/${p.id}`} style={{ marginLeft: 30 }}>
+                      {p.name}
+                    </a>
+                  )}
                 </td>
                 <td>
                   {p.email}
@@ -357,7 +443,7 @@ function Workshop({ w, busy, act, manage }: { w: Data['workshops'][number]; busy
                 <td>
                   <PaidText app={p} />
                 </td>
-                <td>{p.status === 'registered' && manage(p, 'workshop', w.when)}</td>
+                <td style={right}>{p.status === 'registered' && manage(p, 'workshop', w.when)}</td>
               </tr>
             ))}
           </tbody>
