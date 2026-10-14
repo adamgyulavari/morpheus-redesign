@@ -4946,6 +4946,10 @@ export interface ApplicationSetting {
  */
 export interface BillingSetting {
   id: number;
+  /**
+   * Kikapcsolva a Nyitott Műhely-jelentkezés újra fizetés nélküli (a helyszínen fizetnek); a már elkezdett fizetések rendben lezárulnak.
+   */
+  onlinePayments?: boolean | null;
   vatMode: 'AAM' | '27' | '18' | '5';
   /**
    * Ennyi ideig tartjuk a helyet, amíg a jelentkező fizet; utána felszabadul.
@@ -5301,6 +5305,7 @@ export interface ApplicationSettingsSelect<T extends boolean = true> {
  * via the `definition` "billingSettings_select".
  */
 export interface BillingSettingsSelect<T extends boolean = true> {
+  onlinePayments?: T;
   vatMode?: T;
   ordersHoldMinutes?: T;
   updatedAt?: T;

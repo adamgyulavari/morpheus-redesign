@@ -1,10 +1,18 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import SmartLink from '@/components/SmartLink';
+import SignupDialog from '@/components/signup/SignupDialog';
 import { SectionHeading, SectionIntro } from '@/components/ui';
 import WorkshopFeature from '@/components/WorkshopFeature';
-import { getOpenWorkshopSessions, getPastWorkshops, getSiteSettings, getUi, getUpcomingWorkshops } from '@/lib/data';
-import { dateRange, dayOfMonth, monthShort, weekday } from '@/lib/dates';
+import {
+  getOnlinePayments,
+  getOpenWorkshopSessions,
+  getPastWorkshops,
+  getSiteSettings,
+  getUi,
+  getUpcomingWorkshops,
+} from '@/lib/data';
+import { dateRange, dayOfMonth, monthDayShort, monthShort, weekday } from '@/lib/dates';
 import { fill } from '@/lib/format';
 
 import type { BlockProps } from './types';
@@ -82,7 +90,11 @@ export async function PastWorkshops({ block, className }: BlockProps<'pastWorksh
 
 /** The next Nyitott Műhely dates: live places and state, "Jelentkezem" opens the sign-up form. */
 export async function OpenWorkshopSessions({ block, className }: BlockProps<'openWorkshopSessions'>) {
-  const [ui, sessions] = await Promise.all([getUi(), getOpenWorkshopSessions(block.limit)]);
+  const [ui, sessions, online] = await Promise.all([
+    getUi(),
+    getOpenWorkshopSessions(block.limit),
+    getOnlinePayments(),
+  ]);
   const leftText = (left: number | null) =>
     left == null ? undefined : fill(ui.sessions.left, { count: String(left) });
   return (
@@ -144,12 +156,30 @@ export async function OpenWorkshopSessions({ block, className }: BlockProps<'ope
                 {status.sub && <span className="text-sm text-muted">{status.sub}</span>}
               </div>
               <div className="col-start-2 sm:col-start-auto">
-                {bookable && (
-                  // sign-up with payment: the checkout page (lib/payments)
-                  <Link href={`/fizetes?session=${session.id}`} className="btn btn-md btn-primary">
-                    {ui.sessions.book}
-                  </Link>
-                )}
+                {bookable &&
+                  (online ? (
+                    // sign-up with payment: the checkout page (lib/payments)
+                    <Link href={`/fizetes?session=${session.id}`} className="btn btn-md btn-primary">
+                      {ui.sessions.book}
+                    </Link>
+                  ) : (
+                    // online payment switched off: the free sign-up, paid on site
+                    <SignupDialog
+                      label={ui.sessions.book}
+                      buttonClassName="btn btn-md btn-primary"
+                      target={{
+                        kind: 'workshop',
+                        sessionId: session.id,
+                        title: `${block.title} — ${monthDayShort(session.date)}`,
+                        details: [
+                          `${monthDayShort(session.date)}, ${weekday(session.date)} · ${session.startTime}–${session.endTime}`,
+                          session.place,
+                          session.description,
+                        ].filter(Boolean) as string[],
+                        price: session.price,
+                      }}
+                    />
+                  ))}
               </div>
             </div>
           );

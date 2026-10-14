@@ -15,6 +15,7 @@ import { CourseGroups } from './payload/collections/CourseGroups';
 import { LoginTokens } from './payload/collections/LoginTokens';
 import { Media } from './payload/collections/Media';
 import { Pages } from './payload/collections/Pages';
+import { MockPayments, Orders, Payments } from './payload/collections/payments';
 import { LegalPages, Productions, Shows } from './payload/collections/productions';
 import { RoomBookings } from './payload/collections/RoomBookings';
 import { Rooms, StudentLinks } from './payload/collections/Rooms';
@@ -34,7 +35,6 @@ import { emailAdapter } from './payload/email';
 import { ApplicationSettings, BillingSettings, RoomBookingSettings, SiteSettings, Ui } from './payload/globals';
 import { migrations } from './payload/migrations';
 import { arrangeNav } from './payload/nav';
-import { MockPayments, Orders, Payments } from './payload/collections/payments';
 import { redirectsConfig, redirectsTranslationsHu } from './payload/redirects';
 import { generateDescription, generateImage, generateTitle, generateURL, seoFields } from './payload/seo';
 

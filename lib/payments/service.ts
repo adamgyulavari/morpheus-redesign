@@ -37,19 +37,12 @@ import type { Order, Payment, Session } from '@/payload-types';
 
 import { sendLateRefund, sendOrderExpired, sendOrderPaid, sendStaffAlert, sendStaffPaid } from './notify';
 import { paymentProvider } from './providers';
+import { billingSettings, PAUSED } from './settings';
 import { movesForward, type ProviderStatus, paidOrLater } from './types';
 
 type Result<T = object> = ({ ok: true } & T) | { ok: false; reason: string };
 
 // ── settings, billing ───────────────────────────────────────────────────────
-
-export async function billingSettings(payload: Payload) {
-  const doc = await payload.findGlobal({ slug: 'billingSettings', depth: 0 });
-  return {
-    vatMode: doc.vatMode ?? 'AAM',
-    holdMinutes: typeof doc.ordersHoldMinutes === 'number' && doc.ordersHoldMinutes >= 5 ? doc.ordersHoldMinutes : 30,
-  };
-}
 
 /** The buyer on the invoice (a snapshot on the order; the account keeps its own copy). */
 export type Billing = { name: string; zip: string; city: string; address: string; country: string; taxNumber: string };
@@ -96,6 +89,7 @@ export async function checkout(
   if (invalid) return { ok: false, reason: invalid };
   const billing = clean(input.billing);
   const [settings, billingRules] = await Promise.all([applicationSettings(payload), billingSettings(payload)]);
+  if (!billingRules.online) return { ok: false, reason: PAUSED };
 
   const s = await payload.findByID({ collection: 'sessions', id: input.sessionId, depth: 0, disableErrors: true });
   if (s?.kind !== 'workshop') return { ok: false, reason: 'Nincs ilyen alkalom.' };

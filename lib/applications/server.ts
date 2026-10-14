@@ -10,6 +10,7 @@ import { createLocalReq, type Payload, type PayloadRequest, type TypedUser, type
 import { cache } from 'react';
 
 import { dateRange } from '@/lib/dates';
+import { billingSettings } from '@/lib/payments/settings';
 import { momentText, whenText } from '@/lib/rooms/format';
 import { placeOf } from '@/lib/rooms/occupancy';
 import { errorMessage } from '@/lib/rooms/server';
@@ -275,6 +276,9 @@ export async function signUp(
 
   let target: TargetInfo;
   if (input.kind === 'workshop') {
+    // with online payment on, workshop sign-ups go through the checkout (lib/payments)
+    if ((await billingSettings(payload)).online)
+      return { ok: false, reason: 'Erre az alkalomra a fizetéssel lehet jelentkezni.' };
     const s = input.sessionId
       ? await payload.findByID({ collection: 'sessions', id: input.sessionId, depth: 0, disableErrors: true })
       : null;

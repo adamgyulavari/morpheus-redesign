@@ -9,6 +9,7 @@ import { NOBODY, takenBy, workshopFacts, workshopInfo } from '@/lib/applications
 import { applicationSettings } from '@/lib/applications/settings';
 import { getCurrentUser, payloadClient } from '@/lib/auth';
 import { formatHuf } from '@/lib/format';
+import { billingSettings, PAUSED } from '@/lib/payments/settings';
 
 // per visitor and per moment (places, holds), never cached
 export const dynamic = 'force-dynamic';
@@ -21,7 +22,11 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
   const payload = await payloadClient();
   const s = id ? await payload.findByID({ collection: 'sessions', id, depth: 0, disableErrors: true }) : null;
   if (s?.kind !== 'workshop') notFound();
-  const [viewer, settings] = await Promise.all([getCurrentUser(), applicationSettings(payload)]);
+  const [viewer, settings, billing] = await Promise.all([
+    getCurrentUser(),
+    applicationSettings(payload),
+    billingSettings(payload),
+  ]);
   const taken = (await takenBy(payload, 'session_id', [s.id])).get(s.id) ?? NOBODY;
   const facts = workshopFacts(s, taken);
   const state = workshopState(facts, new Date(), settings);
@@ -60,7 +65,16 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
         </div>
       </Card>
 
-      {open ? (
+      {!billing.online ? (
+        <Card>
+          <p className="text-[17px]">
+            {PAUSED} Az időpontokra a Nyitott Műhely oldalán jelentkezhetsz; a díjat a helyszínen fizeted.
+          </p>
+          <Link href="/nyitott-alkalmak/" className="link self-start font-semibold">
+            Az időpontok
+          </Link>
+        </Card>
+      ) : open ? (
         <CheckoutForm
           sessionId={s.id}
           price={price}

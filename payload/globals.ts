@@ -526,7 +526,18 @@ export const BillingSettings: GlobalConfig = {
     description:
       'Online fizetés és számlázás. A kulcsok (fizetési szolgáltató, Számlázz.hu) nem itt, hanem a szerver beállításaiban vannak.',
   },
+  hooks: globalRevalidation(),
   fields: [
+    {
+      name: 'onlinePayments',
+      label: 'Online fizetés',
+      type: 'checkbox',
+      defaultValue: true,
+      admin: {
+        description:
+          'Kikapcsolva a Nyitott Műhely-jelentkezés újra fizetés nélküli (a helyszínen fizetnek); a már elkezdett fizetések rendben lezárulnak.',
+      },
+    },
     {
       type: 'row',
       fields: [
