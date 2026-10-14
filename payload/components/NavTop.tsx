@@ -7,11 +7,38 @@ import { countUnplaced } from '@/lib/rooms/server';
 import { userIsStaffOrAdmin } from '@/payload/access';
 import { DAILY } from '@/payload/nav';
 
-const badge = { fontSize: 13, color: 'var(--theme-warning-500, #f9c86a)' } as const;
+const row = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 } as const;
+
+/** A count next to a link: amber pill, its own link (the meaning in the tooltip). */
+function Badge({ count, href, title }: { count: number; href: string; title: string }) {
+  if (!count) return null;
+  return (
+    <a
+      href={href}
+      title={title}
+      aria-label={title}
+      style={{
+        minWidth: 20,
+        height: 20,
+        padding: '0 6px',
+        borderRadius: 999,
+        background: '#f9c86a',
+        color: '#0b3a3f',
+        fontSize: 12,
+        fontWeight: 700,
+        lineHeight: '20px',
+        textAlign: 'center',
+        textDecoration: 'none',
+      }}
+    >
+      {count}
+    </a>
+  );
+}
 
 /**
- * Above the sidebar's groups: Irányítópult, then the "Napi munka" group — Jelentkezések (with the
- * applications waiting for a decision), Teremnaptár (with the upcoming sessions without a place)
+ * Above the sidebar's groups: Irányítópult, then the "Napi munka" group — Jelentkezések (badge: the
+ * applications waiting for a decision), Teremnaptár (badge: the upcoming sessions without a place)
  * and the collections in DAILY (payload/nav.ts).
  */
 export async function NavTop({ payload, user }: ServerProps) {
@@ -28,22 +55,18 @@ export async function NavTop({ payload, user }: ServerProps) {
         Irányítópult
       </a>
       <NavGroup label="Napi munka">
-        <a href="/admin/jelentkezesek" className="nav__link">
-          Jelentkezések
-        </a>
-        {waiting > 0 && (
-          <a href="/admin/jelentkezesek" className="nav__link" style={badge}>
-            Döntésre vár: {waiting}
+        <span style={row}>
+          <a href="/admin/jelentkezesek" className="nav__link">
+            Jelentkezések
           </a>
-        )}
-        <a href="/admin/teremnaptar" className="nav__link">
-          Teremnaptár
-        </a>
-        {unplaced > 0 && (
-          <a href={unplacedListHref()} className="nav__link" style={badge}>
-            Helyszín nélkül: {unplaced}
+          <Badge count={waiting} href="/admin/jelentkezesek" title={`Döntésre vár: ${waiting}`} />
+        </span>
+        <span style={row}>
+          <a href="/admin/teremnaptar" className="nav__link">
+            Teremnaptár
           </a>
-        )}
+          <Badge count={unplaced} href={unplacedListHref()} title={`Helyszín nélkül: ${unplaced} alkalom`} />
+        </span>
         {collections.map((c) => (
           <a key={c.slug} href={`/admin/collections/${c.slug}`} className="nav__link">
             {c.label}
