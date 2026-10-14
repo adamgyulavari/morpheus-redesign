@@ -19,6 +19,7 @@ import {
   isCounted,
   isCutoffDue,
   placesLeft,
+  takesPlace,
   type WorkshopFacts,
   workshopState,
 } from './rules';
@@ -33,16 +34,26 @@ const workshop = (extra: Partial<WorkshopFacts> = {}): WorkshopFacts => ({
   minParticipants: 5,
   maxParticipants: 12,
   taken: 3,
+  paid: 3,
   ...extra,
 });
 const hoursBefore = (h: number, from = start) => new Date(from.getTime() - h * 3_600_000);
 const reason = (r: { ok: boolean; reason?: string }) => (r.ok ? 'ok' : r.reason);
 
 describe('counting', () => {
-  it('only registered sign-ups take a place', () => {
+  it('only paid (registered) sign-ups count toward the minimum', () => {
     expect(isCounted('registered')).toBe(true);
-    for (const s of ['cancelled', 'moved', 'new', 'interview', 'accepted', 'rejected', 'withdrawn'] as const)
+    for (const s of ['held', 'cancelled', 'moved', 'credited', 'refunded', 'new', 'interview', 'accepted'] as const)
       expect(isCounted(s)).toBe(false);
+  });
+
+  it('a place is taken when paid, or while the hold lasts', () => {
+    const now = new Date('2026-11-01T10:00:00Z');
+    expect(takesPlace('registered', null, now)).toBe(true);
+    expect(takesPlace('held', new Date('2026-11-01T10:20:00Z'), now)).toBe(true);
+    expect(takesPlace('held', new Date('2026-11-01T09:59:00Z'), now)).toBe(false);
+    expect(takesPlace('held', null, now)).toBe(false);
+    expect(takesPlace('cancelled', null, now)).toBe(false);
   });
 
   it('places left never go below zero; no maximum means no limit', () => {
@@ -60,7 +71,11 @@ describe('workshop state (the public page)', () => {
   });
 
   it('reaching the minimum reads as running, before the cutoff decides', () => {
-    expect(workshopState(workshop({ taken: 5 }), now, rules)).toEqual({ state: 'confirmed', left: 7 });
+    expect(workshopState(workshop({ taken: 5, paid: 5 }), now, rules)).toEqual({ state: 'confirmed', left: 7 });
+  });
+
+  it('places awaiting payment are taken, but only paid ones count toward the minimum', () => {
+    expect(workshopState(workshop({ taken: 5, paid: 3 }), now, rules)).toEqual({ state: 'open', needed: 2, left: 7 });
   });
 
   it('full, cancelled, closed', () => {

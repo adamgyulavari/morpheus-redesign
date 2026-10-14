@@ -16,6 +16,9 @@ import * as migration_20261014_014745_workshop_defaults from './20261014_014745_
 import * as migration_20261014_051509_signup_mode from './20261014_051509_signup_mode';
 import * as migration_20261014_051547_remove_signup_enabled from './20261014_051547_remove_signup_enabled';
 import * as migration_20261014_151220_applications_course from './20261014_151220_applications_course';
+import * as migration_20261014_161157_payments from './20261014_161157_payments';
+import * as migration_20261014_161500_held_in_unique_indexes from './20261014_161500_held_in_unique_indexes';
+import * as migration_20261014_162000_aszf_page from './20261014_162000_aszf_page';
 
 export const migrations = [
   {
@@ -106,6 +109,21 @@ export const migrations = [
   {
     up: migration_20261014_151220_applications_course.up,
     down: migration_20261014_151220_applications_course.down,
-    name: '20261014_151220_applications_course'
+    name: '20261014_151220_applications_course',
+  },
+  {
+    up: migration_20261014_161157_payments.up,
+    down: migration_20261014_161157_payments.down,
+    name: '20261014_161157_payments',
+  },
+  {
+    up: migration_20261014_161500_held_in_unique_indexes.up,
+    down: migration_20261014_161500_held_in_unique_indexes.down,
+    name: '20261014_161500_held_in_unique_indexes',
+  },
+  {
+    up: migration_20261014_162000_aszf_page.up,
+    down: migration_20261014_162000_aszf_page.down,
+    name: '20261014_162000_aszf_page',
   },
 ];

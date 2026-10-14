@@ -36,13 +36,13 @@ export type TargetInfo = {
 };
 
 const MY_ACCOUNT = '/fiokom';
-const hello = (a: Applicant) => (a.firstName?.trim() ? `Kedves ${a.firstName.trim()}!` : 'Kedves Jelentkezőnk!');
+export const hello = (a: Applicant) => (a.firstName?.trim() ? `Kedves ${a.firstName.trim()}!` : 'Kedves Jelentkezőnk!');
 const intro = (texts: EmailTexts, key: keyof EmailTexts, fallback: string) => texts[key] ?? fallback;
 
 /** The site's price format ("6000 Ft", "45 000 Ft"); undefined without a price. */
 export const huf = (n: number | null | undefined) => (n == null ? undefined : formatHuf(n));
 
-const details = (t: TargetInfo, extra: { label: string; value: string }[] = []) => [
+export const details = (t: TargetInfo, extra: { label: string; value: string }[] = []) => [
   { label: 'Mire', value: t.title },
   ...(t.when ? [{ label: 'Mikor', value: t.when }] : []),
   ...(t.place ? [{ label: 'Hol', value: t.place }] : []),
@@ -50,18 +50,30 @@ const details = (t: TargetInfo, extra: { label: string; value: string }[] = []) 
   ...extra,
 ];
 
-async function send(payload: Payload, to: string | string[], subject: string, html: string) {
+/** Sends (never throws: a failed e-mail is logged). `ics`: a calendar file attached. */
+export async function send(payload: Payload, to: string | string[], subject: string, html: string, ics?: string) {
   const list = (Array.isArray(to) ? to : [to]).filter(Boolean);
   if (!list.length) return;
   try {
-    await payload.sendEmail({ to: list, subject, html });
+    await payload.sendEmail({
+      to: list,
+      subject,
+      html,
+      ...(ics
+        ? {
+            attachments: [
+              { filename: 'alkalom.ics', content: ics, contentType: 'text/calendar; charset=utf-8; method=PUBLISH' },
+            ],
+          }
+        : {}),
+    });
   } catch (err) {
     payload.logger.error({ err, msg: `application e-mail failed: ${subject}` });
   }
 }
 
 /** The "Fiókom" button: a login link for those who may not be logged in, else the page. */
-async function myApplicationsButton(payload: Payload, userId: number, login: boolean) {
+export async function myApplicationsButton(payload: Payload, userId: number, login: boolean) {
   if (!login) return { label: 'Fiókom', href: siteUrl(MY_ACCOUNT) };
   try {
     const { url } = await createLoginLink(payload, userId, { ttlMs: APPLICATION_LINK_TTL_MS });
@@ -71,7 +83,7 @@ async function myApplicationsButton(payload: Payload, userId: number, login: boo
     return { label: 'Fiókom', href: siteUrl(MY_ACCOUNT) };
   }
 }
-const LINK_NOTE = 'A gomb egy hétig belépteti a fiókodba. Később a belépés oldalon kérhetsz új belépési linket.';
+export const LINK_NOTE = 'A gomb egy hétig belépteti a fiókodba. Később a belépés oldalon kérhetsz új belépési linket.';
 
 // ── to the applicant ────────────────────────────────────────────────────────
 

@@ -2,7 +2,7 @@ import type { Field, GlobalConfig } from 'payload';
 
 import { WEEKDAYS } from '@/lib/rooms/labels';
 
-import { anyone, isStaffOrAdmin } from './access';
+import { anyone, isAdmin, isStaffOrAdmin } from './access';
 import { date, link, links, relationship, text, textarea, time } from './fields';
 import { globalRevalidation } from './revalidate';
 
@@ -512,6 +512,46 @@ export const ApplicationSettings: GlobalConfig = {
         emailText('cancelledMinimum', 'Elmarad (nincs elég jelentkező)', 'A következő időpontok listája automatikus.'),
         emailText('cancellation', 'Lemondás visszaigazolása', ''),
         emailText('accepted', 'Felvétel a kurzusba', 'A belépési link automatikus.'),
+      ],
+    },
+  ],
+};
+
+/** Online payment and invoicing (lib/payments, lib/invoicing). Secrets (API keys) are env only. */
+export const BillingSettings: GlobalConfig = {
+  slug: 'billingSettings',
+  label: 'Fizetési beállítások',
+  access: { read: isStaffOrAdmin, update: isAdmin },
+  admin: {
+    description:
+      'Online fizetés és számlázás. A kulcsok (fizetési szolgáltató, Számlázz.hu) nem itt, hanem a szerver beállításaiban vannak.',
+  },
+  fields: [
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'vatMode',
+          label: 'ÁFA',
+          type: 'select',
+          required: true,
+          defaultValue: 'AAM',
+          options: [
+            { label: 'Alanyi adómentes (AAM)', value: 'AAM' },
+            { label: '27%', value: '27' },
+            { label: '18%', value: '18' },
+            { label: '5%', value: '5' },
+          ],
+        },
+        {
+          name: 'ordersHoldMinutes',
+          label: 'Helyfoglalás fizetésig (perc)',
+          type: 'number',
+          required: true,
+          min: 5,
+          defaultValue: 30,
+          admin: { description: 'Ennyi ideig tartjuk a helyet, amíg a jelentkező fizet; utána felszabadul.' },
+        },
       ],
     },
   ],

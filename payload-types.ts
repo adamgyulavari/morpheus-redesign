@@ -79,6 +79,8 @@ export interface Config {
     media: Media;
     users: User;
     contactPeople: ContactPerson;
+    orders: Order;
+    payments: Payment;
     ctaBands: CtaBand;
     legalPages: LegalPage;
     venues: Venue;
@@ -88,6 +90,7 @@ export interface Config {
     roomBookings: RoomBooking;
     applications: Application;
     loginTokens: LoginToken;
+    mockPayments: MockPayment;
     redirects: Redirect;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
@@ -106,6 +109,9 @@ export interface Config {
     users: {
       courseGroups: 'courseGroups';
     };
+    orders: {
+      payments: 'payments';
+    };
     sessions: {
       applications: 'applications';
     };
@@ -123,6 +129,8 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     contactPeople: ContactPeopleSelect<false> | ContactPeopleSelect<true>;
+    orders: OrdersSelect<false> | OrdersSelect<true>;
+    payments: PaymentsSelect<false> | PaymentsSelect<true>;
     ctaBands: CtaBandsSelect<false> | CtaBandsSelect<true>;
     legalPages: LegalPagesSelect<false> | LegalPagesSelect<true>;
     venues: VenuesSelect<false> | VenuesSelect<true>;
@@ -132,6 +140,7 @@ export interface Config {
     roomBookings: RoomBookingsSelect<false> | RoomBookingsSelect<true>;
     applications: ApplicationsSelect<false> | ApplicationsSelect<true>;
     loginTokens: LoginTokensSelect<false> | LoginTokensSelect<true>;
+    mockPayments: MockPaymentsSelect<false> | MockPaymentsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
@@ -148,6 +157,7 @@ export interface Config {
     ui: Ui;
     roomBookingSettings: RoomBookingSetting;
     applicationSettings: ApplicationSetting;
+    billingSettings: BillingSetting;
     'payload-jobs-stats': PayloadJobsStat;
   };
   globalsSelect: {
@@ -155,6 +165,7 @@ export interface Config {
     ui: UiSelect<false> | UiSelect<true>;
     roomBookingSettings: RoomBookingSettingsSelect<false> | RoomBookingSettingsSelect<true>;
     applicationSettings: ApplicationSettingsSelect<false> | ApplicationSettingsSelect<true>;
+    billingSettings: BillingSettingsSelect<false> | BillingSettingsSelect<true>;
     'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
   };
   locale: null;
@@ -166,6 +177,8 @@ export interface Config {
     tasks: {
       revalidateDates: TaskRevalidateDates;
       workshopCutoff: TaskWorkshopCutoff;
+      orderPaid: TaskOrderPaid;
+      expireOrders: TaskExpireOrders;
       inline: {
         input: unknown;
         output: unknown;
@@ -387,9 +400,23 @@ export interface Application {
   displayTitle?: string | null;
   kind: 'workshop' | 'beginner' | 'professional';
   /**
-   * Nyitott Műhely és kezdő: Jelentkezett / Lemondva / Áthelyezve. Szakmai: Új / Interjú / Felvéve / Elutasítva / Visszavonta.
+   * Nyitott Műhely és kezdő: Fizetésre vár / Jelentkezett (fizetett) / Lemondva / Áthelyezve / Kreditté alakítva / Visszatérítve. Szakmai: Új / Interjú / Felvéve / Elutasítva / Visszavonta.
    */
-  status?: ('registered' | 'cancelled' | 'moved' | 'new' | 'interview' | 'accepted' | 'rejected' | 'withdrawn') | null;
+  status?:
+    | (
+        | 'held'
+        | 'registered'
+        | 'cancelled'
+        | 'moved'
+        | 'credited'
+        | 'refunded'
+        | 'new'
+        | 'interview'
+        | 'accepted'
+        | 'rejected'
+        | 'withdrawn'
+      )
+    | null;
   user: number | User;
   session?: (number | null) | Session;
   courseGroup?: (number | null) | CourseGroup;
@@ -405,8 +432,13 @@ export interface Application {
   movedTo?: (number | null) | Application;
   cancelReason?: string | null;
   cancelledAt?: string | null;
+  order?: (number | null) | Order;
   /**
-   * Átutalás / készpénz (az online fizetésig).
+   * Addig tartjuk a helyet, amíg a fizetés lezajlik.
+   */
+  holdUntil?: string | null;
+  /**
+   * Átutalás / készpénz — ha nem online fizetett.
    */
   paidOffline?: boolean | null;
   paymentNote?: string | null;
@@ -428,6 +460,23 @@ export interface User {
   lastName: string;
   firstName: string;
   phone?: string | null;
+  billing?: {
+    /**
+     * Üresen: a saját neve.
+     */
+    name?: string | null;
+    /**
+     * Csak cégnek.
+     */
+    taxNumber?: string | null;
+    zip?: string | null;
+    city?: string | null;
+    /**
+     * Kétbetűs kód.
+     */
+    country?: string | null;
+    address?: string | null;
+  };
   name?: string | null;
   /**
    * Foglalhat termet gyakorláshoz a Fiókom → Teremfoglalás oldalon. Csak ezzel lehet foglalni; a kurzus-tagság önmagában nem ad jogot.
@@ -848,6 +897,88 @@ export interface RoomBooking {
    * Csak adminisztrátor: az ütköző diák-gyakorlásokat lemondja (a diákok e-mailt kapnak). Alkalommal és bérléssel ütközni nem lehet.
    */
   overridePractice?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Online jelentkezések fizetése: egy rendelés = egy jelentkezés. A rendszer írja; javítani csak adminisztrátor tud.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders".
+ */
+export interface Order {
+  id: number;
+  user: number | User;
+  application?: (number | null) | Application;
+  kind: 'workshop' | 'beginner' | 'monthlyFee';
+  status: 'pending' | 'paid' | 'expired' | 'canceled' | 'refunded' | 'partially_refunded';
+  label: string;
+  price: number;
+  creditUsed: number;
+  /**
+   * Ár − kredit: ennyit fizet kártyával.
+   */
+  amountDue: number;
+  expiresAt?: string | null;
+  paidAt?: string | null;
+  billing?: {
+    name?: string | null;
+    taxNumber?: string | null;
+    zip?: string | null;
+    city?: string | null;
+    country?: string | null;
+    address?: string | null;
+  };
+  token: string;
+  payments?: {
+    docs?: (number | Payment)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Fizetési kísérletek a fizetési szolgáltatónál (egy rendeléshez több is lehet, pl. újrapróbálás).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payments".
+ */
+export interface Payment {
+  id: number;
+  order: number | Order;
+  provider: string;
+  providerPaymentId: string;
+  amount: number;
+  status: 'pending' | 'paid' | 'failed' | 'expired' | 'canceled' | 'refunded' | 'partially_refunded';
+  paidAt?: string | null;
+  refunds?:
+    | {
+        providerRefundId?: string | null;
+        amount: number;
+        at?: string | null;
+        by?: (number | null) | User;
+        id?: string | null;
+      }[]
+    | null;
+  raw?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  log?:
+    | {
+        at?: string | null;
+        source?: string | null;
+        status?: string | null;
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2450,6 +2581,23 @@ export interface LoginToken {
   createdAt: string;
 }
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mockPayments".
+ */
+export interface MockPayment {
+  id: number;
+  orderId: string;
+  amount: number;
+  amountRefunded?: number | null;
+  description?: string | null;
+  status: 'pending' | 'paid' | 'failed' | 'expired' | 'canceled';
+  paidAt?: string | null;
+  returnUrl?: string | null;
+  webhookUrl?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Régi vagy megszűnt címek továbbítása egy mostani oldalra (pl. a korábbi weboldal /rolunk-2/ címe → Rólunk).
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2555,7 +2703,7 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'revalidateDates' | 'workshopCutoff';
+        taskSlug: 'inline' | 'revalidateDates' | 'workshopCutoff' | 'orderPaid' | 'expireOrders';
         taskID: string;
         input?:
           | {
@@ -2588,7 +2736,7 @@ export interface PayloadJob {
         id?: string | null;
       }[]
     | null;
-  taskSlug?: ('inline' | 'revalidateDates' | 'workshopCutoff') | null;
+  taskSlug?: ('inline' | 'revalidateDates' | 'workshopCutoff' | 'orderPaid' | 'expireOrders') | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
@@ -2660,6 +2808,14 @@ export interface PayloadLockedDocument {
         value: number | ContactPerson;
       } | null)
     | ({
+        relationTo: 'orders';
+        value: number | Order;
+      } | null)
+    | ({
+        relationTo: 'payments';
+        value: number | Payment;
+      } | null)
+    | ({
         relationTo: 'ctaBands';
         value: number | CtaBand;
       } | null)
@@ -2694,6 +2850,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'loginTokens';
         value: number | LoginToken;
+      } | null)
+    | ({
+        relationTo: 'mockPayments';
+        value: number | MockPayment;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -4018,6 +4178,16 @@ export interface UsersSelect<T extends boolean = true> {
   lastName?: T;
   firstName?: T;
   phone?: T;
+  billing?:
+    | T
+    | {
+        name?: T;
+        taxNumber?: T;
+        zip?: T;
+        city?: T;
+        country?: T;
+        address?: T;
+      };
   name?: T;
   roomBooking?: T;
   roles?: T;
@@ -4053,6 +4223,69 @@ export interface ContactPeopleSelect<T extends boolean = true> {
   photo?: T;
   order?: T;
   importId?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders_select".
+ */
+export interface OrdersSelect<T extends boolean = true> {
+  user?: T;
+  application?: T;
+  kind?: T;
+  status?: T;
+  label?: T;
+  price?: T;
+  creditUsed?: T;
+  amountDue?: T;
+  expiresAt?: T;
+  paidAt?: T;
+  billing?:
+    | T
+    | {
+        name?: T;
+        taxNumber?: T;
+        zip?: T;
+        city?: T;
+        country?: T;
+        address?: T;
+      };
+  token?: T;
+  payments?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payments_select".
+ */
+export interface PaymentsSelect<T extends boolean = true> {
+  order?: T;
+  provider?: T;
+  providerPaymentId?: T;
+  amount?: T;
+  status?: T;
+  paidAt?: T;
+  refunds?:
+    | T
+    | {
+        providerRefundId?: T;
+        amount?: T;
+        at?: T;
+        by?: T;
+        id?: T;
+      };
+  raw?: T;
+  log?:
+    | T
+    | {
+        at?: T;
+        source?: T;
+        status?: T;
+        note?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -4226,6 +4459,8 @@ export interface ApplicationsSelect<T extends boolean = true> {
   movedTo?: T;
   cancelReason?: T;
   cancelledAt?: T;
+  order?: T;
+  holdUntil?: T;
   paidOffline?: T;
   paymentNote?: T;
   staffNotes?: T;
@@ -4243,6 +4478,22 @@ export interface LoginTokensSelect<T extends boolean = true> {
   attempts?: T;
   expiresAt?: T;
   usedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mockPayments_select".
+ */
+export interface MockPaymentsSelect<T extends boolean = true> {
+  orderId?: T;
+  amount?: T;
+  amountRefunded?: T;
+  description?: T;
+  status?: T;
+  paidAt?: T;
+  returnUrl?: T;
+  webhookUrl?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -4688,6 +4939,22 @@ export interface ApplicationSetting {
   createdAt?: string | null;
 }
 /**
+ * Online fizetés és számlázás. A kulcsok (fizetési szolgáltató, Számlázz.hu) nem itt, hanem a szerver beállításaiban vannak.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "billingSettings".
+ */
+export interface BillingSetting {
+  id: number;
+  vatMode: 'AAM' | '27' | '18' | '5';
+  /**
+   * Ennyi ideig tartjuk a helyet, amíg a jelentkező fizet; utána felszabadul.
+   */
+  ordersHoldMinutes: number;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-jobs-stats".
  */
@@ -5031,6 +5298,17 @@ export interface ApplicationSettingsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "billingSettings_select".
+ */
+export interface BillingSettingsSelect<T extends boolean = true> {
+  vatMode?: T;
+  ordersHoldMinutes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-jobs-stats_select".
  */
 export interface PayloadJobsStatsSelect<T extends boolean = true> {
@@ -5062,6 +5340,24 @@ export interface TaskRevalidateDates {
  * via the `definition` "TaskWorkshopCutoff".
  */
 export interface TaskWorkshopCutoff {
+  input?: unknown;
+  output?: unknown;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskOrderPaid".
+ */
+export interface TaskOrderPaid {
+  input: {
+    orderId: number;
+  };
+  output?: unknown;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskExpireOrders".
+ */
+export interface TaskExpireOrders {
   input?: unknown;
   output?: unknown;
 }

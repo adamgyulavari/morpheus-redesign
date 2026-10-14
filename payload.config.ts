@@ -31,9 +31,10 @@ import {
 } from './payload/collections/simple';
 import { Users } from './payload/collections/Users';
 import { emailAdapter } from './payload/email';
-import { ApplicationSettings, RoomBookingSettings, SiteSettings, Ui } from './payload/globals';
+import { ApplicationSettings, BillingSettings, RoomBookingSettings, SiteSettings, Ui } from './payload/globals';
 import { migrations } from './payload/migrations';
 import { arrangeNav } from './payload/nav';
+import { MockPayments, Orders, Payments } from './payload/collections/payments';
 import { redirectsConfig, redirectsTranslationsHu } from './payload/redirects';
 import { generateDescription, generateImage, generateTitle, generateURL, seoFields } from './payload/seo';
 
@@ -136,8 +137,11 @@ export default buildConfig({
     Media,
     Users,
     LoginTokens,
+    Orders,
+    Payments,
+    MockPayments,
   ]),
-  globals: arrangeNav([SiteSettings, Ui, RoomBookingSettings, ApplicationSettings]),
+  globals: arrangeNav([SiteSettings, Ui, RoomBookingSettings, ApplicationSettings, BillingSettings]),
   editor: lexicalEditor(),
   // SMTP when SMTP_HOST is set; otherwise e-mails (with their links) are written to the console
   email: emailAdapter(),
@@ -203,8 +207,35 @@ export default buildConfig({
           return { output: { decided: decided.length } };
         },
       },
+      {
+        // after a payment: confirmation e-mails (later: invoice, course membership) — lib/payments
+        slug: 'orderPaid',
+        label: 'Fizetés után: visszaigazolás',
+        inputSchema: [{ name: 'orderId', type: 'number', required: true }],
+        retries: 3,
+        handler: async ({ input, req }) => {
+          const { afterPaid } = await import('./lib/payments/service');
+          await afterPaid(req.payload, input.orderId);
+          return { output: {} };
+        },
+      },
+      {
+        // an unpaid hold runs out: the place is free again
+        slug: 'expireOrders',
+        label: 'Lejárt fizetési foglalások',
+        schedule: [{ cron: '*/2 * * * *', queue: 'schedules' }],
+        retries: 2,
+        handler: async ({ req }) => {
+          const { expireOrders } = await import('./lib/payments/service');
+          const expired = await expireOrders(req.payload);
+          return { output: { expired: expired.length } };
+        },
+      },
     ],
-    autoRun: [{ cron: '* * * * *', queue: 'schedules' }],
+    autoRun: [
+      { cron: '* * * * *', queue: 'schedules' },
+      { cron: '* * * * *', queue: 'payments' },
+    ],
     // only inside the web server — not in CLI runs (migrate, seed)
     shouldAutoRun: () => Boolean(process.env.NEXT_RUNTIME),
   },

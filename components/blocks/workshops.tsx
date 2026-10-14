@@ -1,10 +1,10 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import SmartLink from '@/components/SmartLink';
-import SignupDialog from '@/components/signup/SignupDialog';
 import { SectionHeading, SectionIntro } from '@/components/ui';
 import WorkshopFeature from '@/components/WorkshopFeature';
 import { getOpenWorkshopSessions, getPastWorkshops, getSiteSettings, getUi, getUpcomingWorkshops } from '@/lib/data';
-import { dateRange, dayOfMonth, monthDayShort, monthShort, weekday } from '@/lib/dates';
+import { dateRange, dayOfMonth, monthShort, weekday } from '@/lib/dates';
 import { fill } from '@/lib/format';
 
 import type { BlockProps } from './types';
@@ -116,7 +116,6 @@ export async function OpenWorkshopSessions({ block, className }: BlockProps<'ope
                   ? { text: ui.sessions.full, tone: 'text-rust-dark' }
                   : { text: ui.sessions.closed, tone: 'text-muted' };
           const bookable = state.state === 'open' || state.state === 'confirmed';
-          const when = `${monthDayShort(session.date)}, ${weekday(session.date)} · ${session.startTime}–${session.endTime}`;
           return (
             <div
               key={session.id}
@@ -146,17 +145,10 @@ export async function OpenWorkshopSessions({ block, className }: BlockProps<'ope
               </div>
               <div className="col-start-2 sm:col-start-auto">
                 {bookable && (
-                  <SignupDialog
-                    label={ui.sessions.book}
-                    buttonClassName="btn btn-md btn-primary"
-                    target={{
-                      kind: 'workshop',
-                      sessionId: session.id,
-                      title: `${block.title} — ${monthDayShort(session.date)}`,
-                      details: [when, session.place, session.description].filter(Boolean) as string[],
-                      price: session.price,
-                    }}
-                  />
+                  // sign-up with payment: the checkout page (lib/payments)
+                  <Link href={`/fizetes?session=${session.id}`} className="btn btn-md btn-primary">
+                    {ui.sessions.book}
+                  </Link>
                 )}
               </div>
             </div>

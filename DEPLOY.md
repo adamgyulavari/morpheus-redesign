@@ -77,6 +77,8 @@ media bucket.
    | `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | from step 1 |
    | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Scaleway Transactional Email: `smtp.tem.scaleway.com`, port `587` (or `2587`), user = the project ID, password = an API secret key |
    | `EMAIL_FROM`, `EMAIL_FROM_NAME` | sender, e.g. `noreply@morpheus-szinmuhely.hu` / `Morpheus Színműhely` (the domain must be verified in Scaleway TEM) |
+   | `PAYMENT_PROVIDER` | `mollie` (required on a deployed site; the `mock` provider is refused there) |
+   | `MOLLIE_API_KEY` | Mollie dashboard → Developers → API keys: `test_…` on staging, `live_…` on the live site. Secret |
 
    Don't set `TZ`; dates are handled in Budapest time by the code.
 
@@ -88,6 +90,16 @@ media bucket.
 5. **Healthcheck**: the image has one (`/api/users/me`); Coolify picks it up.
 6. Deploy. In the logs you should see `Migrating: …` / `Migrated: …` (first start or after a schema
    change), then the server is ready. Open `/admin` and log in.
+
+### Online payment (Mollie)
+
+- Mollie calls `https://<site>/api/payments/webhook` after every payment change; the site sets this
+  URL on each payment, nothing to configure in Mollie. It must be reachable from the internet, so
+  test mode is tested on staging (a local dev server can't receive it — use `PAYMENT_PROVIDER=mock`
+  there, or a tunnel).
+- Test mode: a `test_…` key; Mollie's test checkout lets you pick paid / failed / expired.
+- Payments are in HUF; Mollie offers the methods available for HUF (cards, PayPal…).
+- Switching provider (e.g. Barion): see `lib/payments/providers/README.md`.
 
 ### Deploy webhook (GitHub → Coolify)
 

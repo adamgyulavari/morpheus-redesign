@@ -236,7 +236,7 @@ const findCourses = cache(async (): Promise<Course[]> => {
     courseId: g.course == null ? null : String(typeof g.course === 'object' ? g.course.id : g.course),
     start: map.courseStart(
       g as CourseGroup,
-      courseSignupState(courseFacts(g as CourseGroup, taken.get(g.id) ?? 0), now),
+      courseSignupState(courseFacts(g as CourseGroup, taken.get(g.id)?.taken ?? 0), now),
     ),
   }));
   return courses.map((c) =>

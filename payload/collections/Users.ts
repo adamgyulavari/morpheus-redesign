@@ -89,6 +89,36 @@ export const Users: CollectionConfig = {
     },
     text('phone', 'Telefonszám'),
     {
+      // the buyer on invoices; prefilled at checkout (/fizetes), editable in /fiokom/adatok
+      name: 'billing',
+      label: 'Számlázási adatok',
+      type: 'group',
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            text('name', 'Számlázási név', { description: 'Üresen: a saját neve.' }),
+            text('taxNumber', 'Adószám', { description: 'Csak cégnek.' }),
+          ],
+        },
+        {
+          type: 'row',
+          fields: [
+            text('zip', 'Irányítószám'),
+            text('city', 'Város'),
+            {
+              name: 'country',
+              label: 'Ország',
+              type: 'text',
+              defaultValue: 'HU',
+              admin: { description: 'Kétbetűs kód.' },
+            },
+          ],
+        },
+        text('address', 'Cím (utca, házszám)'),
+      ],
+    },
+    {
       name: 'name',
       label: 'Név',
       type: 'text',
