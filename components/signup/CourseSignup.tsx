@@ -1,6 +1,7 @@
 /**
  * A course's sign-up button, by its "Jelentkezés módja": the external link, the beginner sign-up
- * (for one group, or a choice of the open ones) or the professional application form.
+ * (for one group, or a choice of the open ones) or the professional application form. With
+ * "Jelentkezés csoport nélkül is" on the course, also without a group.
  */
 import { ButtonLink } from '@/components/ui';
 import { monthDayShort, weekday } from '@/lib/dates';
@@ -41,7 +42,11 @@ export default function CourseSignup({ course, label, variant, size = 'lg', arro
     );
 
   const open = course.starts.filter((s) => s.signup.state === 'open');
+  const courseId = Number(course.id);
+  // applications without a group: when none is open, or as a choice next to the open ones
+  const withoutGroup = course.openWithoutGroup;
   if (course.signupMode === 'professional') {
+    if (!start && !open.length && !withoutGroup) return null;
     return (
       <SignupDialog
         label={label}
@@ -50,7 +55,9 @@ export default function CourseSignup({ course, label, variant, size = 'lg', arro
           kind: 'professional',
           title: course.title,
           courseGroupId: start?.groupId,
+          courseId,
           groups: start ? undefined : open.map((s) => ({ id: s.groupId, label: groupLabel(s) })),
+          noGroupLabel: withoutGroup ? 'Még nem tudom / bármelyik csoport' : undefined,
         }}
       />
     );
@@ -79,8 +86,8 @@ export default function CourseSignup({ course, label, variant, size = 'lg', arro
       />
     );
   }
-  if (!open.length) return null;
-  const only = open.length === 1 ? open[0] : undefined;
+  if (!open.length && !withoutGroup) return null;
+  const only = open.length === 1 && !withoutGroup ? open[0] : undefined;
   return (
     <SignupDialog
       label={label}
@@ -89,9 +96,15 @@ export default function CourseSignup({ course, label, variant, size = 'lg', arro
         kind: 'beginner',
         title: only ? only.title : course.title,
         courseGroupId: only?.groupId,
-        details: only ? startDetails(only) : undefined,
+        courseId,
+        details: only
+          ? startDetails(only)
+          : open.length
+            ? undefined
+            : ['Most nincs induló csoport — jelentkezz, és szólunk, amint indul a következő.'],
         price: only?.signup.price,
         groups: only ? undefined : open.map((s) => ({ id: s.groupId, label: groupLabel(s) })),
+        noGroupLabel: withoutGroup ? 'Egyik időpont sem jó — a következő csoportba' : undefined,
       }}
     />
   );

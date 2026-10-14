@@ -41,7 +41,6 @@ import {
   canSignUpCourse,
   canSignUpWorkshop,
   canWithdraw,
-  courseSignupState,
   cutoffAt,
   cutoffOutcome,
   isCutoffDue,
@@ -232,7 +231,10 @@ async function applicantFor(
 export type SignUpInput = ApplicantInput & {
   kind: ApplicationKind;
   sessionId?: number;
+  /** Empty: without a group — only where the course takes those (`openWithoutGroup`). */
   courseGroupId?: number | null;
+  /** The course (catalogue entry) of a group-less application. */
+  courseId?: number | null;
   message?: string;
 };
 
@@ -272,21 +274,29 @@ export async function signUp(
     const verdict = canSignUpWorkshop(workshopFacts(s, taken), now, settings);
     if (!verdict.ok) return verdict;
     target = await workshopInfo(payload, s, settings);
+  } else if (input.courseGroupId) {
+    const g = await payload.findByID({
+      collection: 'courseGroups',
+      id: input.courseGroupId,
+      depth: 0,
+      disableErrors: true,
+    });
+    if (!g) return { ok: false, reason: 'Nincs ilyen kurzus.' };
+    if (signupKindOf(g) !== input.kind) return { ok: false, reason: 'Erre a kurzusra így nem lehet jelentkezni.' };
+    const taken = (await takenBy(payload, 'course_group_id', [g.id])).get(g.id) ?? 0;
+    const verdict = canSignUpCourse(courseFacts(g, taken), now);
+    if (!verdict.ok) return verdict;
+    target = courseInfo(g);
+    input.courseId = null; // the group's own (the collection's hook)
   } else {
-    const groupId =
-      input.courseGroupId ?? (input.kind === 'professional' ? await onlyOpenProfessional(payload, now) : null);
-    const g = groupId
-      ? await payload.findByID({ collection: 'courseGroups', id: groupId, depth: 0, disableErrors: true })
+    // without a group: only where the course takes those
+    const c = input.courseId
+      ? await payload.findByID({ collection: 'courses', id: input.courseId, depth: 0, disableErrors: true })
       : null;
-    if (input.kind === 'beginner' && !g) return { ok: false, reason: 'Nincs ilyen kurzus.' };
-    if (g) {
-      if (signupKindOf(g) !== input.kind) return { ok: false, reason: 'Erre a kurzusra így nem lehet jelentkezni.' };
-      const taken = (await takenBy(payload, 'course_group_id', [g.id])).get(g.id) ?? 0;
-      const verdict = canSignUpCourse(courseFacts(g, taken), now);
-      if (!verdict.ok) return verdict;
-      target = courseInfo(g);
-    } else target = { title: APPLICATION_KINDS.professional };
-    input.courseGroupId = g?.id ?? null;
+    if (!c?.openWithoutGroup || c.signupMode !== input.kind)
+      return { ok: false, reason: 'Erre a kurzusra most nem lehet jelentkezni.' };
+    target = { title: c.title, withoutGroup: true };
+    input.courseGroupId = null;
   }
 
   const { applicant, created } = await applicantFor(payload, viewer, input);
@@ -299,6 +309,7 @@ export async function signUp(
         user: applicant.userId,
         session: input.kind === 'workshop' ? input.sessionId : null,
         courseGroup: input.kind === 'workshop' ? null : input.courseGroupId,
+        course: input.kind === 'workshop' ? null : input.courseId,
         name: applicant.name,
         email: applicant.email,
         phone: applicant.phone,
@@ -313,24 +324,6 @@ export async function signUp(
   await sendReceived(payload, settings, applicant, input.kind, target, { created, loggedIn: Boolean(viewer) });
   await sendStaffNew(payload, settings, applicationId, APPLICATION_KINDS[input.kind], applicant, target, input.message);
   return { ok: true, applicationId };
-}
-
-/** The open professional groups; when exactly one is open, applications go to it. */
-export async function openProfessionalGroups(payload: Payload, now = new Date()) {
-  const { docs } = await payload.find({
-    collection: 'courseGroups',
-    where: SIGNUP_ON,
-    depth: 0,
-    sort: 'startDate',
-    ...all,
-  });
-  return docs.filter(
-    (g) => signupKindOf(g) === 'professional' && courseSignupState(courseFacts(g, 0), now).state === 'open',
-  );
-}
-async function onlyOpenProfessional(payload: Payload, now: Date) {
-  const open = await openProfessionalGroups(payload, now);
-  return open.length === 1 ? (open[0]?.id ?? null) : null;
 }
 
 // ── the participant: cancel, move ───────────────────────────────────────────
@@ -369,7 +362,9 @@ export async function allowedActions(
           disableErrors: true,
         })
       : null;
-    return { cancel: a.status === 'registered' && g ? canCancelCourse(new Date(g.startDate), now) : no, move: false };
+    if (a.status !== 'registered') return { cancel: no, move: false };
+    // without a group (waiting to be placed): always
+    return { cancel: g ? canCancelCourse(new Date(g.startDate), now) : { ok: true }, move: false };
   }
   const s = relId(a.session)
     ? await payload.findByID({ collection: 'sessions', id: relId(a.session) ?? 0, depth: 0, disableErrors: true })
@@ -650,6 +645,10 @@ export async function admit(payload: Payload, staff: TypedUser, id: number, grou
   try {
     group = await inTransaction(payload, async (req) => {
       const g = await payload.findByID({ collection: 'courseGroups', id: targetId, depth: 0, req });
+      if (signupKindOf(g) !== a.kind) throw new Error('Ez a csoport nem ilyen jelentkezéshez való.');
+      // a group-less kezdő application: placed first (the place is counted, under a lock)
+      if (a.kind === 'beginner' && !relId(a.courseGroup))
+        await payload.update({ collection: 'applications', id, data: { courseGroup: g.id }, req });
       const students = relIds(g.students);
       if (!students.includes(userId))
         await payload.update({
@@ -822,6 +821,8 @@ export type DashboardApplication = {
   message: string;
   createdAt: string;
   group?: { id: number; title: string };
+  /** The course of an application without a group. */
+  course?: string;
 };
 
 const toDashboard = (a: {
@@ -835,8 +836,10 @@ const toDashboard = (a: {
   message?: string | null;
   createdAt: string;
   courseGroup?: unknown;
+  course?: unknown;
 }): DashboardApplication => {
   const g = a.courseGroup && typeof a.courseGroup === 'object' ? (a.courseGroup as CourseGroup) : null;
+  const c = a.course && typeof a.course === 'object' ? (a.course as { title?: string }) : null;
   return {
     id: a.id,
     name: a.name,
@@ -848,6 +851,7 @@ const toDashboard = (a: {
     message: a.message ?? '',
     createdAt: a.createdAt,
     group: g ? { id: g.id, title: g.title } : undefined,
+    course: c?.title,
   };
 };
 
@@ -917,10 +921,15 @@ export async function dashboard(payload: Payload, now = new Date()) {
     }),
     beginners: beginners.map(toDashboard),
     professionals: courseApps.filter((a) => a.kind === 'professional').map(toDashboard),
-    /** For "Felvétel és csoportba helyezés": the running and upcoming professional groups. */
-    professionalGroups: groups
-      .filter((g) => signupKindOf(g as CourseGroup) === 'professional')
-      .map((g) => ({ id: g.id, title: g.title })),
+    /** For "Felvétel és csoportba helyezés": the running and upcoming groups of each kind. */
+    groups: {
+      beginner: groups
+        .filter((g) => signupKindOf(g as CourseGroup) === 'beginner')
+        .map((g) => ({ id: g.id, title: g.title })),
+      professional: groups
+        .filter((g) => signupKindOf(g as CourseGroup) === 'professional')
+        .map((g) => ({ id: g.id, title: g.title })),
+    },
   };
 }
 

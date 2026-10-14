@@ -19,7 +19,7 @@ const MAX_PER_IP = 8;
 const MAX_PER_EMAIL = 4;
 const str = (form: FormData, name: string) => String(form.get(name) ?? '').trim();
 
-/** One form for all three: `kind`, and `session` or `courseGroup`. */
+/** One form for all three: `kind`, and `session`, or `courseGroup` ("none": without a group) and `course`. */
 export async function signUpAction(_: SignUpState, form: FormData): Promise<SignUpState> {
   const values = {
     lastName: str(form, 'lastName'),
@@ -47,6 +47,7 @@ export async function signUpAction(_: SignUpState, form: FormData): Promise<Sign
     kind,
     sessionId: Number(form.get('session')) || undefined,
     courseGroupId: Number(values.courseGroup) || null,
+    courseId: Number(form.get('course')) || null,
     lastName: values.lastName,
     firstName: values.firstName,
     email: values.email,

@@ -201,6 +201,17 @@ export const Courses: CollectionConfig = {
                   'Kezdőnél az oldal a kurzushoz tartozó, jelentkezésre nyitott csoportokat mutatja (Csoportok → Jelentkezés a weboldalon).',
               },
             },
+            {
+              name: 'openWithoutGroup',
+              label: 'Jelentkezés csoport nélkül is',
+              type: 'checkbox',
+              defaultValue: false,
+              admin: {
+                condition: (_, s) => s?.signupMode === 'beginner' || s?.signupMode === 'professional',
+                description:
+                  'Akkor is lehet jelentkezni, ha nincs nyitott csoport (vagy egyik sem jó a jelentkezőnek). A csoportba a Jelentkezések oldalon helyezed.',
+              },
+            },
             text('admission', 'Felvétel', {
               required: true,
               description: 'Pl. „előzetes tapasztalat nélkül” — a Képzések összehasonlításban.',

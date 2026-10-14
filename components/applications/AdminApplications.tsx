@@ -4,7 +4,8 @@
  * /admin/jelentkezesek: what staff act on. Every row has one "Kezelés" button: a dialog with the
  * payment fields and the possible decisions, saved by one button in one server call (payment
  * first, then the decision), so nothing races.
- * - Kezdő: Mentés / Mentés és felvétel (into the group, may book rooms) / Elutasítás (archived).
+ * - Kezdő: Mentés / Mentés és felvétel (into the group — or, without one, a chosen group; may book
+ *   rooms) / Elutasítás (archived).
  * - Szakmai: Interjú / Elutasítás (no e-mail) / Felvétel és csoportba helyezés.
  * - Nyitott Műhely: payment, Lemondás (an e-mail tells them); per date: add a participant, e-mail them.
  */
@@ -98,12 +99,12 @@ export default function AdminApplications() {
                     {a.email}
                     <div className={s.muted}>{a.phone}</div>
                   </td>
-                  <td>{a.group?.title}</td>
+                  <td>{a.group?.title ?? <span className={s.muted}>{withoutGroup(a)}</span>}</td>
                   <td>{date(a.createdAt)}</td>
                   <td>
                     <PaidText app={a} />
                   </td>
-                  <td style={right}>{manage(a, 'beginner', a.group?.title ?? '')}</td>
+                  <td style={right}>{manage(a, 'beginner', a.group?.title ?? withoutGroup(a))}</td>
                 </tr>
               ))}
             </tbody>
@@ -126,7 +127,7 @@ export default function AdminApplications() {
                 <span className={s.muted}>
                   {APPLICATION_STATUSES[a.status]} · {date(a.createdAt)}
                 </span>
-                {manage(a, 'professional', a.group?.title ?? 'Szakmai kurzus')}
+                {manage(a, 'professional', a.group?.title ?? withoutGroup(a))}
               </span>
             </div>
             <div className={s.muted}>
@@ -150,7 +151,7 @@ export default function AdminApplications() {
         <DecisionDialog
           key={open.app.id}
           {...open}
-          groups={data.professionalGroups}
+          groups={data.groups[open.kind === 'beginner' ? 'beginner' : 'professional']}
           busy={pending}
           onClose={() => setOpen(null)}
           onDecide={async (input) => {
@@ -162,6 +163,9 @@ export default function AdminApplications() {
   );
 }
 
+/** "Kezdő kurzus — csoport nélkül": an application waiting to be placed. */
+const withoutGroup = (app: App) => `${app.course ?? 'Csoport nélkül'}${app.course ? ' — csoport nélkül' : ''}`;
+
 /** What the row needs: amber = something to do, teal = ready for the next step, grey = done. */
 function stateOf(app: App, kind: Kind): { tone: 'todo' | 'ready' | 'done'; text: string } {
   if (kind === 'professional')
@@ -169,7 +173,9 @@ function stateOf(app: App, kind: Kind): { tone: 'todo' | 'ready' | 'done'; text:
       ? { tone: 'todo', text: 'Új jelentkezés — elbírálásra vár' }
       : { tone: 'ready', text: 'Interjú — döntésre vár' };
   if (!app.paidOffline) return { tone: 'todo', text: 'A fizetés nincs rögzítve' };
-  return kind === 'beginner' ? { tone: 'ready', text: 'Fizetett — felvehető' } : { tone: 'done', text: 'Fizetve' };
+  if (kind === 'beginner')
+    return { tone: 'ready', text: app.group ? 'Fizetett — felvehető' : 'Fizetett — csoportba helyezhető' };
+  return { tone: 'done', text: 'Fizetve' };
 }
 const TONES = {
   todo: { bg: '#f9c86a', fg: '#0b3a3f', mark: '!' },
@@ -264,7 +270,8 @@ function DecisionDialog({
   app: App;
   kind: Kind;
   context: string;
-  groups: Data['professionalGroups'];
+  /** The groups of this kind, to admit into (when the application has none). */
+  groups: Data['groups']['beginner'];
   busy: boolean;
   onClose: () => void;
   onDecide: (input: { decision: Decision; paid?: boolean; paymentNote?: string; groupId?: number | null }) => void;
@@ -275,6 +282,8 @@ function DecisionDialog({
   const [group, setGroup] = useState<number | ''>(app.group?.id ?? (groups.length === 1 ? (groups[0]?.id ?? '') : ''));
   const [confirm, setConfirm] = useState<Decision | null>(null);
   const payment = kind === 'professional' ? {} : { paid, paymentNote: note };
+  // szakmai: always chosen at admission; kezdő: only when the application came without a group
+  const choosesGroup = kind === 'professional' || (kind === 'beginner' && !app.group);
   const go = (decision: Decision) => onDecide({ decision, ...payment, groupId: group || null });
   // decisions that can't be undone ask once more (the button's text changes)
   const ask = (decision: Decision) => (confirm === decision ? go(decision) : setConfirm(decision));
@@ -311,7 +320,7 @@ function DecisionDialog({
           </fieldset>
         )}
 
-        {kind === 'professional' && (
+        {choosesGroup && (
           <label className={s.field}>
             Csoport (a felvételhez)
             <select value={group} onChange={(e) => setGroup(e.target.value ? Number(e.target.value) : '')}>
@@ -332,8 +341,19 @@ function DecisionDialog({
             </button>
           )}
           {kind === 'beginner' && (
-            <button type="button" className={`${s.btn} ${s.primary}`} disabled={busy} onClick={() => ask('admit')}>
-              {label('admit', 'Mentés és felvétel', 'Biztosan felveszed? (Üdvözlő levél megy.)')}
+            <button
+              type="button"
+              className={`${s.btn} ${s.primary}`}
+              disabled={busy || (choosesGroup && !group)}
+              onClick={() => ask('admit')}
+            >
+              {choosesGroup
+                ? label(
+                    'admit',
+                    'Mentés és csoportba helyezés',
+                    'Biztosan ebbe a csoportba veszed fel? (Üdvözlő levél megy.)',
+                  )
+                : label('admit', 'Mentés és felvétel', 'Biztosan felveszed? (Üdvözlő levél megy.)')}
             </button>
           )}
           {kind === 'professional' && app.status === 'new' && (
@@ -362,7 +382,7 @@ function DecisionDialog({
             </button>
           )}
         </div>
-        {kind === 'professional' && !group && (
+        {choosesGroup && !group && (
           <p className={s.muted} style={{ margin: 0 }}>
             A felvételhez válassz csoportot.
           </p>

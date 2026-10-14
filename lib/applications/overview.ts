@@ -8,7 +8,7 @@ import type { Payload, TypedUser } from 'payload';
 import { dateRange, monthDayShort, weekday } from '@/lib/dates';
 import { clockOf, dayOf } from '@/lib/rooms/time';
 import { relIds } from '@/payload/rel';
-import type { CourseGroup, Session } from '@/payload-types';
+import type { Course, CourseGroup, Session } from '@/payload-types';
 
 import { REVIEW_STATUSES } from './labels';
 import { allowedActions, upcomingWorkshops } from './server';
@@ -96,6 +96,7 @@ export async function myApplications(payload: Payload, user: TypedUser, activeGr
       continue;
     }
     const g = typeof a.courseGroup === 'object' ? (a.courseGroup as CourseGroup | null) : null;
+    const course = typeof a.course === 'object' ? (a.course as Course | null) : null;
     // admitted (in the group): the group itself is in "Kurzusaim"
     if (g && activeGroupIds.includes(g.id)) continue;
     if (a.kind === 'beginner' && a.status !== 'registered') continue;
@@ -103,10 +104,14 @@ export async function myApplications(payload: Payload, user: TypedUser, activeGr
     pending.push({
       applicationId: a.id,
       kind: a.kind,
-      title: g?.title ?? 'Szakmai kurzus',
+      title: g?.title ?? course?.title ?? 'Szakmai kurzus',
       when: g ? dateRange(dayOf(new Date(g.startDate)), dayOf(new Date(g.endDate))) : undefined,
       status:
-        a.kind === 'professional' && a.status === 'interview' ? REVIEW_STATUSES.interview : 'Jelentkezés elküldve',
+        a.kind === 'professional' && a.status === 'interview'
+          ? REVIEW_STATUSES.interview
+          : g
+            ? 'Jelentkezés elküldve'
+            : 'Csoportbeosztásra vár',
       canCancel: actions.cancel.ok,
     });
   }

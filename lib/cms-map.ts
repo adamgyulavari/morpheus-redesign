@@ -207,6 +207,7 @@ export const course = (c: P.Course, starts: CourseStart[]): Course => ({
   title: c.title,
   url: c.url,
   signupMode: c.signupMode ?? 'external',
+  openWithoutGroup: Boolean(c.openWithoutGroup),
   signupUrl: c.signupUrl,
   rhythm: c.rhythm,
   length: c.length,

@@ -27,8 +27,12 @@ export type SignupTarget = {
   price?: string;
   sessionId?: number;
   courseGroupId?: number;
-  /** The open groups to choose from (a select when there are several). */
+  /** The open groups to choose from (a select when there are several, or with `noGroupLabel`). */
   groups?: { id: number; label: string }[];
+  /** The course: what a group-less application is for. */
+  courseId?: number;
+  /** The course takes applications without a group: this option in the select ("none"). */
+  noGroupLabel?: string;
 };
 
 function Submit({ children }: { children: ReactNode }) {
@@ -143,9 +147,11 @@ function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string
           )}
           <input type="hidden" name="kind" value={target.kind} />
           {target.sessionId && <input type="hidden" name="session" value={target.sessionId} />}
-          {(target.courseGroupId ?? (target.groups?.length === 1 ? target.groups[0]?.id : undefined)) && (
+          {(target.courseGroupId ??
+            (target.groups?.length === 1 && !target.noGroupLabel ? target.groups[0]?.id : undefined)) && (
             <input type="hidden" name="courseGroup" value={target.courseGroupId ?? target.groups?.[0]?.id} />
           )}
+          {target.courseId && <input type="hidden" name="course" value={target.courseId} />}
 
           {me === undefined ? (
             <p className="text-[15px] text-muted">Betöltés…</p>
@@ -217,7 +223,7 @@ function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string
             </>
           )}
 
-          {!target.courseGroupId && target.groups && target.groups.length > 1 && (
+          {!target.courseGroupId && target.groups && target.groups.length > (target.noGroupLabel ? 0 : 1) && (
             <label className="field-label">
               Melyik csoportba jelentkezel? *
               <select className="field" name="courseGroup" required defaultValue={v('courseGroup') ?? ''}>
@@ -229,6 +235,7 @@ function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string
                     {g.label}
                   </option>
                 ))}
+                {target.noGroupLabel && <option value="none">{target.noGroupLabel}</option>}
               </select>
             </label>
           )}

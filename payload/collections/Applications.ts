@@ -26,13 +26,16 @@ type ApplicationDoc = {
   user?: Rel;
   session?: Rel;
   courseGroup?: Rel;
+  course?: Rel;
   name?: string;
 };
 
 const fail = failer('applications');
 
 const sameTargetOf = (a: ApplicationDoc, b: ApplicationDoc) =>
-  relId(a.session) === relId(b.session) && relId(a.courseGroup) === relId(b.courseGroup);
+  relId(a.session) === relId(b.session) &&
+  relId(a.courseGroup) === relId(b.courseGroup) &&
+  relId(a.course) === relId(b.course);
 
 const SIGNUP = Object.keys(SIGNUP_STATUSES) as ApplicationStatus[];
 const REVIEW = Object.keys(REVIEW_STATUSES) as ApplicationStatus[];
@@ -76,7 +79,13 @@ async function targetOf(req: PayloadRequest, a: ApplicationDoc): Promise<string>
     return s ? `${s.displayTitle}, ${whenText(s.start, s.end)}` : '';
   }
   const groupId = relId(a.courseGroup);
-  if (!groupId) return 'Szakmai kurzus (csoport nélkül)';
+  if (!groupId) {
+    const courseId = relId(a.course);
+    const c = courseId
+      ? await req.payload.findByID({ collection: 'courses', id: courseId, depth: 0, req, disableErrors: true })
+      : null;
+    return `${c?.title ?? APPLICATION_KINDS[a.kind ?? 'professional']} (csoport nélkül)`;
+  }
   const g = await req.payload.findByID({ collection: 'courseGroups', id: groupId, depth: 0, req, disableErrors: true });
   return g?.title ?? '';
 }
@@ -124,15 +133,37 @@ export const Applications: CollectionConfig = {
           if (!relId(a.session)) fail('session', 'Válaszd ki az alkalmat.', req);
           data.courseGroup = null;
         } else {
-          if (kind === 'beginner' && !relId(a.courseGroup)) fail('courseGroup', 'Válaszd ki a kurzust.', req);
+          if (kind === 'beginner' && !relId(a.courseGroup) && !relId(a.course))
+            fail('courseGroup', 'Válaszd ki a csoportot vagy a kurzust.', req);
           data.session = null;
+          // the group's course, so a group-less application and a placed one point to the same course
+          const groupId = relId(a.courseGroup);
+          if (groupId && relId(data.courseGroup) !== relId(before.courseGroup)) {
+            const g = await req.payload.findByID({
+              collection: 'courseGroups',
+              id: groupId,
+              depth: 0,
+              req,
+              disableErrors: true,
+            });
+            if (relId(g?.course)) data.course = relId(g?.course);
+          }
+          a.course = data.course ?? a.course;
         }
         // one active application per person and date / course (the unique indexes are the guarantee)
         if (isActive(status) && (!isActive(before.status as ApplicationStatus) || !sameTargetOf(before, a))) {
           const target: Where =
             a.kind === 'workshop'
               ? { session: { equals: relId(a.session) } }
-              : { courseGroup: relId(a.courseGroup) ? { equals: relId(a.courseGroup) } : { exists: false } };
+              : relId(a.courseGroup)
+                ? { courseGroup: { equals: relId(a.courseGroup) } }
+                : {
+                    and: [
+                      { courseGroup: { exists: false } },
+                      { kind: { equals: a.kind } },
+                      { course: relId(a.course) ? { equals: relId(a.course) } : { exists: false } },
+                    ],
+                  };
           const { totalDocs } = await req.payload.count({
             collection: 'applications',
             where: {
@@ -140,7 +171,6 @@ export const Applications: CollectionConfig = {
                 { user: { equals: relId(a.user) } },
                 target,
                 { status: { in: [...ACTIVE_STATUSES] } },
-                ...(a.kind === 'professional' && !relId(a.courseGroup) ? [{ kind: { equals: 'professional' } }] : []),
                 ...(before.id ? [{ id: { not_equals: before.id } }] : []),
               ],
             },
@@ -202,7 +232,14 @@ export const Applications: CollectionConfig = {
     },
     {
       ...relationship('courseGroup', 'Kurzus (csoport)', 'courseGroups', {
-        description: 'Szakmainál nem kötelező: felvételkor kell kiválasztani.',
+        description: 'Üresen: csoport nélküli jelentkezés — felvételkor kell kiválasztani.',
+      }),
+      index: true,
+      admin: { condition: (_, s) => s?.kind && s.kind !== 'workshop' },
+    },
+    {
+      ...relationship('course', 'Kurzus', 'courses', {
+        description: 'Automatikus a csoportból; csoport nélküli jelentkezésnél ez mondja meg, melyik kurzusra.',
       }),
       index: true,
       admin: { condition: (_, s) => s?.kind && s.kind !== 'workshop' },

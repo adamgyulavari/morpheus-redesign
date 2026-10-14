@@ -24,6 +24,8 @@ export type Applicant = {
 export type TargetInfo = {
   /** "Nyitott Műhely" / the course group's name */
   title: string;
+  /** A course application without a group (staff place it later). */
+  withoutGroup?: boolean;
   /** Workshop: when; course: its dates. */
   when?: string;
   place?: string;
@@ -96,18 +98,24 @@ export async function sendReceived(
           ),
           accountLine,
         ]
-      : [
-          hello(a),
-          intro(s.texts, 'signupReceived', 'Köszönjük a jelentkezésed, rögzítettük a helyed.'),
-          'A fizetés részleteit hamarosan e-mailben küldjük.',
-          ...(kind === 'workshop' && t.minParticipants && t.cutoff
-            ? [
-                `Az alkalom legalább ${t.minParticipants} jelentkezővel indul; ez ${momentText(t.cutoff)}-kor dől el, és e-mailben értesítünk róla.`,
-                `Ha mégsem tudsz jönni, a fiókodban mondhatod le, legkésőbb ${s.userCancelHours} órával a kezdés előtt.`,
-              ]
-            : []),
-          accountLine,
-        ];
+      : kind === 'beginner' && t.withoutGroup
+        ? [
+            hello(a),
+            'Köszönjük a jelentkezésed! Még nem soroltunk csoportba: hamarosan jelentkezünk, melyik csoportban kezdhetsz.',
+            accountLine,
+          ]
+        : [
+            hello(a),
+            intro(s.texts, 'signupReceived', 'Köszönjük a jelentkezésed, rögzítettük a helyed.'),
+            'A fizetés részleteit hamarosan e-mailben küldjük.',
+            ...(kind === 'workshop' && t.minParticipants && t.cutoff
+              ? [
+                  `Az alkalom legalább ${t.minParticipants} jelentkezővel indul; ez ${momentText(t.cutoff)}-kor dől el, és e-mailben értesítünk róla.`,
+                  `Ha mégsem tudsz jönni, a fiókodban mondhatod le, legkésőbb ${s.userCancelHours} órával a kezdés előtt.`,
+                ]
+              : []),
+            accountLine,
+          ];
   await send(
     payload,
     a.email,

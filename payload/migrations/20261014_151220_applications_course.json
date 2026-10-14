@@ -20849,6 +20849,13 @@
           "notNull": true,
           "default": "'external'"
         },
+        "open_without_group": {
+          "name": "open_without_group",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
         "admission": {
           "name": "admission",
           "type": "varchar",
@@ -25120,6 +25127,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "course_id": {
+          "name": "course_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "target": {
           "name": "target",
           "type": "varchar",
@@ -25278,6 +25291,21 @@
           "method": "btree",
           "with": {}
         },
+        "applications_course_idx": {
+          "name": "applications_course_idx",
+          "columns": [
+            {
+              "expression": "course_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "applications_moved_to_idx": {
           "name": "applications_moved_to_idx",
           "columns": [
@@ -25357,6 +25385,19 @@
           "tableTo": "course_groups",
           "columnsFrom": [
             "course_group_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "applications_course_id_courses_id_fk": {
+          "name": "applications_course_id_courses_id_fk",
+          "tableFrom": "applications",
+          "tableTo": "courses",
+          "columnsFrom": [
+            "course_id"
           ],
           "columnsTo": [
             "id"
@@ -31449,6 +31490,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "4999a222-446c-4a95-be4e-d47429e61a0e",
+  "id": "f6e20e3d-c095-4c80-a4d0-e6d8d8c61786",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

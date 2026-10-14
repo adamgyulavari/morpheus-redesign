@@ -137,6 +137,8 @@ export type Course = {
   url: string;
   /** How people sign up: the external link, or on the site (lib/applications). */
   signupMode: SignupMode;
+  /** Sign-up also without a group (none open, or none suits the applicant). */
+  openWithoutGroup: boolean;
   signupUrl: string;
   /** e.g. "heti 1×2 óra" */
   rhythm: string;

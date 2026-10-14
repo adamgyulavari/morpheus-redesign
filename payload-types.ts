@@ -339,6 +339,10 @@ export interface Course {
    */
   signupMode: 'external' | 'beginner' | 'professional';
   /**
+   * Akkor is lehet jelentkezni, ha nincs nyitott csoport (vagy egyik sem jó a jelentkezőnek). A csoportba a Jelentkezések oldalon helyezed.
+   */
+  openWithoutGroup?: boolean | null;
+  /**
    * Pl. „előzetes tapasztalat nélkül” — a Képzések összehasonlításban.
    */
   admission: string;
@@ -389,6 +393,7 @@ export interface Application {
   user: number | User;
   session?: (number | null) | Session;
   courseGroup?: (number | null) | CourseGroup;
+  course?: (number | null) | Course;
   target?: string | null;
   name: string;
   email: string;
@@ -3805,6 +3810,7 @@ export interface CoursesSelect<T extends boolean = true> {
   rhythm?: T;
   length?: T;
   signupMode?: T;
+  openWithoutGroup?: T;
   admission?: T;
   card?:
     | T
@@ -4211,6 +4217,7 @@ export interface ApplicationsSelect<T extends boolean = true> {
   user?: T;
   session?: T;
   courseGroup?: T;
+  course?: T;
   target?: T;
   name?: T;
   email?: T;
