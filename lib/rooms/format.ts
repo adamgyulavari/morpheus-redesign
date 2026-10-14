@@ -1,3 +1,5 @@
+import { relIds } from '@/payload/rel';
+
 import { clockOf, TZ } from './time';
 
 /** "nov. 3., k. 18:00–21:00" (Budapest time) */
@@ -17,4 +19,23 @@ export function momentText(moment: string | Date): string {
     weekday: 'long',
   }).format(a);
   return `${date} ${clockOf(a)}`;
+}
+
+/** What `placeText` needs of a session. */
+export type Placed = { locationType?: string | null; rooms?: unknown; externalLocation?: string | null };
+
+/**
+ * Where a session is: its rooms ("Nagyterem, Próbaterem"), the external venue, or undefined while
+ * it has no place (each caller words that its own way).
+ */
+export function placeText(s: Placed, roomName: ReadonlyMap<number, string>): string | undefined {
+  if (s.locationType === 'room')
+    return (
+      relIds(s.rooms)
+        .map((id) => roomName.get(id))
+        .filter(Boolean)
+        .join(', ') || undefined
+    );
+  if (s.locationType === 'external') return s.externalLocation || undefined;
+  return undefined;
 }

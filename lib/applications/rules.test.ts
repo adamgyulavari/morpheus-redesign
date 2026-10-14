@@ -5,6 +5,7 @@ import { at, clockOf, dayOf } from '@/lib/rooms/time';
 import {
   type ApplicationRules,
   type CourseFacts,
+  canApplyWithoutGroup,
   canCancel,
   canCancelCourse,
   canMove,
@@ -209,5 +210,14 @@ describe('cancelling a course sign-up, withdrawing an application', () => {
     expect(canWithdraw('interview').ok).toBe(true);
     expect(canWithdraw('accepted').ok).toBe(false);
     expect(canWithdraw('rejected').ok).toBe(false);
+  });
+});
+
+describe('canApplyWithoutGroup', () => {
+  it('only with the switch on, for the kind the course takes', () => {
+    expect(canApplyWithoutGroup({ openWithoutGroup: true, signupMode: 'beginner' }, 'beginner')).toBe(true);
+    expect(canApplyWithoutGroup({ openWithoutGroup: false, signupMode: 'beginner' }, 'beginner')).toBe(false);
+    expect(canApplyWithoutGroup({ openWithoutGroup: true, signupMode: 'beginner' }, 'professional')).toBe(false);
+    expect(canApplyWithoutGroup({ openWithoutGroup: true, signupMode: 'external' }, 'beginner')).toBe(false);
   });
 });

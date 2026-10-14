@@ -4,49 +4,34 @@
  */
 import type { Payload } from 'payload';
 
-import { dashboard } from '@/lib/applications/server';
+import { countWaiting, dashboard } from '@/lib/applications/server';
 import { applicationSettings } from '@/lib/applications/settings';
-import { todayInBudapest, weekday } from '@/lib/dates';
+import { monthLong, todayInBudapest, weekday } from '@/lib/dates';
+import { placeText } from '@/lib/rooms/format';
 import { SESSION_KINDS, type SessionKind } from '@/lib/rooms/labels';
-import { countUnplaced, planFill, roomsById } from '@/lib/rooms/server';
+import { roomNameMap } from '@/lib/rooms/occupancy';
+import { countUnplaced, planFill } from '@/lib/rooms/server';
 import { addDays, at, clockOf, dayOf, daysOfMonth } from '@/lib/rooms/time';
-import { relIds } from '@/payload/rel';
 
 export type Todo = { text: string; href: string; tone: 'warn' | 'info' };
 
 export type WeekItem = { time: string; title: string; kind: SessionKind; place: string; cancelled: boolean };
-
-const MONTHS = [
-  'január',
-  'február',
-  'március',
-  'április',
-  'május',
-  'június',
-  'július',
-  'augusztus',
-  'szeptember',
-  'október',
-  'november',
-  'december',
-];
 
 /** Upcoming sessions without a place, as a filtered list of the sessions collection. */
 export const unplacedListHref = (now = new Date()) =>
   `/admin/collections/sessions?where[and][0][locationType][equals]=unplaced&where[and][1][status][equals]=scheduled&where[and][2][start][greater_than]=${encodeURIComponent(now.toISOString())}&sort=start`;
 
 export async function adminHome(payload: Payload, now = new Date()) {
-  const [apps, unplaced, settings, rooms] = await Promise.all([
+  const [apps, waiting, unplaced, settings, roomName] = await Promise.all([
     dashboard(payload, now),
+    countWaiting(payload),
     countUnplaced(payload),
     applicationSettings(payload),
-    roomsById(payload),
+    roomNameMap(payload),
   ]);
 
   // ── teendők
   const todos: Todo[] = [];
-  const newPros = apps.professionals.filter((p) => p.status === 'new').length;
-  const waiting = apps.beginners.length + newPros;
   if (waiting) todos.push({ text: `Döntésre vár: ${waiting} jelentkezés`, href: '/admin/jelentkezesek', tone: 'warn' });
   const unpaid = apps.workshops
     .filter((w) => w.status !== 'cancelled')
@@ -80,7 +65,7 @@ export async function adminHome(payload: Payload, now = new Date()) {
     rooms: d.rooms,
   });
   const missing = plan.planned.length + plan.workshops.length;
-  const fill = missing ? { month: MONTHS[m - 1] ?? '', count: missing } : null;
+  const fill = missing ? { month: monthLong(nextMonthDay), count: missing } : null;
 
   // ── the coming 7 days
   const today = todayInBudapest(now);
@@ -107,7 +92,6 @@ export async function adminHome(payload: Payload, now = new Date()) {
     sort: 'start',
     limit: 200,
   });
-  const roomName = new Map(rooms.map((r) => [r.id, r.name]));
   const days = new Map<string, WeekItem[]>();
   for (const s of docs) {
     const start = new Date(s.start);
@@ -117,15 +101,7 @@ export async function adminHome(payload: Payload, now = new Date()) {
       time: `${clockOf(start)}–${clockOf(new Date(s.end))}`,
       title: String(s.displayTitle ?? SESSION_KINDS[s.kind as SessionKind]),
       kind: s.kind as SessionKind,
-      place:
-        s.locationType === 'room'
-          ? relIds(s.rooms)
-              .map((id) => roomName.get(id))
-              .filter(Boolean)
-              .join(', ')
-          : s.locationType === 'external'
-            ? (s.externalLocation ?? '')
-            : 'helyszín nélkül',
+      place: placeText(s, roomName) ?? 'helyszín nélkül',
       cancelled: s.status === 'cancelled',
     });
     days.set(day, list);

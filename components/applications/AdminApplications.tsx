@@ -99,12 +99,12 @@ export default function AdminApplications() {
                     {a.email}
                     <div className={s.muted}>{a.phone}</div>
                   </td>
-                  <td>{a.group?.title ?? <span className={s.muted}>{withoutGroup(a)}</span>}</td>
+                  <td>{a.group?.title ?? <span className={s.muted}>{a.target}</span>}</td>
                   <td>{date(a.createdAt)}</td>
                   <td>
                     <PaidText app={a} />
                   </td>
-                  <td style={right}>{manage(a, 'beginner', a.group?.title ?? withoutGroup(a))}</td>
+                  <td style={right}>{manage(a, 'beginner', a.target)}</td>
                 </tr>
               ))}
             </tbody>
@@ -127,7 +127,7 @@ export default function AdminApplications() {
                 <span className={s.muted}>
                   {APPLICATION_STATUSES[a.status]} · {date(a.createdAt)}
                 </span>
-                {manage(a, 'professional', a.group?.title ?? withoutGroup(a))}
+                {manage(a, 'professional', a.target)}
               </span>
             </div>
             <div className={s.muted}>
@@ -162,9 +162,6 @@ export default function AdminApplications() {
     </div>
   );
 }
-
-/** "Kezdő kurzus — csoport nélkül": an application waiting to be placed. */
-const withoutGroup = (app: App) => `${app.course ?? 'Csoport nélkül'}${app.course ? ' — csoport nélkül' : ''}`;
 
 /** What the row needs: amber = something to do, teal = ready for the next step, grey = done. */
 function stateOf(app: App, kind: Kind): { tone: 'todo' | 'ready' | 'done'; text: string } {

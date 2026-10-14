@@ -4,6 +4,7 @@
  * "Jelentkezés csoport nélkül is" on the course, also without a group.
  */
 import { ButtonLink } from '@/components/ui';
+import { canApplyWithoutGroup } from '@/lib/applications/rules';
 import { monthDayShort, weekday } from '@/lib/dates';
 import { momentText } from '@/lib/rooms/format';
 import type { Course, CourseStart } from '@/lib/types';
@@ -44,7 +45,7 @@ export default function CourseSignup({ course, label, variant, size = 'lg', arro
   const open = course.starts.filter((s) => s.signup.state === 'open');
   const courseId = Number(course.id);
   // applications without a group: when none is open, or as a choice next to the open ones
-  const withoutGroup = course.openWithoutGroup;
+  const withoutGroup = canApplyWithoutGroup(course, course.signupMode);
   if (course.signupMode === 'professional') {
     if (!start && !open.length && !withoutGroup) return null;
     return (

@@ -15,7 +15,7 @@ import { relId, relIds } from '@/payload/rel';
 import { whenText } from './format';
 import { icsFile } from './ics';
 import { BOOKING_KINDS } from './labels';
-import { roomNames } from './occupancy';
+import { placeOf, roomNames } from './occupancy';
 
 const HORIZON_MS = 30 * 86_400_000;
 const STUDIO = 'Morpheus Színműhely';
@@ -177,11 +177,8 @@ export async function notifyPractice(
 
 // ── sessions ────────────────────────────────────────────────────────────────
 
-async function placeOf(req: PayloadRequest, s: Doc): Promise<string> {
-  if (s.locationType === 'room') return roomNames(req.payload, relIds(s.rooms), req);
-  if (s.locationType === 'external') return String(s.externalLocation ?? '');
-  return 'Helyszín egyeztetés alatt';
-}
+const placeOrPending = async (req: PayloadRequest, s: Doc) =>
+  (await placeOf(req.payload, s, req)) ?? 'Helyszín egyeztetés alatt';
 
 /** Students of the session's group, or of the groups playing its production. */
 async function studentsOf(req: PayloadRequest, s: Doc): Promise<Recipient[]> {
@@ -244,7 +241,7 @@ export async function notifySessionChange(
     const oldStart = new Date(String(previous.start));
     const oldEnd = new Date(String(previous.end));
     const timeChanged = start.getTime() !== oldStart.getTime() || end.getTime() !== oldEnd.getTime();
-    const [place, oldPlace] = await Promise.all([placeOf(req, doc), placeOf(req, previous)]);
+    const [place, oldPlace] = await Promise.all([placeOrPending(req, doc), placeOrPending(req, previous)]);
     const placeChanged = place !== oldPlace;
     if (!cancelled && !reinstated && !timeChanged && !placeChanged) return;
 

@@ -6,9 +6,10 @@
 import type { Payload, TypedUser } from 'payload';
 
 import { dateRange, monthDayShort, weekday } from '@/lib/dates';
+import { placeText } from '@/lib/rooms/format';
+import { roomNameMap } from '@/lib/rooms/occupancy';
 import { clockOf, dayOf } from '@/lib/rooms/time';
-import { relIds } from '@/payload/rel';
-import type { Course, CourseGroup, Session } from '@/payload-types';
+import type { Course, CourseGroup } from '@/payload-types';
 
 import { REVIEW_STATUSES } from './labels';
 import { allowedActions, upcomingWorkshops } from './server';
@@ -57,23 +58,7 @@ export async function myApplications(payload: Payload, user: TypedUser, activeGr
     sort: '-createdAt',
     limit: 100,
   });
-  const rooms = await payload.find({
-    collection: 'rooms',
-    depth: 0,
-    select: { name: true },
-    limit: 0,
-    pagination: false,
-  });
-  const roomName = new Map(rooms.docs.map((r) => [r.id, r.name]));
-  const placeOf = (s: Session) =>
-    s.locationType === 'room'
-      ? relIds(s.rooms)
-          .map((id) => roomName.get(id))
-          .filter(Boolean)
-          .join(', ') || undefined
-      : s.locationType === 'external'
-        ? (s.externalLocation ?? undefined)
-        : undefined;
+  const roomName = await roomNameMap(payload);
 
   const workshops: MyWorkshop[] = [];
   const pending: MyPending[] = [];
@@ -88,7 +73,7 @@ export async function myApplications(payload: Payload, user: TypedUser, activeGr
         title: s.title || 'Nyitott Műhely',
         start: s.start,
         end: s.end,
-        place: placeOf(s),
+        place: placeText(s, roomName),
         cancelled: a.status === 'cancelled' || s.status === 'cancelled',
         canCancel: actions.cancel.ok,
         canMove: actions.move,

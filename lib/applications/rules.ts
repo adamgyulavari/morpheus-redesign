@@ -156,6 +156,15 @@ export function canSignUpCourse(c: CourseFacts, now: Date): RuleResult {
   return OK;
 }
 
+/**
+ * May one apply to the course without a group? Its "Jelentkezés csoport nélkül is" is on and it takes
+ * this kind (the page: whether to offer it; the server: whether to accept it).
+ */
+export const canApplyWithoutGroup = (
+  c: { openWithoutGroup?: boolean | null; signupMode?: string | null },
+  kind: 'beginner' | 'professional',
+): boolean => Boolean(c.openWithoutGroup) && c.signupMode === kind;
+
 /** A beginner sign-up may be cancelled until the course starts. */
 export function canCancelCourse(courseStart: Date, now: Date): RuleResult {
   return now < courseStart ? OK : refuse('A kurzus már elkezdődött; a lemondáshoz írj nekünk.');

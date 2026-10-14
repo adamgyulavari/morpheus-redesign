@@ -7,10 +7,11 @@ import { randomBytes } from 'node:crypto';
 
 import { sql } from '@payloadcms/db-postgres';
 import { createLocalReq, type Payload, type PayloadRequest, type TypedUser, type Where } from 'payload';
+import { cache } from 'react';
 
 import { dateRange } from '@/lib/dates';
 import { momentText, whenText } from '@/lib/rooms/format';
-import { roomNames } from '@/lib/rooms/occupancy';
+import { placeOf } from '@/lib/rooms/occupancy';
 import { errorMessage } from '@/lib/rooms/server';
 import { dbOf } from '@/payload/db';
 import { relId, relIds } from '@/payload/rel';
@@ -35,6 +36,7 @@ import {
   type ApplicationRules,
   COUNTED_STATUSES,
   type CourseFacts,
+  canApplyWithoutGroup,
   canCancel,
   canCancelCourse,
   canMove,
@@ -127,12 +129,6 @@ export function courseFacts(g: CourseGroup, taken: number): CourseFacts {
     capacity: g.signup?.capacity ?? null,
     taken,
   };
-}
-
-async function placeOf(payload: Payload, s: Session): Promise<string | undefined> {
-  if (s.locationType === 'room') return (await roomNames(payload, relIds(s.rooms))) || undefined;
-  if (s.locationType === 'external') return s.externalLocation ?? undefined;
-  return undefined;
 }
 
 export async function workshopInfo(payload: Payload, s: Session, rules: ApplicationRules): Promise<TargetInfo> {
@@ -293,7 +289,7 @@ export async function signUp(
     const c = input.courseId
       ? await payload.findByID({ collection: 'courses', id: input.courseId, depth: 0, disableErrors: true })
       : null;
-    if (!c?.openWithoutGroup || c.signupMode !== input.kind)
+    if (!c || !canApplyWithoutGroup(c, input.kind))
       return { ok: false, reason: 'Erre a kurzusra most nem lehet jelentkezni.' };
     target = { title: c.title, withoutGroup: true };
     input.courseGroupId = null;
@@ -821,8 +817,8 @@ export type DashboardApplication = {
   message: string;
   createdAt: string;
   group?: { id: number; title: string };
-  /** The course of an application without a group. */
-  course?: string;
+  /** What it is for, as saved: the group, or "Kezdő kurzus (csoport nélkül)". */
+  target: string;
 };
 
 const toDashboard = (a: {
@@ -836,10 +832,9 @@ const toDashboard = (a: {
   message?: string | null;
   createdAt: string;
   courseGroup?: unknown;
-  course?: unknown;
+  target?: string | null;
 }): DashboardApplication => {
   const g = a.courseGroup && typeof a.courseGroup === 'object' ? (a.courseGroup as CourseGroup) : null;
-  const c = a.course && typeof a.course === 'object' ? (a.course as { title?: string }) : null;
   return {
     id: a.id,
     name: a.name,
@@ -851,7 +846,7 @@ const toDashboard = (a: {
     message: a.message ?? '',
     createdAt: a.createdAt,
     group: g ? { id: g.id, title: g.title } : undefined,
-    course: c?.title,
+    target: a.target ?? '',
   };
 };
 
@@ -900,9 +895,7 @@ export async function dashboard(payload: Payload, now = new Date()) {
       })
     : { docs: [] };
   const studentsOf = new Map(groups.map((g) => [g.id, relIds(g.students)]));
-  const beginners = courseApps.filter(
-    (a) => a.kind === 'beginner' && !(studentsOf.get(relId(a.courseGroup) ?? 0) ?? []).includes(relId(a.user) ?? 0),
-  );
+  const beginners = courseApps.filter((a) => a.kind === 'beginner' && awaitingAdmission(a, studentsOf));
   return {
     workshops: dates.map((s) => {
       const list = participants.filter((p) => relId(p.session) === s.id);
@@ -933,10 +926,41 @@ export async function dashboard(payload: Payload, now = new Date()) {
   };
 }
 
-/** For the nav link: course applications waiting for a decision. */
-export async function countWaiting(payload: Payload): Promise<number> {
-  const d = await dashboard(payload);
-  return d.beginners.length + d.professionals.filter((p) => p.status === 'new').length;
+/**
+ * Course applications waiting for a decision (the sidebar badge, the admin home): kezdő sign-ups not
+ * admitted yet, new szakmai ones. Once per render.
+ */
+export const countWaiting = cache(async (payload: Payload): Promise<number> => {
+  const [{ docs: beginners }, { totalDocs: professionals }] = await Promise.all([
+    payload.find({
+      collection: 'applications',
+      where: { and: [{ kind: { equals: 'beginner' } }, { status: { equals: 'registered' } }] },
+      depth: 0,
+      select: { user: true, courseGroup: true },
+      ...all,
+    }),
+    payload.count({
+      collection: 'applications',
+      where: { and: [{ kind: { equals: 'professional' } }, { status: { equals: 'new' } }] },
+    }),
+  ]);
+  const groupIds = [...new Set(beginners.flatMap((a) => relId(a.courseGroup) ?? []))];
+  const { docs: groups } = groupIds.length
+    ? await payload.find({
+        collection: 'courseGroups',
+        where: { id: { in: groupIds } },
+        depth: 0,
+        select: { students: true },
+        ...all,
+      })
+    : { docs: [] };
+  const studentsOf = new Map(groups.map((g) => [g.id, relIds(g.students)]));
+  return beginners.filter((a) => awaitingAdmission(a, studentsOf)).length + professionals;
+});
+
+/** A kezdő sign-up still to admit: not among its group's students yet (a group-less one: until placed). */
+function awaitingAdmission(a: { user?: unknown; courseGroup?: unknown }, studentsOf: Map<number, number[]>) {
+  return !(studentsOf.get(relId(a.courseGroup) ?? 0) ?? []).includes(relId(a.user) ?? 0);
 }
 
 export type Decision = 'save' | 'admit' | 'interview' | 'reject' | 'cancel';

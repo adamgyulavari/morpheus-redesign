@@ -5,6 +5,7 @@
  */
 
 import type { Payload, TypedUser, Where } from 'payload';
+import { cache } from 'react';
 import { applicationSettings } from '@/lib/applications/settings';
 import { todayInBudapest } from '@/lib/dates';
 import { userIsStaffOrAdmin } from '@/payload/access';
@@ -658,10 +659,13 @@ export async function unplacedSessions(payload: Payload, from: Date, to: Date) {
   }));
 }
 
-export const countUnplaced = async (payload: Payload) =>
-  (
-    await payload.count({
-      collection: 'sessions',
-      where: { and: [...UNPLACED, { start: { greater_than: new Date().toISOString() } }] },
-    })
-  ).totalDocs;
+/** (Once per render: the sidebar and the admin home both ask.) */
+export const countUnplaced = cache(
+  async (payload: Payload) =>
+    (
+      await payload.count({
+        collection: 'sessions',
+        where: { and: [...UNPLACED, { start: { greater_than: new Date().toISOString() } }] },
+      })
+    ).totalDocs,
+);
