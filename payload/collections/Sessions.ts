@@ -133,7 +133,7 @@ export const Sessions: CollectionConfig = {
         // the box applies to the booking this session creates or moves, too
         if (mayOverridePractice(req, s)) req.context.overridePractice = true;
         data.displayTitle = await titleOf(s, req);
-        if (operation === 'update' && s.generatedFrom?.courseGroup && !req.context.generating && edited(before, s)) {
+        if (operation === 'update' && s.generatedFrom?.day && !req.context.generating && edited(before, s)) {
           data.customized = true;
         }
 
@@ -346,7 +346,7 @@ export const Sessions: CollectionConfig = {
       name: 'generatedFrom',
       label: 'Hónap feltöltéséből',
       type: 'group',
-      admin: { position: 'sidebar', condition: (_, s) => Boolean(s?.generatedFrom?.courseGroup) },
+      admin: { position: 'sidebar', condition: (_, s) => Boolean(s?.generatedFrom?.day) },
       fields: [
         { ...relationship('courseGroup', 'Csoport', 'courseGroups'), index: true, admin: { readOnly: true } },
         { name: 'entry', label: 'Órarend-sor', type: 'number', admin: { readOnly: true } },

@@ -89,6 +89,8 @@ export default buildConfig({
         Icon: '@/payload/components/Graphics#AdminIcon',
       },
       providers: ['@/payload/components/AdminTheme#AdminTheme'],
+      // back to the website, in the header
+      actions: ['@/payload/components/SiteLink#SiteLink'],
       beforeNavLinks: [
         '@/payload/components/RoomCalendarNav#RoomCalendarNav',
         '@/payload/components/ApplicationsNav#ApplicationsNav',

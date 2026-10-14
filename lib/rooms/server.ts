@@ -5,10 +5,20 @@
  */
 
 import type { Payload, TypedUser, Where } from 'payload';
+import { applicationSettings } from '@/lib/applications/settings';
 import { todayInBudapest } from '@/lib/dates';
 import { userIsStaffOrAdmin } from '@/payload/access';
 import { relId, relIds } from '@/payload/rel';
-import { generatedKey, groupsInMonth, type PlannedSession, planMonth, type ScheduleGroup } from './generate';
+import type { Session } from '@/payload-types';
+import {
+  generatedKey,
+  groupsInMonth,
+  type PlannedWorkshop,
+  planMonth,
+  planWorkshops,
+  type ScheduleGroup,
+  type WorkshopPlan,
+} from './generate';
 import { BOOKING_KINDS, type BookingKind, SESSION_KINDS, type SessionKind } from './labels';
 import { describeClash, findClashes } from './occupancy';
 import {
@@ -300,7 +310,7 @@ export function errorMessage(err: unknown): string {
 // ── fill month ──────────────────────────────────────────────────────────────
 
 export type FillPreviewItem = {
-  /** "groupId:entry:day" — what to tick to create it. */
+  /** "groupId:entry:day", or "workshop:day" — what to tick to create it. */
   key: string;
   title: string;
   day: string;
@@ -311,20 +321,26 @@ export type FillPreviewItem = {
   clashes: string[];
 };
 
-/** Sessions fill month made for the month's days (of the groups, or of any group). */
-const generatedIn = (year: number, month: number, groupIds: number[] | null): Where[] => {
+/** Nyitott Műhely in the fill: the day and the time from the dialog, the rest from Jelentkezési beállítások. */
+export type WorkshopFill = Omit<WorkshopPlan, 'rooms'>;
+
+const WORKSHOP_TITLE = SESSION_KINDS.workshop;
+const workshopKey = (day: string) => `workshop:${day}`;
+
+/** The month's days, as a condition on what fill month made. */
+const generatedInMonth = (year: number, month: number): Where[] => {
   const days = daysOfMonth(year, month);
   return [
-    { 'generatedFrom.courseGroup': groupIds?.length ? { in: groupIds } : { exists: true } },
     { 'generatedFrom.day': { greater_than_equal: days[0] } },
     { 'generatedFrom.day': { less_than_equal: days.at(-1) } },
   ];
 };
 
 async function scheduleGroups(payload: Payload, ids: number[] | null): Promise<ScheduleGroup[]> {
+  if (ids && !ids.length) return [];
   const { docs } = await payload.find({
     collection: 'courseGroups',
-    where: ids?.length ? { id: { in: ids } } : undefined,
+    where: ids ? { id: { in: ids } } : undefined,
     depth: 0,
     // no `select` here: with it, Payload 3.90 returns the schedule rows without their rooms
     // (relationships nested in an array field)
@@ -344,21 +360,34 @@ async function scheduleGroups(payload: Payload, ids: number[] | null): Promise<S
   }));
 }
 
-/** The groups running in the month (for the month dialog's first step). */
+/** The groups running in the month and the Nyitott Műhely defaults (for the month dialog's first step). */
 export async function monthGroups(payload: Payload, year: number, month: number) {
-  return groupsInMonth(await scheduleGroups(payload, null), year, month).map((g) => ({ id: g.id, title: g.title }));
+  const { weekday, startTime, endTime } = (await applicationSettings(payload)).workshopDefaults;
+  return {
+    groups: groupsInMonth(await scheduleGroups(payload, null), year, month).map((g) => ({ id: g.id, title: g.title })),
+    workshop: { weekday, startTime, endTime },
+  };
 }
 
-/** What fill month would create for the month (and which would end up without a place). */
-export async function planFill(payload: Payload, year: number, month: number, groupIds: number[] | null) {
-  const groups = groupIds?.length
+/**
+ * What fill month would create for the month: the groups' sessions (`groupIds`; null: every group
+ * running then) and, with `workshop`, the Nyitott Műhely dates.
+ */
+export async function planFill(
+  payload: Payload,
+  year: number,
+  month: number,
+  groupIds: number[] | null,
+  workshop: WorkshopFill | null = null,
+) {
+  const groups = groupIds
     ? await scheduleGroups(payload, groupIds)
     : groupsInMonth(await scheduleGroups(payload, null), year, month);
   const ids = groups.map((g) => g.id);
   const { docs: generated } = ids.length
     ? await payload.find({
         collection: 'sessions',
-        where: { and: generatedIn(year, month, ids) },
+        where: { and: [{ 'generatedFrom.courseGroup': { in: ids } }, ...generatedInMonth(year, month)] },
         depth: 0,
         select: { generatedFrom: true },
         ...all,
@@ -375,17 +404,62 @@ export async function planFill(payload: Payload, year: number, month: number, gr
   );
   const settings = await loadSettings(payload);
   const planned = planMonth({ year, month, groups, closedDays: settings.closedDays, existing });
-  return { groups, planned };
+  return { groups, planned, workshops: await planWorkshopFill(payload, year, month, workshop, settings.closedDays) };
 }
 
-export async function previewFill(payload: Payload, year: number, month: number, groupIds: number[] | null) {
-  const { groups, planned } = await planFill(payload, year, month, groupIds);
+/** Nyitott Műhely dates: one a week from the first day; a day that already has one (made by hand too) is skipped. */
+async function planWorkshopFill(
+  payload: Payload,
+  year: number,
+  month: number,
+  workshop: WorkshopFill | null,
+  closedDays: string[],
+): Promise<PlannedWorkshop[]> {
+  if (!workshop) return [];
+  const days = daysOfMonth(year, month);
+  const { docs } = await payload.find({
+    collection: 'sessions',
+    where: {
+      and: [
+        { kind: { equals: 'workshop' } },
+        { start: { greater_than_equal: at(days[0] ?? '', '00:00').toISOString() } },
+        { start: { less_than: at(addDays(days.at(-1) ?? '', 1), '00:00').toISOString() } },
+      ],
+    },
+    depth: 0,
+    select: { start: true },
+    ...all,
+  });
+  const { rooms } = (await applicationSettings(payload)).workshopDefaults;
+  return planWorkshops({
+    year,
+    month,
+    plan: { ...workshop, rooms },
+    closedDays,
+    existingDays: new Set(docs.map((s) => dayOf(new Date(s.start)))),
+  });
+}
+
+export async function previewFill(
+  payload: Payload,
+  year: number,
+  month: number,
+  groupIds: number[] | null,
+  workshop: WorkshopFill | null = null,
+) {
+  const { groups, planned, workshops } = await planFill(payload, year, month, groupIds, workshop);
   const roomNames = new Map((await roomsById(payload)).map((r) => [r.id, r.name]));
+  const sorted = [
+    ...planned.map((p) => ({ ...p, key: generatedKey(p.courseGroup, p.entry, p.day) })),
+    ...workshops.map((w) => ({ ...w, key: workshopKey(w.day), title: WORKSHOP_TITLE })),
+  ].sort((a, b) => a.start.getTime() - b.start.getTime() || a.title.localeCompare(b.title, 'hu'));
   // planned sessions can also clash with each other (two groups, same room and time)
-  const taken: PlannedSession[] = [];
+  const taken: typeof sorted = [];
   const items: FillPreviewItem[] = [];
-  for (const p of planned) {
-    const clashes: string[] = (await findClashes(payload, undefined, p.rooms, p.start, p.end)).map(describeClash);
+  for (const p of sorted) {
+    const clashes: string[] = p.rooms.length
+      ? (await findClashes(payload, undefined, p.rooms, p.start, p.end)).map(describeClash)
+      : [];
     for (const t of taken) {
       if (t.start < p.end && p.start < t.end && t.rooms.some((r) => p.rooms.includes(r))) {
         clashes.push(
@@ -398,7 +472,7 @@ export async function previewFill(payload: Payload, year: number, month: number,
     }
     if (!clashes.length) taken.push(p);
     items.push({
-      key: generatedKey(p.courseGroup, p.entry, p.day),
+      key: p.key,
       title: p.title,
       day: p.day,
       start: p.start.toISOString(),
@@ -418,62 +492,118 @@ export async function applyFill(
   month: number,
   groupIds: number[] | null,
   keys?: string[],
+  workshop: WorkshopFill | null = null,
 ) {
   const wanted = keys ? new Set(keys) : null;
-  const planned = (await planFill(payload, year, month, groupIds)).planned.filter(
-    (p) => !wanted || wanted.has(generatedKey(p.courseGroup, p.entry, p.day)),
-  );
+  const plan = await planFill(payload, year, month, groupIds, workshop);
+  const planned = plan.planned.filter((p) => !wanted || wanted.has(generatedKey(p.courseGroup, p.entry, p.day)));
+  const workshops = plan.workshops.filter((w) => !wanted || wanted.has(workshopKey(w.day)));
+  const defaults = workshops.length ? (await applicationSettings(payload)).workshopDefaults : null;
   let placed = 0;
   const unplaced: { title: string; day: string; start: string; clashes: string[] }[] = [];
-  for (const p of planned) {
+  const create = async (
+    title: string,
+    p: { day: string; start: Date; end: Date; rooms: number[] },
+    data: Partial<Session>,
+  ) => {
     const session = await payload.create({
       collection: 'sessions',
       data: {
-        kind: 'course',
-        courseGroup: p.courseGroup,
         start: p.start.toISOString(),
         end: p.end.toISOString(),
-        locationType: 'room',
+        locationType: p.rooms.length ? 'room' : 'unplaced',
         rooms: p.rooms,
         status: 'scheduled',
-        generatedFrom: { courseGroup: p.courseGroup, entry: p.entry, day: p.day },
-      },
+        ...data,
+      } as Session,
       user,
       overrideAccess: false,
       context: { generating: true },
     });
     if (session.locationType === 'room') placed++;
     else {
-      const clashes = await findClashes(payload, undefined, p.rooms, p.start, p.end);
-      unplaced.push({ title: p.title, day: p.day, start: p.start.toISOString(), clashes: clashes.map(describeClash) });
+      const clashes = p.rooms.length ? await findClashes(payload, undefined, p.rooms, p.start, p.end) : [];
+      unplaced.push({ title, day: p.day, start: p.start.toISOString(), clashes: clashes.map(describeClash) });
     }
+  };
+  for (const p of planned) {
+    await create(p.title, p, {
+      kind: 'course',
+      courseGroup: p.courseGroup,
+      generatedFrom: { courseGroup: p.courseGroup, entry: p.entry, day: p.day },
+    });
   }
-  return { created: planned.length, placed, unplaced };
+  for (const w of workshops) {
+    await create(WORKSHOP_TITLE, w, {
+      kind: 'workshop',
+      generatedFrom: { day: w.day },
+      workshop: {
+        price: defaults?.price,
+        minParticipants: defaults?.minParticipants,
+        maxParticipants: defaults?.maxParticipants,
+        bookable: true,
+        workshopStatus: 'open',
+      },
+    });
+  }
+  return { created: planned.length + workshops.length, placed, unplaced };
 }
 
-/** The month's generated sessions that "Generált alkalmak törlése" may delete: future, not hand-edited. */
-export async function deletableGenerated(payload: Payload, year: number, month: number, groupIds: number[] | null) {
+/**
+ * The month's generated sessions that "Generált alkalmak törlése" may delete: future, not
+ * hand-edited — of the groups (null: any group) and, with `workshops`, the generated Nyitott Műhely
+ * dates nobody has signed up for.
+ */
+export async function deletableGenerated(
+  payload: Payload,
+  year: number,
+  month: number,
+  groupIds: number[] | null,
+  workshops = false,
+) {
+  const scopes: Where[] = [];
+  if (!groupIds || groupIds.length)
+    scopes.push({ 'generatedFrom.courseGroup': groupIds ? { in: groupIds } : { exists: true } });
+  if (workshops) scopes.push({ kind: { equals: 'workshop' } });
+  if (!scopes.length) return [];
   const { docs } = await payload.find({
     collection: 'sessions',
     where: {
       and: [
-        ...generatedIn(year, month, groupIds),
+        { or: scopes },
+        ...generatedInMonth(year, month),
         { customized: { not_equals: true } },
         { start: { greater_than: new Date().toISOString() } },
       ],
     },
     depth: 0,
-    select: { displayTitle: true, start: true, end: true, locationType: true },
+    select: { displayTitle: true, kind: true, start: true, end: true, locationType: true },
     sort: 'start',
     ...all,
   });
-  return docs.map((s) => ({
-    id: s.id,
-    title: String(s.displayTitle ?? ''),
-    start: s.start,
-    end: s.end,
-    placed: s.locationType === 'room',
-  }));
+  const workshopIds = docs.filter((s) => s.kind === 'workshop').map((s) => s.id);
+  const signedUp = workshopIds.length
+    ? new Set(
+        (
+          await payload.find({
+            collection: 'applications',
+            where: { session: { in: workshopIds } },
+            depth: 0,
+            select: { session: true },
+            ...all,
+          })
+        ).docs.map((a) => relId(a.session)),
+      )
+    : new Set<number | null>();
+  return docs
+    .filter((s) => !signedUp.has(s.id))
+    .map((s) => ({
+      id: s.id,
+      title: String(s.displayTitle ?? ''),
+      start: s.start,
+      end: s.end,
+      placed: s.locationType === 'room',
+    }));
 }
 
 /** Deletes them (and their bookings) — or only the ticked ones (`ids`, still checked here). */
@@ -484,9 +614,12 @@ export async function deleteGenerated(
   month: number,
   groupIds: number[] | null,
   ids?: number[],
+  workshops = false,
 ) {
   const wanted = ids ? new Set(ids) : null;
-  const docs = (await deletableGenerated(payload, year, month, groupIds)).filter((d) => !wanted || wanted.has(d.id));
+  const docs = (await deletableGenerated(payload, year, month, groupIds, workshops)).filter(
+    (d) => !wanted || wanted.has(d.id),
+  );
   for (const s of docs) await payload.delete({ collection: 'sessions', id: s.id, user, overrideAccess: false });
   return { deleted: docs.length };
 }

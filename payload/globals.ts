@@ -1,5 +1,7 @@
 import type { Field, GlobalConfig } from 'payload';
 
+import { WEEKDAYS } from '@/lib/rooms/labels';
+
 import { anyone, isStaffOrAdmin } from './access';
 import { date, link, links, relationship, text, textarea, time } from './fields';
 import { globalRevalidation } from './revalidate';
@@ -462,6 +464,44 @@ export const ApplicationSettings: GlobalConfig = {
           min: 0,
           defaultValue: 24,
           admin: { description: 'A résztvevő eddig mondhatja le a jelentkezését a fiókjában.' },
+        },
+      ],
+    },
+    {
+      name: 'workshopDefaults',
+      label: 'Nyitott Műhely alapértékek',
+      type: 'group',
+      admin: {
+        description:
+          'A Teremnaptár „Hónap feltöltése” ezekkel hozza létre a Nyitott Műhely időpontjait (a nap és az idő ott még átírható).',
+      },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'weekday',
+              label: 'Nap',
+              type: 'select',
+              defaultValue: '6',
+              options: WEEKDAYS.map((label, i) => ({ label, value: String(i + 1) })),
+              admin: { width: '34%' },
+            },
+            { ...time('startTime', 'Kezdés'), defaultValue: '14:00', admin: { width: '33%' } },
+            { ...time('endTime', 'Vége'), defaultValue: '16:00', admin: { width: '33%' } },
+          ],
+        },
+        relationship('rooms', 'Termek', 'rooms', {
+          hasMany: true,
+          description: 'Üresen helyszín nélkül jön létre; a Teremnaptárban később elhelyezheted.',
+        }),
+        {
+          type: 'row',
+          fields: [
+            { name: 'price', label: 'Ár (Ft)', type: 'number', min: 0, defaultValue: 5000 },
+            { name: 'minParticipants', label: 'Minimum létszám', type: 'number', min: 1, defaultValue: 5 },
+            { name: 'maxParticipants', label: 'Maximum létszám', type: 'number', min: 1, defaultValue: 16 },
+          ],
         },
       ],
     },

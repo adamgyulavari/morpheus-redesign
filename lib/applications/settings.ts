@@ -1,6 +1,8 @@
 /** The "Jelentkezési beállítások" global, read once per request. */
 import type { Payload, PayloadRequest } from 'payload';
 
+import { relIds } from '@/payload/rel';
+
 import { type ApplicationRules, DEFAULT_RULES } from './rules';
 
 export type EmailTexts = Partial<
@@ -10,7 +12,22 @@ export type EmailTexts = Partial<
   >
 >;
 
-export type ApplicationSettings = ApplicationRules & { notifyEmails: string[]; texts: EmailTexts };
+/** What "Hónap feltöltése" creates a Nyitott Műhely date with. */
+export type WorkshopDefaults = {
+  weekday: number;
+  startTime: string;
+  endTime: string;
+  rooms: number[];
+  price: number;
+  minParticipants: number;
+  maxParticipants: number;
+};
+
+export type ApplicationSettings = ApplicationRules & {
+  notifyEmails: string[];
+  texts: EmailTexts;
+  workshopDefaults: WorkshopDefaults;
+};
 
 export function settingsFrom(doc: Record<string, unknown> | null | undefined): ApplicationSettings {
   const num = (v: unknown, fallback: number) => (typeof v === 'number' && v >= 0 ? v : fallback);
@@ -18,11 +35,22 @@ export function settingsFrom(doc: Record<string, unknown> | null | undefined): A
     ? (doc.notifyEmails as { email?: string | null }[]).flatMap((e) => (e.email?.trim() ? [e.email.trim()] : []))
     : [];
   const texts = (doc?.texts ?? {}) as Record<string, string | null | undefined>;
+  const w = (doc?.workshopDefaults ?? {}) as Record<string, unknown>;
+  const clock = (v: unknown, fallback: string) => (typeof v === 'string' && /^\d\d:\d\d$/.test(v) ? v : fallback);
   return {
     workshopCutoffHours: num(doc?.workshopCutoffHours, DEFAULT_RULES.workshopCutoffHours),
     userCancelHours: num(doc?.userCancelHours, DEFAULT_RULES.userCancelHours),
     notifyEmails: emails,
     texts: Object.fromEntries(Object.entries(texts).filter(([, v]) => typeof v === 'string' && v.trim())) as EmailTexts,
+    workshopDefaults: {
+      weekday: Number(w.weekday) || 6,
+      startTime: clock(w.startTime, '14:00'),
+      endTime: clock(w.endTime, '16:00'),
+      rooms: relIds(w.rooms),
+      price: num(w.price, 5000),
+      minParticipants: num(w.minParticipants, 5),
+      maxParticipants: num(w.maxParticipants, 16),
+    },
   };
 }
 

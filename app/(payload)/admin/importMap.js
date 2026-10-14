@@ -22,6 +22,7 @@ import { SlugField as SlugField_2b8867833a34864a02ddf429b0728a40 } from '@payloa
 import { FillMonthLink as FillMonthLink_3e10b527e91a7be1977956b871d79c02 } from '@/payload/components/FillMonthLink'
 import { AdminIcon as AdminIcon_c7cc1027a67379fab4ede5a29a5bee3b } from '@/payload/components/Graphics'
 import { AdminLogo as AdminLogo_c7cc1027a67379fab4ede5a29a5bee3b } from '@/payload/components/Graphics'
+import { SiteLink as SiteLink_bf613e78b6eaaa1518bf2d3380563a7e } from '@/payload/components/SiteLink'
 import { RoomCalendarNav as RoomCalendarNav_f110d0bc0bd33b6f55f8fe48dc5f0145 } from '@/payload/components/RoomCalendarNav'
 import { ApplicationsNav as ApplicationsNav_ca69f763a588bf24827689b55ccbb728 } from '@/payload/components/ApplicationsNav'
 import { AdminTheme as AdminTheme_d51e05e162859c3d161662d24fe628c0 } from '@/payload/components/AdminTheme'
@@ -56,6 +57,7 @@ export const importMap = {
   "@/payload/components/FillMonthLink#FillMonthLink": FillMonthLink_3e10b527e91a7be1977956b871d79c02,
   "@/payload/components/Graphics#AdminIcon": AdminIcon_c7cc1027a67379fab4ede5a29a5bee3b,
   "@/payload/components/Graphics#AdminLogo": AdminLogo_c7cc1027a67379fab4ede5a29a5bee3b,
+  "@/payload/components/SiteLink#SiteLink": SiteLink_bf613e78b6eaaa1518bf2d3380563a7e,
   "@/payload/components/RoomCalendarNav#RoomCalendarNav": RoomCalendarNav_f110d0bc0bd33b6f55f8fe48dc5f0145,
   "@/payload/components/ApplicationsNav#ApplicationsNav": ApplicationsNav_ca69f763a588bf24827689b55ccbb728,
   "@/payload/components/AdminTheme#AdminTheme": AdminTheme_d51e05e162859c3d161662d24fe628c0,

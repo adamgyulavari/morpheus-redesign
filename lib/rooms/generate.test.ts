@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { generatedKey, groupsInMonth, planMonth, type ScheduleGroup } from './generate';
+import { generatedKey, groupsInMonth, planMonth, planWorkshops, type ScheduleGroup } from './generate';
 
 const keddi: ScheduleGroup = {
   id: 7,
@@ -99,5 +99,34 @@ describe('groupsInMonth', () => {
       { id: 4, startDate: '2026-12-01', endDate: '2027-01-31' },
     ];
     expect(groupsInMonth(groups, 2026, 11).map((g) => g.id)).toEqual([2, 3]);
+  });
+});
+
+describe('planWorkshops', () => {
+  const plan = { weekday: 6, from: '2026-11-01', startTime: '14:00', endTime: '16:00', rooms: [3] };
+  const run = (opts: { from?: string; closed?: string[]; existing?: string[]; month?: number } = {}) =>
+    planWorkshops({
+      year: 2026,
+      month: opts.month ?? 11,
+      plan: { ...plan, from: opts.from ?? plan.from },
+      closedDays: opts.closed ?? [],
+      existingDays: new Set(opts.existing),
+    });
+
+  it('every Saturday of the month, 14:00–16:00 Budapest time (CET)', () => {
+    const p = run();
+    expect(p.map((w) => w.day)).toEqual(['2026-11-07', '2026-11-14', '2026-11-21', '2026-11-28']);
+    expect(p[0]?.start.toISOString()).toBe('2026-11-07T13:00:00.000Z');
+    expect(p[0]?.rooms).toEqual([3]);
+  });
+
+  it('from the first date on, skipping closed days and days that already have one', () => {
+    expect(run({ from: '2026-11-10', closed: ['2026-11-21'], existing: ['2026-11-28'] }).map((w) => w.day)).toEqual([
+      '2026-11-14',
+    ]);
+  });
+
+  it('summer time in October', () => {
+    expect(run({ month: 10, from: '2026-10-01' })[0]?.start.toISOString()).toBe('2026-10-03T12:00:00.000Z');
   });
 });

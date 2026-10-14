@@ -6,7 +6,8 @@
  *   visible, the dragged range highlighted) — date, times, rooms; cancel or delete.
  * - Drag an entry to move it (a session's booking moves with it; a clash leaves it without a place).
  * - Drag an unplaced session from the side panel onto the calendar.
- * - "Hónap feltöltése" / "Generált alkalmak törlése": month and groups → the list (each tickable) → do it.
+ * - "Hónap feltöltése" / "Generált alkalmak törlése": month, groups and Nyitott Műhely → the list (each
+ *   tickable) → do it.
  */
 import { Draggable } from '@fullcalendar/interaction';
 import { useSearchParams } from 'next/navigation';
@@ -29,9 +30,16 @@ import {
   updateSession,
 } from '@/lib/rooms/admin-actions';
 import { whenText } from '@/lib/rooms/format';
-import { BOOKING_KINDS, LOCATION_TYPES, type LocationType, SESSION_KINDS, type SessionKind } from '@/lib/rooms/labels';
-import type { ScheduleEvent } from '@/lib/rooms/server';
-import { addDays, at, clockOf, dayOf } from '@/lib/rooms/time';
+import {
+  BOOKING_KINDS,
+  LOCATION_TYPES,
+  type LocationType,
+  SESSION_KINDS,
+  type SessionKind,
+  WEEKDAYS,
+} from '@/lib/rooms/labels';
+import type { ScheduleEvent, WorkshopFill } from '@/lib/rooms/server';
+import { addDays, at, clockOf, dayOf, daysOfMonth } from '@/lib/rooms/time';
 
 import s from './calendar.module.css';
 import RoomCalendar from './RoomCalendar';
@@ -511,9 +519,17 @@ type Row = { id: string; title: string; start: string; end: string; detail?: Rea
 
 const nextMonth = () => addDays(todayInBudapest(), 31).slice(0, 7);
 
+/** The first day of the month that is not in the past. */
+const firstDayFrom = (month: string) => {
+  const [y, m] = month.split('-').map(Number) as [number, number];
+  const today = todayInBudapest();
+  return daysOfMonth(y, m).find((d) => d >= today) ?? `${month}-01`;
+};
+
 /**
- * Both month actions in three steps: 1. month and groups → 2. the list, each row tickable →
- * 3. the result. Fill creates the ticked sessions; delete removes the ticked generated ones.
+ * Both month actions in three steps: 1. month, groups and Nyitott Műhely → 2. the list, each row
+ * tickable → 3. the result. Fill creates the ticked sessions; delete removes the ticked generated
+ * ones (Nyitott Műhely dates only while nobody has signed up).
  */
 function MonthDialog({
   mode,
@@ -530,6 +546,13 @@ function MonthDialog({
   const [month, setMonth] = useState(nextMonth);
   const [groups, setGroups] = useState<{ id: number; title: string }[]>([]);
   const [selectedGroups, setSelectedGroups] = useState<number[]>([]);
+  const [withWorkshop, setWithWorkshop] = useState(false);
+  const [workshop, setWorkshop] = useState<WorkshopFill>({
+    weekday: 6,
+    from: '',
+    startTime: '14:00',
+    endTime: '16:00',
+  });
   const [rows, setRows] = useState<Row[]>([]);
   const [ticked, setTicked] = useState<Set<string>>(new Set());
   const [result, setResult] = useState('');
@@ -543,19 +566,20 @@ function MonthDialog({
     if (!mode) return;
     setStep(1);
     setResult('');
-    groupsOfMonth(y, m).then((list) => {
-      if (!list) return;
-      setGroups(list);
-      setSelectedGroups(
-        initialGroup && list.some((g) => g.id === initialGroup) ? [initialGroup] : list.map((g) => g.id),
-      );
+    groupsOfMonth(y, m).then((r) => {
+      if (!r) return;
+      const fromGroup = Boolean(initialGroup && r.groups.some((g) => g.id === initialGroup));
+      setGroups(r.groups);
+      setSelectedGroups(fromGroup && initialGroup ? [initialGroup] : r.groups.map((g) => g.id));
+      setWithWorkshop(!fromGroup);
+      setWorkshop({ ...r.workshop, from: firstDayFrom(month) });
     });
   }, [mode, month]);
 
   const next = async () => {
     setBusy(true);
     if (fill) {
-      const p = await fillMonthPreview(y, m, selectedGroups);
+      const p = await fillMonthPreview(y, m, selectedGroups, withWorkshop ? workshop : null);
       const items = p?.items ?? [];
       setRows(
         items.map((i) => ({
@@ -566,12 +590,12 @@ function MonthDialog({
           warn: i.clashes.length > 0,
           detail: i.clashes.length
             ? `${i.rooms.join(', ')} — helyszín nélkül lesz, ütközik: ${i.clashes.join('; ')}`
-            : i.rooms.join(', '),
+            : i.rooms.join(', ') || 'helyszín nélkül',
         })),
       );
       setTicked(new Set(items.map((i) => i.key)));
     } else {
-      const list = (await generatedPreview(y, m, selectedGroups)) ?? [];
+      const list = (await generatedPreview(y, m, selectedGroups, withWorkshop)) ?? [];
       setRows(
         list.map((d) => ({
           id: String(d.id),
@@ -590,7 +614,7 @@ function MonthDialog({
   const run = async () => {
     setBusy(true);
     if (fill) {
-      const r = await fillMonthApply(y, m, selectedGroups, [...ticked]);
+      const r = await fillMonthApply(y, m, selectedGroups, [...ticked], withWorkshop ? workshop : null);
       if (r) {
         setResult(
           `${r.created} alkalom létrehozva, ${r.placed} teremmel.` +
@@ -600,7 +624,7 @@ function MonthDialog({
         );
       }
     } else {
-      const r = await deleteGeneratedSessions(y, m, selectedGroups, [...ticked].map(Number));
+      const r = await deleteGeneratedSessions(y, m, selectedGroups, [...ticked].map(Number), withWorkshop);
       if (r) setResult(`${r.deleted} alkalom törölve.`);
     }
     setBusy(false);
@@ -629,7 +653,7 @@ function MonthDialog({
       <div className={s.form}>
         <h2 id="month-dialog-title">{fill ? 'Hónap feltöltése' : 'Generált alkalmak törlése'}</h2>
         <ol className={s.steps}>
-          <li aria-current={step === 1 ? 'step' : undefined}>1. Hónap és csoportok</li>
+          <li aria-current={step === 1 ? 'step' : undefined}>1. Mit és mikor</li>
           <li aria-current={step === 2 ? 'step' : undefined}>
             2. {fill ? 'Létrehozandó alkalmak' : 'Törlendő alkalmak'}
           </li>
@@ -640,8 +664,8 @@ function MonthDialog({
           <>
             <p className={s.muted}>
               {fill
-                ? 'A csoportok órarendjéből a hónap alkalmai, terem-foglalással. A korábban már létrehozott napok (akkor is, ha azóta áthelyezték vagy elmaradt) és a zárva tartó napok kimaradnak.'
-                : 'A hónap jövőbeli, kézzel nem módosított generált alkalmai (a foglalásukkal együtt). A kézzel módosítottak és a múltbeliek maradnak.'}
+                ? 'A csoportok órarendjéből a hónap alkalmai, terem-foglalással, és ha kéred, a Nyitott Műhely időpontjai. A korábban már létrehozott napok (akkor is, ha azóta áthelyezték vagy elmaradt) és a zárva tartó napok kimaradnak.'
+                : 'A hónap jövőbeli, kézzel nem módosított generált alkalmai (a foglalásukkal együtt). A kézzel módosítottak, a múltbeliek és azok a Nyitott Műhely időpontok, amelyekre már jelentkeztek, maradnak.'}
             </p>
             <label className={s.field}>
               Hónap
@@ -663,6 +687,59 @@ function MonthDialog({
                 </label>
               ))}
             </fieldset>
+            <fieldset className={`${s.field} ${s.fieldset}`}>
+              <legend>Nyitott Műhely</legend>
+              <label className={s.check}>
+                <input type="checkbox" checked={withWorkshop} onChange={(e) => setWithWorkshop(e.target.checked)} />
+                {fill ? 'Hetente egy időpont' : 'A generált időpontok'}
+              </label>
+              {fill && withWorkshop && (
+                <div className={s.row}>
+                  <label className={s.field}>
+                    Nap
+                    <select
+                      value={workshop.weekday}
+                      onChange={(e) => setWorkshop((w) => ({ ...w, weekday: Number(e.target.value) }))}
+                    >
+                      {WEEKDAYS.map((label, i) => (
+                        <option key={label} value={i + 1}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className={s.field}>
+                    Első nap
+                    <input
+                      type="date"
+                      value={workshop.from}
+                      min={`${month}-01`}
+                      max={daysOfMonth(y, m).at(-1)}
+                      onChange={(e) => setWorkshop((w) => ({ ...w, from: e.target.value }))}
+                    />
+                  </label>
+                  <label className={s.field}>
+                    Kezdés
+                    <input
+                      type="time"
+                      value={workshop.startTime}
+                      onChange={(e) => setWorkshop((w) => ({ ...w, startTime: e.target.value }))}
+                    />
+                  </label>
+                  <label className={s.field}>
+                    Vége
+                    <input
+                      type="time"
+                      value={workshop.endTime}
+                      onChange={(e) => setWorkshop((w) => ({ ...w, endTime: e.target.value }))}
+                    />
+                  </label>
+                </div>
+              )}
+              {fill && withWorkshop && (
+                <p className={s.muted}>Ár, létszám és terem: Jelentkezési beállítások → Nyitott Műhely alapértékek.</p>
+              )}
+            </fieldset>
             <div className={s.actions}>
               <button type="button" className={s.btn} onClick={onClose}>
                 Mégse
@@ -671,7 +748,11 @@ function MonthDialog({
                 type="button"
                 className={`${s.btn} ${s.primary}`}
                 onClick={next}
-                disabled={busy || !selectedGroups.length}
+                disabled={
+                  busy ||
+                  (!selectedGroups.length && !withWorkshop) ||
+                  (fill && withWorkshop && !(workshop.from && workshop.startTime < workshop.endTime))
+                }
               >
                 Tovább
               </button>
@@ -698,7 +779,7 @@ function MonthDialog({
                       />
                     </th>
                     <th>Mikor</th>
-                    <th>Csoport</th>
+                    <th>Alkalom</th>
                   </tr>
                 </thead>
                 <tbody>

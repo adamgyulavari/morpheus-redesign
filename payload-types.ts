@@ -1960,7 +1960,7 @@ export interface CourseGroup {
   createdAt: string;
 }
 /**
- * Minden jelentkezés: Nyitott Műhely alkalmak, kezdő kurzusok, szakmai pályázatok. A résztvevők a fiókjukban (/fiokom/jelentkezeseim) követik.
+ * Minden jelentkezés: Nyitott Műhely alkalmak, kezdő kurzusok, szakmai pályázatok. A résztvevők a fiókjuk áttekintőjén (/fiokom) követik.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "applications".
@@ -4633,6 +4633,21 @@ export interface ApplicationSetting {
    * A résztvevő eddig mondhatja le a jelentkezését a fiókjában.
    */
   userCancelHours: number;
+  /**
+   * A Teremnaptár „Hónap feltöltése” ezekkel hozza létre a Nyitott Műhely időpontjait (a nap és az idő ott még átírható).
+   */
+  workshopDefaults?: {
+    weekday?: ('1' | '2' | '3' | '4' | '5' | '6' | '7') | null;
+    startTime?: string | null;
+    endTime?: string | null;
+    /**
+     * Üresen helyszín nélkül jön létre; a Teremnaptárban később elhelyezheted.
+     */
+    rooms?: (number | Room)[] | null;
+    price?: number | null;
+    minParticipants?: number | null;
+    maxParticipants?: number | null;
+  };
   texts?: {
     /**
      * Nyitott Műhely és kezdő kurzus. Üresen az alapszöveg megy.
@@ -4979,6 +4994,17 @@ export interface ApplicationSettingsSelect<T extends boolean = true> {
       };
   workshopCutoffHours?: T;
   userCancelHours?: T;
+  workshopDefaults?:
+    | T
+    | {
+        weekday?: T;
+        startTime?: T;
+        endTime?: T;
+        rooms?: T;
+        price?: T;
+        minParticipants?: T;
+        maxParticipants?: T;
+      };
   texts?:
     | T
     | {

@@ -28945,6 +28945,49 @@
           "notNull": true,
           "default": 24
         },
+        "workshop_defaults_weekday": {
+          "name": "workshop_defaults_weekday",
+          "type": "enum_application_settings_workshop_defaults_weekday",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'6'"
+        },
+        "workshop_defaults_start_time": {
+          "name": "workshop_defaults_start_time",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'14:00'"
+        },
+        "workshop_defaults_end_time": {
+          "name": "workshop_defaults_end_time",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'16:00'"
+        },
+        "workshop_defaults_price": {
+          "name": "workshop_defaults_price",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 5000
+        },
+        "workshop_defaults_min_participants": {
+          "name": "workshop_defaults_min_participants",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 5
+        },
+        "workshop_defaults_max_participants": {
+          "name": "workshop_defaults_max_participants",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 16
+        },
         "texts_signup_received": {
           "name": "texts_signup_received",
           "type": "varchar",
@@ -28996,6 +29039,137 @@
       },
       "indexes": {},
       "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.application_settings_rels": {
+      "name": "application_settings_rels",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "order": {
+          "name": "order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "parent_id": {
+          "name": "parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "path": {
+          "name": "path",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_id": {
+          "name": "rooms_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "application_settings_rels_order_idx": {
+          "name": "application_settings_rels_order_idx",
+          "columns": [
+            {
+              "expression": "order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "application_settings_rels_parent_idx": {
+          "name": "application_settings_rels_parent_idx",
+          "columns": [
+            {
+              "expression": "parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "application_settings_rels_path_idx": {
+          "name": "application_settings_rels_path_idx",
+          "columns": [
+            {
+              "expression": "path",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "application_settings_rels_rooms_id_idx": {
+          "name": "application_settings_rels_rooms_id_idx",
+          "columns": [
+            {
+              "expression": "rooms_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "application_settings_rels_parent_fk": {
+          "name": "application_settings_rels_parent_fk",
+          "tableFrom": "application_settings_rels",
+          "tableTo": "application_settings",
+          "columnsFrom": [
+            "parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "application_settings_rels_rooms_fk": {
+          "name": "application_settings_rels_rooms_fk",
+          "tableFrom": "application_settings_rels",
+          "tableTo": "rooms",
+          "columnsFrom": [
+            "rooms_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -31240,6 +31414,19 @@
         "30",
         "60"
       ]
+    },
+    "public.enum_application_settings_workshop_defaults_weekday": {
+      "name": "enum_application_settings_workshop_defaults_weekday",
+      "schema": "public",
+      "values": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ]
     }
   },
   "schemas": {},
@@ -31252,6 +31439,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "bf841832-da0c-4ee1-b75a-773f0c591c02",
+  "id": "fcfc2141-c638-409e-bc6b-cda7c52c051b",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

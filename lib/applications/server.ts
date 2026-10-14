@@ -735,7 +735,6 @@ export async function cancelByStaff(payload: Payload, id: number): Promise<Resul
   return { ok: true };
 }
 
-
 /** "E-mail a résztvevőknek": a free-text message to everyone registered for the date. */
 export async function messageParticipants(
   payload: Payload,

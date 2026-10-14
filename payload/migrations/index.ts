@@ -12,6 +12,7 @@ import * as migration_20261013_014650_applications from './20261013_014650_appli
 import * as migration_20261013_021132_workshop_cutoff_job from './20261013_021132_workshop_cutoff_job';
 import * as migration_20261013_025650_signup_pages from './20261013_025650_signup_pages';
 import * as migration_20261013_030125_remove_static_dates from './20261013_030125_remove_static_dates';
+import * as migration_20261014_014745_workshop_defaults from './20261014_014745_workshop_defaults';
 
 export const migrations = [
   {
@@ -82,6 +83,11 @@ export const migrations = [
   {
     up: migration_20261013_030125_remove_static_dates.up,
     down: migration_20261013_030125_remove_static_dates.down,
-    name: '20261013_030125_remove_static_dates'
+    name: '20261013_030125_remove_static_dates',
+  },
+  {
+    up: migration_20261014_014745_workshop_defaults.up,
+    down: migration_20261014_014745_workshop_defaults.down,
+    name: '20261014_014745_workshop_defaults'
   },
 ];
