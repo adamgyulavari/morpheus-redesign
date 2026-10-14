@@ -25,7 +25,7 @@ export const ACTIVE_STATUSES = [
 ] as const satisfies ApplicationStatus[];
 /**
  * Statuses that take a place: paid (or paid offline), and awaiting payment while the hold lasts
- * (`holdUntil`; an expired hold no longer counts, even before the expiry job tidies it up).
+ * (`holdUntil`; a hold that ran out simply stops counting — nothing changes its status).
  */
 export const PLACE_STATUSES = ['held', 'registered'] as const satisfies ApplicationStatus[];
 /** Statuses that count toward a workshop's minimum: paid only. */

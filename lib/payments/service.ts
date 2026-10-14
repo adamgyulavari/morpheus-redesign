@@ -4,7 +4,9 @@
  *   capacity lock), then the provider's payment page — or done at once when nothing is due;
  * - applyPaymentUpdate: what the webhook (and the result page) run — the provider is asked, the
  *   change is applied once (statuses only forward), the follow-ups queued;
- * - expireOrders / cancelOrder: an unpaid hold lets the place go.
+ * - an unpaid order lapses by its date (`expiresAt`, the application's `holdUntil`): nothing runs
+ *   at the deadline; the place simply stops counting. Paying later (the e-mailed link) takes the
+ *   place again if one is free (payOrder); cancelOrder lets it go at once.
  * Amounts are whole forints. Times UTC.
  */
 import { randomBytes } from 'node:crypto';
@@ -35,7 +37,7 @@ import { siteUrl } from '@/payload/email';
 import { relId } from '@/payload/rel';
 import type { Order, Payment, Session } from '@/payload-types';
 
-import { sendLateRefund, sendOrderExpired, sendOrderPaid, sendStaffAlert, sendStaffPaid } from './notify';
+import { sendLateRefund, sendOrderPaid, sendPaymentLink, sendStaffAlert, sendStaffPaid } from './notify';
 import { paymentProvider } from './providers';
 import { billingSettings, PAUSED } from './settings';
 import { movesForward, type ProviderStatus, paidOrLater } from './types';
@@ -71,7 +73,6 @@ const clean = (b: Billing): Billing => ({
 /** The result page's address: by the order's token, never its id. */
 export const resultUrl = (token: string) => siteUrl(`/fizetes/eredmeny?rendeles=${encodeURIComponent(token)}`);
 const webhookUrl = () => siteUrl('/api/payments/webhook');
-export const checkoutUrlFor = (sessionId: number) => siteUrl(`/fizetes?session=${sessionId}`);
 
 export type CheckoutInput = ApplicantInput & { sessionId: number; billing: Billing };
 
@@ -102,23 +103,18 @@ export async function checkout(
   if (viewer || created)
     await payload.update({ collection: 'users', id: applicant.userId, data: { billing } }).catch(() => {});
 
-  // back again while the place is still held: the same order, a new payment
+  // back again with an unpaid order for the date (held or lapsed): the same order, a new payment
   const held = await payload.find({
     collection: 'applications',
     where: {
-      and: [
-        { user: { equals: applicant.userId } },
-        { session: { equals: s.id } },
-        { status: { equals: 'held' } },
-        { holdUntil: { greater_than: now.toISOString() } },
-      ],
+      and: [{ user: { equals: applicant.userId } }, { session: { equals: s.id } }, { status: { equals: 'held' } }],
     },
     depth: 1,
     limit: 1,
   });
   const heldOrder = held.docs[0]?.order;
   if (heldOrder && typeof heldOrder === 'object' && heldOrder.status === 'pending')
-    return startPayment(payload, heldOrder, applicant.email);
+    return payOrder(payload, heldOrder, applicant.email, now);
 
   const price = Math.max(0, Math.round(s.workshop?.price ?? 0));
   const holdUntil = new Date(now.getTime() + billingRules.holdMinutes * 60_000);
@@ -167,7 +163,58 @@ export async function checkout(
     await completeWithoutPayment(payload, order.id);
     return { ok: true, token: order.token, checkoutUrl: null };
   }
+  // a backup: the order page, to pay later if the payment page was closed
+  await sendPaymentLink(payload, applicant, await workshopInfo(payload, s, settings), {
+    amount: order.amountDue,
+    holdUntil: holdUntil.toISOString(),
+    href: resultUrl(order.token),
+  });
   return startPayment(payload, order, applicant.email);
+}
+
+/** An unpaid order whose hold ran out (by its date — nothing marks it). */
+export const lapsed = (order: Pick<Order, 'status' | 'expiresAt'>, now: Date) =>
+  order.status === 'pending' && Boolean(order.expiresAt) && new Date(order.expiresAt as string) <= now;
+
+/**
+ * Pay a pending order: a new payment. If its hold ran out, the place is taken again first —
+ * when the date is still open and a place is free.
+ */
+async function payOrder(
+  payload: Payload,
+  order: Order,
+  email: string,
+  now: Date,
+): Promise<Result<{ token: string; checkoutUrl: string | null }>> {
+  if (!lapsed(order, now)) return startPayment(payload, order, email);
+  const applicationId = relId(order.application);
+  const a = applicationId
+    ? await payload.findByID({ collection: 'applications', id: applicationId, depth: 0, disableErrors: true })
+    : null;
+  if (a?.status !== 'held') return { ok: false, reason: 'Ez a foglalás már nem érvényes; jelentkezz újra.' };
+  const s = await payload.findByID({
+    collection: 'sessions',
+    id: relId(a.session) ?? 0,
+    depth: 0,
+    disableErrors: true,
+  });
+  if (!s) return { ok: false, reason: 'Nincs ilyen alkalom.' };
+  const [settings, billingRules] = await Promise.all([applicationSettings(payload), billingSettings(payload)]);
+  if (!billingRules.online) return { ok: false, reason: PAUSED };
+  const taken = (await takenBy(payload, 'session_id', [s.id])).get(s.id) ?? NOBODY;
+  const verdict = canSignUpWorkshop(workshopFacts(s, taken), now, settings);
+  if (!verdict.ok) return verdict;
+  const holdUntil = new Date(now.getTime() + billingRules.holdMinutes * 60_000).toISOString();
+  const renewed = await inTransaction(payload, async (req) => {
+    const o = await lockOrder(req, order.id);
+    if (o.status !== 'pending') return null;
+    // pre-checked: a refusal inside the hook would roll the whole transaction back
+    if ((await placesLeftFor(req, a, a.id)) === 0) return null;
+    await payload.update({ collection: 'applications', id: a.id, data: { holdUntil }, req });
+    return payload.update({ collection: 'orders', id: o.id, data: { expiresAt: holdUntil }, req });
+  });
+  if (!renewed) return { ok: false, reason: 'Ez az alkalom időközben megtelt.' };
+  return startPayment(payload, renewed, email);
 }
 
 /** A new provider payment for a pending order (first try, or "Újrapróbálom"). */
@@ -183,7 +230,8 @@ export async function startPayment(
       amount: order.amountDue,
       description: `${order.label} — Morpheus Színműhely`,
       customerEmail: email,
-      returnUrl: resultUrl(order.token),
+      // back from the payment page: the order page waits a little for the provider's answer
+      returnUrl: `${resultUrl(order.token)}&vissza=1`,
       webhookUrl: webhookUrl(),
     });
     await payload.create({
@@ -322,6 +370,7 @@ export async function applyPaymentUpdate(
       await confirmOrder(req, order);
       effects.push({ type: 'paid', orderId: order.id });
     } else {
+      await releaseHold(req, order, 'A fizetés a foglalási idő után érkezett; a hely közben betelt.');
       effects.push({ type: 'refund', why: 'late', orderId: order.id, paymentId: payment.id, amount: truth.amount });
     }
     return true;
@@ -460,31 +509,7 @@ const workshopIcs = (applicationId: number, s: Session, info: { title: string; p
     location: info.place,
   });
 
-// ── unpaid holds ────────────────────────────────────────────────────────────
-
-/** The hold ran out (a job, every few minutes): the place is free again, the person is told. */
-export async function expireOrders(payload: Payload, now = new Date()): Promise<number[]> {
-  const { docs } = await payload.find({
-    collection: 'orders',
-    where: { and: [{ status: { equals: 'pending' } }, { expiresAt: { less_than_equal: now.toISOString() } }] },
-    depth: 0,
-    limit: 100,
-  });
-  const expired: number[] = [];
-  for (const o of docs) {
-    const done = await inTransaction(payload, async (req) => {
-      const order = await lockOrder(req, o.id);
-      if (order.status !== 'pending') return false;
-      await releaseHold(req, order, 'A fizetés nem érkezett meg időben.');
-      await payload.update({ collection: 'orders', id: order.id, data: { status: 'expired' }, req });
-      return true;
-    });
-    if (!done) continue;
-    expired.push(o.id);
-    await tellExpired(payload, o.id, now);
-  }
-  return expired;
-}
+// ── letting a place go ────────────────────────────────────────────────────────────
 
 /** "Mégse" on the result page: the person lets the place go. */
 export async function cancelOrder(payload: Payload, token: string): Promise<Result> {
@@ -513,22 +538,6 @@ async function releaseHold(req: PayloadRequest, order: Order, reason: string) {
     });
 }
 
-async function tellExpired(payload: Payload, orderId: number, now: Date) {
-  const order = await payload.findByID({ collection: 'orders', id: orderId, depth: 1 });
-  const application = typeof order.application === 'object' ? order.application : null;
-  if (!application || order.kind !== 'workshop') return;
-  const settings = await applicationSettings(payload);
-  const s = await payload.findByID({ collection: 'sessions', id: relId(application.session) ?? 0, depth: 0 });
-  const taken = (await takenBy(payload, 'session_id', [s.id])).get(s.id) ?? NOBODY;
-  const open = canSignUpWorkshop(workshopFacts(s, taken), now, settings).ok;
-  await sendOrderExpired(
-    payload,
-    applicantOf(application),
-    await workshopInfo(payload, s, settings),
-    open ? checkoutUrlFor(s.id) : undefined,
-  );
-}
-
 // ── the result page ─────────────────────────────────────────────────────────
 
 export async function orderByToken(payload: Payload, token: string): Promise<Order | null> {
@@ -548,8 +557,10 @@ export type OrderView = {
   amountDue: number;
   creditUsed: number;
   expiresAt: string | null;
-  /** The last payment attempt failed / was cancelled (and the hold still lasts): "Újrapróbálom". */
+  /** The last payment attempt failed / was cancelled. */
   lastFailed: boolean;
+  /** Unpaid and the hold ran out: paying takes the place again if one is free. */
+  lapsed: boolean;
   sessionId: number | null;
 };
 
@@ -588,16 +599,15 @@ export async function orderStatus(payload: Payload, token: string, now = new Dat
     creditUsed: order.creditUsed,
     expiresAt: order.expiresAt ?? null,
     lastFailed: Boolean(payment && ['failed', 'expired', 'canceled'].includes(payment.status)),
+    lapsed: lapsed(order, now),
     sessionId: relId(application?.session),
   };
 }
 
-/** "Újrapróbálom": a new payment for the same order while the place is still held. */
+/** "Fizetés" on the order page (also from the e-mailed link): a new payment for the same order. */
 export async function retryPayment(payload: Payload, token: string, now = new Date()) {
   const order = await orderByToken(payload, token);
   if (order?.status !== 'pending') return { ok: false as const, reason: 'Ez a rendelés már le van zárva.' };
-  if (order.expiresAt && new Date(order.expiresAt) <= now)
-    return { ok: false as const, reason: 'A foglalás lejárt; jelentkezz újra.' };
   const user = await payload.findByID({ collection: 'users', id: relId(order.user) ?? 0, depth: 0 });
-  return startPayment(payload, order, user.email);
+  return payOrder(payload, order, user.email, now);
 }

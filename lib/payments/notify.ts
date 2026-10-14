@@ -1,5 +1,5 @@
 /**
- * Payment e-mails, in the shared layout: to the participant (paid, hold expired, late payment
+ * Payment e-mails, in the shared layout: to the participant (the payment link, paid, late payment
  * refunded) and to staff (new paid sign-up, alerts). Failures are logged, never thrown.
  */
 import type { Payload } from 'payload';
@@ -59,22 +59,34 @@ export async function sendOrderPaid(
   );
 }
 
-/** The hold ran out without payment; a link back while places are left. */
-export async function sendOrderExpired(payload: Payload, a: Applicant, t: TargetInfo, again?: string) {
+/** Sent with the payment page: the order page, to pay later if that page got closed (a backup). */
+export async function sendPaymentLink(
+  payload: Payload,
+  a: Applicant,
+  t: TargetInfo,
+  p: { amount: number; holdUntil: string; href: string },
+) {
+  const until = new Intl.DateTimeFormat('hu-HU', {
+    timeZone: 'Europe/Budapest',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(p.holdUntil));
   await send(
     payload,
     a.email,
-    `Lejárt a foglalásod: ${t.title}`,
+    `Jelentkezésed fizetése: ${t.title}`,
     emailLayout({
-      preheader: 'A fizetés nem érkezett meg időben.',
-      heading: 'Lejárt a foglalásod',
+      preheader: `A helyedet ${until}-ig tartjuk.`,
+      heading: 'Már csak a fizetés van hátra',
       paragraphs: [
         hello(a),
-        'A fizetés nem érkezett meg időben, ezért a helyet felszabadítottuk. Pénzt nem vontunk le.',
-        again ? 'Ha még szeretnél jönni, most is jelentkezhetsz:' : 'Erre az alkalomra már nincs szabad hely.',
+        `Megkaptuk a jelentkezésed; a helyed a fizetéssel lesz biztos. ${until}-ig tartjuk neked.`,
+        'Ha a fizetési oldal bezárult vagy a fizetés megszakadt, ezen a linken folytathatod — később is, amíg van szabad hely. Ha már fizettél, a link a fizetés állapotát mutatja.',
       ],
-      details: details(t),
-      button: again ? { label: 'Újra jelentkezem', href: again } : undefined,
+      details: details(t, [{ label: 'Fizetendő', value: formatHuf(p.amount) }]),
+      button: { label: 'Fizetés', href: p.href },
     }),
   );
 }

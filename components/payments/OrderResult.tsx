@@ -1,8 +1,9 @@
 'use client';
 
 /**
- * The result page's body: paid / still pending (polled for ~30 s — the webhook decides) / failed
- * ("Újrapróbálom" while the place is held, or "Mégse") / expired / cancelled.
+ * The order page's body: paid / back from the payment page and waiting for the answer (polled for
+ * ~30 s — the webhook decides) / unpaid ("Fizetés" — also after the hold ran out, while a place is
+ * free — or "Mégse") / cancelled / refunded.
  */
 import Link from 'next/link';
 import { useEffect, useState, useTransition } from 'react';
@@ -15,12 +16,22 @@ import type { OrderView } from '@/lib/payments/service';
 const POLL_MS = 3_000;
 const POLL_FOR_MS = 30_000;
 
-export default function OrderResult({ token, initial }: { token: string; initial: OrderView }) {
+export default function OrderResult({
+  token,
+  initial,
+  returned,
+}: {
+  token: string;
+  initial: OrderView;
+  /** Back from the payment page (not the e-mailed link): wait for the provider first. */
+  returned: boolean;
+}) {
   const [order, setOrder] = useState(initial);
   const [waitedOut, setWaitedOut] = useState(false);
   const [error, setError] = useState('');
   const [pending, start] = useTransition();
-  const waiting = order.status === 'pending' && !order.lastFailed;
+  const waiting = returned && order.status === 'pending' && !order.lastFailed && !order.lapsed;
+  const unpaid = order.status === 'pending' && !(waiting && !waitedOut);
 
   useEffect(() => {
     if (!waiting) return;
@@ -52,6 +63,11 @@ export default function OrderResult({ token, initial }: { token: string; initial
       if (next) setOrder(next);
     });
   const again = order.sessionId ? `/fizetes?session=${order.sessionId}` : '/nyitott-alkalmak/';
+  const until =
+    order.expiresAt &&
+    new Intl.DateTimeFormat('hu-HU', { timeZone: 'Europe/Budapest', hour: '2-digit', minute: '2-digit' }).format(
+      new Date(order.expiresAt),
+    );
 
   return (
     <Card>
@@ -70,43 +86,36 @@ export default function OrderResult({ token, initial }: { token: string; initial
             </Link>
           </>
         )}
-        {waiting && (
+        {waiting && !waitedOut && (
           <>
             <h2 className="font-display text-[34px] leading-tight">A fizetés feldolgozása…</h2>
-            <p className="text-[17px] leading-relaxed">
-              {waitedOut
-                ? 'Még nem kaptunk visszajelzést a fizetési szolgáltatótól. Amint megérkezik, e-mailben értesítünk — nem kell újra fizetned.'
-                : 'Egy pillanat, várjuk a fizetési szolgáltató visszajelzését.'}
-            </p>
+            <p className="text-[17px] leading-relaxed">Egy pillanat, várjuk a fizetési szolgáltató visszajelzését.</p>
           </>
         )}
-        {order.status === 'pending' && order.lastFailed && (
+        {unpaid && (
           <>
-            <h2 className="font-display text-[34px] leading-tight">A fizetés nem sikerült</h2>
+            <h2 className="font-display text-[34px] leading-tight">
+              {order.lastFailed ? 'A fizetés nem sikerült' : 'Fizetésre vár'}
+            </h2>
             <p className="text-[17px] leading-relaxed">
-              Pénzt nem vontunk le. A helyedet még tartjuk
-              {order.expiresAt
-                ? ` ${new Intl.DateTimeFormat('hu-HU', { timeZone: 'Europe/Budapest', hour: '2-digit', minute: '2-digit' }).format(new Date(order.expiresAt))}-ig`
+              {order.lastFailed ? 'Pénzt nem vontunk le. ' : ''}
+              {order.lapsed
+                ? 'A foglalási idő lejárt; ha van még szabad hely, most is kifizetheted.'
+                : until
+                  ? `A helyedet ${until}-ig tartjuk.`
+                  : ''}
+              {waitedOut
+                ? ' Ha már fizettél, nem kell újra: amint a visszajelzés megérkezik, e-mailben értesítünk.'
                 : ''}
-              .
             </p>
             <div className="flex flex-wrap gap-3">
               <button type="button" className="btn btn-md btn-primary" disabled={pending} onClick={retry}>
-                {pending ? 'Egy pillanat…' : 'Újrapróbálom'}
+                {pending ? 'Egy pillanat…' : `Fizetés — ${formatHuf(order.amountDue)}`}
               </button>
               <button type="button" className="btn btn-md btn-outline" disabled={pending} onClick={cancel}>
                 Mégse
               </button>
             </div>
-          </>
-        )}
-        {order.status === 'expired' && (
-          <>
-            <h2 className="font-display text-[34px] leading-tight">Lejárt a foglalás</h2>
-            <p className="text-[17px] leading-relaxed">A fizetés nem érkezett meg időben, a helyet felszabadítottuk.</p>
-            <Link href={again} className="btn btn-md btn-primary self-start">
-              Újra jelentkezem
-            </Link>
           </>
         )}
         {order.status === 'canceled' && (

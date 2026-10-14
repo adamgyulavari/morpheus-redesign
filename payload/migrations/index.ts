@@ -20,6 +20,7 @@ import * as migration_20261014_161157_payments from './20261014_161157_payments'
 import * as migration_20261014_161500_held_in_unique_indexes from './20261014_161500_held_in_unique_indexes';
 import * as migration_20261014_162000_aszf_page from './20261014_162000_aszf_page';
 import * as migration_20261014_185611_online_payments from './20261014_185611_online_payments';
+import * as migration_20261014_214947_drop_expire_orders from './20261014_214947_drop_expire_orders';
 
 export const migrations = [
   {
@@ -130,6 +131,11 @@ export const migrations = [
   {
     up: migration_20261014_185611_online_payments.up,
     down: migration_20261014_185611_online_payments.down,
-    name: '20261014_185611_online_payments'
+    name: '20261014_185611_online_payments',
+  },
+  {
+    up: migration_20261014_214947_drop_expire_orders.up,
+    down: migration_20261014_214947_drop_expire_orders.down,
+    name: '20261014_214947_drop_expire_orders'
   },
 ];

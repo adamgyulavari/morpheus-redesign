@@ -178,7 +178,6 @@ export interface Config {
       revalidateDates: TaskRevalidateDates;
       workshopCutoff: TaskWorkshopCutoff;
       orderPaid: TaskOrderPaid;
-      expireOrders: TaskExpireOrders;
       inline: {
         input: unknown;
         output: unknown;
@@ -2703,7 +2702,7 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'revalidateDates' | 'workshopCutoff' | 'orderPaid' | 'expireOrders';
+        taskSlug: 'inline' | 'revalidateDates' | 'workshopCutoff' | 'orderPaid';
         taskID: string;
         input?:
           | {
@@ -2736,7 +2735,7 @@ export interface PayloadJob {
         id?: string | null;
       }[]
     | null;
-  taskSlug?: ('inline' | 'revalidateDates' | 'workshopCutoff' | 'orderPaid' | 'expireOrders') | null;
+  taskSlug?: ('inline' | 'revalidateDates' | 'workshopCutoff' | 'orderPaid') | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
@@ -5356,14 +5355,6 @@ export interface TaskOrderPaid {
   input: {
     orderId: number;
   };
-  output?: unknown;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "TaskExpireOrders".
- */
-export interface TaskExpireOrders {
-  input?: unknown;
   output?: unknown;
 }
 /**

@@ -219,18 +219,6 @@ export default buildConfig({
           return { output: {} };
         },
       },
-      {
-        // an unpaid hold runs out: the place is free again
-        slug: 'expireOrders',
-        label: 'Lejárt fizetési foglalások',
-        schedule: [{ cron: '*/2 * * * *', queue: 'schedules' }],
-        retries: 2,
-        handler: async ({ req }) => {
-          const { expireOrders } = await import('./lib/payments/service');
-          const expired = await expireOrders(req.payload);
-          return { output: { expired: expired.length } };
-        },
-      },
     ],
     autoRun: [
       { cron: '* * * * *', queue: 'schedules' },
