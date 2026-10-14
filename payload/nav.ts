@@ -1,6 +1,8 @@
 /**
  * The admin sidebar in one place: which group each collection and global is in, and the groups'
- * order. Above them (beforeNavLinks): Irányítópult, Jelentkezések, Teremnaptár (payload/components/NavTop).
+ * order. "Napi munka" is drawn by payload/components/NavTop (beforeNavLinks), because it also holds
+ * the custom views (Jelentkezések, Teremnaptár): its collections are left out of Payload's groups
+ * (`group: false` — their pages stay as they are) and listed in DAILY.
  */
 import type { CollectionConfig, GlobalConfig } from 'payload';
 
@@ -39,6 +41,11 @@ const GROUP_OF: Record<string, NavGroup> = {
   applicationSettings: 'Beállítások',
 };
 
+/** "Napi munka" after Jelentkezések and Teremnaptár, in this order (NavTop). */
+export const DAILY = Object.entries(GROUP_OF)
+  .filter(([, g]) => g === 'Napi munka')
+  .map(([slug]) => slug);
+
 /** The group of a slug (for the redirects plugin's overrides). */
 export const navGroup = (slug: string): NavGroup => GROUP_OF[slug] ?? 'Beállítások';
 
@@ -51,6 +58,10 @@ const ORDER = Object.keys(GROUP_OF);
 export function arrangeNav<T extends CollectionConfig | GlobalConfig>(items: T[]): T[] {
   const rank = (t: T) => NAV_GROUPS.indexOf(navGroup(t.slug)) * 1000 + (ORDER.indexOf(t.slug) + 1 || 999);
   return items
-    .map((t) => (t.admin?.hidden ? t : { ...t, admin: { ...t.admin, group: navGroup(t.slug) } }))
+    .map((t) => {
+      if (t.admin?.hidden) return t;
+      const group = navGroup(t.slug);
+      return { ...t, admin: { ...t.admin, group: group === 'Napi munka' ? (false as const) : group } };
+    })
     .sort((a, b) => rank(a) - rank(b));
 }

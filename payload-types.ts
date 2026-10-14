@@ -541,7 +541,7 @@ export interface Session {
   createdAt: string;
 }
 /**
- * A darabok. Az időpontokat az „Időpontok” között adhatod meg.
+ * A darabok. Az időpontokat az „Előadás-időpontok” között adhatod meg.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "productions".
