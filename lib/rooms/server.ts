@@ -321,8 +321,8 @@ export type FillPreviewItem = {
   clashes: string[];
 };
 
-/** Nyitott Műhely in the fill: the day and the time from the dialog, the rest from Jelentkezési beállítások. */
-export type WorkshopFill = Omit<WorkshopPlan, 'rooms'>;
+/** Nyitott Műhely in the fill: day, time and rooms from the dialog; price and size from Jelentkezési beállítások. */
+export type WorkshopFill = WorkshopPlan;
 
 const WORKSHOP_TITLE = SESSION_KINDS.workshop;
 const workshopKey = (day: string) => `workshop:${day}`;
@@ -360,12 +360,13 @@ async function scheduleGroups(payload: Payload, ids: number[] | null): Promise<S
   }));
 }
 
-/** The groups running in the month and the Nyitott Műhely defaults (for the month dialog's first step). */
+/** The groups running in the month, the Nyitott Műhely defaults and the rooms (for the month dialog's first step). */
 export async function monthGroups(payload: Payload, year: number, month: number) {
-  const { weekday, startTime, endTime } = (await applicationSettings(payload)).workshopDefaults;
+  const { weekday, startTime, endTime, rooms } = (await applicationSettings(payload)).workshopDefaults;
   return {
     groups: groupsInMonth(await scheduleGroups(payload, null), year, month).map((g) => ({ id: g.id, title: g.title })),
-    workshop: { weekday, startTime, endTime },
+    workshop: { weekday, startTime, endTime, rooms },
+    rooms: (await roomsById(payload)).filter((r) => r.active).map((r) => ({ id: r.id, name: r.name })),
   };
 }
 
@@ -430,11 +431,10 @@ async function planWorkshopFill(
     select: { start: true },
     ...all,
   });
-  const { rooms } = (await applicationSettings(payload)).workshopDefaults;
   return planWorkshops({
     year,
     month,
-    plan: { ...workshop, rooms },
+    plan: workshop,
     closedDays,
     existingDays: new Set(docs.map((s) => dayOf(new Date(s.start)))),
   });

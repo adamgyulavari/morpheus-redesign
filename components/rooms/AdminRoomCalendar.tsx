@@ -552,7 +552,9 @@ function MonthDialog({
     from: '',
     startTime: '14:00',
     endTime: '16:00',
+    rooms: [],
   });
+  const [rooms, setRooms] = useState<{ id: number; name: string }[]>([]);
   const [rows, setRows] = useState<Row[]>([]);
   const [ticked, setTicked] = useState<Set<string>>(new Set());
   const [result, setResult] = useState('');
@@ -570,6 +572,7 @@ function MonthDialog({
       if (!r) return;
       const fromGroup = Boolean(initialGroup && r.groups.some((g) => g.id === initialGroup));
       setGroups(r.groups);
+      setRooms(r.rooms);
       setSelectedGroups(fromGroup && initialGroup ? [initialGroup] : r.groups.map((g) => g.id));
       setWithWorkshop(!fromGroup);
       setWorkshop({ ...r.workshop, from: firstDayFrom(month) });
@@ -737,7 +740,30 @@ function MonthDialog({
                 </div>
               )}
               {fill && withWorkshop && (
-                <p className={s.muted}>Ár, létszám és terem: Jelentkezési beállítások → Nyitott Műhely alapértékek.</p>
+                <fieldset className={`${s.field} ${s.fieldset}`}>
+                  <legend>Terem</legend>
+                  <div className={s.row}>
+                    {rooms.map((r) => (
+                      <label key={r.id} className={s.check}>
+                        <input
+                          type="checkbox"
+                          checked={workshop.rooms.includes(r.id)}
+                          onChange={(e) =>
+                            setWorkshop((w) => ({
+                              ...w,
+                              rooms: e.target.checked ? [...w.rooms, r.id] : w.rooms.filter((id) => id !== r.id),
+                            }))
+                          }
+                        />
+                        {r.name}
+                      </label>
+                    ))}
+                  </div>
+                  <p className={s.muted}>
+                    Ha nem jelölsz termet, helyszín nélkül jön létre. Ár és létszám: Jelentkezési beállítások → Nyitott
+                    Műhely alapértékek.
+                  </p>
+                </fieldset>
               )}
             </fieldset>
             <div className={s.actions}>

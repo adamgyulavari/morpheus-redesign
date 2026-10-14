@@ -473,7 +473,7 @@ export const ApplicationSettings: GlobalConfig = {
       type: 'group',
       admin: {
         description:
-          'A Teremnaptár „Hónap feltöltése” ezekkel hozza létre a Nyitott Műhely időpontjait (a nap és az idő ott még átírható).',
+          'A Teremnaptár „Hónap feltöltése” ezekkel hozza létre a Nyitott Műhely időpontjait (a nap, az idő és a terem ott még átírható).',
       },
       fields: [
         {
