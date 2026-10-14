@@ -6,7 +6,7 @@
 import { randomBytes } from 'node:crypto';
 
 import { sql } from '@payloadcms/db-postgres';
-import { createLocalReq, type Payload, type PayloadRequest, type TypedUser } from 'payload';
+import { createLocalReq, type Payload, type PayloadRequest, type TypedUser, type Where } from 'payload';
 
 import { dateRange } from '@/lib/dates';
 import { momentText, whenText } from '@/lib/rooms/format';
@@ -112,13 +112,19 @@ export function workshopFacts(s: Session, taken: number): WorkshopFacts {
 export const signupKindOf = (g: Pick<CourseGroup, 'type' | 'signup'>): 'beginner' | 'professional' =>
   g.signup?.kind ?? SIGNUP_KIND_OF_TYPE[g.type] ?? 'beginner';
 
+/** Groups whose sign-up may be open (the dates decide the rest). */
+export const SIGNUP_ON: Where = { 'signup.mode': { in: ['open', 'window'] } };
+
 export function courseFacts(g: CourseGroup, taken: number): CourseFacts {
+  const mode = g.signup?.mode ?? 'closed';
+  // the window's dates count only in "Időablakban"
+  const inWindow = mode === 'window';
   return {
     kind: signupKindOf(g),
-    enabled: Boolean(g.signup?.enabled),
-    opensAt: g.signup?.opensAt ? new Date(g.signup.opensAt) : null,
+    enabled: mode !== 'closed',
+    opensAt: inWindow && g.signup?.opensAt ? new Date(g.signup.opensAt) : null,
     // without an end: until the course starts
-    closesAt: g.signup?.closesAt ? new Date(g.signup.closesAt) : new Date(g.startDate),
+    closesAt: inWindow && g.signup?.closesAt ? new Date(g.signup.closesAt) : new Date(g.startDate),
     capacity: g.signup?.capacity ?? null,
     taken,
   };
@@ -313,7 +319,7 @@ export async function signUp(
 export async function openProfessionalGroups(payload: Payload, now = new Date()) {
   const { docs } = await payload.find({
     collection: 'courseGroups',
-    where: { 'signup.enabled': { equals: true } },
+    where: SIGNUP_ON,
     depth: 0,
     sort: 'startDate',
     ...all,

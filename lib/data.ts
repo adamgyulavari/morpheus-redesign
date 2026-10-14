@@ -19,7 +19,7 @@ import { getPayload } from 'payload';
 import { cache } from 'react';
 import type { CourseGroup } from '@/payload-types';
 import { courseSignupState } from './applications/rules';
-import { courseFacts, takenBy, upcomingWorkshops } from './applications/server';
+import { courseFacts, SIGNUP_ON, takenBy, upcomingWorkshops } from './applications/server';
 
 import * as map from './cms-map';
 import { todayInBudapest } from './dates';
@@ -218,7 +218,7 @@ const findCourses = cache(async (): Promise<Course[]> => {
     p.find({ collection: 'courses', depth: 0, ...all }),
     p.find({
       collection: 'courseGroups',
-      where: { and: [{ 'signup.enabled': { equals: true } }, { startDate: { greater_than_equal: fromToday() } }] },
+      where: { and: [SIGNUP_ON, { startDate: { greater_than_equal: fromToday() } }] },
       depth: 0,
       sort: 'startDate',
       select: { title: true, type: true, course: true, startDate: true, defaultSchedule: true, signup: true },

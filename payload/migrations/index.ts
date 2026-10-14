@@ -13,6 +13,8 @@ import * as migration_20261013_021132_workshop_cutoff_job from './20261013_02113
 import * as migration_20261013_025650_signup_pages from './20261013_025650_signup_pages';
 import * as migration_20261013_030125_remove_static_dates from './20261013_030125_remove_static_dates';
 import * as migration_20261014_014745_workshop_defaults from './20261014_014745_workshop_defaults';
+import * as migration_20261014_051509_signup_mode from './20261014_051509_signup_mode';
+import * as migration_20261014_051547_remove_signup_enabled from './20261014_051547_remove_signup_enabled';
 
 export const migrations = [
   {
@@ -88,6 +90,16 @@ export const migrations = [
   {
     up: migration_20261014_014745_workshop_defaults.up,
     down: migration_20261014_014745_workshop_defaults.down,
-    name: '20261014_014745_workshop_defaults'
+    name: '20261014_014745_workshop_defaults',
+  },
+  {
+    up: migration_20261014_051509_signup_mode.up,
+    down: migration_20261014_051509_signup_mode.down,
+    name: '20261014_051509_signup_mode',
+  },
+  {
+    up: migration_20261014_051547_remove_signup_enabled.up,
+    down: migration_20261014_051547_remove_signup_enabled.down,
+    name: '20261014_051547_remove_signup_enabled'
   },
 ];

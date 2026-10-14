@@ -225,8 +225,11 @@ export interface CourseGroup {
   /**
    * A kurzus oldalán (a fenti „Kurzus” oldalán) ez a csoport jelenik meg induló csoportként, jelentkezési gombbal.
    */
-  signup?: {
-    enabled?: boolean | null;
+  signup: {
+    /**
+     * Időablakban: a lenti kezdet és vég között.
+     */
+    mode: 'closed' | 'open' | 'window';
     /**
      * Üresen a típusból: kezdő → kezdő, szakmai → szakmai.
      */
@@ -2748,7 +2751,7 @@ export interface CourseGroupsSelect<T extends boolean = true> {
   signup?:
     | T
     | {
-        enabled?: T;
+        mode?: T;
         kind?: T;
         price?: T;
         priceLabel?: T;

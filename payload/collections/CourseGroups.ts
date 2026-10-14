@@ -1,8 +1,9 @@
 import type { CollectionConfig, Where } from 'payload';
 
-import { SIGNUP_KIND_OF_TYPE } from '@/lib/applications/labels';
+import { SIGNUP_KIND_OF_TYPE, SIGNUP_MODES } from '@/lib/applications/labels';
 import { todayInBudapest } from '@/lib/dates';
-import { WEEKDAYS } from '@/lib/rooms/labels';
+import { options, WEEKDAYS } from '@/lib/rooms/labels';
+import type { CourseGroup } from '@/payload-types';
 import { isStaffOrAdmin, isStaffOrAdminField, userIsStaffOrAdmin } from '../access';
 
 import { date, dateTime, fullRichText, relationship, text, time } from '../fields';
@@ -16,6 +17,13 @@ import { collectionRevalidation } from '../revalidate';
  * Students see only their own groups (in /fiokom and through the API), without the student list.
  * `monthlyFee` and `invoiceDay` are for the monthly billing of a later phase.
  */
+type Signup = NonNullable<CourseGroup['signup']>;
+
+/** The window's dates only matter (and show) with "Időablakban". */
+const inWindow = (_: unknown, sibling: Partial<Signup>) => sibling?.mode === 'window';
+const opensAt = dateTime('opensAt', 'Jelentkezés kezdete', { description: 'Üresen: azonnal.' });
+const closesAt = dateTime('closesAt', 'Jelentkezés vége', { description: 'Üresen: a kurzus kezdéséig.' });
+
 export const CourseGroups: CollectionConfig = {
   slug: 'courseGroups',
   labels: { singular: 'Csoport', plural: 'Csoportok' },
@@ -121,7 +129,15 @@ export const CourseGroups: CollectionConfig = {
         {
           type: 'row',
           fields: [
-            { name: 'enabled', label: 'Jelentkezés engedélyezve', type: 'checkbox', defaultValue: false },
+            {
+              name: 'mode',
+              label: 'Jelentkezés',
+              type: 'select',
+              required: true,
+              defaultValue: 'closed',
+              options: options(SIGNUP_MODES),
+              admin: { description: 'Időablakban: a lenti kezdet és vég között.' },
+            },
             {
               name: 'kind',
               label: 'Jelentkezés módja',
@@ -151,8 +167,25 @@ export const CourseGroups: CollectionConfig = {
         {
           type: 'row',
           fields: [
-            dateTime('opensAt', 'Jelentkezés kezdete', { description: 'Üresen: azonnal.' }),
-            dateTime('closesAt', 'Jelentkezés vége', { description: 'Üresen: a kurzus kezdéséig.' }),
+            {
+              ...opensAt,
+              admin: { ...opensAt.admin, condition: inWindow },
+              validate: (value: unknown, { siblingData }: { siblingData: Partial<Signup> }) =>
+                siblingData.mode !== 'window' || value || siblingData.closesAt
+                  ? true
+                  : 'Időablakhoz add meg a kezdetet vagy a véget.',
+            },
+            {
+              ...closesAt,
+              admin: { ...closesAt.admin, condition: inWindow },
+              validate: (value: unknown, { siblingData }: { siblingData: Partial<Signup> }) =>
+                siblingData.mode !== 'window' ||
+                !value ||
+                !siblingData.opensAt ||
+                new Date(String(value)) > new Date(siblingData.opensAt)
+                  ? true
+                  : 'A vége legyen a kezdet után.',
+            },
           ],
         },
       ],

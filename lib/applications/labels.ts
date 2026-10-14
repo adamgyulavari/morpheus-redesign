@@ -33,6 +33,14 @@ export const WORKSHOP_STATUSES = {
 } as const;
 export type WorkshopStatus = keyof typeof WORKSHOP_STATUSES;
 
+/** A course group's sign-up on the website. */
+export const SIGNUP_MODES = {
+  closed: 'Zárva',
+  open: 'Nyitva (a kurzus kezdéséig)',
+  window: 'Időablakban',
+} as const;
+export type SignupMode = keyof typeof SIGNUP_MODES;
+
 /** Course group type → the sign-up kind it takes. */
 export const SIGNUP_KIND_OF_TYPE: Record<string, 'beginner' | 'professional' | undefined> = {
   kezdo: 'beginner',
