@@ -15,8 +15,6 @@ import { date, fullRichText, image, importId, paragraphsRichText, relationship, 
 import { previewPath } from '../preview';
 import { collectionRevalidation } from '../revalidate';
 
-const SHOWS = 'Előadások';
-
 const slug = () =>
   slugField({
     useAsSlug: 'title',
@@ -43,8 +41,7 @@ export const Productions: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'group', 'byline', '_status', 'updatedAt'],
-    group: SHOWS,
-    description: 'A darabok. Az időpontokat az „Időpontok” között adhatod meg.',
+    description: 'A darabok. Az időpontokat az „Előadás-időpontok” között adhatod meg.',
     livePreview: { url: ({ data }) => (data?.detailPage && data.slug ? previewPath(`/repertoar/${data.slug}`) : null) },
     preview: (data) => (data?.slug ? previewPath(`/repertoar/${data.slug as string}`) : null),
   },
@@ -233,12 +230,11 @@ export const Productions: CollectionConfig = {
 
 export const Shows: CollectionConfig = {
   slug: 'shows',
-  labels: { singular: 'Időpont', plural: 'Időpontok' },
+  labels: { singular: 'Előadás-időpont', plural: 'Előadás-időpontok' },
   access: contentAccess,
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['date', 'time', 'production', 'venue', 'label'],
-    group: SHOWS,
     description:
       'Az előadások időpontjai. Elöl a legkésőbbi; a múltbeli időpontok másnap automatikusan eltűnnek az oldalról.',
   },
@@ -299,7 +295,6 @@ export const LegalPages: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'slug', 'effectiveDate', '_status'],
-    group: 'Oldalak',
     description:
       'Pl. az adatkezelési tájékoztató. Egy oldalon a „Jogi dokumentum” blokkal jelenik meg. Törölni csak adminisztrátor tud.',
   },

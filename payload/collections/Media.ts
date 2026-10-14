@@ -20,7 +20,6 @@ export const Media: CollectionConfig = {
   admin: {
     useAsTitle: 'alt',
     defaultColumns: ['filename', 'alt', 'updatedAt'],
-    group: 'Tartalom',
     description: 'Feltöltött képek és videók. A fókuszpont jelöli, mi maradjon látható, ha a képet körbe kell vágni.',
   },
   defaultSort: '-updatedAt',

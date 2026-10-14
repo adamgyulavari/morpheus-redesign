@@ -7,7 +7,7 @@ import { clashMessage, findClashes, roomNames, syncOccupancy } from '@/lib/rooms
 import { dateTime, relationship, text, textarea } from '../fields';
 import { type Rel, relId, relIds } from '../rel';
 import { blockingClashes, failer, mayOverridePractice, overridePracticeField } from './placement';
-import { ROOMS_GROUP, staffOnly } from './Rooms';
+import { staffOnly } from './Rooms';
 
 type BookingDoc = {
   id?: number;
@@ -55,7 +55,6 @@ export const RoomBookings: CollectionConfig = {
   admin: {
     useAsTitle: 'displayTitle',
     defaultColumns: ['displayTitle', 'kind', 'start', 'end', 'rooms', 'status'],
-    group: ROOMS_GROUP,
     description:
       'Ki és mi foglal termet. Az alkalmak (órák, próbák) foglalását az alkalom kezeli; itt a bérléseket, egyéb foglalásokat és a diákok gyakorlásait látod.',
   },

@@ -11,7 +11,7 @@ import { dateTime, relationship, text, textarea } from '../fields';
 import { type Rel, relId, relIds } from '../rel';
 import { collectionRevalidation } from '../revalidate';
 import { blockingClashes, failer, mayOverridePractice, overridePracticeField } from './placement';
-import { ROOMS_GROUP, staffOnly } from './Rooms';
+import { staffOnly } from './Rooms';
 
 export type SessionDoc = {
   id?: number;
@@ -98,7 +98,6 @@ export const Sessions: CollectionConfig = {
   admin: {
     useAsTitle: 'displayTitle',
     defaultColumns: ['displayTitle', 'kind', 'start', 'locationType', 'status'],
-    group: ROOMS_GROUP,
     description: 'Órák, próbák, vizsgák, előadások. A helyszín: terem (foglalással), külső helyszín vagy még nincs.',
     listSearchableFields: ['displayTitle', 'title'],
   },

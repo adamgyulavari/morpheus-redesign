@@ -89,7 +89,7 @@ async function targetOf(req: PayloadRequest, a: ApplicationDoc): Promise<string>
  */
 export const Applications: CollectionConfig = {
   slug: 'applications',
-  labels: { singular: 'Jelentkezés', plural: 'Jelentkezések' },
+  labels: { singular: 'Jelentkezés', plural: 'Összes jelentkezés' },
   access: {
     // their own for the student area; everything else goes through the server code
     read: ({ req: { user } }) =>
@@ -101,7 +101,6 @@ export const Applications: CollectionConfig = {
   admin: {
     useAsTitle: 'displayTitle',
     defaultColumns: ['name', 'kind', 'target', 'status', 'createdAt', 'paidOffline'],
-    group: 'Jelentkezések',
     listSearchableFields: ['name', 'email', 'target'],
     description:
       'Minden jelentkezés: Nyitott Műhely alkalmak, kezdő kurzusok, szakmai pályázatok. A résztvevők a fiókjuk áttekintőjén (/fiokom) követik.',

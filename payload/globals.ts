@@ -10,10 +10,9 @@ const access = { read: anyone, update: isStaffOrAdmin };
 
 export const SiteSettings: GlobalConfig = {
   slug: 'siteSettings',
-  label: 'Beállítások',
+  label: 'Weboldal beállításai',
   access,
   admin: {
-    group: 'Beállítások',
     description: 'A weboldal egészére érvényes adatok: menü, lábléc, elérhetőségek, közösségi média.',
   },
   hooks: globalRevalidation(),
@@ -311,7 +310,6 @@ export const Ui: GlobalConfig = {
   label: 'Felületi szövegek',
   access,
   admin: {
-    group: 'Beállítások',
     description:
       'Gombok, üres állapotok, űrlapok és felolvasott feliratok szövegei. A {kapcsos zárójeles} részeket a weboldal tölti ki — ezeket hagyd meg.',
   },
@@ -325,7 +323,6 @@ export const RoomBookingSettings: GlobalConfig = {
   label: 'Teremfoglalási szabályok',
   access: { read: isStaffOrAdmin, update: isStaffOrAdmin },
   admin: {
-    group: 'Teremnaptár',
     description:
       'A diákok teremfoglalásának szabályai. A munkatársakra nem vonatkoznak (az ütközés tilalma mindenkire igen).',
   },
@@ -428,7 +425,6 @@ export const ApplicationSettings: GlobalConfig = {
   label: 'Jelentkezési beállítások',
   access: { read: isStaffOrAdmin, update: isStaffOrAdmin },
   admin: {
-    group: 'Jelentkezések',
     description: 'Kik kapnak értesítést az új jelentkezésekről, a Nyitott Műhely határidői és az e-mailek bevezetői.',
   },
   fields: [

@@ -8,11 +8,6 @@ import { contentAccess } from '../access';
 import { date, emphasised, eyebrow, image, importId, link, paragraphs, text, textarea, time } from '../fields';
 import { collectionRevalidation } from '../revalidate';
 
-const PEOPLE = 'Emberek';
-const PROGRAMMES = 'Képzések és programok';
-const SHOWS = 'Előadások';
-const PAGES = 'Oldalak';
-
 export const Venues: CollectionConfig = {
   slug: 'venues',
   labels: { singular: 'Helyszín', plural: 'Helyszínek' },
@@ -20,7 +15,6 @@ export const Venues: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'shortName'],
-    group: SHOWS,
     description: 'Ahol az előadásokat tartjuk.',
   },
   defaultSort: 'name',
@@ -42,7 +36,6 @@ export const Reviews: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'label', 'order'],
-    group: PEOPLE,
     description: 'Hallgatói vélemények a csúszkában.',
   },
   defaultSort: 'order',
@@ -81,7 +74,6 @@ export const Instructors: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'role', 'order'],
-    group: PEOPLE,
     description: 'Az oktatók az Oktatóink oldalon és a nyitóoldalon.',
   },
   defaultSort: 'order',
@@ -114,7 +106,6 @@ export const ContactPeople: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'role', 'phone'],
-    group: PEOPLE,
     description: 'A Kapcsolat oldalon és a bio oldalon megjelenő személyek.',
   },
   defaultSort: 'order',
@@ -135,7 +126,6 @@ export const TeamBuildingProgrammes: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'duration', 'order'],
-    group: PROGRAMMES,
     description: 'A Csapatépítő oldalon felsorolt programok.',
   },
   defaultSort: 'order',
@@ -159,7 +149,6 @@ export const Courses: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'rhythm', 'length'],
-    group: PROGRAMMES,
     description:
       'A kurzusok adatai, induló csoportjai és árai. Az oldalak ezekből építik a kártyákat, időpontokat és árakat.',
   },
@@ -286,7 +275,6 @@ export const Workshops: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'kind', 'startDate', 'endDate'],
-    group: PROGRAMMES,
     description: 'A közelgő workshopok kiemelve jelennek meg; a lezajlottak a „Korábbi workshopok” közé kerülnek.',
   },
   defaultSort: '-startDate',
@@ -334,7 +322,6 @@ export const CtaBands: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'heading'],
-    group: PAGES,
     description:
       'Újrahasznosítható „Felhívás” sávok (felcím, cím, két gomb). Az oldalak hivatkoznak rájuk, így egy helyen szerkeszthetők.',
   },

@@ -32,7 +32,6 @@ export const CourseGroups: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'type', 'startDate', 'endDate', 'studentCount', 'isActive'],
-    group: 'Kurzusok',
     description:
       'Az induló és futó csoportok a hallgatóikkal. A hallgatók a fiókjukban (/fiokom) látják a saját csoportjaikat.',
   },

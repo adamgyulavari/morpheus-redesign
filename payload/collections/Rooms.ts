@@ -3,8 +3,6 @@ import type { CollectionConfig } from 'payload';
 import { isStaffOrAdmin } from '../access';
 import { image, relationship, text, textarea } from '../fields';
 
-export const ROOMS_GROUP = 'Teremnaptár';
-
 /** Staff manage these in the admin; students see them only through the room-calendar server functions. */
 export const staffOnly = {
   read: isStaffOrAdmin,
@@ -21,7 +19,6 @@ export const Rooms: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'capacity', 'active', 'studentBookable', 'order'],
-    group: ROOMS_GROUP,
     description:
       'A termek. Inaktív teremre nem lehet foglalni; diákok csak a „Diákok foglalhatják” termeket foglalhatják.',
   },
@@ -75,7 +72,6 @@ export const StudentLinks: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'audience', 'active', 'order'],
-    group: 'Kurzusok',
     description: 'A hallgatók a fiókjukban látják: mindenki, vagy csak a kiválasztott csoportok hallgatói.',
   },
   defaultSort: 'order',

@@ -33,6 +33,7 @@ import { Users } from './payload/collections/Users';
 import { emailAdapter } from './payload/email';
 import { ApplicationSettings, RoomBookingSettings, SiteSettings, Ui } from './payload/globals';
 import { migrations } from './payload/migrations';
+import { arrangeNav } from './payload/nav';
 import { redirectsConfig, redirectsTranslationsHu } from './payload/redirects';
 import { generateDescription, generateImage, generateTitle, generateURL, seoFields } from './payload/seo';
 
@@ -91,10 +92,10 @@ export default buildConfig({
       providers: ['@/payload/components/AdminTheme#AdminTheme'],
       // back to the website, in the header
       actions: ['@/payload/components/SiteLink#SiteLink'],
-      beforeNavLinks: [
-        '@/payload/components/RoomCalendarNav#RoomCalendarNav',
-        '@/payload/components/ApplicationsNav#ApplicationsNav',
-      ],
+      // Irányítópult, Jelentkezések, Teremnaptár above the groups (payload/nav.ts)
+      beforeNavLinks: ['@/payload/components/NavTop#NavTop'],
+      // the admin home: to-dos, the coming week, quick actions — above the card grid
+      beforeDashboard: ['@/payload/components/AdminHome#AdminHome'],
       views: {
         // the room calendar (lib/rooms, components/rooms)
         teremnaptar: { Component: '@/payload/views/RoomCalendarView#RoomCalendarView', path: '/teremnaptar' },
@@ -112,7 +113,8 @@ export default buildConfig({
     },
   },
   i18n: { supportedLanguages: { hu }, fallbackLanguage: 'hu', translations: { hu: redirectsTranslationsHu } },
-  collections: [
+  // sidebar groups and their order: payload/nav.ts
+  collections: arrangeNav([
     Pages,
     CtaBands,
     LegalPages,
@@ -134,8 +136,8 @@ export default buildConfig({
     Media,
     Users,
     LoginTokens,
-  ],
-  globals: [SiteSettings, Ui, RoomBookingSettings, ApplicationSettings],
+  ]),
+  globals: arrangeNav([SiteSettings, Ui, RoomBookingSettings, ApplicationSettings]),
   editor: lexicalEditor(),
   // SMTP when SMTP_HOST is set; otherwise e-mails (with their links) are written to the console
   email: emailAdapter(),
