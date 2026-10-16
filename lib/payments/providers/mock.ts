@@ -40,7 +40,13 @@ export const mockProvider: PaymentProvider = {
     const p = await payload.findByID({ collection: 'mockPayments', id: docId(id) });
     const refunded = p.amountRefunded ?? 0;
     const status: ProviderStatus =
-      p.status === 'paid' && refunded > 0 ? (refunded >= p.amount ? 'refunded' : 'partially_refunded') : p.status;
+      p.status === 'paid' && refunded > 0
+        ? refunded >= p.amount
+          ? 'refunded'
+          : 'partially_refunded'
+        : p.status === 'pending'
+          ? 'open' // the mock page's buttons not pressed yet
+          : p.status;
     return {
       status,
       amount: p.amount,

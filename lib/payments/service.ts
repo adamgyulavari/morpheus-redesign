@@ -241,8 +241,8 @@ export async function startPayment(
         provider: provider.name,
         providerPaymentId: p.providerPaymentId,
         amount: order.amountDue,
-        status: 'pending',
-        log: [{ at: new Date().toISOString(), source: 'create', status: 'pending' }],
+        status: 'open',
+        log: [{ at: new Date().toISOString(), source: 'create', status: 'open' }],
       },
     });
     return { ok: true, token: order.token, checkoutUrl: p.checkoutUrl };
@@ -561,6 +561,8 @@ export type OrderView = {
   lastFailed: boolean;
   /** Unpaid and the hold ran out: paying takes the place again if one is free. */
   lapsed: boolean;
+  /** The provider is processing a payment (not just waiting for the person): worth waiting for. */
+  processing: boolean;
   sessionId: number | null;
 };
 
@@ -582,7 +584,7 @@ export async function orderStatus(payload: Payload, token: string, now = new Dat
       })
     ).docs[0];
   let payment = await latest(order);
-  if (order.status === 'pending' && payment?.status === 'pending') {
+  if (order.status === 'pending' && (payment?.status === 'open' || payment?.status === 'pending')) {
     await applyPaymentUpdate(payload, payment.providerPaymentId, 'return', now).catch((err) =>
       payload.logger.error({ err, msg: 'payment status refresh failed' }),
     );
@@ -600,6 +602,7 @@ export async function orderStatus(payload: Payload, token: string, now = new Dat
     expiresAt: order.expiresAt ?? null,
     lastFailed: Boolean(payment && ['failed', 'expired', 'canceled'].includes(payment.status)),
     lapsed: lapsed(order, now),
+    processing: payment?.status === 'pending',
     sessionId: relId(application?.session),
   };
 }

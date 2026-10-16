@@ -949,7 +949,7 @@ export interface Payment {
   provider: string;
   providerPaymentId: string;
   amount: number;
-  status: 'pending' | 'paid' | 'failed' | 'expired' | 'canceled' | 'refunded' | 'partially_refunded';
+  status: 'open' | 'pending' | 'paid' | 'failed' | 'expired' | 'canceled' | 'refunded' | 'partially_refunded';
   paidAt?: string | null;
   refunds?:
     | {

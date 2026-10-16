@@ -30,7 +30,7 @@ export default function OrderResult({
   const [waitedOut, setWaitedOut] = useState(false);
   const [error, setError] = useState('');
   const [pending, start] = useTransition();
-  const waiting = returned && order.status === 'pending' && !order.lastFailed && !order.lapsed;
+  const waiting = returned && order.status === 'pending' && order.processing;
   const unpaid = order.status === 'pending' && !(waiting && !waitedOut);
 
   useEffect(() => {
@@ -77,7 +77,7 @@ export default function OrderResult({
           <>
             <h2 className="font-display text-[34px] leading-tight">Sikeres fizetés — várunk!</h2>
             <p className="text-[17px] leading-relaxed">
-              {order.amountDue > 0 ? `Megkaptuk a ${formatHuf(order.amountDue)} befizetést. ` : ''}
+              {order.amountDue > 0 ? `Megkaptuk a befizetésed (${formatHuf(order.amountDue)}). ` : ''}
               {order.creditUsed > 0 ? `Kreditből: ${formatHuf(order.creditUsed)}. ` : ''}A visszaigazolást e-mailben
               küldjük.
             </p>

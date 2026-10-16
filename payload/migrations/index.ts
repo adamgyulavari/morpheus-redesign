@@ -21,6 +21,7 @@ import * as migration_20261014_161500_held_in_unique_indexes from './20261014_16
 import * as migration_20261014_162000_aszf_page from './20261014_162000_aszf_page';
 import * as migration_20261014_185611_online_payments from './20261014_185611_online_payments';
 import * as migration_20261014_214947_drop_expire_orders from './20261014_214947_drop_expire_orders';
+import * as migration_20261016_194816_payment_open_status from './20261016_194816_payment_open_status';
 
 export const migrations = [
   {
@@ -136,6 +137,11 @@ export const migrations = [
   {
     up: migration_20261014_214947_drop_expire_orders.up,
     down: migration_20261014_214947_drop_expire_orders.down,
-    name: '20261014_214947_drop_expire_orders'
+    name: '20261014_214947_drop_expire_orders',
+  },
+  {
+    up: migration_20261016_194816_payment_open_status.up,
+    down: migration_20261016_194816_payment_open_status.down,
+    name: '20261016_194816_payment_open_status'
   },
 ];

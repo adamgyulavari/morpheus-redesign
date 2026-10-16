@@ -14,7 +14,7 @@ describe('Mollie amounts', () => {
 
 describe('Mollie status mapping', () => {
   it('maps every Mollie status', () => {
-    expect(mapMollieStatus('open', 5000, 0)).toBe('pending');
+    expect(mapMollieStatus('open', 5000, 0)).toBe('open');
     expect(mapMollieStatus('pending', 5000, 0)).toBe('pending');
     expect(mapMollieStatus('authorized', 5000, 0)).toBe('pending');
     expect(mapMollieStatus('paid', 5000, 0)).toBe('paid');

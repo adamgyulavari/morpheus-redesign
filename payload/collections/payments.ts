@@ -30,7 +30,8 @@ export const ORDER_STATUSES = {
 export type OrderStatus = keyof typeof ORDER_STATUSES;
 
 export const PAYMENT_STATUSES = {
-  pending: 'Folyamatban',
+  open: 'Fizetésre vár',
+  pending: 'Feldolgozás alatt',
   paid: 'Fizetve',
   failed: 'Sikertelen',
   expired: 'Lejárt',

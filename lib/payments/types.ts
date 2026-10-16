@@ -3,8 +3,19 @@
  * field name, status or id format leaks past this file. Amounts are whole forints (HUF) everywhere.
  */
 
-/** A payment's state as our code understands it (each provider maps its own statuses to these). */
-export type ProviderStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'canceled' | 'refunded' | 'partially_refunded';
+/**
+ * A payment's state as our code understands it (each provider maps its own statuses to these):
+ * `open` — the person hasn't paid (yet); `pending` — a payment is being processed.
+ */
+export type ProviderStatus =
+  | 'open'
+  | 'pending'
+  | 'paid'
+  | 'failed'
+  | 'expired'
+  | 'canceled'
+  | 'refunded'
+  | 'partially_refunded';
 
 export type ProviderPayment = {
   status: ProviderStatus;
@@ -43,13 +54,14 @@ export interface PaymentProvider {
 
 /** Statuses only move forward: a late or repeated callback can't take a payment back. */
 const RANK: Record<ProviderStatus, number> = {
-  pending: 0,
-  failed: 1,
-  expired: 1,
-  canceled: 1,
-  paid: 2,
-  partially_refunded: 3,
-  refunded: 4,
+  open: 0,
+  pending: 1,
+  failed: 2,
+  expired: 2,
+  canceled: 2,
+  paid: 3,
+  partially_refunded: 4,
+  refunded: 5,
 };
 
 export const movesForward = (from: ProviderStatus, to: ProviderStatus) => RANK[to] > RANK[from];

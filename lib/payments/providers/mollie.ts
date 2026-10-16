@@ -4,7 +4,7 @@
  */
 import { createHash } from 'node:crypto';
 
-import createMollieClient, { Locale, type Payment, PaymentStatus } from '@mollie/api-client';
+import { createMollieClient, Locale, type Payment, PaymentStatus } from '@mollie/api-client';
 
 import type { PaymentProvider, ProviderStatus } from '../types';
 
@@ -27,8 +27,9 @@ export function fromMollieAmount(a: { currency: string; value: string } | null |
 }
 
 /**
- * Mollie's payment status (plus what was refunded) → ours. `open`/`pending`/`authorized` are all
- * "not decided yet"; a paid payment with refunds is (partially) refunded.
+ * Mollie's payment status (plus what was refunded) → ours. `open`: not paid yet (also after a
+ * failed card, which Mollie lets the person retry, or leaving its page); `pending`/`authorized`:
+ * being processed; a paid payment with refunds is (partially) refunded.
  */
 export function mapMollieStatus(status: string, amount: number, amountRefunded: number): ProviderStatus {
   switch (status) {
@@ -41,8 +42,10 @@ export function mapMollieStatus(status: string, amount: number, amountRefunded: 
       return 'expired';
     case PaymentStatus.canceled:
       return 'canceled';
+    case PaymentStatus.open:
+      return 'open';
     default:
-      // open, pending, authorized
+      // pending, authorized
       return 'pending';
   }
 }
@@ -66,6 +69,8 @@ const describe = (p: Payment) => {
   };
 };
 
+const isLocal = (url: string) => ['localhost', '127.0.0.1', '[::1]'].includes(new URL(url).hostname);
+
 export const mollieProvider: PaymentProvider = {
   name: 'mollie',
   async createPayment(i) {
@@ -73,7 +78,8 @@ export const mollieProvider: PaymentProvider = {
       amount: toMollieAmount(i.amount),
       description: i.description,
       redirectUrl: i.returnUrl,
-      webhookUrl: i.webhookUrl,
+      // Mollie refuses a webhook it can't reach; locally the order page asks Mollie instead
+      ...(isLocal(i.webhookUrl) ? {} : { webhookUrl: i.webhookUrl }),
       metadata: { orderId: i.orderId, email: i.customerEmail },
       locale: Locale.hu_HU,
     });
