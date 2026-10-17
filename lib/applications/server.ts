@@ -152,16 +152,12 @@ export async function workshopInfo(payload: Payload, s: Session, rules: Applicat
 }
 
 export function courseInfo(g: CourseGroup): TargetInfo {
-  // kezdő: from its payment options (its single price is hidden there); otherwise its price (label)
-  const options = signupKindOf(g) === 'beginner' ? (g.signup?.options ?? []) : [];
-  const lowest = options.length ? Math.min(...options.map((o) => o.amount)) : null;
   return {
     title: g.title,
     when: dateRange(g.startDate.slice(0, 10), g.endDate.slice(0, 10)),
-    price:
-      lowest != null
-        ? `${huf(lowest)}${options.length > 1 ? '-tól' : ''}`
-        : g.signup?.priceLabel || huf(g.signup?.price),
+    // kezdő: no price here — it depends on the chosen payment option (the e-mails show what was
+    // paid); otherwise the group's price (label)
+    price: signupKindOf(g) === 'beginner' ? undefined : g.signup?.priceLabel || huf(g.signup?.price),
   };
 }
 

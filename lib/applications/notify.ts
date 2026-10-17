@@ -250,7 +250,14 @@ export async function sendWorkshopCancelled(
 }
 
 /** Admitted into the course ("Felvétel a kurzusba"), with a login link. */
-export async function sendAccepted(payload: Payload, s: ApplicationSettings, a: Applicant, t: TargetInfo) {
+export async function sendAccepted(
+  payload: Payload,
+  s: ApplicationSettings,
+  a: Applicant,
+  t: TargetInfo,
+  /** More rows, e.g. what was paid at the checkout. */
+  extra: { label: string; value: string }[] = [],
+) {
   let button = { label: 'Belépés a fiókomba', href: siteUrl('/fiokom') };
   try {
     const { url } = await createLoginLink(payload, a.userId, { ttlMs: APPLICATION_LINK_TTL_MS });
@@ -273,7 +280,7 @@ export async function sendAccepted(payload: Payload, s: ApplicationSettings, a: 
           'Örömmel értesítünk, hogy felvettünk a kurzusra. A fiókodban megtalálod a csoport időpontjait és tudnivalóit.',
         ),
       ],
-      details: details(t),
+      details: details(t, extra),
       button,
       footnote: LINK_NOTE,
     }),

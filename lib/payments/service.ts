@@ -34,6 +34,7 @@ import {
   workshopInfo,
 } from '@/lib/applications/server';
 import { applicationSettings } from '@/lib/applications/settings';
+import { formatHuf } from '@/lib/format';
 import { issueInvoice, stornoInvoice } from '@/lib/invoicing/service';
 import { whenText } from '@/lib/rooms/format';
 import { icsFile } from '@/lib/rooms/ics';
@@ -716,7 +717,13 @@ export async function afterPaid(payload: Payload, orderId: number) {
         await joinGroup(req, userId, group);
         return group;
       });
-      await sendAccepted(payload, settings, applicant, courseInfo(g));
+      const parts = order.plan?.parts ?? 1;
+      await sendAccepted(payload, settings, applicant, courseInfo(g), [
+        {
+          label: 'Fizetés',
+          value: `${order.plan?.label ? `${order.plan.label} — ` : ''}${formatHuf(order.amountDue)} befizetve${parts > 1 ? ` (1. részlet a ${parts}-ből)` : ''}`,
+        },
+      ]);
     } else {
       await sendOrderPaid(payload, applicant, info, money, {
         loggedIn: false,
