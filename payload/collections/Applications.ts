@@ -1,6 +1,5 @@
-import { sql } from '@payloadcms/db-postgres';
 import type { CollectionConfig, PayloadRequest, Where } from 'payload';
-
+import { placesLeftFor } from '@/lib/applications/capacity';
 import {
   APPLICATION_KINDS,
   type ApplicationKind,
@@ -8,12 +7,11 @@ import {
   REVIEW_STATUSES,
   SIGNUP_STATUSES,
 } from '@/lib/applications/labels';
-import { ACTIVE_STATUSES, COUNTED_STATUSES, isActive, isCounted, placesLeft } from '@/lib/applications/rules';
+import { ACTIVE_STATUSES, isActive, PLACE_STATUSES, takesPlace } from '@/lib/applications/rules';
 import { whenText } from '@/lib/rooms/format';
 import { options } from '@/lib/rooms/labels';
 
 import { isStaffOrAdmin, userIsStaffOrAdmin } from '../access';
-import { dbOf } from '../db';
 import { relationship, text, textarea } from '../fields';
 import { type Rel, relId } from '../rel';
 import { collectionRevalidation } from '../revalidate';
@@ -27,6 +25,7 @@ type ApplicationDoc = {
   session?: Rel;
   courseGroup?: Rel;
   course?: Rel;
+  holdUntil?: string | null;
   name?: string;
 };
 
@@ -38,38 +37,12 @@ const sameTargetOf = (a: ApplicationDoc, b: ApplicationDoc) =>
   relId(a.course) === relId(b.course);
 
 const SIGNUP = Object.keys(SIGNUP_STATUSES) as ApplicationStatus[];
+/** Statuses that end an application (`cancelledAt` is set). */
+const CLOSED: ApplicationStatus[] = ['cancelled', 'withdrawn', 'moved'];
 const REVIEW = Object.keys(REVIEW_STATUSES) as ApplicationStatus[];
 export const statusesOf = (kind: ApplicationKind) => (kind === 'professional' ? REVIEW : SIGNUP);
 export const initialStatus = (kind: ApplicationKind): ApplicationStatus =>
   kind === 'professional' ? 'new' : 'registered';
-
-const inList = (list: readonly string[]) =>
-  sql.join(
-    list.map((s) => sql`${s}`),
-    sql`, `,
-  );
-
-/**
- * Takes a place, or refuses: locks the session or course group row (SELECT … FOR UPDATE) in the
- * save's transaction, so two people can't take the last place at once, then counts.
- */
-async function checkCapacity(req: PayloadRequest, a: ApplicationDoc, ownId: number | undefined) {
-  const db = await dbOf(req.payload, req);
-  const sessionId = a.kind === 'workshop' ? relId(a.session) : null;
-  const groupId = a.kind === 'beginner' ? relId(a.courseGroup) : null;
-  if (!sessionId && !groupId) return;
-  const { rows } = sessionId
-    ? await db.execute(sql`SELECT workshop_max_participants AS max FROM sessions WHERE id = ${sessionId} FOR UPDATE`)
-    : await db.execute(sql`SELECT signup_capacity AS max FROM course_groups WHERE id = ${groupId} FOR UPDATE`);
-  const max = rows[0]?.max == null ? null : Number(rows[0].max);
-  if (max == null) return;
-  const target = sessionId ? sql`session_id = ${sessionId}` : sql`course_group_id = ${groupId}`;
-  const { rows: count } = await db.execute(sql`
-    SELECT count(*)::int AS n FROM applications
-    WHERE ${target} AND status IN (${inList(COUNTED_STATUSES)}) AND id <> ${ownId ?? 0}`);
-  if (placesLeft(max, Number(count[0]?.n ?? 0)) === 0)
-    fail(sessionId ? 'session' : 'courseGroup', sessionId ? 'Ez az alkalom megtelt.' : 'Ez a kurzus megtelt.', req);
-}
 
 /** "Nyitott Műhely, okt. 18., szo 10:00–13:00" or the group's name. */
 async function targetOf(req: PayloadRequest, a: ApplicationDoc): Promise<string> {
@@ -183,13 +156,23 @@ export const Applications: CollectionConfig = {
               req,
             );
         }
-        // a place is taken (again): count under a lock
-        const counted = isCounted(status);
-        const wasCounted = operation === 'update' && isCounted(before.status as ApplicationStatus);
-        if (counted && (!wasCounted || !sameTargetOf(before, a))) await checkCapacity(req, { ...a, status }, before.id);
+        // a place is taken (again — also a hold that ran out, then paid): count under a lock
+        const takes = (PLACE_STATUSES as readonly string[]).includes(status);
+        const took =
+          operation === 'update' &&
+          takesPlace(
+            before.status as ApplicationStatus,
+            before.holdUntil ? new Date(before.holdUntil) : null,
+            new Date(),
+          );
+        if (takes && (!took || !sameTargetOf(before, a)) && (await placesLeftFor(req, a, before.id)) === 0)
+          fail(
+            a.kind === 'workshop' ? 'session' : 'courseGroup',
+            a.kind === 'workshop' ? 'Ez az alkalom megtelt.' : 'Ez a kurzus megtelt.',
+            req,
+          );
 
-        if ((status === 'cancelled' || status === 'withdrawn' || status === 'moved') && before.status !== status)
-          data.cancelledAt ??= new Date().toISOString();
+        if (CLOSED.includes(status) && before.status !== status) data.cancelledAt ??= new Date().toISOString();
         const target = await targetOf(req, a);
         data.target = target;
         data.displayTitle = `${a.name ?? ''} — ${target}`;
@@ -218,7 +201,7 @@ export const Applications: CollectionConfig = {
           options: options({ ...SIGNUP_STATUSES, ...REVIEW_STATUSES }),
           admin: {
             description:
-              'Nyitott Műhely és kezdő: Jelentkezett / Lemondva / Áthelyezve. Szakmai: Új / Interjú / Felvéve / Elutasítva / Visszavonta.',
+              'Nyitott Műhely és kezdő: Fizetésre vár / Jelentkezett (fizetett) / Lemondva / Áthelyezve. Szakmai: Új / Interjú / Felvéve / Elutasítva / Visszavonta.',
           },
         },
       ],
@@ -271,11 +254,28 @@ export const Applications: CollectionConfig = {
       ],
     },
     {
+      ...relationship('order', 'Rendelés', 'orders'),
+      admin: { readOnly: true, position: 'sidebar', condition: (_, s) => Boolean(s?.order) },
+    },
+    {
+      name: 'holdUntil',
+      label: 'Fizetésre vár eddig',
+      type: 'date',
+      index: true,
+      admin: {
+        readOnly: true,
+        position: 'sidebar',
+        condition: (_, s) => s?.status === 'held',
+        date: { pickerAppearance: 'dayAndTime', displayFormat: 'yyyy. MM. dd. HH:mm' },
+        description: 'Addig tartjuk a helyet, amíg a fizetés lezajlik.',
+      },
+    },
+    {
       name: 'paidOffline',
       label: 'Fizetve',
       type: 'checkbox',
       defaultValue: false,
-      admin: { position: 'sidebar', description: 'Átutalás / készpénz (az online fizetésig).' },
+      admin: { position: 'sidebar', description: 'Átutalás / készpénz — ha nem online fizetett.' },
     },
     {
       ...text('paymentNote', 'Fizetés megjegyzés', { description: 'Pl. „átutalta 10.12.”' }),

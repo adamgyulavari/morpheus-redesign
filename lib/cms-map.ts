@@ -248,6 +248,7 @@ export const courseStart = (g: P.CourseGroup, s: CourseSignupState): CourseStart
 
 export const openWorkshopSession = (w: OpenWorkshop): OpenWorkshopSession => ({
   id: w.id,
+  code: w.code,
   title: w.title,
   description: opt(w.description),
   date: dayOf(new Date(w.start)),

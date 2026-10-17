@@ -16,6 +16,15 @@ import * as migration_20261014_014745_workshop_defaults from './20261014_014745_
 import * as migration_20261014_051509_signup_mode from './20261014_051509_signup_mode';
 import * as migration_20261014_051547_remove_signup_enabled from './20261014_051547_remove_signup_enabled';
 import * as migration_20261014_151220_applications_course from './20261014_151220_applications_course';
+import * as migration_20261014_161157_payments from './20261014_161157_payments';
+import * as migration_20261014_161500_held_in_unique_indexes from './20261014_161500_held_in_unique_indexes';
+import * as migration_20261014_162000_aszf_page from './20261014_162000_aszf_page';
+import * as migration_20261014_185611_online_payments from './20261014_185611_online_payments';
+import * as migration_20261014_214947_drop_expire_orders from './20261014_214947_drop_expire_orders';
+import * as migration_20261016_194816_payment_open_status from './20261016_194816_payment_open_status';
+import * as migration_20261017_003904_invoices from './20261017_003904_invoices';
+import * as migration_20261017_013547_drop_credit from './20261017_013547_drop_credit';
+import * as migration_20261017_015357_session_code from './20261017_015357_session_code';
 
 export const migrations = [
   {
@@ -106,6 +115,51 @@ export const migrations = [
   {
     up: migration_20261014_151220_applications_course.up,
     down: migration_20261014_151220_applications_course.down,
-    name: '20261014_151220_applications_course'
+    name: '20261014_151220_applications_course',
+  },
+  {
+    up: migration_20261014_161157_payments.up,
+    down: migration_20261014_161157_payments.down,
+    name: '20261014_161157_payments',
+  },
+  {
+    up: migration_20261014_161500_held_in_unique_indexes.up,
+    down: migration_20261014_161500_held_in_unique_indexes.down,
+    name: '20261014_161500_held_in_unique_indexes',
+  },
+  {
+    up: migration_20261014_162000_aszf_page.up,
+    down: migration_20261014_162000_aszf_page.down,
+    name: '20261014_162000_aszf_page',
+  },
+  {
+    up: migration_20261014_185611_online_payments.up,
+    down: migration_20261014_185611_online_payments.down,
+    name: '20261014_185611_online_payments',
+  },
+  {
+    up: migration_20261014_214947_drop_expire_orders.up,
+    down: migration_20261014_214947_drop_expire_orders.down,
+    name: '20261014_214947_drop_expire_orders',
+  },
+  {
+    up: migration_20261016_194816_payment_open_status.up,
+    down: migration_20261016_194816_payment_open_status.down,
+    name: '20261016_194816_payment_open_status',
+  },
+  {
+    up: migration_20261017_003904_invoices.up,
+    down: migration_20261017_003904_invoices.down,
+    name: '20261017_003904_invoices',
+  },
+  {
+    up: migration_20261017_013547_drop_credit.up,
+    down: migration_20261017_013547_drop_credit.down,
+    name: '20261017_013547_drop_credit',
+  },
+  {
+    up: migration_20261017_015357_session_code.up,
+    down: migration_20261017_015357_session_code.down,
+    name: '20261017_015357_session_code'
   },
 ];

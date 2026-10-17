@@ -157,6 +157,8 @@ export type Course = {
 /** A Nyitott Műhely date (a `workshop` session) as the public page shows it. */
 export type OpenWorkshopSession = {
   id: number;
+  /** Public code: the checkout link (/fizetes?alkalom=…). */
+  code: string;
   title: string;
   description?: string;
   /** Budapest day "YYYY-MM-DD" and clock times. */

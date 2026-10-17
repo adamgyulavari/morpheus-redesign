@@ -10,6 +10,7 @@ import { createLocalReq, type Payload, type PayloadRequest, type TypedUser, type
 import { cache } from 'react';
 
 import { dateRange } from '@/lib/dates';
+import { billingSettings } from '@/lib/payments/settings';
 import { momentText, whenText } from '@/lib/rooms/format';
 import { placeOf } from '@/lib/rooms/occupancy';
 import { errorMessage } from '@/lib/rooms/server';
@@ -53,6 +54,7 @@ import {
   workshopState,
 } from './rules';
 import { type ApplicationSettings, applicationSettings } from './settings';
+import { IS_PAID, TAKES_PLACE } from './sql';
 
 const all = { limit: 0, pagination: false } as const;
 type Result<T = object> = ({ ok: true } & T) | { ok: false; reason: string };
@@ -82,23 +84,29 @@ const inList = (list: readonly (string | number)[]) =>
     sql`, `,
   );
 
-/** Counted sign-ups (COUNTED_STATUSES) per session or course group. */
+/** Per date or course: places taken (paid + held within the hold) and paid sign-ups. */
+export type Taken = { taken: number; paid: number };
+export const NOBODY: Taken = { taken: 0, paid: 0 };
+
+/** Places taken and paid sign-ups per session or course group (lib/applications/sql.ts). */
 export async function takenBy(
   payload: Payload,
   column: 'session_id' | 'course_group_id',
   ids: number[],
   req?: PayloadRequest,
-): Promise<Map<number, number>> {
+): Promise<Map<number, Taken>> {
   if (!ids.length) return new Map();
   const db = await dbOf(payload, req);
   const { rows } = await db.execute(sql`
-    SELECT ${sql.raw(column)} AS id, count(*)::int AS n FROM applications
-    WHERE ${sql.raw(column)} IN (${inList(ids)}) AND status IN (${inList(COUNTED_STATUSES)})
+    SELECT ${sql.raw(column)} AS id,
+      count(*) FILTER (WHERE ${TAKES_PLACE})::int AS taken,
+      count(*) FILTER (WHERE ${IS_PAID})::int AS paid
+    FROM applications WHERE ${sql.raw(column)} IN (${inList(ids)})
     GROUP BY ${sql.raw(column)}`);
-  return new Map(rows.map((r) => [Number(r.id), Number(r.n)]));
+  return new Map(rows.map((r) => [Number(r.id), { taken: Number(r.taken), paid: Number(r.paid) }]));
 }
 
-export function workshopFacts(s: Session, taken: number): WorkshopFacts {
+export function workshopFacts(s: Session, { taken, paid }: Taken): WorkshopFacts {
   return {
     start: new Date(s.start),
     cancelled: s.status === 'cancelled',
@@ -107,6 +115,7 @@ export function workshopFacts(s: Session, taken: number): WorkshopFacts {
     minParticipants: s.workshop?.minParticipants ?? 5,
     maxParticipants: s.workshop?.maxParticipants ?? null,
     taken,
+    paid,
   };
 }
 
@@ -150,10 +159,12 @@ export function courseInfo(g: CourseGroup): TargetInfo {
   };
 }
 
-const countText = (taken: number, s: Session) => {
+/** For staff: "6 fő fizetett (+2 fizetésre vár) — minimum 5, maximum 16". */
+export const countText = ({ taken, paid }: Taken, s: Session) => {
   const min = s.workshop?.minParticipants ?? 5;
   const max = s.workshop?.maxParticipants;
-  return `${taken} fő (minimum ${min}${max ? `, maximum ${max}` : ''})`;
+  const held = taken - paid;
+  return `${paid} fő fizetett${held > 0 ? ` (+${held} fizetésre vár)` : ''} — minimum ${min}${max ? `, maximum ${max}` : ''}`;
 };
 
 // ── the applicant ───────────────────────────────────────────────────────────
@@ -164,7 +175,7 @@ export type ApplicantInput = { lastName: string; firstName: string; email: strin
  * The logged-in user, or the account with this address — created (student, unverified) when there
  * is none. The answer is the same either way, so the form never tells whether an address had an account.
  */
-async function applicantFor(
+export async function applicantFor(
   payload: Payload,
   viewer: TypedUser | null,
   input: ApplicantInput,
@@ -234,7 +245,10 @@ export type SignUpInput = ApplicantInput & {
   message?: string;
 };
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// the same rule as Payload's own e-mail field (ASCII local part), so an address passing here is
+// never refused when the account is created
+const EMAIL =
+  /^(?!.*\.\.)[\w!#$%&'*+/=?^`{|}~-](?:[\w!#$%&'*+/=?^`{|}~.-]*[\w!#$%&'*+/=?^`{|}~-])?@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,}$/i;
 
 /** Checks the form's fields (the rest is checked against the date or course). */
 export function validateInput(input: SignUpInput, viewer: TypedUser | null): string | null {
@@ -262,11 +276,14 @@ export async function signUp(
 
   let target: TargetInfo;
   if (input.kind === 'workshop') {
+    // with online payment on, workshop sign-ups go through the checkout (lib/payments)
+    if ((await billingSettings(payload)).online)
+      return { ok: false, reason: 'Erre az alkalomra a fizetéssel lehet jelentkezni.' };
     const s = input.sessionId
       ? await payload.findByID({ collection: 'sessions', id: input.sessionId, depth: 0, disableErrors: true })
       : null;
     if (s?.kind !== 'workshop') return { ok: false, reason: 'Nincs ilyen alkalom.' };
-    const taken = (await takenBy(payload, 'session_id', [s.id])).get(s.id) ?? 0;
+    const taken = (await takenBy(payload, 'session_id', [s.id])).get(s.id) ?? NOBODY;
     const verdict = canSignUpWorkshop(workshopFacts(s, taken), now, settings);
     if (!verdict.ok) return verdict;
     target = await workshopInfo(payload, s, settings);
@@ -279,7 +296,7 @@ export async function signUp(
     });
     if (!g) return { ok: false, reason: 'Nincs ilyen kurzus.' };
     if (signupKindOf(g) !== input.kind) return { ok: false, reason: 'Erre a kurzusra így nem lehet jelentkezni.' };
-    const taken = (await takenBy(payload, 'course_group_id', [g.id])).get(g.id) ?? 0;
+    const taken = (await takenBy(payload, 'course_group_id', [g.id])).get(g.id)?.taken ?? 0;
     const verdict = canSignUpCourse(courseFacts(g, taken), now);
     if (!verdict.ok) return verdict;
     target = courseInfo(g);
@@ -328,7 +345,7 @@ async function ownApplication(payload: Payload, user: TypedUser, id: number) {
   const a = await payload.findByID({ collection: 'applications', id, depth: 0, disableErrors: true });
   return a && relId(a.user) === user.id ? a : null;
 }
-const applicantOf = (
+export const applicantOf = (
   a: { user: unknown; name: string; email: string; phone?: string | null },
   firstName?: string | null,
 ): Applicant => ({
@@ -366,7 +383,7 @@ export async function allowedActions(
     ? await payload.findByID({ collection: 'sessions', id: relId(a.session) ?? 0, depth: 0, disableErrors: true })
     : null;
   if (!s) return { cancel: no, move: false };
-  const facts = workshopFacts(s, 0);
+  const facts = workshopFacts(s, NOBODY);
   const dateCancelled = facts.cancelled || facts.workshopStatus === 'cancelled';
   const cancel = a.status === 'registered' && !dateCancelled ? canCancel(facts.start, now, rules) : no;
   const move =
@@ -407,13 +424,13 @@ async function targetAndCount(
 ): Promise<{ info: TargetInfo; count: string }> {
   if (a.kind === 'workshop') {
     const s = await payload.findByID({ collection: 'sessions', id: relId(a.session) ?? 0, depth: 0 });
-    const taken = (await takenBy(payload, 'session_id', [s.id])).get(s.id) ?? 0;
+    const taken = (await takenBy(payload, 'session_id', [s.id])).get(s.id) ?? NOBODY;
     return { info: await workshopInfo(payload, s, settings), count: countText(taken, s) };
   }
   const groupId = relId(a.courseGroup);
   if (!groupId) return { info: { title: APPLICATION_KINDS.professional }, count: '' };
   const g = await payload.findByID({ collection: 'courseGroups', id: groupId, depth: 0 });
-  const taken = (await takenBy(payload, 'course_group_id', [g.id])).get(g.id) ?? 0;
+  const taken = (await takenBy(payload, 'course_group_id', [g.id])).get(g.id)?.taken ?? 0;
   return { info: courseInfo(g), count: `${taken} fő${g.signup?.capacity ? ` (férőhely: ${g.signup.capacity})` : ''}` };
 }
 
@@ -436,8 +453,8 @@ export async function moveOwn(
   if (!from || to?.kind !== 'workshop') return { ok: false, reason: 'Nincs ilyen alkalom.' };
   const taken = await takenBy(payload, 'session_id', [from.id, to.id]);
   const verdict = canMove(
-    { status, sessionId: from.id, workshop: workshopFacts(from, taken.get(from.id) ?? 0) },
-    { sessionId: to.id, workshop: workshopFacts(to, taken.get(to.id) ?? 0) },
+    { status, sessionId: from.id, workshop: workshopFacts(from, taken.get(from.id) ?? NOBODY) },
+    { sessionId: to.id, workshop: workshopFacts(to, taken.get(to.id) ?? NOBODY) },
     now,
     settings,
   );
@@ -456,6 +473,8 @@ export async function moveOwn(
           email: a.email,
           phone: a.phone,
           paidOffline: a.paidOffline,
+          // paid online: the payment goes with it
+          order: relId(a.order),
         },
         req,
       });
@@ -472,7 +491,7 @@ export async function moveOwn(
   const who = applicantOf(a, user.firstName);
   await sendMoved(payload, who, fromInfo, toInfo);
   if (a.status === 'registered') {
-    const left = (await takenBy(payload, 'session_id', [from.id])).get(from.id) ?? 0;
+    const left = (await takenBy(payload, 'session_id', [from.id])).get(from.id) ?? NOBODY;
     await sendStaffCancellation(payload, settings, who, fromInfo, countText(left, from), toInfo.when);
   }
   return { ok: true, applicationId };
@@ -482,6 +501,8 @@ export async function moveOwn(
 
 export type OpenWorkshop = {
   id: number;
+  /** The public code (checkout link). */
+  code: string;
   title: string;
   description?: string | null;
   start: string;
@@ -517,13 +538,14 @@ export async function upcomingWorkshops(payload: Payload, now = new Date(), limi
   return Promise.all(
     docs.map(async (s) => ({
       id: s.id,
+      code: s.code ?? '',
       title: s.title || 'Nyitott Műhely',
       description: s.workshop?.description,
       start: s.start,
       end: s.end,
       place: await placeOf(payload, s),
       price: huf(s.workshop?.price),
-      state: workshopState(workshopFacts(s, taken.get(s.id) ?? 0), now, settings),
+      state: workshopState(workshopFacts(s, taken.get(s.id) ?? NOBODY), now, settings),
     })),
   );
 }
@@ -566,7 +588,7 @@ export async function runWorkshopCutoffs(payload: Payload, now = new Date()) {
         const db = await dbOf(payload, req);
         await db.execute(sql`SELECT id FROM sessions WHERE id = ${candidate.id} FOR UPDATE`);
         const s = await payload.findByID({ collection: 'sessions', id: candidate.id, depth: 0, req });
-        const taken = (await takenBy(payload, 'session_id', [s.id], req)).get(s.id) ?? 0;
+        const taken = (await takenBy(payload, 'session_id', [s.id], req)).get(s.id) ?? NOBODY;
         if (!isCutoffDue(workshopFacts(s, taken), now, settings)) return null;
         const { docs: participants } = await payload.find({
           collection: 'applications',
@@ -575,7 +597,7 @@ export async function runWorkshopCutoffs(payload: Payload, now = new Date()) {
           req,
           ...all,
         });
-        const outcome = cutoffOutcome(taken, s.workshop?.minParticipants ?? 5);
+        const outcome = cutoffOutcome(taken.paid, s.workshop?.minParticipants ?? 5);
         await payload.update({
           collection: 'sessions',
           id: s.id,

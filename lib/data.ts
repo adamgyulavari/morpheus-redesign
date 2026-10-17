@@ -23,6 +23,7 @@ import { courseFacts, SIGNUP_ON, takenBy, upcomingWorkshops } from './applicatio
 
 import * as map from './cms-map';
 import { todayInBudapest } from './dates';
+import { billingSettings } from './payments/settings';
 import type {
   ContactPerson,
   Course,
@@ -236,7 +237,7 @@ const findCourses = cache(async (): Promise<Course[]> => {
     courseId: g.course == null ? null : String(typeof g.course === 'object' ? g.course.id : g.course),
     start: map.courseStart(
       g as CourseGroup,
-      courseSignupState(courseFacts(g as CourseGroup, taken.get(g.id) ?? 0), now),
+      courseSignupState(courseFacts(g as CourseGroup, taken.get(g.id)?.taken ?? 0), now),
     ),
   }));
   return courses.map((c) =>
@@ -338,3 +339,6 @@ export async function getRedirect(path: string): Promise<{ href: string; permane
         : ref && 'path' in ref && ref.path;
   return href ? { href, permanent: r.type !== '302' } : undefined;
 }
+
+/** Whether workshop sign-ups go through the online checkout ("Fizetési beállítások"). */
+export const getOnlinePayments = cache(async () => (await billingSettings(await payload())).online);

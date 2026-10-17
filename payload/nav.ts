@@ -6,7 +6,7 @@
  */
 import type { CollectionConfig, GlobalConfig } from 'payload';
 
-export const NAV_GROUPS = ['Napi munka', 'Weboldal', 'Emberek', 'Beállítások'] as const;
+export const NAV_GROUPS = ['Napi munka', 'Weboldal', 'Emberek', 'Pénzügyek', 'Beállítások'] as const;
 type NavGroup = (typeof NAV_GROUPS)[number];
 
 const GROUP_OF: Record<string, NavGroup> = {
@@ -25,6 +25,10 @@ const GROUP_OF: Record<string, NavGroup> = {
   // accounts and contacts
   users: 'Emberek',
   contactPeople: 'Emberek',
+  // money: read-mostly lists (lib/payments)
+  orders: 'Pénzügyek',
+  payments: 'Pénzügyek',
+  invoices: 'Pénzügyek',
   // set up once, or the raw lists behind the dashboard and the room calendar
   ctaBands: 'Beállítások',
   legalPages: 'Beállítások',
@@ -39,6 +43,7 @@ const GROUP_OF: Record<string, NavGroup> = {
   ui: 'Beállítások',
   roomBookingSettings: 'Beállítások',
   applicationSettings: 'Beállítások',
+  billingSettings: 'Beállítások',
 };
 
 /** "Napi munka" after Jelentkezések and Teremnaptár, in this order (NavTop). */

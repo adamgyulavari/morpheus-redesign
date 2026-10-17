@@ -9,6 +9,7 @@ export type ApplicationKind = keyof typeof APPLICATION_KINDS;
 
 /** Workshop and beginner sign-ups. */
 export const SIGNUP_STATUSES = {
+  held: 'Fizetésre vár',
   registered: 'Jelentkezett',
   cancelled: 'Lemondva',
   moved: 'Áthelyezve',

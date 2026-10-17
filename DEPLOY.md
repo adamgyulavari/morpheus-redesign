@@ -77,6 +77,10 @@ media bucket.
    | `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | from step 1 |
    | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Scaleway Transactional Email: `smtp.tem.scaleway.com`, port `587` (or `2587`), user = the project ID, password = an API secret key |
    | `EMAIL_FROM`, `EMAIL_FROM_NAME` | sender, e.g. `noreply@morpheus-szinmuhely.hu` / `Morpheus Színműhely` (the domain must be verified in Scaleway TEM) |
+   | `PAYMENT_PROVIDER` | `mollie` (required on a deployed site; the `mock` provider is refused there) |
+   | `MOLLIE_API_KEY` | Mollie dashboard → Developers → API keys: `test_…` on staging, `live_…` on the live site. Secret |
+   | `INVOICING_MODE` | `live` on the live site only (refused anywhere else); `test` on staging with a Számlázz.hu test account; `off` (default): invoices are only prepared, never sent |
+   | `SZAMLAZZ_AGENT_KEY` | Számlázz.hu → Számla Agent kulcsok. The real account's key only on the live site; staging gets a test account's key. Secret |
 
    Don't set `TZ`; dates are handled in Budapest time by the code.
 
@@ -88,6 +92,28 @@ media bucket.
 5. **Healthcheck**: the image has one (`/api/users/me`); Coolify picks it up.
 6. Deploy. In the logs you should see `Migrating: …` / `Migrated: …` (first start or after a schema
    change), then the server is ready. Open `/admin` and log in.
+
+### Online payment (Mollie)
+
+- Mollie calls `https://<site>/api/payments/webhook` after every payment change; the site sets this
+  URL on each payment, nothing to configure in Mollie. It must be reachable from the internet, so
+  test mode is tested on staging (a local dev server can't receive it — use `PAYMENT_PROVIDER=mock`
+  there, or a tunnel).
+- Test mode: a `test_…` key; Mollie's test checkout lets you pick paid / failed / expired.
+- Payments are in HUF; Mollie offers the methods available for HUF (cards, PayPal…).
+- Switching provider (e.g. Barion): see `lib/payments/providers/README.md`.
+
+### Invoicing (Számlázz.hu)
+
+- Every paid order gets one invoice, e-mailed to the buyer by Számlázz.hu (admin: Pénzügyek →
+  Számlák). The VAT mode and the invoice prefix are in Fizetési beállítások.
+- Test with a **separate Számlázz.hu account in test mode** (register a new account, press
+  „Tesztüzem bekapcsolása” right after the first login, never connect it to NAV): its invoices
+  are test invoices, its e-mails only reach the account's own address. A real account's key makes
+  real, numbered invoices reported to NAV — never use it outside the live site.
+- A failed invoice is stored with the error and staff get an e-mail. "Küldés alatt" that stays
+  means Számlázz.hu didn't answer: check in Számlázz.hu whether it exists (external id
+  `order-<id>`).
 
 ### Deploy webhook (GitHub → Coolify)
 

@@ -15,6 +15,7 @@ import { CourseGroups } from './payload/collections/CourseGroups';
 import { LoginTokens } from './payload/collections/LoginTokens';
 import { Media } from './payload/collections/Media';
 import { Pages } from './payload/collections/Pages';
+import { Invoices, MockPayments, Orders, Payments } from './payload/collections/payments';
 import { LegalPages, Productions, Shows } from './payload/collections/productions';
 import { RoomBookings } from './payload/collections/RoomBookings';
 import { Rooms, StudentLinks } from './payload/collections/Rooms';
@@ -31,7 +32,7 @@ import {
 } from './payload/collections/simple';
 import { Users } from './payload/collections/Users';
 import { emailAdapter } from './payload/email';
-import { ApplicationSettings, RoomBookingSettings, SiteSettings, Ui } from './payload/globals';
+import { ApplicationSettings, BillingSettings, RoomBookingSettings, SiteSettings, Ui } from './payload/globals';
 import { migrations } from './payload/migrations';
 import { arrangeNav } from './payload/nav';
 import { redirectsConfig, redirectsTranslationsHu } from './payload/redirects';
@@ -136,8 +137,12 @@ export default buildConfig({
     Media,
     Users,
     LoginTokens,
+    Orders,
+    Payments,
+    Invoices,
+    MockPayments,
   ]),
-  globals: arrangeNav([SiteSettings, Ui, RoomBookingSettings, ApplicationSettings]),
+  globals: arrangeNav([SiteSettings, Ui, RoomBookingSettings, ApplicationSettings, BillingSettings]),
   editor: lexicalEditor(),
   // SMTP when SMTP_HOST is set; otherwise e-mails (with their links) are written to the console
   email: emailAdapter(),
@@ -203,8 +208,23 @@ export default buildConfig({
           return { output: { decided: decided.length } };
         },
       },
+      {
+        // after a payment: confirmation e-mails (later: invoice, course membership) — lib/payments
+        slug: 'orderPaid',
+        label: 'Fizetés után: visszaigazolás',
+        inputSchema: [{ name: 'orderId', type: 'number', required: true }],
+        retries: 3,
+        handler: async ({ input, req }) => {
+          const { afterPaid } = await import('./lib/payments/service');
+          await afterPaid(req.payload, input.orderId);
+          return { output: {} };
+        },
+      },
     ],
-    autoRun: [{ cron: '* * * * *', queue: 'schedules' }],
+    autoRun: [
+      { cron: '* * * * *', queue: 'schedules' },
+      { cron: '* * * * *', queue: 'payments' },
+    ],
     // only inside the web server — not in CLI runs (migrate, seed)
     shouldAutoRun: () => Boolean(process.env.NEXT_RUNTIME),
   },
