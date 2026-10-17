@@ -28,7 +28,7 @@ type Props = {
   code: string;
   price: number;
   loginHref: string;
-  /** The order: what, when, where (server-rendered). */
+  /** The order: when (the card's heading), where, the places note (server-rendered). */
   summary: ReactNode;
   /** The cancellation rules in plain words (from the settings). */
   policy: string[];
@@ -154,13 +154,12 @@ export default function CheckoutForm({ code, price, loginHref, summary, policy, 
 
       {/* stays in view while the (longer, logged-out) form on the left scrolls; clear of the sticky header */}
       <Card className="lg:sticky lg:top-28">
-        <h2 className={heading}>A jelentkezésed</h2>
         {summary}
-        <div className="flex items-baseline justify-between gap-4 border-y border-line py-4">
-          <span className="text-[16px] font-semibold">Fizetendő</span>
+        <div className="flex items-center justify-between gap-4 border-y border-line py-4">
+          <span className="text-[16px] font-semibold leading-none">Fizetendő</span>
           <span className="font-display text-[32px] leading-none">{formatHuf(price)}</span>
         </div>
-        <ul className="flex list-disc flex-col gap-2 pl-5 text-[14.5px] leading-relaxed text-ink2">
+        <ul className="flex list-disc flex-col gap-1.5 pl-4 text-[13px] leading-snug text-muted">
           {policy.map((p) => (
             <li key={p}>{p}</li>
           ))}
@@ -185,12 +184,12 @@ export default function CheckoutForm({ code, price, loginHref, summary, policy, 
           </p>
         )}
         <Submit>{price > 0 ? `Fizetés — ${formatHuf(price)}` : 'Jelentkezem'}</Submit>
-        <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[13px] text-muted">
-          <LockIcon />
+        <p className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-1 text-[13px] leading-none text-muted">
+          <LockIcon className="relative top-[2px] block h-3.5 w-3.5 shrink-0" />
           <span>Biztonságos fizetés:</span>
           {provider.logo ? (
             // biome-ignore lint/performance/noImgElement: a tiny SVG wordmark; next/image adds nothing
-            <img src={provider.logo} alt={provider.name} className="h-[13px] w-auto" />
+            <img src={provider.logo} alt={provider.name} className="block h-[13px] w-auto" />
           ) : (
             <span className="font-semibold text-ink2">{provider.name}</span>
           )}

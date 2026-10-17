@@ -57,21 +57,14 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
           loginHref={`/belepes?vissza=${encodeURIComponent(checkoutPath(s.code))}`}
           provider={paymentProvider().brand}
           summary={
-            <dl className="grid gap-x-5 gap-y-2 text-[15.5px] sm:grid-cols-[max-content_1fr]">
-              <dt className="font-semibold text-ink2">Mikor</dt>
-              <dd>{info.when}</dd>
-              {info.place && (
-                <>
-                  <dt className="font-semibold text-ink2">Hol</dt>
-                  <dd>{info.place}</dd>
-                </>
-              )}
-              <dt className="font-semibold text-ink2">Létszám</dt>
-              <dd>
+            <div className="flex flex-col gap-1.5">
+              <h2 className="font-display text-[28px] leading-tight">{info.when}</h2>
+              {info.place && <p className="text-[16px] text-ink2">{info.place}</p>}
+              <p className="text-[13px] text-muted">
                 {state.state === 'open' ? `Még ${state.needed} jelentkező kell az induláshoz` : 'Biztosan indul'}
                 {state.left != null ? ` · ${state.left} szabad hely` : ''}
-              </dd>
-            </dl>
+              </p>
+            </div>
           }
           policy={[
             `Legkésőbb ${settings.userCancelHours} órával a kezdés előtt a fiókodban áthelyezheted a jelentkezésed egy másik időpontra, vagy lemondhatod. Lemondás esetén a díjat nem térítjük vissza.`,
