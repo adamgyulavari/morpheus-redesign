@@ -77,9 +77,8 @@ export default function OrderResult({
           <>
             <h2 className="font-display text-[34px] leading-tight">Sikeres fizetés — várunk!</h2>
             <p className="text-[17px] leading-relaxed">
-              {order.amountDue > 0 ? `Megkaptuk a befizetésed (${formatHuf(order.amountDue)}). ` : ''}
-              {order.creditUsed > 0 ? `Kreditből: ${formatHuf(order.creditUsed)}. ` : ''}A visszaigazolást e-mailben
-              küldjük.
+              {order.amountDue > 0 ? `Megkaptuk a befizetésed (${formatHuf(order.amountDue)}). ` : ''}A visszaigazolást
+              e-mailben küldjük.
             </p>
             <Link href="/fiokom" className="btn btn-md btn-primary self-start">
               Fiókom

@@ -80,8 +80,8 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
           price={price}
           loginHref={`/belepes?vissza=${encodeURIComponent(here)}`}
           policy={[
-            `Lemondás: legkésőbb ${settings.userCancelHours} órával a kezdés előtt, a fiókodban — a befizetett összeg kreditként marad nálad, és másik alkalomra fordíthatod.`,
-            `Ha ${settings.workshopCutoffHours} órával a kezdés előtt nincs legalább ${facts.minParticipants} fizetett jelentkező, az alkalom elmarad: a teljes összeget kreditként jóváírjuk, és egy kattintással áthelyezheted másik időpontra.`,
+            `Legkésőbb ${settings.userCancelHours} órával a kezdés előtt a fiókodban áthelyezheted a jelentkezésed egy másik időpontra, vagy lemondhatod. Lemondás esetén a díjat nem térítjük vissza.`,
+            `Ha ${settings.workshopCutoffHours} órával a kezdés előtt nincs legalább ${facts.minParticipants} fizetett jelentkező, az alkalom elmarad; a jelentkezésed a fiókodban áthelyezheted egy másik időpontra.`,
           ]}
           me={
             viewer

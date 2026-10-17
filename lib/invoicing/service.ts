@@ -32,12 +32,7 @@ export function invoicingMode(): InvoicingMode {
   return mode;
 }
 
-/**
- * The amount on the invoice: what was paid now (by card). Credit used on the order came from an
- * earlier payment that was invoiced back then — invoicing the full price would invoice that money
- * twice. TO CONFIRM WITH THE ACCOUNTANT (the alternative: the full price, with the credit shown as
- * an advance already paid).
- */
+/** The amount on the invoice: what was paid. */
 export const invoiceAmountFor = (order: Pick<Order, 'amountDue'>) => Math.max(0, order.amountDue);
 
 const UNIT: Record<Order['kind'], string> = { workshop: 'alkalom', beginner: 'kurzus', monthlyFee: 'hónap' };
@@ -64,12 +59,7 @@ export async function issueInvoice(payload: Payload, orderId: number, now = new 
     // the payment's day (TO CONFIRM: or the workshop's / course's date)
     fulfilmentDate: paidOn,
     prefix: rules.invoicePrefix || undefined,
-    note: [
-      `Online fizetve bankkártyával (rendelés #${order.id}).`,
-      order.creditUsed > 0 ? `Korábbi befizetésből (kredit) levonva: ${order.creditUsed} Ft.` : '',
-    ]
-      .filter(Boolean)
-      .join(' '),
+    note: `Online fizetve bankkártyával (rendelés #${order.id}).`,
     buyer: {
       name: b.name || [user.lastName, user.firstName].filter(Boolean).join(' '),
       country: b.country || 'HU',

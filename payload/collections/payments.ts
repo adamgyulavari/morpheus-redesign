@@ -54,7 +54,7 @@ export const Orders: CollectionConfig = {
   },
   admin: {
     useAsTitle: 'label',
-    defaultColumns: ['label', 'user', 'status', 'price', 'creditUsed', 'amountDue', 'createdAt'],
+    defaultColumns: ['label', 'user', 'status', 'amountDue', 'paidAt', 'createdAt'],
     description:
       'Online jelentkezések fizetése: egy rendelés = egy jelentkezés. A rendszer írja; javítani csak adminisztrátor tud.',
   },
@@ -95,11 +95,7 @@ export const Orders: CollectionConfig = {
     text('label', 'Megnevezés', { required: true }),
     {
       type: 'row',
-      fields: [
-        huf('price', 'Ár (Ft)'),
-        huf('creditUsed', 'Kreditből (Ft)'),
-        huf('amountDue', 'Fizetendő (Ft)', 'Ár − kredit: ennyit fizet kártyával.'),
-      ],
+      fields: [huf('price', 'Ár (Ft)'), huf('amountDue', 'Fizetendő (Ft)', 'Ennyit fizet kártyával.')],
     },
     {
       type: 'row',

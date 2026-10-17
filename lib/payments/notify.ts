@@ -20,14 +20,10 @@ import { emailLayout, siteUrl } from '@/payload/email';
 export type PaidInfo = {
   /** HUF */
   price: number;
-  creditUsed: number;
   amountDue: number;
 };
 
-const paidRows = (p: PaidInfo) => [
-  { label: 'Fizetve', value: formatHuf(p.amountDue) },
-  ...(p.creditUsed ? [{ label: 'Kreditből', value: formatHuf(p.creditUsed) }] : []),
-];
+const paidRows = (p: PaidInfo) => [{ label: 'Fizetve', value: formatHuf(p.amountDue) }];
 
 /** Payment received: the place is theirs. A workshop gets its calendar file. */
 export async function sendOrderPaid(

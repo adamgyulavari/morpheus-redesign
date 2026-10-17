@@ -24,7 +24,7 @@ const h2 = (t: string) => ({
   children: [text(t)],
 });
 
-const body = {
+export const body = {
   root: {
     type: 'root',
     format: '',
@@ -41,14 +41,11 @@ const body = {
       ),
       h2('Lemondási feltételek'),
       p(
-        'Nyitott Műhely: a jelentkezés legkésőbb 24 órával az alkalom kezdése előtt mondható le a fiókban. Ilyenkor a befizetett összeg kreditként marad a fiókodban, és későbbi jelentkezésre fordítható. Ezután lemondani nem lehet.',
+        'Nyitott Műhely: a jelentkezés legkésőbb 24 órával az alkalom kezdése előtt a fiókban áthelyezhető egy másik időpontra, vagy lemondható. Lemondás esetén a befizetett díjat nem térítjük vissza. Ezután áthelyezni és lemondani már nem lehet.',
       ),
       p(
-        'Ha 48 órával az alkalom kezdése előtt nincs meg a minimális létszám, az alkalom elmarad: a résztvevők a teljes befizetett összeget kreditként kapják vissza, és egy kattintással áthelyezhetik másik időpontra.',
+        'Ha 48 órával az alkalom kezdése előtt nincs meg a minimális létszám, az alkalom elmarad; a jelentkezésed a fiókodban áthelyezheted egy másik időpontra.',
       ),
-      p('Pénzbeli visszatérítést kérésre, egyedi elbírálás alapján adunk: írj nekünk.'),
-      h2('Kredit'),
-      p('A kredit a fiókodban látható, és a következő jelentkezéseknél automatikusan felhasználható. Felhasználhatóság ideje: kitöltendő.'),
       h2('Panaszkezelés'),
       p('Kitöltendő.'),
     ],

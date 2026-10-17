@@ -473,6 +473,8 @@ export async function moveOwn(
           email: a.email,
           phone: a.phone,
           paidOffline: a.paidOffline,
+          // paid online: the payment goes with it
+          order: relId(a.order),
         },
         req,
       });

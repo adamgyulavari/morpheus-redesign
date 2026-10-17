@@ -13,8 +13,6 @@ export const SIGNUP_STATUSES = {
   registered: 'Jelentkezett',
   cancelled: 'Lemondva',
   moved: 'Áthelyezve',
-  credited: 'Kreditté alakítva',
-  refunded: 'Visszatérítve',
 } as const;
 
 /** Professional applications. */

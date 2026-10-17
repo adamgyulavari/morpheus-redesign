@@ -43,7 +43,7 @@ const reason = (r: { ok: boolean; reason?: string }) => (r.ok ? 'ok' : r.reason)
 describe('counting', () => {
   it('only paid (registered) sign-ups count toward the minimum', () => {
     expect(isCounted('registered')).toBe(true);
-    for (const s of ['held', 'cancelled', 'moved', 'credited', 'refunded', 'new', 'interview', 'accepted'] as const)
+    for (const s of ['held', 'cancelled', 'moved', 'new', 'interview', 'accepted'] as const)
       expect(isCounted(s)).toBe(false);
   });
 

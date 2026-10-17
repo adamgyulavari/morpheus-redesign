@@ -38,7 +38,7 @@ const sameTargetOf = (a: ApplicationDoc, b: ApplicationDoc) =>
 
 const SIGNUP = Object.keys(SIGNUP_STATUSES) as ApplicationStatus[];
 /** Statuses that end an application (`cancelledAt` is set). */
-const CLOSED: ApplicationStatus[] = ['cancelled', 'withdrawn', 'moved', 'credited', 'refunded'];
+const CLOSED: ApplicationStatus[] = ['cancelled', 'withdrawn', 'moved'];
 const REVIEW = Object.keys(REVIEW_STATUSES) as ApplicationStatus[];
 export const statusesOf = (kind: ApplicationKind) => (kind === 'professional' ? REVIEW : SIGNUP);
 export const initialStatus = (kind: ApplicationKind): ApplicationStatus =>
@@ -201,7 +201,7 @@ export const Applications: CollectionConfig = {
           options: options({ ...SIGNUP_STATUSES, ...REVIEW_STATUSES }),
           admin: {
             description:
-              'Nyitott Műhely és kezdő: Fizetésre vár / Jelentkezett (fizetett) / Lemondva / Áthelyezve / Kreditté alakítva / Visszatérítve. Szakmai: Új / Interjú / Felvéve / Elutasítva / Visszavonta.',
+              'Nyitott Műhely és kezdő: Fizetésre vár / Jelentkezett (fizetett) / Lemondva / Áthelyezve. Szakmai: Új / Interjú / Felvéve / Elutasítva / Visszavonta.',
           },
         },
       ],

@@ -36,7 +36,7 @@ export async function checkoutAction(_: CheckoutState, form: FormData): Promise<
   values.email = values.email.toLowerCase();
   // honeypot: people don't see it; bots fill it in and get nowhere
   if (str(form, 'website')) return { error: 'Hibás kérés.', values };
-  if (form.get('terms') !== 'on' || form.get('cancellation') !== 'on')
+  if (form.get('terms') !== 'on')
     return { error: 'A jelentkezéshez el kell fogadnod az ÁSZF-et és a lemondási feltételeket.', values };
 
   const viewer = await getCurrentUser();

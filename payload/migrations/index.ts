@@ -23,6 +23,7 @@ import * as migration_20261014_185611_online_payments from './20261014_185611_on
 import * as migration_20261014_214947_drop_expire_orders from './20261014_214947_drop_expire_orders';
 import * as migration_20261016_194816_payment_open_status from './20261016_194816_payment_open_status';
 import * as migration_20261017_003904_invoices from './20261017_003904_invoices';
+import * as migration_20261017_013547_drop_credit from './20261017_013547_drop_credit';
 
 export const migrations = [
   {
@@ -148,6 +149,11 @@ export const migrations = [
   {
     up: migration_20261017_003904_invoices.up,
     down: migration_20261017_003904_invoices.down,
-    name: '20261017_003904_invoices'
+    name: '20261017_003904_invoices',
+  },
+  {
+    up: migration_20261017_013547_drop_credit.up,
+    down: migration_20261017_013547_drop_credit.down,
+    name: '20261017_013547_drop_credit'
   },
 ];

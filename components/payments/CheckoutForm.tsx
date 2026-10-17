@@ -156,13 +156,7 @@ export default function CheckoutForm({ sessionId, price, loginHref, policy, me }
             <Link href="/aszf/" className="link font-semibold" target="_blank">
               Általános Szerződési Feltételeket
             </Link>
-            . *
-          </span>
-        </label>
-        <label className="flex gap-3 text-[15px] leading-relaxed">
-          <input type="checkbox" name="cancellation" required className="mt-1 h-5 w-5 shrink-0 accent-teal" />
-          <span>
-            Tudomásul veszem a{' '}
+            , benne a{' '}
             <Link href="/aszf/#lemondasi-feltetelek" className="link font-semibold" target="_blank">
               lemondási feltételeket
             </Link>

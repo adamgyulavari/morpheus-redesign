@@ -402,22 +402,10 @@ export interface Application {
   displayTitle?: string | null;
   kind: 'workshop' | 'beginner' | 'professional';
   /**
-   * Nyitott Műhely és kezdő: Fizetésre vár / Jelentkezett (fizetett) / Lemondva / Áthelyezve / Kreditté alakítva / Visszatérítve. Szakmai: Új / Interjú / Felvéve / Elutasítva / Visszavonta.
+   * Nyitott Műhely és kezdő: Fizetésre vár / Jelentkezett (fizetett) / Lemondva / Áthelyezve. Szakmai: Új / Interjú / Felvéve / Elutasítva / Visszavonta.
    */
   status?:
-    | (
-        | 'held'
-        | 'registered'
-        | 'cancelled'
-        | 'moved'
-        | 'credited'
-        | 'refunded'
-        | 'new'
-        | 'interview'
-        | 'accepted'
-        | 'rejected'
-        | 'withdrawn'
-      )
+    | ('held' | 'registered' | 'cancelled' | 'moved' | 'new' | 'interview' | 'accepted' | 'rejected' | 'withdrawn')
     | null;
   user: number | User;
   session?: (number | null) | Session;
@@ -916,9 +904,8 @@ export interface Order {
   status: 'pending' | 'paid' | 'expired' | 'canceled' | 'refunded' | 'partially_refunded';
   label: string;
   price: number;
-  creditUsed: number;
   /**
-   * Ár − kredit: ennyit fizet kártyával.
+   * Ennyit fizet kártyával.
    */
   amountDue: number;
   expiresAt?: string | null;
@@ -4281,7 +4268,6 @@ export interface OrdersSelect<T extends boolean = true> {
   status?: T;
   label?: T;
   price?: T;
-  creditUsed?: T;
   amountDue?: T;
   expiresAt?: T;
   paidAt?: T;

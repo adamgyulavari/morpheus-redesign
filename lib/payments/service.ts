@@ -144,7 +144,6 @@ export async function checkout(
           kind: 'workshop',
           label: `${s.displayTitle ?? 'Nyitott Műhely'} — ${whenText(s.start, s.end, 'long')}`,
           price,
-          creditUsed: 0,
           amountDue: price,
           status: 'pending',
           expiresAt: holdUntil.toISOString(),
@@ -482,13 +481,14 @@ async function queueFollowUps(payload: Payload, orderId: number) {
 
 /** The `orderPaid` job: confirmation (with .ics) to the participant, a notice to staff. */
 export async function afterPaid(payload: Payload, orderId: number) {
-  const order = await payload.findByID({ collection: 'orders', id: orderId, depth: 1 });
-  const application = typeof order.application === 'object' ? order.application : null;
-  if (!application) return;
+  const order = await payload.findByID({ collection: 'orders', id: orderId, depth: 1, disableErrors: true });
+  // gone (deleted by staff): nothing to confirm
+  const application = order && typeof order.application === 'object' ? order.application : null;
+  if (!order || !application) return;
   const settings = await applicationSettings(payload);
   const user = typeof order.user === 'object' ? order.user : null;
   const applicant = applicantOf(application, user?.firstName);
-  const money = { price: order.price, creditUsed: order.creditUsed, amountDue: order.amountDue };
+  const money = { price: order.price, amountDue: order.amountDue };
   if (order.kind === 'workshop') {
     const s = await payload.findByID({ collection: 'sessions', id: relId(application.session) ?? 0, depth: 0 });
     const info = await workshopInfo(payload, s, settings);
@@ -558,7 +558,6 @@ export type OrderView = {
   status: Order['status'];
   label: string;
   amountDue: number;
-  creditUsed: number;
   expiresAt: string | null;
   /** The last payment attempt failed / was cancelled. */
   lastFailed: boolean;
@@ -601,7 +600,6 @@ export async function orderStatus(payload: Payload, token: string, now = new Dat
     status: order.status,
     label: order.label,
     amountDue: order.amountDue,
-    creditUsed: order.creditUsed,
     expiresAt: order.expiresAt ?? null,
     lastFailed: Boolean(payment && ['failed', 'expired', 'canceled'].includes(payment.status)),
     lapsed: lapsed(order, now),
