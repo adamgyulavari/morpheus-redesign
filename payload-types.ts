@@ -512,6 +512,7 @@ export interface User {
 export interface Session {
   id: number;
   displayTitle?: string | null;
+  code?: string | null;
   /**
    * Üresen a csoport vagy az előadás nevéből készül.
    */
@@ -4431,6 +4432,7 @@ export interface StudentLinksSelect<T extends boolean = true> {
  */
 export interface SessionsSelect<T extends boolean = true> {
   displayTitle?: T;
+  code?: T;
   title?: T;
   kind?: T;
   status?: T;

@@ -71,6 +71,18 @@ const clean = (b: Billing): Billing => ({
 
 // ── checkout ────────────────────────────────────────────────────────────────
 
+/** The workshop date by its public code (the checkout's link). */
+export async function sessionByCode(payload: Payload, code: string) {
+  if (!code || code.length > 32) return null;
+  const { docs } = await payload.find({
+    collection: 'sessions',
+    where: { and: [{ code: { equals: code } }, { kind: { equals: 'workshop' } }] },
+    depth: 0,
+    limit: 1,
+  });
+  return docs[0] ?? null;
+}
+
 /** The result page's address: by the order's token, never its id. */
 export const resultUrl = (token: string) => siteUrl(`/fizetes/eredmeny?rendeles=${encodeURIComponent(token)}`);
 const webhookUrl = () => siteUrl('/api/payments/webhook');
@@ -565,7 +577,8 @@ export type OrderView = {
   lapsed: boolean;
   /** The provider is processing a payment (not just waiting for the person): worth waiting for. */
   processing: boolean;
-  sessionId: number | null;
+  /** The date's public code ("Újra jelentkezem"). */
+  sessionCode: string | null;
 };
 
 /**
@@ -604,7 +617,16 @@ export async function orderStatus(payload: Payload, token: string, now = new Dat
     lastFailed: Boolean(payment && ['failed', 'expired', 'canceled'].includes(payment.status)),
     lapsed: lapsed(order, now),
     processing: payment?.status === 'pending',
-    sessionId: relId(application?.session),
+    sessionCode: relId(application?.session)
+      ? ((
+          await payload.findByID({
+            collection: 'sessions',
+            id: relId(application?.session) ?? 0,
+            depth: 0,
+            disableErrors: true,
+          })
+        )?.code ?? null)
+      : null,
   };
 }
 

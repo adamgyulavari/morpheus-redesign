@@ -501,6 +501,8 @@ export async function moveOwn(
 
 export type OpenWorkshop = {
   id: number;
+  /** The public code (checkout link). */
+  code: string;
   title: string;
   description?: string | null;
   start: string;
@@ -536,6 +538,7 @@ export async function upcomingWorkshops(payload: Payload, now = new Date(), limi
   return Promise.all(
     docs.map(async (s) => ({
       id: s.id,
+      code: s.code ?? '',
       title: s.title || 'Nyitott Műhely',
       description: s.workshop?.description,
       start: s.start,

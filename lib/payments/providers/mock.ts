@@ -19,6 +19,7 @@ const docId = (providerPaymentId: string) => {
 
 export const mockProvider: PaymentProvider = {
   name: 'mock',
+  brand: { name: 'Teszt fizetés (fejlesztői mód)' },
   async createPayment(i) {
     const payload = await db();
     const doc = await payload.create({

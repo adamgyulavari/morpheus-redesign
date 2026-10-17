@@ -48,6 +48,15 @@ export function CheckIcon({ className = 'h-5 w-5 shrink-0' }: IconProps) {
   );
 }
 
+export function LockIcon({ className = 'h-4 w-4 shrink-0' }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" strokeWidth={1.8} {...stroke} aria-hidden="true">
+      <rect x="5" y="11" width="14" height="10" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </svg>
+  );
+}
+
 export function PersonIcon({ className = 'h-5 w-5' }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" strokeWidth={1.6} {...stroke} aria-hidden="true">

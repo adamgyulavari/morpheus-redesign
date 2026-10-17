@@ -14,6 +14,7 @@ import {
 } from '@/lib/data';
 import { dateRange, dayOfMonth, monthDayShort, monthShort, weekday } from '@/lib/dates';
 import { fill } from '@/lib/format';
+import { checkoutPath } from '@/lib/payments/links';
 
 import type { BlockProps } from './types';
 
@@ -159,7 +160,7 @@ export async function OpenWorkshopSessions({ block, className }: BlockProps<'ope
                 {bookable &&
                   (online ? (
                     // sign-up with payment: the checkout page (lib/payments)
-                    <Link href={`/fizetes?session=${session.id}`} className="btn btn-md btn-primary">
+                    <Link href={checkoutPath(session.code)} className="btn btn-md btn-primary">
                       {ui.sessions.book}
                     </Link>
                   ) : (

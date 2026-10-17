@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import type { CollectionConfig, PayloadRequest } from 'payload';
 import { WORKSHOP_STATUSES } from '@/lib/applications/labels';
 import { cutoffAt } from '@/lib/applications/rules';
@@ -13,10 +14,13 @@ import { collectionRevalidation } from '../revalidate';
 import { blockingClashes, failer, mayOverridePractice, overridePracticeField } from './placement';
 import { staffOnly } from './Rooms';
 
+const workshopCode = () => randomBytes(6).toString('base64url');
+
 export type SessionDoc = {
   id?: number;
   title?: string | null;
   displayTitle?: string;
+  code?: string | null;
   kind?: keyof typeof SESSION_KINDS;
   courseGroup?: Rel;
   production?: Rel;
@@ -121,6 +125,8 @@ export const Sessions: CollectionConfig = {
         }
         if (owners > 1) fail('production', 'Csoport vagy előadás — csak az egyik.', req);
         if (s.kind === 'workshop') {
+          // the date's public code: its checkout link (/fizetes?alkalom=…), not the sequential id
+          data.code = before.code || data.code || workshopCode();
           if (owners) fail('courseGroup', 'A nyitott műhely alkalom nem tartozik csoporthoz vagy előadáshoz.', req);
           const w = s.workshop ?? {};
           if (w.maxParticipants != null && w.minParticipants != null && w.maxParticipants < w.minParticipants)
@@ -206,6 +212,7 @@ export const Sessions: CollectionConfig = {
   },
   fields: [
     { name: 'displayTitle', label: 'Megnevezés', type: 'text', index: true, admin: { readOnly: true, hidden: true } },
+    { name: 'code', type: 'text', unique: true, index: true, admin: { hidden: true } },
     text('title', 'Cím', { description: 'Üresen a csoport vagy az előadás nevéből készül.' }),
     {
       type: 'row',

@@ -25049,6 +25049,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "code": {
+          "name": "code",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
         "title": {
           "name": "title",
           "type": "varchar",
@@ -25213,6 +25219,21 @@
             }
           ],
           "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "sessions_code_idx": {
+          "name": "sessions_code_idx",
+          "columns": [
+            {
+              "expression": "code",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -32911,6 +32932,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "0b7583c2-8a8a-47ad-8bc0-09dd56255f1b",
+  "id": "0d6f439c-cf61-4d65-adaa-8c0cb48d5308",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

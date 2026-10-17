@@ -10,7 +10,7 @@ import { redirect } from 'next/navigation';
 import { getCurrentUser, payloadClient } from '@/lib/auth';
 import { allow, clientIp } from '@/payload/magic-link';
 
-import { cancelOrder, checkout, orderStatus, resultUrl, retryPayment } from './service';
+import { cancelOrder, checkout, orderStatus, resultUrl, retryPayment, sessionByCode } from './service';
 
 export type CheckoutState = { error?: string; values?: Record<string, string> };
 
@@ -45,8 +45,11 @@ export async function checkoutAction(_: CheckoutState, form: FormData): Promise<
   if (!allow(`checkout-ip:${ip}`, MAX_PER_IP) || (email && !allow(`checkout-email:${email}`, MAX_PER_EMAIL)))
     return { error: 'Túl sok próbálkozás rövid időn belül. Próbáld újra negyedóra múlva.', values };
 
-  const r = await checkout(await payloadClient(), viewer, {
-    sessionId: Number(form.get('session')) || 0,
+  const payload = await payloadClient();
+  const session = await sessionByCode(payload, str(form, 'alkalom'));
+  if (!session) return { error: 'Nincs ilyen alkalom.', values };
+  const r = await checkout(payload, viewer, {
+    sessionId: session.id,
     lastName: values.lastName,
     firstName: values.firstName,
     email: values.email,

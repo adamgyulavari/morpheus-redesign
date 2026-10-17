@@ -73,6 +73,8 @@ const isLocal = (url: string) => ['localhost', '127.0.0.1', '[::1]'].includes(ne
 
 export const mollieProvider: PaymentProvider = {
   name: 'mollie',
+  // Mollie's own wordmark (from its checkout page)
+  brand: { name: 'Mollie', logo: '/payments/mollie.svg' },
   async createPayment(i) {
     const p = await mollie().payments.create({
       amount: toMollieAmount(i.amount),
