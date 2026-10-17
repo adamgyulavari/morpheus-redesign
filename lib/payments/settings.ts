@@ -9,6 +9,7 @@ export const billingSettings = cache(async (payload: Payload) => {
     online: doc.onlinePayments !== false,
     vatMode: doc.vatMode ?? 'AAM',
     invoicePrefix: doc.invoicePrefix?.trim() ?? '',
+    transferDueDays: typeof doc.transferDueDays === 'number' && doc.transferDueDays >= 1 ? doc.transferDueDays : 8,
     holdMinutes: typeof doc.ordersHoldMinutes === 'number' && doc.ordersHoldMinutes >= 5 ? doc.ordersHoldMinutes : 30,
   };
 });

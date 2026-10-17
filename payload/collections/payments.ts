@@ -102,6 +102,23 @@ export const Orders: CollectionConfig = {
       fields: [{ ...moment('expiresAt', 'Foglalás lejár'), index: true }, moment('paidAt', 'Fizetve')],
     },
     {
+      // kezdő: the chosen payment option — the later instalments are invoiced from this (lib/invoicing/run)
+      name: 'plan',
+      label: 'Fizetési mód (kezdő)',
+      type: 'group',
+      admin: { condition: (data) => data?.kind === 'beginner' },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            text('label', 'Lehetőség'),
+            { name: 'total', label: 'Teljes összeg (Ft)', type: 'number', min: 0 },
+            { name: 'parts', label: 'Részletek', type: 'number', min: 1 },
+          ],
+        },
+      ],
+    },
+    {
       name: 'billing',
       label: 'Számlázási adatok (a rendeléskor)',
       type: 'group',
@@ -315,8 +332,34 @@ export const Invoices: CollectionConfig = {
       type: 'row',
       fields: [
         text('number', 'Számlaszám'),
-        { ...relationship('order', 'Rendelés', 'orders', { required: true }), index: true },
+        { ...relationship('order', 'Rendelés', 'orders'), index: true },
         { ...relationship('user', 'Fiók', 'users', { required: true }), index: true },
+      ],
+    },
+    {
+      // the monthly run (Havi számlázás): a szakmai month, or a kezdő instalment
+      type: 'row',
+      fields: [
+        { ...relationship('courseGroup', 'Csoport', 'courseGroups'), index: true },
+        text('period', 'Hónap', { description: 'Havidíjnál, pl. 2026-11' }),
+        { name: 'part', label: 'Részlet', type: 'number', min: 1 },
+      ],
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'method',
+          label: 'Fizetés',
+          type: 'select',
+          defaultValue: 'card',
+          options: [
+            { label: 'Bankkártya (online)', value: 'card' },
+            { label: 'Átutalás', value: 'transfer' },
+          ],
+        },
+        { name: 'dueDate', label: 'Fizetési határidő', type: 'date', admin: { readOnly: true } },
+        moment('paidAt', 'Befizetve'),
       ],
     },
     {

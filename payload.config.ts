@@ -102,6 +102,8 @@ export default buildConfig({
         teremnaptar: { Component: '@/payload/views/RoomCalendarView#RoomCalendarView', path: '/teremnaptar' },
         // payments, admissions, reviews (lib/applications, components/applications)
         jelentkezesek: { Component: '@/payload/views/ApplicationsView#ApplicationsView', path: '/jelentkezesek' },
+        // the monthly invoices: szakmai fees, kezdő instalments (lib/invoicing/run)
+        szamlazas: { Component: '@/payload/views/BillingRunView#BillingRunView', path: '/szamlazas' },
       },
     },
     dateFormat: 'yyyy. MM. dd. HH:mm',

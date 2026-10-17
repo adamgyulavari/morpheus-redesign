@@ -75,7 +75,7 @@ export default function AdminApplications() {
       <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <h2 style={{ margin: 0 }}>Kezdő kurzus ({data.beginners.length})</h2>
         <p className={s.muted} style={{ margin: 0 }}>
-          A felvétel a csoport hallgatói közé tesz (teremfoglalási joggal), és üdvözlő levelet küld belépési linkkel.
+          A felvétel a csoport hallgatói közé tesz, és üdvözlő levelet küld belépési linkkel. Teremfoglalást a fiókján adhatsz.
         </p>
         {data.beginners.length === 0 ? (
           <p className={s.muted}>Nincs felvételre váró jelentkezés.</p>

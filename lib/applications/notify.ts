@@ -270,7 +270,7 @@ export async function sendAccepted(payload: Payload, s: ApplicationSettings, a: 
         intro(
           s.texts,
           'accepted',
-          'Örömmel értesítünk, hogy felvettünk a kurzusra. A fiókodban megtalálod a csoport időpontjait és tudnivalóit, és termet is foglalhatsz gyakorláshoz.',
+          'Örömmel értesítünk, hogy felvettünk a kurzusra. A fiókodban megtalálod a csoport időpontjait és tudnivalóit.',
         ),
       ],
       details: details(t),

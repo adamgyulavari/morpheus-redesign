@@ -27,6 +27,7 @@ import * as migration_20261017_013547_drop_credit from './20261017_013547_drop_c
 import * as migration_20261017_015357_session_code from './20261017_015357_session_code';
 import * as migration_20261017_021712_course_payment from './20261017_021712_course_payment';
 import * as migration_20261017_023534_group_payment_options from './20261017_023534_group_payment_options';
+import * as migration_20261017_025423_monthly_billing from './20261017_025423_monthly_billing';
 
 export const migrations = [
   {
@@ -172,6 +173,11 @@ export const migrations = [
   {
     up: migration_20261017_023534_group_payment_options.up,
     down: migration_20261017_023534_group_payment_options.down,
-    name: '20261017_023534_group_payment_options'
+    name: '20261017_023534_group_payment_options',
+  },
+  {
+    up: migration_20261017_025423_monthly_billing.up,
+    down: migration_20261017_025423_monthly_billing.down,
+    name: '20261017_025423_monthly_billing'
   },
 ];

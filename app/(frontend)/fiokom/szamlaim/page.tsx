@@ -23,16 +23,61 @@ const dayText = (iso: string) =>
 
 const STATUS = { paid: 'Fizetve', refunded: 'Visszatérítve', partially_refunded: 'Részben visszatérítve' } as const;
 
-/** My payments with their invoices (PDF from Számlázz.hu, only mine), and any unfinished payment. */
+/**
+ * My online payments with their invoices, my monthly fee / instalment invoices (to pay by transfer),
+ * any unfinished payment. PDFs from Számlázz.hu, only mine.
+ */
 export default async function InvoicesPage() {
   const user = await requireUser('/fiokom/szamlaim');
-  const { paid, unpaid } = await myOrders(await payloadClient(), user);
+  const { paid, unpaid, bills } = await myOrders(await payloadClient(), user);
   return (
     <AccountShell eyebrow="Fiókom" heading="*Számláim*" wide>
       <AccountNav canBook={mayBookRooms(user)} isStaff={userIsStaffOrAdmin(user)} />
       <div className="grid max-w-[880px] gap-5">
         <UnpaidNotice unpaid={unpaid} />
+        {bills.length > 0 && (
+          <Card>
+            <h2 className="font-display text-[28px] leading-tight">Havidíjak és részletek</h2>
+            <ul className="flex flex-col divide-y divide-line">
+              {bills.map((b) => (
+                <li
+                  key={b.id}
+                  className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2 py-4 first:pt-0 last:pb-0"
+                >
+                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="text-[16px] font-semibold">{b.label}</span>
+                    <span className="text-[14px] text-ink2">
+                      {formatHuf(b.amount)} ·{' '}
+                      {b.reversed
+                        ? 'Sztornózva'
+                        : b.paid
+                          ? 'Befizetve'
+                          : `Átutalással fizetendő${b.dueDate ? `, határidő: ${dayText(b.dueDate)}` : ''}`}
+                    </span>
+                  </div>
+                  <div className="text-[14px]">
+                    {b.pdf ? (
+                      <a
+                        href={`/fiokom/szamlaim/${b.id}`}
+                        target="_blank"
+                        rel="noopener"
+                        className="link font-semibold"
+                      >
+                        Számla {b.number} (PDF)
+                      </a>
+                    ) : (
+                      <span className="text-muted">
+                        {b.number ? `Számla ${b.number}` : 'A számla hamarosan elkészül.'}
+                      </span>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
         <Card>
+          <h2 className="font-display text-[28px] leading-tight">Online fizetések</h2>
           {!paid.length ? (
             <p className="text-[15px] text-muted">Még nincs online fizetésed.</p>
           ) : (

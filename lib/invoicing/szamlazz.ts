@@ -37,6 +37,8 @@ export type InvoiceData = {
   }[];
   /** 'AAM' (alanyi adómentes) or a rate */
   vat: VatMode;
+  /** Paid by card at the checkout (default), or an unpaid invoice to pay by transfer by `dueDate`. */
+  payment?: { method: 'card' } | { method: 'transfer'; dueDate: string };
 };
 
 export type VatMode = 'AAM' | '27' | '18' | '5';
@@ -61,8 +63,9 @@ const tags = (fields: [string, string | number | boolean | undefined | null][]) 
 const head = (ns: string) =>
   `<?xml version="1.0" encoding="UTF-8"?><${ns} xmlns="http://www.szamlazz.hu/${ns}" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.szamlazz.hu/${ns} https://www.szamlazz.hu/szamla/docs/xsds/agent/${ns}.xsd">`;
 
-/** xmlszamla: a paid invoice, e-mailed to the buyer by Számlázz.hu (an e-invoice). */
+/** xmlszamla: an invoice (paid by card, or to pay by transfer), e-mailed to the buyer by Számlázz.hu (an e-invoice). */
 export function invoiceXml(key: string, d: InvoiceData): string {
+  const transfer = d.payment?.method === 'transfer' ? d.payment : null;
   const items = d.items
     .map((i) => {
       const unit = split(i.gross, d.vat);
@@ -91,14 +94,14 @@ export function invoiceXml(key: string, d: InvoiceData): string {
     `<fejlec>${tags([
       ['keltDatum', d.issueDate],
       ['teljesitesDatum', d.fulfilmentDate],
-      ['fizetesiHataridoDatum', d.issueDate],
-      ['fizmod', 'Bankkártya'],
+      ['fizetesiHataridoDatum', transfer ? transfer.dueDate : d.issueDate],
+      ['fizmod', transfer ? 'Átutalás' : 'Bankkártya'],
       ['penznem', 'HUF'],
       ['szamlaNyelve', 'hu'],
       ['megjegyzes', d.note],
       ['rendelesSzam', d.orderRef],
       ['szamlaszamElotag', d.prefix],
-      ['fizetve', true],
+      ['fizetve', !transfer],
     ])}</fejlec>`,
     '<elado></elado>',
     `<vevo>${tags([

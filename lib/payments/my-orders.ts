@@ -19,6 +19,15 @@ export type MyOrder = {
 
 export type MyUnpaid = { label: string; amount: number; lapsed: boolean; href: string };
 
+/** An invoice to pay by transfer (havidíj, részlet): with its due date and whether it's settled. */
+export type MyBill = MyInvoice & {
+  label: string;
+  amount: number;
+  dueDate: string | null;
+  paid: boolean;
+  reversed: boolean;
+};
+
 /** Paid (and refunded) orders with their invoices, newest first; and the unfinished payments. */
 export async function myOrders(payload: Payload, user: TypedUser, now = new Date()) {
   const own = { user, overrideAccess: false } as const;
@@ -33,7 +42,7 @@ export async function myOrders(payload: Payload, user: TypedUser, now = new Date
     }),
     payload.find({
       collection: 'invoices',
-      where: { and: [{ user: { equals: user.id } }, { status: { equals: 'issued' } }] },
+      where: { and: [{ user: { equals: user.id } }, { status: { in: ['issued', 'draft'] } }] },
       sort: 'createdAt',
       depth: 0,
       limit: 200,
@@ -49,7 +58,7 @@ export async function myOrders(payload: Payload, user: TypedUser, now = new Date
       status: o.status as MyOrder['status'],
       paidAt: o.paidAt ?? null,
       invoices: invoices
-        .filter((i) => relId(i.order) === o.id && i.number)
+        .filter((i) => relId(i.order) === o.id && i.status === 'issued' && i.number)
         .map((i) => ({ id: i.id, number: i.number ?? '', kind: i.kind, pdf: i.mode !== 'off' })),
     }));
   // unpaid and still held (or lapsed, but not let go): the order page continues it
@@ -61,5 +70,21 @@ export async function myOrders(payload: Payload, user: TypedUser, now = new Date
       lapsed: lapsed(o, now),
       href: `/fizetes/eredmeny?rendeles=${encodeURIComponent(o.token)}`,
     }));
-  return { paid, unpaid };
+  // the monthly run's invoices (no checkout order), newest first
+  const reversed = new Set(invoices.filter((i) => i.kind === 'storno').map((i) => relId(i.stornoOf)));
+  const bills: MyBill[] = invoices
+    .filter((i) => !relId(i.order) && i.kind === 'invoice')
+    .reverse()
+    .map((i) => ({
+      id: i.id,
+      number: i.number ?? '',
+      kind: i.kind,
+      pdf: i.status === 'issued' && i.mode !== 'off' && Boolean(i.number),
+      label: (i.data as { items?: { name: string }[] } | null)?.items?.[0]?.name ?? '',
+      amount: i.gross,
+      dueDate: i.dueDate?.slice(0, 10) ?? null,
+      paid: Boolean(i.paidAt),
+      reversed: reversed.has(i.id),
+    }));
+  return { paid, unpaid, bills };
 }

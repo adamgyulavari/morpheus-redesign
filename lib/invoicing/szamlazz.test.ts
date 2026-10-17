@@ -72,6 +72,14 @@ describe('invoiceXml', () => {
       items: [{ name: 'Kezdő kurzus', quantity: 2, unit: 'kurzus', gross: 45000 }],
     };
     expect(validate(invoiceXml('KEY', other), 'xmlszamla.xsd')).toBe('');
+    const transfer: InvoiceData = { ...invoice, payment: { method: 'transfer', dueDate: '2026-10-25' } };
+    expect(validate(invoiceXml('KEY', transfer), 'xmlszamla.xsd')).toBe('');
+  });
+  it('a transfer invoice: unpaid, Átutalás, its due date', () => {
+    const xml = invoiceXml('KEY', { ...invoice, payment: { method: 'transfer', dueDate: '2026-10-25' } });
+    expect(xml).toContain('<fizetesiHataridoDatum>2026-10-25</fizetesiHataridoDatum><fizmod>Átutalás</fizmod>');
+    expect(xml).toContain('<fizetve>false</fizetve>');
+    expect(invoiceXml('KEY', invoice)).toContain('<fizmod>Bankkártya</fizmod>');
   });
 });
 

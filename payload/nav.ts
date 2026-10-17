@@ -1,7 +1,7 @@
 /**
  * The admin sidebar in one place: which group each collection and global is in, and the groups'
  * order. "Napi munka" is drawn by payload/components/NavTop (beforeNavLinks), because it also holds
- * the custom views (Jelentkezések, Teremnaptár): its collections are left out of Payload's groups
+ * the custom views (Jelentkezések, Teremnaptár, Havi számlázás): its collections are left out of Payload's groups
  * (`group: false` — their pages stay as they are) and listed in DAILY.
  */
 import type { CollectionConfig, GlobalConfig } from 'payload';

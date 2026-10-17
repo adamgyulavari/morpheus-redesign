@@ -58,25 +58,15 @@ export async function issueInvoice(payload: Payload, orderId: number, now = new 
   const user = order.user as User;
   const rules = await billingSettings(payload);
   const vat = rules.vatMode as VatMode;
-  const b = order.billing ?? {};
-  const paidOn = todayInBudapest(order.paidAt ? new Date(order.paidAt) : now);
   const data: InvoiceData = {
     externalId: key,
     orderRef: `#${order.id}`,
     issueDate: todayInBudapest(now),
     // the payment's day (TO CONFIRM: or the workshop's / course's date)
-    fulfilmentDate: paidOn,
+    fulfilmentDate: todayInBudapest(order.paidAt ? new Date(order.paidAt) : now),
     prefix: rules.invoicePrefix || undefined,
     note: `Online fizetve bankkártyával (rendelés #${order.id}).`,
-    buyer: {
-      name: b.name || [user.lastName, user.firstName].filter(Boolean).join(' '),
-      country: b.country || 'HU',
-      zip: b.zip ?? '',
-      city: b.city ?? '',
-      address: b.address ?? '',
-      email: user.email,
-      taxNumber: b.taxNumber || undefined,
-    },
+    buyer: buyerOf(user, order.billing),
     items: [{ name: order.label, quantity: 1, unit: UNIT[order.kind], gross }],
     vat,
   };
@@ -89,6 +79,91 @@ export async function issueInvoice(payload: Payload, orderId: number, now = new 
     data: { ...data },
     send: (agentKey) => createInvoice(agentKey, data),
     what: `számla a #${order.id} rendeléshez`,
+  });
+}
+
+type BillingDetails = {
+  name?: string | null;
+  zip?: string | null;
+  city?: string | null;
+  address?: string | null;
+  country?: string | null;
+  taxNumber?: string | null;
+};
+
+/** The buyer on an invoice: the billing details given (the order's, or the account's), else the name. */
+export function buyerOf(
+  user: Pick<User, 'email' | 'firstName' | 'lastName'>,
+  b?: BillingDetails | null,
+): InvoiceData['buyer'] {
+  return {
+    name: b?.name || [user.lastName, user.firstName].filter(Boolean).join(' '),
+    country: b?.country || 'HU',
+    zip: b?.zip ?? '',
+    city: b?.city ?? '',
+    address: b?.address ?? '',
+    email: user.email,
+    taxNumber: b?.taxNumber || undefined,
+  };
+}
+
+/** Számlázz.hu needs a postal address on every invoice. */
+export const hasAddress = (b: InvoiceData['buyer']) => Boolean(b.zip.trim() && b.city.trim() && b.address.trim());
+
+/** One line of the monthly run (lib/invoicing/run): a szakmai month, or a kezdő instalment. */
+export type TransferCharge = {
+  key: string;
+  userId: number;
+  courseGroup: number;
+  period?: string;
+  part?: number;
+  label: string;
+  unit: string;
+  gross: number;
+  note?: string;
+};
+
+/**
+ * An invoice to pay by transfer (Havi számlázás): unpaid, due in `transferDueDays`, e-mailed by
+ * Számlázz.hu. Once per key; again only after a definite failure.
+ */
+export async function issueTransferInvoice(
+  payload: Payload,
+  c: TransferCharge,
+  now = new Date(),
+): Promise<Invoice | null> {
+  const existing = await byKey(payload, c.key);
+  if (existing && existing.status !== 'failed') return existing;
+  const user = await payload.findByID({ collection: 'users', id: c.userId, depth: 0 });
+  const rules = await billingSettings(payload);
+  const vat = rules.vatMode as VatMode;
+  const issueDate = todayInBudapest(now);
+  const dueDate = todayInBudapest(new Date(now.getTime() + rules.transferDueDays * 864e5));
+  const data: InvoiceData = {
+    externalId: c.key,
+    orderRef: c.period ?? (c.part ? `${c.part}. részlet` : ''),
+    issueDate,
+    fulfilmentDate: issueDate,
+    prefix: rules.invoicePrefix || undefined,
+    note: c.note,
+    buyer: buyerOf(user, user.billing),
+    items: [{ name: c.label, quantity: 1, unit: c.unit, gross: c.gross }],
+    vat,
+    payment: { method: 'transfer', dueDate },
+  };
+  return record(payload, existing, {
+    key: c.key,
+    kind: 'invoice',
+    user: user.id,
+    courseGroup: c.courseGroup,
+    period: c.period,
+    part: c.part,
+    method: 'transfer',
+    dueDate,
+    ...split(c.gross, vat),
+    data: { ...data },
+    send: (agentKey) => createInvoice(agentKey, data),
+    what: `számla: ${c.label} (${user.email})`,
   });
 }
 
@@ -115,8 +190,12 @@ export async function stornoInvoice(
   return record(payload, existing, {
     key,
     kind: 'storno',
-    order: relId(invoice.order) ?? 0,
+    order: relId(invoice.order) ?? undefined,
     user: relId(invoice.user) ?? 0,
+    courseGroup: relId(invoice.courseGroup) ?? undefined,
+    period: invoice.period ?? undefined,
+    part: invoice.part ?? undefined,
+    method: invoice.method ?? undefined,
     net: invoice.net,
     vat: invoice.vat,
     gross: invoice.gross,
@@ -134,8 +213,13 @@ async function byKey(payload: Payload, key: string) {
 }
 
 type Draft = Pick<Invoice, 'key' | 'kind' | 'net' | 'vat' | 'gross'> & {
-  order: number;
+  order?: number;
   user: number;
+  courseGroup?: number;
+  period?: string;
+  part?: number;
+  method?: Invoice['method'];
+  dueDate?: string;
   stornoOf?: number;
   data: Record<string, unknown>;
   send: ((agentKey: string) => Promise<AgentResult>) | null;

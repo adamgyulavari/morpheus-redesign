@@ -938,6 +938,11 @@ export interface Order {
   amountDue: number;
   expiresAt?: string | null;
   paidAt?: string | null;
+  plan?: {
+    label?: string | null;
+    total?: number | null;
+    parts?: number | null;
+  };
   billing?: {
     name?: string | null;
     taxNumber?: string | null;
@@ -973,8 +978,17 @@ export interface Invoice {
   status: 'draft' | 'sending' | 'issued' | 'failed';
   mode: 'off' | 'test' | 'live';
   number?: string | null;
-  order: number | Order;
+  order?: (number | null) | Order;
   user: number | User;
+  courseGroup?: (number | null) | CourseGroup;
+  /**
+   * Havidíjnál, pl. 2026-11
+   */
+  period?: string | null;
+  part?: number | null;
+  method?: ('card' | 'transfer') | null;
+  dueDate?: string | null;
+  paidAt?: string | null;
   net: number;
   vat: number;
   gross: number;
@@ -4311,6 +4325,13 @@ export interface OrdersSelect<T extends boolean = true> {
   amountDue?: T;
   expiresAt?: T;
   paidAt?: T;
+  plan?:
+    | T
+    | {
+        label?: T;
+        total?: T;
+        parts?: T;
+      };
   billing?:
     | T
     | {
@@ -4372,6 +4393,12 @@ export interface InvoicesSelect<T extends boolean = true> {
   number?: T;
   order?: T;
   user?: T;
+  courseGroup?: T;
+  period?: T;
+  part?: T;
+  method?: T;
+  dueDate?: T;
+  paidAt?: T;
   net?: T;
   vat?: T;
   gross?: T;
@@ -5046,6 +5073,10 @@ export interface BillingSetting {
   onlinePayments?: boolean | null;
   vatMode: 'AAM' | '27' | '18' | '5';
   /**
+   * A havidíj- és részletszámlák fizetési határideje a kiállítástól.
+   */
+  transferDueDays?: number | null;
+  /**
    * A Számlázz.hu-ban beállított számlatömb előtagja (pl. MSZ). Üresen: a fiók alapértelmezése.
    */
   invoicePrefix?: string | null;
@@ -5405,6 +5436,7 @@ export interface ApplicationSettingsSelect<T extends boolean = true> {
 export interface BillingSettingsSelect<T extends boolean = true> {
   onlinePayments?: T;
   vatMode?: T;
+  transferDueDays?: T;
   invoicePrefix?: T;
   ordersHoldMinutes?: T;
   updatedAt?: T;

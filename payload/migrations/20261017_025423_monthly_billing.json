@@ -23239,6 +23239,24 @@
           "primaryKey": false,
           "notNull": false
         },
+        "plan_label": {
+          "name": "plan_label",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "plan_total": {
+          "name": "plan_total",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "plan_parts": {
+          "name": "plan_parts",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
         "billing_name": {
           "name": "billing_name",
           "type": "varchar",
@@ -23881,13 +23899,51 @@
           "name": "order_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "user_id": {
           "name": "user_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
+        },
+        "course_group_id": {
+          "name": "course_group_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "period": {
+          "name": "period",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "part": {
+          "name": "part",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "method": {
+          "name": "method",
+          "type": "enum_invoices_method",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'card'"
+        },
+        "due_date": {
+          "name": "due_date",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "paid_at": {
+          "name": "paid_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
         },
         "net": {
           "name": "net",
@@ -24010,6 +24066,21 @@
           "method": "btree",
           "with": {}
         },
+        "invoices_course_group_idx": {
+          "name": "invoices_course_group_idx",
+          "columns": [
+            {
+              "expression": "course_group_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "invoices_storno_of_idx": {
           "name": "invoices_storno_of_idx",
           "columns": [
@@ -24076,6 +24147,19 @@
           "tableTo": "users",
           "columnsFrom": [
             "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "invoices_course_group_id_course_groups_id_fk": {
+          "name": "invoices_course_group_id_course_groups_id_fk",
+          "tableFrom": "invoices",
+          "tableTo": "course_groups",
+          "columnsFrom": [
+            "course_group_id"
           ],
           "columnsTo": [
             "id"
@@ -30675,6 +30759,13 @@
           "notNull": true,
           "default": "'AAM'"
         },
+        "transfer_due_days": {
+          "name": "transfer_due_days",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 8
+        },
         "invoice_prefix": {
           "name": "invoice_prefix",
           "type": "varchar",
@@ -32865,6 +32956,14 @@
         "live"
       ]
     },
+    "public.enum_invoices_method": {
+      "name": "enum_invoices_method",
+      "schema": "public",
+      "values": [
+        "card",
+        "transfer"
+      ]
+    },
     "public.enum_legal_pages_status": {
       "name": "enum_legal_pages_status",
       "schema": "public",
@@ -33067,6 +33166,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "b3ca20ff-d328-4960-ad89-2735383ab888",
+  "id": "229637a9-42fe-4f16-a9a5-d21b302b2fe1",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

@@ -152,10 +152,16 @@ export async function workshopInfo(payload: Payload, s: Session, rules: Applicat
 }
 
 export function courseInfo(g: CourseGroup): TargetInfo {
+  // kezdő: from its payment options (its single price is hidden there); otherwise its price (label)
+  const options = signupKindOf(g) === 'beginner' ? (g.signup?.options ?? []) : [];
+  const lowest = options.length ? Math.min(...options.map((o) => o.amount)) : null;
   return {
     title: g.title,
     when: dateRange(g.startDate.slice(0, 10), g.endDate.slice(0, 10)),
-    price: g.signup?.priceLabel || huf(g.signup?.price),
+    price:
+      lowest != null
+        ? `${huf(lowest)}${options.length > 1 ? '-tól' : ''}`
+        : g.signup?.priceLabel || huf(g.signup?.price),
   };
 }
 
@@ -647,7 +653,7 @@ export async function runWorkshopCutoffs(payload: Payload, now = new Date()) {
 // ── staff ───────────────────────────────────────────────────────────────────
 
 /**
- * "Felvétel a kurzusba": the person joins the course group's students and may book rooms; a
+ * "Felvétel a kurzusba": the person joins the course group's students; a
  * professional application becomes `accepted` (with the group, if it had none). Welcome e-mail.
  */
 export async function admit(payload: Payload, staff: TypedUser, id: number, groupId?: number | null): Promise<Result> {
@@ -684,8 +690,8 @@ export async function admit(payload: Payload, staff: TypedUser, id: number, grou
 }
 
 /**
- * The person joins the group's students and may book rooms (staff can take that back on the
- * account) — Felvétel by staff (their rights apply), or a paid kezdő sign-up (the system).
+ * The person joins the group's students — Felvétel by staff (their rights apply), or a paid kezdő
+ * sign-up (the system). Room booking is not given here: staff turn it on on the account.
  */
 export async function joinGroup(req: PayloadRequest, userId: number, g: CourseGroup, staff?: TypedUser) {
   const students = relIds(g.students);
@@ -697,7 +703,6 @@ export async function joinGroup(req: PayloadRequest, userId: number, g: CourseGr
       req,
       ...(staff ? { user: staff, overrideAccess: false } : {}),
     });
-  await req.payload.update({ collection: 'users', id: userId, data: { roomBooking: true }, req });
 }
 
 /** Kezdő sign-up for this group goes through the checkout (lib/payments): its switch, and the site's. */

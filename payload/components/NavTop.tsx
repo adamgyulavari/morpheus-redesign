@@ -39,7 +39,7 @@ function Badge({ count, href, title }: { count: number; href: string; title: str
 /**
  * Above the sidebar's groups: Irányítópult, then the "Napi munka" group — Jelentkezések (badge: the
  * applications waiting for a decision), Teremnaptár (badge: the upcoming sessions without a place)
- * and the collections in DAILY (payload/nav.ts).
+ * Havi számlázás and the collections in DAILY (payload/nav.ts).
  */
 export async function NavTop({ payload, user }: ServerProps) {
   if (!userIsStaffOrAdmin(user)) return null;
@@ -67,6 +67,9 @@ export async function NavTop({ payload, user }: ServerProps) {
           </a>
           <Badge count={unplaced} href={unplacedListHref()} title={`Helyszín nélkül: ${unplaced} alkalom`} />
         </span>
+        <a href="/admin/szamlazas" className="nav__link">
+          Havi számlázás
+        </a>
         {collections.map((c) => (
           <a key={c.slug} href={`/admin/collections/${c.slug}`} className="nav__link">
             {c.label}

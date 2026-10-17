@@ -555,6 +555,14 @@ export const BillingSettings: GlobalConfig = {
           ],
         },
         {
+          name: 'transferDueDays',
+          label: 'Átutalási határidő (nap)',
+          type: 'number',
+          min: 1,
+          defaultValue: 8,
+          admin: { description: 'A havidíj- és részletszámlák fizetési határideje a kiállítástól.' },
+        },
+        {
           name: 'invoicePrefix',
           label: 'Számlaszám előtag',
           type: 'text',

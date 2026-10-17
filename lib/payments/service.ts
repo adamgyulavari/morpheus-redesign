@@ -196,6 +196,7 @@ export async function checkoutCourse(
         .concat(parts > 1 ? ` (1. részlet a ${parts}-ből)` : ''),
       amount,
       billing,
+      plan: { label: option.label, total: option.amount, parts },
     },
   });
 }
@@ -224,7 +225,7 @@ async function placeOrder(
   now: Date,
   d: {
     application: Pick<Application, 'kind'> & Partial<Pick<Application, 'session' | 'courseGroup' | 'course'>>;
-    order: { kind: Order['kind']; label: string; amount: number; billing: Billing };
+    order: { kind: Order['kind']; label: string; amount: number; billing: Billing; plan?: Order['plan'] };
   },
 ): Promise<Result<{ token: string; checkoutUrl: string | null }>> {
   const holdUntil = new Date(now.getTime() + holdMinutes * 60_000);
@@ -256,6 +257,7 @@ async function placeOrder(
           status: 'pending',
           expiresAt: holdUntil.toISOString(),
           billing: d.order.billing,
+          plan: d.order.plan,
           token: randomBytes(24).toString('base64url'),
         },
         req,
