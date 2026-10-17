@@ -152,7 +152,8 @@ export default function CheckoutForm({ code, price, loginHref, summary, policy, 
         </Card>
       </div>
 
-      <Card>
+      {/* stays in view while the (longer, logged-out) form on the left scrolls; clear of the sticky header */}
+      <Card className="lg:sticky lg:top-28">
         <h2 className={heading}>A jelentkezésed</h2>
         {summary}
         <div className="flex items-baseline justify-between gap-4 border-y border-line py-4">
