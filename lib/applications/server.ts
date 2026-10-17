@@ -299,8 +299,8 @@ export async function signUp(
     const taken = (await takenBy(payload, 'course_group_id', [g.id])).get(g.id)?.taken ?? 0;
     const verdict = canSignUpCourse(courseFacts(g, taken), now);
     if (!verdict.ok) return verdict;
-    if (input.kind === 'beginner' && (await paysOnline(payload, relId(g.course))))
-      return { ok: false, reason: 'Erre a kurzusra a fizetéssel lehet jelentkezni.' };
+    if (input.kind === 'beginner' && (await groupPaysOnline(payload, g)))
+      return { ok: false, reason: 'Erre a csoportra a fizetéssel lehet jelentkezni.' };
     target = courseInfo(g);
     input.courseId = null; // the group's own (the collection's hook)
   } else {
@@ -310,8 +310,6 @@ export async function signUp(
       : null;
     if (!c || !canApplyWithoutGroup(c, input.kind))
       return { ok: false, reason: 'Erre a kurzusra most nem lehet jelentkezni.' };
-    if (input.kind === 'beginner' && (await paysOnline(payload, c.id)))
-      return { ok: false, reason: 'Erre a kurzusra a fizetéssel lehet jelentkezni.' };
     target = { title: c.title, withoutGroup: true };
     input.courseGroupId = null;
   }
@@ -702,11 +700,14 @@ export async function joinGroup(req: PayloadRequest, userId: number, g: CourseGr
   await req.payload.update({ collection: 'users', id: userId, data: { roomBooking: true }, req });
 }
 
-/** Kezdő sign-up for this course goes through the checkout (lib/payments). */
-export async function paysOnline(payload: Payload, courseId: number | null | undefined) {
-  if (!courseId || !(await billingSettings(payload)).online) return false;
-  const c = await payload.findByID({ collection: 'courses', id: courseId, depth: 0, disableErrors: true });
-  return c?.signupMode === 'beginner' && Boolean(c.payOnline);
+/** Kezdő sign-up for this group goes through the checkout (lib/payments): its switch, and the site's. */
+export async function groupPaysOnline(payload: Payload, g: CourseGroup) {
+  return (
+    signupKindOf(g) === 'beginner' &&
+    Boolean(g.signup?.payOnline) &&
+    Boolean(g.signup?.options?.length) &&
+    (await billingSettings(payload)).online
+  );
 }
 
 /** "Interjú" / "Elutasítás" (no e-mail: Fruzsi writes personally). */
@@ -852,6 +853,8 @@ export type DashboardApplication = {
   phone: string;
   status: ApplicationStatus;
   paidOffline: boolean;
+  /** Paid at the checkout (its order is paid). */
+  paidOnline: boolean;
   paymentNote: string;
   message: string;
   createdAt: string;
@@ -860,34 +863,38 @@ export type DashboardApplication = {
   target: string;
 };
 
-const toDashboard = (a: {
-  id: number;
-  name: string;
-  email: string;
-  phone?: string | null;
-  status?: ApplicationStatus | null;
-  paidOffline?: boolean | null;
-  paymentNote?: string | null;
-  message?: string | null;
-  createdAt: string;
-  courseGroup?: unknown;
-  target?: string | null;
-}): DashboardApplication => {
-  const g = a.courseGroup && typeof a.courseGroup === 'object' ? (a.courseGroup as CourseGroup) : null;
-  return {
-    id: a.id,
-    name: a.name,
-    email: a.email,
-    phone: a.phone ?? '',
-    status: a.status ?? 'registered',
-    paidOffline: Boolean(a.paidOffline),
-    paymentNote: a.paymentNote ?? '',
-    message: a.message ?? '',
-    createdAt: a.createdAt,
-    group: g ? { id: g.id, title: g.title } : undefined,
-    target: a.target ?? '',
+const toDashboard =
+  (paidOrders: Set<number>) =>
+  (a: {
+    id: number;
+    order?: unknown;
+    name: string;
+    email: string;
+    phone?: string | null;
+    status?: ApplicationStatus | null;
+    paidOffline?: boolean | null;
+    paymentNote?: string | null;
+    message?: string | null;
+    createdAt: string;
+    courseGroup?: unknown;
+    target?: string | null;
+  }): DashboardApplication => {
+    const g = a.courseGroup && typeof a.courseGroup === 'object' ? (a.courseGroup as CourseGroup) : null;
+    return {
+      id: a.id,
+      name: a.name,
+      email: a.email,
+      phone: a.phone ?? '',
+      status: a.status ?? 'registered',
+      paidOffline: Boolean(a.paidOffline),
+      paidOnline: paidOrders.has(relId(a.order) ?? 0),
+      paymentNote: a.paymentNote ?? '',
+      message: a.message ?? '',
+      createdAt: a.createdAt,
+      group: g ? { id: g.id, title: g.title } : undefined,
+      target: a.target ?? '',
+    };
   };
-};
 
 /**
  * What staff act on: the upcoming Nyitott Műhely dates with their participants (payment), the
@@ -935,6 +942,19 @@ export async function dashboard(payload: Payload, now = new Date()) {
     : { docs: [] };
   const studentsOf = new Map(groups.map((g) => [g.id, relIds(g.students)]));
   const beginners = courseApps.filter((a) => a.kind === 'beginner' && awaitingAdmission(a, studentsOf));
+  const orderIds = [...participants, ...courseApps]
+    .map((a) => relId(a.order))
+    .filter((id): id is number => Boolean(id));
+  const { docs: paid } = orderIds.length
+    ? await payload.find({
+        collection: 'orders',
+        where: { and: [{ id: { in: orderIds } }, { status: { equals: 'paid' } }] },
+        depth: 0,
+        select: { status: true },
+        ...all,
+      })
+    : { docs: [] };
+  const row = toDashboard(new Set(paid.map((o) => o.id)));
   return {
     workshops: dates.map((s) => {
       const list = participants.filter((p) => relId(p.session) === s.id);
@@ -948,11 +968,11 @@ export async function dashboard(payload: Payload, now = new Date()) {
         price: huf(s.workshop?.price),
         taken,
         cutoff: momentText(cutoffAt(new Date(s.start), settings.workshopCutoffHours)),
-        participants: list.map(toDashboard),
+        participants: list.map(row),
       };
     }),
-    beginners: beginners.map(toDashboard),
-    professionals: courseApps.filter((a) => a.kind === 'professional').map(toDashboard),
+    beginners: beginners.map(row),
+    professionals: courseApps.filter((a) => a.kind === 'professional').map(row),
     /** For "Felvétel és csoportba helyezés": the running and upcoming groups of each kind. */
     groups: {
       beginner: groups

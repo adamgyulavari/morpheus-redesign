@@ -10,12 +10,10 @@ import { redirect } from 'next/navigation';
 import { getCurrentUser, payloadClient } from '@/lib/auth';
 import { allow, clientIp } from '@/payload/magic-link';
 
-import { NO_GROUP } from './links';
 import {
   cancelOrder,
   checkout,
   checkoutCourse,
-  courseBySlug,
   groupByCode,
   orderStatus,
   resultUrl,
@@ -83,23 +81,14 @@ export async function checkoutAction(_: CheckoutState, form: FormData): Promise<
   redirect(r.checkoutUrl ?? resultUrl(r.token));
 }
 
-/** A kezdő course (`kurzus`: its slug; `csoport`: a group's code, or "nincs"; `opcio`: the price option). */
+/** A kezdő group (`csoport`: its public code; `opcio`: its payment option). */
 export async function courseCheckoutAction(_: CheckoutState, form: FormData): Promise<CheckoutState> {
   const c = await readCheckout(form);
-  const values = { ...c.values, opcio: str(form, 'opcio'), csoport: str(form, 'csoport') };
+  const values = { ...c.values, opcio: str(form, 'opcio') };
   if (!c.input) return { error: c.error, values };
-  const course = await courseBySlug(c.payload, str(form, 'kurzus'));
-  if (!course) return { error: 'Nincs ilyen kurzus.', values };
-  const code = str(form, 'csoport');
-  if (!code) return { error: 'Válaszd ki a csoportot.', values };
-  const group = code === NO_GROUP ? null : await groupByCode(c.payload, code);
-  if (code !== NO_GROUP && !group) return { error: 'Nincs ilyen csoport.', values };
-  const r = await checkoutCourse(c.payload, c.viewer, {
-    ...c.input,
-    courseId: course.id,
-    groupId: group?.id ?? null,
-    optionId: str(form, 'opcio'),
-  });
+  const group = await groupByCode(c.payload, str(form, 'csoport'));
+  if (!group) return { error: 'Nincs ilyen csoport.', values };
+  const r = await checkoutCourse(c.payload, c.viewer, { ...c.input, groupId: group.id, optionId: str(form, 'opcio') });
   if (!r.ok) return { error: r.reason, values };
   redirect(r.checkoutUrl ?? resultUrl(r.token));
 }

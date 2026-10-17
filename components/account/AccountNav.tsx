@@ -1,13 +1,12 @@
 'use client';
 
 /**
- * The account area's bar: its tabs, then the admin link (staff) and sign-out. Phase 3 adds
- * "Foglalásaim" (paid bookings) and "Számláim" (invoices) between "Teremfoglalás" and "Adataim".
+ * The account area's bar: its tabs, then the admin link (staff) and sign-out.
  */
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { CalendarIcon, HomeIcon, LogoutIcon, PersonIcon, WrenchIcon } from '@/components/icons';
+import { CalendarIcon, HomeIcon, LogoutIcon, PersonIcon, ReceiptIcon, WrenchIcon } from '@/components/icons';
 import { logout } from '@/lib/account-actions';
 
 export default function AccountNav({ canBook, isStaff }: { canBook: boolean; isStaff: boolean }) {
@@ -15,6 +14,7 @@ export default function AccountNav({ canBook, isStaff }: { canBook: boolean; isS
   const tabs = [
     { href: '/fiokom', label: 'Áttekintés', Icon: HomeIcon },
     ...(canBook ? [{ href: '/fiokom/terem', label: 'Teremfoglalás', Icon: CalendarIcon }] : []),
+    { href: '/fiokom/szamlaim', label: 'Számláim', Icon: ReceiptIcon },
     { href: '/fiokom/adatok', label: 'Adataim', Icon: PersonIcon },
   ];
   return (

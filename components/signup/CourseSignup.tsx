@@ -1,7 +1,7 @@
 /**
  * A course's sign-up button, by its "Jelentkezés módja": the external link, the beginner sign-up
  * (for one group, or a choice of the open ones) or the professional application form. With
- * "Jelentkezés csoport nélkül is" on the course, also without a group. A kezdő course with online
+ * "Jelentkezés csoport nélkül is" on the course, also without a group. A kezdő group with online
  * payment leads to its checkout instead (/fizetes/kurzus/…).
  */
 import Link from 'next/link';
@@ -77,7 +77,7 @@ export default function CourseSignup({ course, label, variant, size = 'lg', arro
         <span className="text-[15px] font-semibold text-ink2">Jelentkezés: {momentText(start.signup.opensAt)}-tól</span>
       );
     if (start.signup.state !== 'open') return null;
-    if (course.payOnline)
+    if (start.payOnline)
       return (
         <Link href={courseCheckoutPath(course.slug, start.code)} className={buttonClassName}>
           {label}
@@ -99,9 +99,14 @@ export default function CourseSignup({ course, label, variant, size = 'lg', arro
   }
   if (!open.length && !withoutGroup) return null;
   const only = open.length === 1 && !withoutGroup ? open[0] : undefined;
-  if (course.payOnline)
+  // any group with online payment: the checkout (which offers the free way for the rest)
+  const paid = open.filter((s) => s.payOnline);
+  if (paid.length)
     return (
-      <Link href={courseCheckoutPath(course.slug, only?.code)} className={buttonClassName}>
+      <Link
+        href={courseCheckoutPath(course.slug, paid.length === 1 && open.length === 1 ? paid[0]?.code : undefined)}
+        className={buttonClassName}
+      >
         {label}
       </Link>
     );

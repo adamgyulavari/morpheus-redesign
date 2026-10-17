@@ -116,6 +116,9 @@ export type CourseStart = {
   startTime?: string;
   endTime?: string;
   signup: { state: 'open' | 'full' | 'notYet' | 'closed'; left: number | null; opensAt?: string; price?: string };
+  /** Kezdő: sign-up with online payment (the group's switch and the site-wide one). */
+  payOnline: boolean;
+  options: PayChoice[];
 };
 
 export type SignupMode = 'external' | 'beginner' | 'professional';
@@ -129,8 +132,18 @@ export type PriceOption = {
   per?: string;
   note?: string;
   highlighted?: boolean;
+};
+
+/** A kezdő group's payment option (its sign-up's "Fizetési lehetőségek"). */
+export type PayChoice = {
+  id: string;
+  label: string;
+  /** HUF, all of it */
+  amount: number;
   /** Paid in this many parts; online sign-up pays the first (amount ÷ installments). */
   installments: number;
+  note?: string;
+  highlighted?: boolean;
 };
 
 export type Course = {
@@ -156,8 +169,6 @@ export type Course = {
   /** Courses with rolling enrolment announce a month instead of dated groups, e.g. "2026-09". */
   nextIntake?: string;
   prices: PriceOption[];
-  /** Kezdő: sign-up with online payment (the course's switch and the site-wide one). */
-  payOnline: boolean;
 };
 
 /** A Nyitott Műhely date (a `workshop` session) as the public page shows it. */

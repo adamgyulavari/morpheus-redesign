@@ -91,6 +91,15 @@ export function CalendarIcon({ className = 'h-[18px] w-[18px]' }: IconProps) {
   );
 }
 
+export function ReceiptIcon({ className = 'h-[18px] w-[18px]' }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" strokeWidth={1.8} {...stroke} aria-hidden="true">
+      <path d="M6 3.5h12v17l-2.5-1.5-2 1.5-1.5-1.5-1.5 1.5-2-1.5L6 20.5z" />
+      <path d="M9 8h6M9 11.5h6M9 15h3.5" />
+    </svg>
+  );
+}
+
 export function WrenchIcon({ className = 'h-[18px] w-[18px]' }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" strokeWidth={1.8} {...stroke} aria-hidden="true">

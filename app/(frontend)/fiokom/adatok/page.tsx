@@ -1,6 +1,6 @@
 import AccountNav from '@/components/account/AccountNav';
 import AccountShell, { Card } from '@/components/account/AccountShell';
-import { ProfileForm } from '@/components/account/forms';
+import { BillingForm, ProfileForm } from '@/components/account/forms';
 import { accountMetadata } from '@/components/account/meta';
 import { requireUser } from '@/lib/auth';
 import { mayBookRooms } from '@/lib/rooms/server';
@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 
 export const generateMetadata = () => accountMetadata('Adataim');
 
-/** Own name and phone. */
+/** Own name and phone; the billing details for invoices. */
 export default async function ProfilePage() {
   const user = await requireUser('/fiokom/adatok');
   return (
@@ -21,6 +21,18 @@ export default async function ProfilePage() {
         <Card>
           <ProfileForm
             user={{ email: user.email, firstName: user.firstName, lastName: user.lastName, phone: user.phone }}
+          />
+        </Card>
+        <Card>
+          <BillingForm
+            billing={{
+              name: user.billing?.name || [user.lastName, user.firstName].filter(Boolean).join(' '),
+              zip: user.billing?.zip ?? '',
+              city: user.billing?.city ?? '',
+              address: user.billing?.address ?? '',
+              country: user.billing?.country || 'HU',
+              taxNumber: user.billing?.taxNumber ?? '',
+            }}
           />
         </Card>
       </div>

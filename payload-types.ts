@@ -260,6 +260,32 @@ export interface CourseGroup {
      */
     capacity?: number | null;
     /**
+     * A jelentkező a lenti lehetőségek közül választ és fizet (egy összegben vagy az első részletet); a fizetéssel felvesszük a csoportba. Kikapcsolva a jelentkezés ingyenes, a felvételről ti döntötök. (A Fizetési beállítások „Online fizetés” kapcsolója is kell hozzá.)
+     */
+    payOnline?: boolean | null;
+    /**
+     * A kurzus oldalán és a fizetésnél ezek látszanak. Új kezdő csoportnál a kurzus árai kerülnek ide; csoportonként módosíthatod.
+     */
+    options?:
+      | {
+          /**
+           * Pl. „Két részletben”
+           */
+          label: string;
+          amount: number;
+          /**
+           * Jelentkezéskor az első részletet fizeti (összeg ÷ részletek).
+           */
+          installments?: number | null;
+          /**
+           * Pl. „kedvezményesen”
+           */
+          note?: string | null;
+          highlighted?: boolean | null;
+          id?: string | null;
+        }[]
+      | null;
+    /**
      * Üresen: azonnal.
      */
     opensAt?: string | null;
@@ -385,17 +411,9 @@ export interface Course {
      * Pl. „2 × 80 000 Ft”
      */
     note?: string | null;
-    /**
-     * Online jelentkezéskor az első részletet fizeti (összeg ÷ részletek); a többit később.
-     */
-    installments?: number | null;
     highlighted?: boolean | null;
     id?: string | null;
   }[];
-  /**
-   * Kezdőnél: a jelentkező a fenti árak közül választ, és fizet (egy összegben vagy az első részletet); a fizetéssel felvesszük a csoportba. Kikapcsolva a jelentkezés ingyenes, a felvételről ti döntötök. (A Fizetési beállítások „Online fizetés” kapcsolója is kell hozzá.)
-   */
-  payOnline?: boolean | null;
   importId?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -2963,6 +2981,17 @@ export interface CourseGroupsSelect<T extends boolean = true> {
         price?: T;
         priceLabel?: T;
         capacity?: T;
+        payOnline?: T;
+        options?:
+          | T
+          | {
+              label?: T;
+              amount?: T;
+              installments?: T;
+              note?: T;
+              highlighted?: T;
+              id?: T;
+            };
         opensAt?: T;
         closesAt?: T;
       };
@@ -4029,11 +4058,9 @@ export interface CoursesSelect<T extends boolean = true> {
         amount?: T;
         per?: T;
         note?: T;
-        installments?: T;
         highlighted?: T;
         id?: T;
       };
-  payOnline?: T;
   importId?: T;
   updatedAt?: T;
   createdAt?: T;

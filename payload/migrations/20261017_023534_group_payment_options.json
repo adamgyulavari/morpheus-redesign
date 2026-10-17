@@ -2,6 +2,113 @@
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.course_groups_signup_options": {
+      "name": "course_groups_signup_options",
+      "schema": "",
+      "columns": {
+        "_order": {
+          "name": "_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_parent_id": {
+          "name": "_parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "label": {
+          "name": "label",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "amount": {
+          "name": "amount",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "installments": {
+          "name": "installments",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 1
+        },
+        "note": {
+          "name": "note",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "highlighted": {
+          "name": "highlighted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "course_groups_signup_options_order_idx": {
+          "name": "course_groups_signup_options_order_idx",
+          "columns": [
+            {
+              "expression": "_order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "course_groups_signup_options_parent_id_idx": {
+          "name": "course_groups_signup_options_parent_id_idx",
+          "columns": [
+            {
+              "expression": "_parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "course_groups_signup_options_parent_id_fk": {
+          "name": "course_groups_signup_options_parent_id_fk",
+          "tableFrom": "course_groups_signup_options",
+          "tableTo": "course_groups",
+          "columnsFrom": [
+            "_parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.course_groups_default_schedule": {
       "name": "course_groups_default_schedule",
       "schema": "",
@@ -189,6 +296,13 @@
           "type": "numeric",
           "primaryKey": false,
           "notNull": false
+        },
+        "signup_pay_online": {
+          "name": "signup_pay_online",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         },
         "signup_opens_at": {
           "name": "signup_opens_at",
@@ -20756,13 +20870,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "installments": {
-          "name": "installments",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 1
-        },
         "highlighted": {
           "name": "highlighted",
           "type": "boolean",
@@ -20913,13 +21020,6 @@
           "type": "timestamp(3) with time zone",
           "primaryKey": false,
           "notNull": false
-        },
-        "pay_online": {
-          "name": "pay_online",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
         },
         "import_id": {
           "name": "import_id",
@@ -32967,6 +33067,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "3d25d9bc-a842-41a1-9356-24979e6271fc",
+  "id": "b3ca20ff-d328-4960-ad89-2735383ab888",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

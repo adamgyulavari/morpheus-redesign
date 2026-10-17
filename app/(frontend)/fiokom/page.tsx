@@ -10,9 +10,11 @@ import ApplicationActions from '@/components/account/upcoming/ApplicationActions
 import { upcomingItems } from '@/components/account/upcoming/items';
 import UpcomingList from '@/components/account/upcoming/UpcomingList';
 import { ArrowRight } from '@/components/icons';
+import UnpaidNotice from '@/components/payments/UnpaidNotice';
 import { myApplications } from '@/lib/applications/overview';
 import { payloadClient, requireUser } from '@/lib/auth';
 import { dateRange } from '@/lib/dates';
+import { myOrders } from '@/lib/payments/my-orders';
 import { checkCancel } from '@/lib/rooms/rules';
 import { loadSettings } from '@/lib/rooms/server';
 import { studentOverview } from '@/lib/rooms/student';
@@ -47,7 +49,7 @@ const Empty = ({ children }: { children: ReactNode }) => <p className="text-[15p
  * The student area's overview. Left: what's coming — the sessions of my groups and their productions,
  * the practice bookings (my groupmates' and mine, with my note and "Lemondás") and my Nyitott Műhely
  * dates. Right: my courses (with pending applications), links. Fresh on every request.
- * Phase 3 adds "Foglalásaim" and "Számláim" sections (and tabs) here.
+ * An unfinished payment is on top ("Fizetés folytatása"); invoices are on /fiokom/szamlaim.
  */
 export default async function AccountPage() {
   const user = await requireUser('/fiokom');
@@ -58,7 +60,7 @@ export default async function AccountPage() {
     user,
     o.groups.map((g) => g.id),
   );
-  const bookingRules = await loadSettings(payload);
+  const [bookingRules, { unpaid }] = await Promise.all([loadSettings(payload), myOrders(payload, user)]);
   const now = new Date();
   const agenda = upcomingItems(o, mine, (start) => checkCancel(new Date(start), bookingRules, now).ok);
   // workshop-only visitors, applicants and those booking rooms without a course see theirs too
@@ -67,6 +69,7 @@ export default async function AccountPage() {
   return (
     <AccountShell eyebrow="Fiókom" heading={`Szia, *${greetingName(user)}!*`} wide>
       <AccountNav canBook={o.mayBook} isStaff={userIsStaffOrAdmin(user)} />
+      <UnpaidNotice unpaid={unpaid} />
 
       {!hasAnything ? (
         <Card>

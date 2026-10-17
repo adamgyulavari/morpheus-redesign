@@ -9,6 +9,7 @@ import type { CourseGroup } from '@/payload-types';
 import { isStaffOrAdmin, isStaffOrAdminField, userIsStaffOrAdmin } from '../access';
 
 import { date, dateTime, fullRichText, relationship, text, time } from '../fields';
+import { relId } from '../rel';
 import { collectionRevalidation } from '../revalidate';
 
 /**
@@ -23,6 +24,10 @@ type Signup = NonNullable<CourseGroup['signup']>;
 
 /** The window's dates only matter (and show) with "Időablakban". */
 const inWindow = (_: unknown, sibling: Partial<Signup>) => sibling?.mode === 'window';
+/** A kezdő sign-up (set, or from the group's type): payment options instead of one price. */
+const isBeginner = (data: Partial<CourseGroup> | undefined, sibling?: Partial<Signup>) =>
+  (sibling?.kind || SIGNUP_KIND_OF_TYPE[data?.type ?? ''] || 'beginner') === 'beginner';
+const notBeginner = (data: Partial<CourseGroup>, sibling: Partial<Signup>) => !isBeginner(data, sibling);
 const opensAt = dateTime('opensAt', 'Jelentkezés kezdete', { description: 'Üresen: azonnal.' });
 const closesAt = dateTime('closesAt', 'Jelentkezés vége', { description: 'Üresen: a kurzus kezdéséig.' });
 
@@ -51,9 +56,27 @@ export const CourseGroups: CollectionConfig = {
     ...collectionRevalidation('courseGroups'),
     beforeChange: [
       // the sign-up kind follows the group's type unless set (kezdő → beginner, szakmai → professional)
-      ({ data, originalDoc }) => {
+      async ({ data, originalDoc, operation, req }) => {
         const type = data.type ?? originalDoc?.type;
         if (data.signup && !data.signup.kind) data.signup.kind = SIGNUP_KIND_OF_TYPE[type] ?? 'beginner';
+        // a new kezdő group starts with its course's prices as the payment options
+        const courseId = relId(data.course ?? originalDoc?.course);
+        if (operation === 'create' && data.signup?.kind === 'beginner' && !data.signup.options?.length && courseId) {
+          const course = await req.payload.findByID({
+            collection: 'courses',
+            id: courseId,
+            depth: 0,
+            req,
+            disableErrors: true,
+          });
+          data.signup.options = (course?.prices ?? []).map(({ label, amount, note, highlighted }) => ({
+            label,
+            amount,
+            note,
+            highlighted,
+            installments: Number(/^\s*(\d+)\s*[×x]/.exec(note ?? '')?.[1] ?? 1),
+          }));
+        }
         // the group's public code: its checkout link (/fizetes/kurzus/…?csoport=…), not the id
         data.code = originalDoc?.code || data.code || randomBytes(6).toString('base64url');
         return data;
@@ -109,7 +132,7 @@ export const CourseGroups: CollectionConfig = {
           label: 'Havidíj (Ft)',
           type: 'number',
           min: 0,
-          admin: { description: 'A havi számlázáshoz (később).' },
+          admin: { description: 'A havi számlázáshoz (később).', condition: (data) => data?.type !== 'kezdo' },
         },
         {
           name: 'invoiceDay',
@@ -118,7 +141,7 @@ export const CourseGroups: CollectionConfig = {
           min: 1,
           max: 28,
           defaultValue: 5,
-          admin: { description: 'A hónap hányadik napján (1–28).' },
+          admin: { description: 'A hónap hányadik napján (1–28).', condition: (data) => data?.type !== 'kezdo' },
         },
       ],
     },
@@ -158,14 +181,63 @@ export const CourseGroups: CollectionConfig = {
         {
           type: 'row',
           fields: [
-            { name: 'price', label: 'Ár (Ft)', type: 'number', min: 0 },
-            text('priceLabel', 'Ár felirata', { description: 'Pl. „45 000 Ft / hó” — ha üres, az ár.' }),
+            { name: 'price', label: 'Ár (Ft)', type: 'number', min: 0, admin: { condition: notBeginner } },
+            {
+              ...text('priceLabel', 'Ár felirata', { description: 'Pl. „45 000 Ft / hó” — ha üres, az ár.' }),
+              admin: { description: 'Pl. „45 000 Ft / hó” — ha üres, az ár.', condition: notBeginner },
+            },
             {
               name: 'capacity',
               label: 'Férőhely',
               type: 'number',
               min: 1,
               admin: { description: 'Csak kezdőnél számít. Üresen: nincs korlát.' },
+            },
+          ],
+        },
+        {
+          name: 'payOnline',
+          label: 'Online fizetés jelentkezéskor',
+          type: 'checkbox',
+          defaultValue: false,
+          admin: {
+            condition: isBeginner,
+            description:
+              'A jelentkező a lenti lehetőségek közül választ és fizet (egy összegben vagy az első részletet); a fizetéssel felvesszük a csoportba. Kikapcsolva a jelentkezés ingyenes, a felvételről ti döntötök. (A Fizetési beállítások „Online fizetés” kapcsolója is kell hozzá.)',
+          },
+        },
+        {
+          name: 'options',
+          label: 'Fizetési lehetőségek',
+          labels: { singular: 'Lehetőség', plural: 'Lehetőségek' },
+          type: 'array',
+          admin: {
+            condition: isBeginner,
+            description:
+              'A kurzus oldalán és a fizetésnél ezek látszanak. Új kezdő csoportnál a kurzus árai kerülnek ide; csoportonként módosíthatod.',
+          },
+          fields: [
+            {
+              type: 'row',
+              fields: [
+                text('label', 'Megnevezés', { required: true, description: 'Pl. „Két részletben”' }),
+                { name: 'amount', label: 'Teljes összeg (Ft)', type: 'number', min: 0, required: true },
+              ],
+            },
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'installments',
+                  label: 'Részletek száma',
+                  type: 'number',
+                  min: 1,
+                  defaultValue: 1,
+                  admin: { description: 'Jelentkezéskor az első részletet fizeti (összeg ÷ részletek).' },
+                },
+                text('note', 'Megjegyzés', { description: 'Pl. „kedvezményesen”' }),
+                { name: 'highlighted', label: 'Alapértelmezett', type: 'checkbox' },
+              ],
             },
           ],
         },

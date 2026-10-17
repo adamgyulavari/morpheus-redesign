@@ -1,7 +1,6 @@
 /**
  * Our payment logic, provider-agnostic (only `./types` and `./providers` — never a vendor SDK):
- * - checkout (a Nyitott Műhely date) / checkoutCourse (a kezdő group, or the course without a
- *   group): a place is held (application `held` + order `pending`, one transaction, under the
+ * - checkout (a Nyitott Műhely date) / checkoutCourse (a kezdő group): a place is held (application `held` + order `pending`, one transaction, under the
  *   capacity lock), then the provider's payment page — or done at once when nothing is due;
  * - applyPaymentUpdate: what the webhook (and the result page) run — the provider is asked, the
  *   change is applied once (statuses only forward), the follow-ups queued;
@@ -35,7 +34,7 @@ import {
   workshopInfo,
 } from '@/lib/applications/server';
 import { applicationSettings } from '@/lib/applications/settings';
-import { issueInvoice } from '@/lib/invoicing/service';
+import { issueInvoice, stornoInvoice } from '@/lib/invoicing/service';
 import { whenText } from '@/lib/rooms/format';
 import { icsFile } from '@/lib/rooms/ics';
 import { errorMessage } from '@/lib/rooms/server';
@@ -44,6 +43,7 @@ import { siteUrl } from '@/payload/email';
 import { relId } from '@/payload/rel';
 import type { Application, Course, CourseGroup, Order, Payment, Session } from '@/payload-types';
 
+import { type Billing, clean, validateBilling } from './billing';
 import { checkoutPath, courseCheckoutPath } from './links';
 import { sendLateRefund, sendOrderPaid, sendPaymentLink, sendStaffAlert, sendStaffPaid } from './notify';
 import { paymentProvider } from './providers';
@@ -54,27 +54,7 @@ type Result<T = object> = ({ ok: true } & T) | { ok: false; reason: string };
 
 // ── settings, billing ───────────────────────────────────────────────────────
 
-/** The buyer on the invoice (a snapshot on the order; the account keeps its own copy). */
-export type Billing = { name: string; zip: string; city: string; address: string; country: string; taxNumber: string };
-
-export function validateBilling(b: Billing): string | null {
-  if (!b.name.trim()) return 'Add meg a számlázási nevet.';
-  const country = b.country.trim().toUpperCase() || 'HU';
-  if (!/^[A-Z]{2}$/.test(country)) return 'Az ország kétbetűs kódja kell (pl. HU).';
-  if (country === 'HU' ? !/^\d{4}$/.test(b.zip.trim()) : !b.zip.trim()) return 'Add meg az irányítószámot.';
-  if (!b.city.trim()) return 'Add meg a várost.';
-  if (!b.address.trim()) return 'Add meg a címet (utca, házszám).';
-  return null;
-}
-
-const clean = (b: Billing): Billing => ({
-  name: b.name.trim(),
-  zip: b.zip.trim(),
-  city: b.city.trim(),
-  address: b.address.trim(),
-  country: b.country.trim().toUpperCase() || 'HU',
-  taxNumber: b.taxNumber.trim(),
-});
+export { type Billing, validateBilling } from './billing';
 
 // ── checkout ────────────────────────────────────────────────────────────────
 
@@ -87,13 +67,6 @@ export async function sessionByCode(payload: Payload, code: string) {
     depth: 0,
     limit: 1,
   });
-  return docs[0] ?? null;
-}
-
-/** A course by its slug (the kezdő checkout's link). */
-export async function courseBySlug(payload: Payload, slug: string) {
-  if (!slug || slug.length > 120) return null;
-  const { docs } = await payload.find({ collection: 'courses', where: { slug: { equals: slug } }, depth: 0, limit: 1 });
   return docs[0] ?? null;
 }
 
@@ -160,23 +133,21 @@ export async function checkout(
 }
 
 export type CourseCheckoutInput = ApplicantInput & {
-  courseId: number;
-  /** null: without a group (the course takes those; staff place it later). */
-  groupId: number | null;
-  /** The chosen price option (the course's `prices`). */
+  groupId: number;
+  /** The chosen payment option (the group's "Fizetési lehetőségek"). */
   optionId: string;
   billing: Billing;
 };
 
-/** What is paid now for a price option: all of it, or the first of its instalments. */
+/** What is paid now for a payment option: all of it, or the first of its instalments. */
 export function dueNow(option: { amount: number; installments?: number | null }) {
   const parts = Math.max(1, Math.round(option.installments ?? 1));
   return { parts, amount: Math.max(0, Math.round(option.amount / parts)) };
 }
 
 /**
- * A kezdő sign-up with payment: a group (or the course, without one) and a price option. Paid
- * means admitted (a group) or waiting to be placed (without one) — see afterPaid.
+ * A kezdő sign-up with payment: a group with "Online fizetés jelentkezéskor", one of its payment
+ * options. Paid means admitted (see afterPaid). Without a group the sign-up stays free.
  */
 export async function checkoutCourse(
   payload: Payload,
@@ -190,19 +161,21 @@ export async function checkoutCourse(
   const billingRules = await billingSettings(payload);
   if (!billingRules.online) return { ok: false, reason: PAUSED };
 
-  const course = await payload.findByID({ collection: 'courses', id: input.courseId, depth: 0, disableErrors: true });
-  if (course?.signupMode !== 'beginner' || !course.payOnline)
-    return { ok: false, reason: 'Erre a kurzusra így nem lehet jelentkezni.' };
-  const option = (course.prices ?? []).find((p) => p.id === input.optionId);
+  const group = await payload.findByID({
+    collection: 'courseGroups',
+    id: input.groupId,
+    depth: 0,
+    disableErrors: true,
+  });
+  if (!group || signupKindOf(group) !== 'beginner' || !group.signup?.payOnline)
+    return { ok: false, reason: 'Erre a csoportra így nem lehet jelentkezni.' };
+  const option = (group.signup.options ?? []).find((o) => o.id === input.optionId);
   if (!option) return { ok: false, reason: 'Válaszd ki, hogyan fizetsz.' };
   const { parts, amount } = dueNow(option);
-
-  let group: CourseGroup | null = null;
-  if (input.groupId) {
-    group = await payload.findByID({ collection: 'courseGroups', id: input.groupId, depth: 0, disableErrors: true });
-    if (!group || relId(group.course) !== course.id || signupKindOf(group) !== 'beginner')
-      return { ok: false, reason: 'Nincs ilyen csoport.' };
-  }
+  const course = relId(group.course)
+    ? await payload.findByID({ collection: 'courses', id: relId(group.course) ?? 0, depth: 0, disableErrors: true })
+    : null;
+  if (!course) return { ok: false, reason: 'Erre a csoportra így nem lehet jelentkezni.' };
   const target = await courseTarget(payload, course, group, now);
   if (!target.verdict.ok) return target.verdict;
 
@@ -210,19 +183,15 @@ export async function checkoutCourse(
   if (viewer || created)
     await payload.update({ collection: 'users', id: applicant.userId, data: { billing } }).catch(() => {});
 
-  const again = await heldOrderOf(
-    payload,
-    applicant.userId,
-    sameTarget({ kind: 'beginner', courseGroup: group?.id, course: course.id }),
-  );
+  const again = await heldOrderOf(payload, applicant.userId, { courseGroup: { equals: group.id } });
   if (again) return payOrder(payload, again, applicant.email, now);
 
   return placeOrder(payload, applicant, target.info, billingRules.holdMinutes, now, {
-    // with a group, the collection's hook sets its course
-    application: { kind: 'beginner', ...(group ? { courseGroup: group.id } : { course: course.id }) },
+    // the collection's hook sets the group's course
+    application: { kind: 'beginner', courseGroup: group.id },
     order: {
       kind: 'beginner',
-      label: [course.title, group ? courseInfo(group).title : 'csoport nélkül', option.label]
+      label: [course.title, courseInfo(group).title, option.label]
         .join(' — ')
         .concat(parts > 1 ? ` (1. részlet a ${parts}-ből)` : ''),
       amount,
@@ -485,7 +454,8 @@ async function confirmOrder(req: PayloadRequest, order: Order) {
 type Effect =
   | { type: 'paid'; orderId: number }
   | { type: 'mismatch'; orderId: number; providerPaymentId: string; expected: number; got: number }
-  | { type: 'refund'; why: 'late' | 'duplicate'; orderId: number; paymentId: number; amount: number };
+  | { type: 'refund'; why: 'late' | 'duplicate'; orderId: number; paymentId: number; amount: number }
+  | { type: 'refundedOutside'; orderId: number; full: boolean; amount: number };
 
 const LOG_KEEP = 30;
 
@@ -534,6 +504,22 @@ export async function applyPaymentUpdate(
       },
       req,
     });
+    // refunded in the provider's dashboard (not by us — ours are on the payment): the order follows
+    if (
+      (truth.status === 'refunded' || truth.status === 'partially_refunded') &&
+      paidOrLater(from) &&
+      !(payment.refunds ?? []).length &&
+      (order.status === 'paid' || order.status === 'partially_refunded')
+    ) {
+      await payload.update({ collection: 'orders', id: order.id, data: { status: truth.status }, req });
+      effects.push({
+        type: 'refundedOutside',
+        orderId: order.id,
+        full: truth.status === 'refunded',
+        amount: truth.amountRefunded,
+      });
+      return true;
+    }
     // only the first time a payment counts as paid does anything follow
     if (!paidOrLater(truth.status) || paidOrLater(from)) return true;
 
@@ -607,7 +593,28 @@ async function runEffect(payload: Payload, e: Effect) {
       `A ${e.providerPaymentId} fizetés ${e.got} Ft-ról szól, a rendelés (#${e.orderId}) ${e.expected} Ft. A jelentkezést nem véglegesítettük.`,
       'Nézd meg a fizetést a szolgáltató felületén és a Rendelések között.',
     ]);
+  if (e.type === 'refundedOutside') return afterOutsideRefund(payload, e.orderId, e.full, e.amount);
   await refundAutomatically(payload, e.orderId, e.paymentId, e.amount, e.why);
+}
+
+/**
+ * A refund made in the provider's dashboard: in full, the invoice is reversed (storno); in part,
+ * staff correct the invoice by hand. The sign-up itself is left as it is — staff decide.
+ */
+async function afterOutsideRefund(payload: Payload, orderId: number, full: boolean, amount: number) {
+  const settings = await applicationSettings(payload);
+  const order = await payload.findByID({ collection: 'orders', id: orderId, depth: 0 });
+  const { docs: invoices } = await payload.find({
+    collection: 'invoices',
+    where: { and: [{ order: { equals: orderId } }, { kind: { equals: 'invoice' } }] },
+    depth: 0,
+  });
+  if (full) for (const invoice of invoices) await stornoInvoice(payload, invoice.id, 'Visszatérítés');
+  await sendStaffAlert(payload, settings, full ? 'visszatérítés' : 'részleges visszatérítés', [
+    `A rendelés #${orderId} (${order.label}) fizetéséből ${amount} Ft-ot visszautaltatok a fizetési szolgáltató felületén.`,
+    full ? 'A számlát sztornóztuk (Pénzügyek → Számlák).' : 'A számlát kézzel kell helyesbíteni a Számlázz.hu-ban.',
+    'A jelentkezés nem változott: ha kell, mondd le a Jelentkezések oldalon.',
+  ]);
 }
 
 /** A late or duplicate payment goes back in full; the person and staff are told. */

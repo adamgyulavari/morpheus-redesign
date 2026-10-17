@@ -241,19 +241,19 @@ const findCourses = cache(async (): Promise<Course[]> => {
     groups.map((g) => g.id),
   );
   const now = new Date();
+  const online = (await billingSettings(p)).online;
   const starts = groups.map((g) => ({
     courseId: g.course == null ? null : String(typeof g.course === 'object' ? g.course.id : g.course),
     start: map.courseStart(
       g as CourseGroup,
       courseSignupState(courseFacts(g as CourseGroup, taken.get(g.id)?.taken ?? 0), now),
+      online,
     ),
   }));
-  const online = (await billingSettings(p)).online;
   return courses.map((c) =>
     map.course(
       c,
       starts.filter((s) => s.courseId === String(c.id)).map((s) => s.start),
-      online,
     ),
   );
 });

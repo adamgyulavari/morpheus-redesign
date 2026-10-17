@@ -16,7 +16,15 @@ import { errorMessage } from '@/lib/rooms/server';
 import { relId } from '@/payload/rel';
 import type { Invoice, Order, User } from '@/payload-types';
 
-import { type AgentResult, createInvoice, createStorno, type InvoiceData, split, type VatMode } from './szamlazz';
+import {
+  type AgentResult,
+  createInvoice,
+  createStorno,
+  type InvoiceData,
+  invoicePdf,
+  split,
+  type VatMode,
+} from './szamlazz';
 
 export type InvoicingMode = 'off' | 'test' | 'live';
 
@@ -186,4 +194,16 @@ async function record(payload: Payload, existing: Invoice | null, d: Draft): Pro
 async function alert(payload: Payload, what: string, line: string) {
   payload.logger.error({ msg: `invoicing: ${what}: ${line}` });
   await sendStaffAlert(payload, await applicationSettings(payload), 'számlázási hiba', [`${what}:`, line]);
+}
+
+/** An issued invoice's PDF from Számlázz.hu (null: not sent there, or no answer). */
+export async function invoicePdfFor(payload: Payload, invoice: Invoice): Promise<Uint8Array | null> {
+  if (invoice.status !== 'issued' || !invoice.number || invoice.mode === 'off') return null;
+  try {
+    if (invoicingMode() === 'off') return null;
+    return await invoicePdf(process.env.SZAMLAZZ_AGENT_KEY ?? '', invoice.number);
+  } catch (err) {
+    payload.logger.error({ err, msg: `invoice PDF failed for ${invoice.number}` });
+    return null;
+  }
 }

@@ -169,10 +169,10 @@ function stateOf(app: App, kind: Kind): { tone: 'todo' | 'ready' | 'done'; text:
     return app.status === 'new'
       ? { tone: 'todo', text: 'Új jelentkezés — elbírálásra vár' }
       : { tone: 'ready', text: 'Interjú — döntésre vár' };
-  if (!app.paidOffline) return { tone: 'todo', text: 'A fizetés nincs rögzítve' };
+  if (!app.paidOffline && !app.paidOnline) return { tone: 'todo', text: 'A fizetés nincs rögzítve' };
   if (kind === 'beginner')
     return { tone: 'ready', text: app.group ? 'Fizetett — felvehető' : 'Fizetett — csoportba helyezhető' };
-  return { tone: 'done', text: 'Fizetve' };
+  return { tone: 'done', text: app.paidOnline ? 'Online fizetve' : 'Fizetve' };
 }
 const TONES = {
   todo: { bg: '#f9c86a', fg: '#0b3a3f', mark: '!' },
@@ -248,7 +248,9 @@ const nameCell = (app: App, kind: Kind) => (
 const right = { textAlign: 'right' as const, whiteSpace: 'nowrap' as const };
 
 const PaidText = ({ app }: { app: App }) =>
-  app.paidOffline ? (
+  app.paidOnline ? (
+    <span>Online fizetve</span>
+  ) : app.paidOffline ? (
     <span>Fizetve{app.paymentNote && <span className={s.muted}> · {app.paymentNote}</span>}</span>
   ) : (
     <span className={s.muted}>—</span>

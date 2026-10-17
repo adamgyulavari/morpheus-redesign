@@ -18,6 +18,7 @@ import {
   register,
   resetPassword,
   sendMagicLink,
+  updateBilling,
   updateProfile,
 } from '@/lib/account-actions';
 
@@ -366,6 +367,85 @@ export function ProfileForm({
         <label className="field-label">
           Telefonszám
           <input className="field" type="tel" name="phone" autoComplete="tel" defaultValue={value('phone')} />
+        </label>
+      </div>
+      <Submit>Mentés</Submit>
+    </form>
+  );
+}
+
+/** The billing details for invoices (the checkout fills them in the first time). */
+export function BillingForm({
+  billing,
+}: {
+  billing: { name: string; zip: string; city: string; address: string; country: string; taxNumber: string };
+}) {
+  const [state, action] = useActionState(updateBilling, initial);
+  const value = (key: string, fallback: string) => v(state, key) ?? fallback;
+  return (
+    <form action={action} className="flex flex-col gap-4 lg:gap-5">
+      <h2 className="font-display text-[32px] leading-none lg:text-[40px]">Számlázási adatok</h2>
+      <p className="text-[15px] text-ink2">Ezek kerülnek a számláidra. Az eddig kiállított számlák nem változnak.</p>
+      <Notice state={state} />
+      <label className="field-label">
+        Név a számlán
+        <input
+          className="field"
+          name="billingName"
+          required
+          autoComplete="name"
+          defaultValue={value('billingName', billing.name)}
+        />
+      </label>
+      <div className="grid gap-4 sm:grid-cols-[140px_1fr]">
+        <label className="field-label">
+          Irányítószám
+          <input
+            className="field"
+            name="zip"
+            required
+            inputMode="numeric"
+            maxLength={10}
+            autoComplete="postal-code"
+            defaultValue={value('zip', billing.zip)}
+          />
+        </label>
+        <label className="field-label">
+          Város
+          <input
+            className="field"
+            name="city"
+            required
+            autoComplete="address-level2"
+            defaultValue={value('city', billing.city)}
+          />
+        </label>
+      </div>
+      <label className="field-label">
+        Cím (utca, házszám)
+        <input
+          className="field"
+          name="address"
+          required
+          autoComplete="street-address"
+          defaultValue={value('address', billing.address)}
+        />
+      </label>
+      <div className="grid gap-4 sm:grid-cols-[140px_1fr]">
+        <label className="field-label">
+          Ország
+          <input
+            className="field"
+            name="country"
+            required
+            maxLength={2}
+            autoComplete="country"
+            defaultValue={value('country', billing.country)}
+          />
+        </label>
+        <label className="field-label">
+          Adószám (cégnek)
+          <input className="field" name="taxNumber" defaultValue={value('taxNumber', billing.taxNumber)} />
         </label>
       </div>
       <Submit>Mentés</Submit>
