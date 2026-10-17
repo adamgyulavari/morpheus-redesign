@@ -1,8 +1,9 @@
 /**
- * The overview's "Közelgő alkalmak": the group's sessions and the practice bookings in one shape, in
- * time order, with the date parts the list shows (Budapest time).
+ * The overview's "Közelgő alkalmak": the group's sessions, the practice bookings and the person's
+ * Nyitott Műhely dates in one shape, in time order, with the date parts the list shows (Budapest time).
  */
 
+import type { MyApplications } from '@/lib/applications/overview';
 import { dayOfMonth, monthShort, todayInBudapest, weekday } from '@/lib/dates';
 import type { SessionKind } from '@/lib/rooms/labels';
 import type { StudentOverview } from '@/lib/rooms/student';
@@ -21,10 +22,22 @@ export type UpcomingItem = {
   place?: string;
   /** Who booked the practice. */
   booker?: string;
+  /** The person's own note on their practice booking. */
+  note?: string;
   cancelled: boolean;
+  /** The person's own practice booking, and whether it may still be cancelled. */
+  practice?: { bookingId: number; canCancel: boolean };
+  /** The person's own Nyitott Műhely sign-up: what they may do with it. */
+  application?: { id: number; canCancel: boolean; canMove: boolean; moveTargets: { id: number; label: string }[] };
 };
 
-export function upcomingItems(o: StudentOverview): UpcomingItem[] {
+export function upcomingItems(
+  o: StudentOverview,
+  mine: MyApplications,
+  /** May an own practice booking starting then still be cancelled (the room booking rules)? */
+  canCancelPractice: (start: string) => boolean,
+): UpcomingItem[] {
+  const own = new Set(o.ownPractice.map((b) => b.id));
   return [
     ...o.sessions.map(
       (s): UpcomingItem => ({
@@ -47,6 +60,20 @@ export function upcomingItems(o: StudentOverview): UpcomingItem[] {
         place: b.rooms,
         booker: b.owner ? b.booker : undefined,
         cancelled: false,
+        note: b.note,
+        practice: own.has(b.id) ? { bookingId: b.id, canCancel: canCancelPractice(b.start) } : undefined,
+      }),
+    ),
+    ...mine.workshops.map(
+      (w): UpcomingItem => ({
+        key: `w${w.applicationId}`,
+        kind: 'workshop',
+        title: w.title,
+        start: w.start,
+        end: w.end,
+        place: w.place,
+        cancelled: w.cancelled,
+        application: { id: w.applicationId, canCancel: w.canCancel, canMove: w.canMove, moveTargets: mine.moveTargets },
       }),
     ),
   ].sort((a, b) => a.start.localeCompare(b.start));

@@ -162,7 +162,7 @@ export function LoginForms({ returnTo, info }: { returnTo: string; info?: string
 }
 
 /** /belepes/link: whose login it is, and the button that uses up the link. */
-export function MagicLinkConfirm({ token, email }: { token: string; email: string }) {
+export function MagicLinkConfirm({ token, email, next }: { token: string; email: string; next?: string }) {
   const [state, action] = useActionState(confirmMagicLink, initial);
   return (
     <form action={action} className="flex flex-col gap-4 lg:gap-5">
@@ -171,6 +171,7 @@ export function MagicLinkConfirm({ token, email }: { token: string; email: strin
         Belépés ezzel a fiókkal: <strong className="font-semibold text-ink">{email}</strong>
       </p>
       <input type="hidden" name="token" value={token} />
+      {next && <input type="hidden" name="next" value={next} />}
       <Submit>Belépés</Submit>
       <p className="text-sm text-muted">Nem te kérted? Csukd be ezt az oldalt, és nem történik semmi.</p>
     </form>

@@ -76,3 +76,28 @@ export function planMonth({
   }
   return planned.sort((a, b) => a.start.getTime() - b.start.getTime() || a.title.localeCompare(b.title, 'hu'));
 }
+
+/** Nyitott Műhely in "Hónap feltöltése": one date a week, from a given day. */
+export type WorkshopPlan = { weekday: number; from: string; startTime: string; endTime: string; rooms: number[] };
+
+export type PlannedWorkshop = { day: string; start: Date; end: Date; rooms: number[] };
+
+/** The month's days on the weekday, from `from`, except closed days and days that already have a Nyitott Műhely. */
+export function planWorkshops({
+  year,
+  month,
+  plan,
+  closedDays,
+  existingDays,
+}: {
+  year: number;
+  month: number;
+  plan: WorkshopPlan;
+  closedDays: Iterable<string>;
+  existingDays: Set<string>;
+}): PlannedWorkshop[] {
+  const closed = new Set(closedDays);
+  return daysOfMonth(year, month)
+    .filter((day) => day >= plan.from && weekdayOf(day) === plan.weekday && !closed.has(day) && !existingDays.has(day))
+    .map((day) => ({ day, start: at(day, plan.startTime), end: at(day, plan.endTime), rooms: plan.rooms }));
+}

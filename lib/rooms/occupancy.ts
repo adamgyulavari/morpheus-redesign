@@ -11,19 +11,11 @@ import { sql } from '@payloadcms/db-postgres';
 import { APIError, type Payload, type PayloadRequest } from 'payload';
 
 import { monthDayShort } from '@/lib/dates';
+import { dbOf } from '@/payload/db';
+import { relIds } from '@/payload/rel';
 
-import { whenText } from './format';
+import { type Placed, placeText, whenText } from './format';
 import { clockOf, dayOf } from './time';
-
-type Row = Record<string, unknown>;
-type Executor = { execute: (q: ReturnType<typeof sql>) => Promise<{ rows: Row[] }> };
-
-/** The Drizzle instance of the request's transaction (as Payload's own adapter does), else the pool. */
-async function dbOf(payload: Payload, req?: Partial<PayloadRequest>): Promise<Executor> {
-  const adapter = payload.db as unknown as { drizzle: Executor; sessions?: Record<string, { db: Executor }> };
-  const id = req?.transactionID ? await req.transactionID : undefined;
-  return (id !== undefined && adapter.sessions?.[String(id)]?.db) || adapter.drizzle;
-}
 
 export type Clash = {
   bookingId: number;
@@ -75,22 +67,38 @@ export async function findClashes(
   }));
 }
 
-/** "Nagyterem, Próbaterem" — the rooms' names, in the given order. */
-export async function roomNames(payload: Payload, ids: number[], req?: PayloadRequest): Promise<string> {
-  if (!ids.length) return '';
+/** Room id → name: of the given rooms, or of all of them. */
+export async function roomNameMap(
+  payload: Payload,
+  ids?: number[],
+  req?: PayloadRequest,
+): Promise<Map<number, string>> {
+  if (ids && !ids.length) return new Map();
   const { docs } = await payload.find({
     collection: 'rooms',
-    where: { id: { in: ids } },
+    where: ids ? { id: { in: ids } } : undefined,
     depth: 0,
     select: { name: true },
     limit: 0,
     pagination: false,
     req,
   });
+  return new Map(docs.map((r) => [r.id, r.name]));
+}
+
+/** "Nagyterem, Próbaterem" — the rooms' names, in the given order. */
+export async function roomNames(payload: Payload, ids: number[], req?: PayloadRequest): Promise<string> {
+  const names = await roomNameMap(payload, ids, req);
   return ids
-    .map((id) => docs.find((r) => r.id === id)?.name)
+    .map((id) => names.get(id))
     .filter(Boolean)
     .join(', ');
+}
+
+/** `placeText` of one session, its rooms' names looked up. */
+export async function placeOf(payload: Payload, s: Placed, req?: PayloadRequest): Promise<string | undefined> {
+  const ids = s.locationType === 'room' ? relIds(s.rooms) : [];
+  return placeText(s, await roomNameMap(payload, ids, req));
 }
 
 /** "Nagyterem, nov. 4. 18:00–21:00: Keddi szakmai II." */

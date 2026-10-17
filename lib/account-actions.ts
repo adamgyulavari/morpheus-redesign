@@ -84,7 +84,7 @@ export async function confirmMagicLink(_: FormState, form: FormData): Promise<Fo
   if (!userId) redirect('/belepes?hiba=link');
   const { token, expires, user } = await issueSession(payload, userId);
   await setSessionCookies(token, expires, user);
-  redirect('/fiokom');
+  redirect(safeReturnPath(form.get('next')));
 }
 
 /** The 6-digit code from the login-link e-mail, typed on another device. */

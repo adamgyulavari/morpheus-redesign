@@ -42,7 +42,6 @@ export const Users: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'email', 'roles'],
-    group: 'Beállítások',
     description: 'Munkatársak (admin felület) és hallgatók (a weboldal fiókja). Szerepkört csak adminisztrátor adhat.',
   },
   defaultSort: 'name',

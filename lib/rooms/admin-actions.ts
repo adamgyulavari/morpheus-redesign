@@ -21,6 +21,7 @@ import {
   roomsById,
   type ScheduleEvent,
   unplacedSessions,
+  type WorkshopFill,
 } from './server';
 
 type Result<T = object> = ({ ok: true } & T) | { ok: false; reason: string };
@@ -210,33 +211,45 @@ export async function updateBooking(
 
 // ── fill month ──────────────────────────────────────────────────────────────
 
-/** The groups running in the month. */
+/** The groups running in the month, and the Nyitott Műhely defaults. */
 export async function groupsOfMonth(year: number, month: number) {
   if (!(await staff())) return null;
   return monthGroups(await payloadClient(), year, month);
 }
 
-export async function fillMonthPreview(year: number, month: number, groupIds: number[] | null) {
+export async function fillMonthPreview(year: number, month: number, groupIds: number[], workshop: WorkshopFill | null) {
   if (!(await staff())) return null;
-  return previewFill(await payloadClient(), year, month, groupIds);
+  return previewFill(await payloadClient(), year, month, groupIds, workshop);
 }
 
-export async function fillMonthApply(year: number, month: number, groupIds: number[] | null, keys?: string[]) {
+export async function fillMonthApply(
+  year: number,
+  month: number,
+  groupIds: number[],
+  keys: string[],
+  workshop: WorkshopFill | null,
+) {
   const user = await staff();
   if (!user) return null;
-  return applyFill(await payloadClient(), user, year, month, groupIds, keys);
+  return applyFill(await payloadClient(), user, year, month, groupIds, keys, workshop);
 }
 
 /** What "Generált alkalmak törlése" would delete in the month. */
-export async function generatedPreview(year: number, month: number, groupIds: number[] | null) {
+export async function generatedPreview(year: number, month: number, groupIds: number[], workshops: boolean) {
   if (!(await staff())) return null;
-  return deletableGenerated(await payloadClient(), year, month, groupIds);
+  return deletableGenerated(await payloadClient(), year, month, groupIds, workshops);
 }
 
-export async function deleteGeneratedSessions(year: number, month: number, groupIds: number[] | null, ids?: number[]) {
+export async function deleteGeneratedSessions(
+  year: number,
+  month: number,
+  groupIds: number[],
+  ids: number[],
+  workshops: boolean,
+) {
   const user = await staff();
   if (!user) return null;
-  return deleteGenerated(await payloadClient(), user, year, month, groupIds, ids);
+  return deleteGenerated(await payloadClient(), user, year, month, groupIds, ids, workshops);
 }
 
 /** Deletes a session (and its booking), or a booking without a session. */

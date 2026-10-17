@@ -10,7 +10,7 @@ import { isAdminField, userIsAdmin } from '../access';
 
 /** Throws a field validation error of the collection (shown at the field in the admin). */
 export const failer =
-  (collection: 'sessions' | 'roomBookings') =>
+  (collection: 'sessions' | 'roomBookings' | 'applications') =>
   (path: string, message: string, req: PayloadRequest): never => {
     throw new ValidationError({ collection, errors: [{ path, message }] }, req.t);
   };

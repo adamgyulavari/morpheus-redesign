@@ -1,5 +1,7 @@
 import type { Field, GlobalConfig } from 'payload';
 
+import { WEEKDAYS } from '@/lib/rooms/labels';
+
 import { anyone, isStaffOrAdmin } from './access';
 import { date, link, links, relationship, text, textarea, time } from './fields';
 import { globalRevalidation } from './revalidate';
@@ -8,10 +10,9 @@ const access = { read: anyone, update: isStaffOrAdmin };
 
 export const SiteSettings: GlobalConfig = {
   slug: 'siteSettings',
-  label: 'Beállítások',
+  label: 'Weboldal beállításai',
   access,
   admin: {
-    group: 'Beállítások',
     description: 'A weboldal egészére érvényes adatok: menü, lábléc, elérhetőségek, közösségi média.',
   },
   hooks: globalRevalidation(),
@@ -248,10 +249,12 @@ const UI: Spec = {
   sessions: [
     'Nyitott Műhely',
     {
-      book: 'Foglalok gomb',
+      book: 'Jelentkezem gomb',
       closed: 'Lezárult',
-      open: 'Foglalási határidő — {deadline} = dátum',
-      closedText: 'Lezárult foglalás',
+      needed: 'Még kell jelentkező — {count} = szám',
+      confirmed: 'Biztosan indul',
+      full: 'Megtelt',
+      left: 'Szabad helyek — {count} = szám',
       empty: 'Nincs időpont',
     },
   ],
@@ -307,7 +310,6 @@ export const Ui: GlobalConfig = {
   label: 'Felületi szövegek',
   access,
   admin: {
-    group: 'Beállítások',
     description:
       'Gombok, üres állapotok, űrlapok és felolvasott feliratok szövegei. A {kapcsos zárójeles} részeket a weboldal tölti ki — ezeket hagyd meg.',
   },
@@ -321,7 +323,6 @@ export const RoomBookingSettings: GlobalConfig = {
   label: 'Teremfoglalási szabályok',
   access: { read: isStaffOrAdmin, update: isStaffOrAdmin },
   admin: {
-    group: 'Teremnaptár',
     description:
       'A diákok teremfoglalásának szabályai. A munkatársakra nem vonatkoznak (az ütközés tilalma mindenkire igen).',
   },
@@ -411,6 +412,106 @@ export const RoomBookingSettings: GlobalConfig = {
             text('note', 'Megjegyzés', { description: 'Pl. „Mindenszentek”' }),
           ],
         },
+      ],
+    },
+  ],
+};
+
+const emailText = (name: string, label: string, description: string): Field =>
+  textarea(name, label, { description: `${description} Üresen az alapszöveg megy.` });
+
+export const ApplicationSettings: GlobalConfig = {
+  slug: 'applicationSettings',
+  label: 'Jelentkezési beállítások',
+  access: { read: isStaffOrAdmin, update: isStaffOrAdmin },
+  admin: {
+    description: 'Kik kapnak értesítést az új jelentkezésekről, a Nyitott Műhely határidői és az e-mailek bevezetői.',
+  },
+  fields: [
+    {
+      name: 'notifyEmails',
+      label: 'Értesítendő címek',
+      labels: { singular: 'Cím', plural: 'Címek' },
+      type: 'array',
+      defaultValue: [{ email: 'info@morpheus-szinmuhely.hu' }],
+      admin: { description: 'Ide megy minden új jelentkezés és lemondás.' },
+      fields: [{ name: 'email', label: 'E-mail-cím', type: 'email', required: true }],
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'workshopCutoffHours',
+          label: 'Döntés az indulásról (óra)',
+          type: 'number',
+          required: true,
+          min: 1,
+          defaultValue: 48,
+          admin: {
+            description:
+              'A Nyitott Műhely ennyi órával a kezdés előtt dől el: elég jelentkező esetén indul, különben elmarad.',
+          },
+        },
+        {
+          name: 'userCancelHours',
+          label: 'Lemondási határidő (óra)',
+          type: 'number',
+          required: true,
+          min: 0,
+          defaultValue: 24,
+          admin: { description: 'A résztvevő eddig mondhatja le a jelentkezését a fiókjában.' },
+        },
+      ],
+    },
+    {
+      name: 'workshopDefaults',
+      label: 'Nyitott Műhely alapértékek',
+      type: 'group',
+      admin: {
+        description:
+          'A Teremnaptár „Hónap feltöltése” ezekkel hozza létre a Nyitott Műhely időpontjait (a nap, az idő és a terem ott még átírható).',
+      },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'weekday',
+              label: 'Nap',
+              type: 'select',
+              defaultValue: '6',
+              options: WEEKDAYS.map((label, i) => ({ label, value: String(i + 1) })),
+              admin: { width: '34%' },
+            },
+            { ...time('startTime', 'Kezdés'), defaultValue: '14:00', admin: { width: '33%' } },
+            { ...time('endTime', 'Vége'), defaultValue: '16:00', admin: { width: '33%' } },
+          ],
+        },
+        relationship('rooms', 'Termek', 'rooms', {
+          hasMany: true,
+          description: 'Üresen helyszín nélkül jön létre; a Teremnaptárban később elhelyezheted.',
+        }),
+        {
+          type: 'row',
+          fields: [
+            { name: 'price', label: 'Ár (Ft)', type: 'number', min: 0, defaultValue: 5000 },
+            { name: 'minParticipants', label: 'Minimum létszám', type: 'number', min: 1, defaultValue: 5 },
+            { name: 'maxParticipants', label: 'Maximum létszám', type: 'number', min: 1, defaultValue: 16 },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'texts',
+      label: 'E-mailek bevezető bekezdése',
+      type: 'group',
+      fields: [
+        emailText('signupReceived', 'Jelentkezés visszaigazolása', 'Nyitott Műhely és kezdő kurzus.'),
+        emailText('applicationReceived', 'Szakmai jelentkezés visszaigazolása', ''),
+        emailText('confirmed', 'Biztosan indul', 'A Nyitott Műhely résztvevőinek a határidőkor.'),
+        emailText('cancelledMinimum', 'Elmarad (nincs elég jelentkező)', 'A következő időpontok listája automatikus.'),
+        emailText('cancellation', 'Lemondás visszaigazolása', ''),
+        emailText('accepted', 'Felvétel a kurzusba', 'A belépési link automatikus.'),
       ],
     },
   ],

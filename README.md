@@ -173,7 +173,7 @@ a paragraph is kept. Dates are Budapest calendar days.
 
 `lib/data.ts` exposes async functions — `getPages()`, `getPage(path)`, `getUi()`, `getCtaBand(id)`,
 `getSiteSettings()`, `getProductions(group?)`, `getUpcomingShows(limit?)`, `getNextShowByProduction()`,
-`getCourse(id)`, `getOpenWorkshopSessions(limit?)`, `getUpcomingWorkshops()`, `getPastWorkshops(limit?)`,
+`getCourse(id)` (with its groups open for sign-up), `getOpenWorkshopSessions(limit?)` (live `workshop` sessions), `getUpcomingWorkshops()`, `getPastWorkshops(limit?)`,
 `getLegalPage(slug)`, … They query Payload's Local API, filter dated items to today onward (Budapest
 time, in the query where possible) and return the types from `lib/types.ts`; every Payload → type
 conversion is in `lib/cms-map.ts` (ids as strings, relationships as ids, uploads as `ImageRef`s of

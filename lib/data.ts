@@ -17,6 +17,9 @@ import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical
 import { draftMode } from 'next/headers';
 import { getPayload } from 'payload';
 import { cache } from 'react';
+import type { CourseGroup } from '@/payload-types';
+import { courseSignupState } from './applications/rules';
+import { courseFacts, SIGNUP_ON, takenBy, upcomingWorkshops } from './applications/server';
 
 import * as map from './cms-map';
 import { todayInBudapest } from './dates';
@@ -204,42 +207,60 @@ export async function getContactPerson(id: string): Promise<ContactPerson> {
 
 // ── Courses & events ────────────────────────────────────────────────────────
 
+/**
+ * Courses with their starts: the course groups linked to them that take sign-ups on the site and
+ * haven't started, soonest first, with the live sign-up state. Groups aren't public in the API;
+ * only these fields are read here (and the places count).
+ */
 const findCourses = cache(async (): Promise<Course[]> => {
-  const { docs } = await (await payload()).find({ collection: 'courses', depth: 0, ...all });
-  return docs.map(map.course);
+  const p = await payload();
+  const [{ docs: courses }, { docs: groups }] = await Promise.all([
+    p.find({ collection: 'courses', depth: 0, ...all }),
+    p.find({
+      collection: 'courseGroups',
+      where: { and: [SIGNUP_ON, { startDate: { greater_than_equal: fromToday() } }] },
+      depth: 0,
+      sort: 'startDate',
+      select: { title: true, type: true, course: true, startDate: true, defaultSchedule: true, signup: true },
+      overrideAccess: true,
+      ...all,
+    }),
+  ]);
+  const taken = await takenBy(
+    p,
+    'course_group_id',
+    groups.map((g) => g.id),
+  );
+  const now = new Date();
+  const starts = groups.map((g) => ({
+    courseId: g.course == null ? null : String(typeof g.course === 'object' ? g.course.id : g.course),
+    start: map.courseStart(
+      g as CourseGroup,
+      courseSignupState(courseFacts(g as CourseGroup, taken.get(g.id) ?? 0), now),
+    ),
+  }));
+  return courses.map((c) =>
+    map.course(
+      c,
+      starts.filter((s) => s.courseId === String(c.id)).map((s) => s.start),
+    ),
+  );
 });
 
-const upcomingStarts = (course: Course): Course => {
-  const today = todayInBudapest();
-  return {
-    ...course,
-    starts: course.starts
-      .filter((s) => s.date >= today)
-      .sort((a, b) => `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`)),
-  };
-};
-
-/** A course with its start dates filtered to today onward (Budapest time), soonest first. */
+/** A course with its upcoming groups open for sign-up. */
 export async function getCourse(id: string): Promise<Course> {
   const course = (await findCourses()).find((c) => c.id === id);
   if (!course) throw new Error(`Unknown course "${id}"`);
-  return upcomingStarts(course);
+  return course;
 }
 
 export async function getCourses(): Promise<Course[]> {
-  return (await findCourses()).map(upcomingStarts);
+  return findCourses();
 }
 
-/** Upcoming open-workshop sessions (today onward), soonest first. */
+/** Upcoming Nyitott Műhely dates (live `workshop` sessions, not cancelled), soonest first. */
 export async function getOpenWorkshopSessions(limit?: number): Promise<OpenWorkshopSession[]> {
-  const { docs } = await (await payload()).find({
-    collection: 'openWorkshopSessions',
-    where: { date: { greater_than_equal: fromToday() } },
-    sort: ['date', 'startTime'],
-    depth: 0,
-    ...(limit === undefined ? all : { limit }),
-  });
-  return docs.map(map.openWorkshopSession);
+  return (await upcomingWorkshops(await payload(), new Date(), limit ?? 20)).map(map.openWorkshopSession);
 }
 
 const findWorkshops = cache(async (): Promise<Workshop[]> => {

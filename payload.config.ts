@@ -10,6 +10,7 @@ import { hu } from '@payloadcms/translations/languages/hu';
 import { buildConfig, type Payload } from 'payload';
 import sharp from 'sharp';
 import { serverUrl } from './lib/env';
+import { Applications } from './payload/collections/Applications';
 import { CourseGroups } from './payload/collections/CourseGroups';
 import { LoginTokens } from './payload/collections/LoginTokens';
 import { Media } from './payload/collections/Media';
@@ -23,7 +24,6 @@ import {
   Courses,
   CtaBands,
   Instructors,
-  OpenWorkshopSessions,
   Reviews,
   TeamBuildingProgrammes,
   Venues,
@@ -31,8 +31,9 @@ import {
 } from './payload/collections/simple';
 import { Users } from './payload/collections/Users';
 import { emailAdapter } from './payload/email';
-import { RoomBookingSettings, SiteSettings, Ui } from './payload/globals';
+import { ApplicationSettings, RoomBookingSettings, SiteSettings, Ui } from './payload/globals';
 import { migrations } from './payload/migrations';
+import { arrangeNav } from './payload/nav';
 import { redirectsConfig, redirectsTranslationsHu } from './payload/redirects';
 import { generateDescription, generateImage, generateTitle, generateURL, seoFields } from './payload/seo';
 
@@ -89,10 +90,17 @@ export default buildConfig({
         Icon: '@/payload/components/Graphics#AdminIcon',
       },
       providers: ['@/payload/components/AdminTheme#AdminTheme'],
-      beforeNavLinks: ['@/payload/components/RoomCalendarNav#RoomCalendarNav'],
+      // back to the website, in the header
+      actions: ['@/payload/components/SiteLink#SiteLink'],
+      // Irányítópult, Jelentkezések, Teremnaptár above the groups (payload/nav.ts)
+      beforeNavLinks: ['@/payload/components/NavTop#NavTop'],
+      // the admin home: to-dos, the coming week, quick actions — above the card grid
+      beforeDashboard: ['@/payload/components/AdminHome#AdminHome'],
       views: {
         // the room calendar (lib/rooms, components/rooms)
         teremnaptar: { Component: '@/payload/views/RoomCalendarView#RoomCalendarView', path: '/teremnaptar' },
+        // payments, admissions, reviews (lib/applications, components/applications)
+        jelentkezesek: { Component: '@/payload/views/ApplicationsView#ApplicationsView', path: '/jelentkezesek' },
       },
     },
     dateFormat: 'yyyy. MM. dd. HH:mm',
@@ -105,7 +113,8 @@ export default buildConfig({
     },
   },
   i18n: { supportedLanguages: { hu }, fallbackLanguage: 'hu', translations: { hu: redirectsTranslationsHu } },
-  collections: [
+  // sidebar groups and their order: payload/nav.ts
+  collections: arrangeNav([
     Pages,
     CtaBands,
     LegalPages,
@@ -113,13 +122,13 @@ export default buildConfig({
     Shows,
     Venues,
     Courses,
-    OpenWorkshopSessions,
     Workshops,
     TeamBuildingProgrammes,
     Instructors,
     Reviews,
     ContactPeople,
     CourseGroups,
+    Applications,
     StudentLinks,
     Sessions,
     RoomBookings,
@@ -127,8 +136,8 @@ export default buildConfig({
     Media,
     Users,
     LoginTokens,
-  ],
-  globals: [SiteSettings, Ui, RoomBookingSettings],
+  ]),
+  globals: arrangeNav([SiteSettings, Ui, RoomBookingSettings, ApplicationSettings]),
   editor: lexicalEditor(),
   // SMTP when SMTP_HOST is set; otherwise e-mails (with their links) are written to the console
   email: emailAdapter(),
@@ -180,6 +189,18 @@ export default buildConfig({
           });
           if (!res.ok) throw new Error(`revalidate failed: ${res.status}`);
           return { output: {} };
+        },
+      },
+      {
+        // Nyitott Műhely: at the cutoff (48 h before) the date runs or is cancelled (lib/applications)
+        slug: 'workshopCutoff',
+        label: 'Nyitott Műhely: döntés az indulásról',
+        schedule: [{ cron: '*/5 * * * *', queue: 'schedules' }],
+        retries: 2,
+        handler: async ({ req }) => {
+          const { runWorkshopCutoffs } = await import('./lib/applications/server');
+          const decided = await runWorkshopCutoffs(req.payload);
+          return { output: { decided: decided.length } };
         },
       },
     ],

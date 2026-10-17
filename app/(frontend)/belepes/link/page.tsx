@@ -7,7 +7,7 @@ import { accountMetadata } from '@/components/account/meta';
 import { payloadClient } from '@/lib/auth';
 import { peekMagicLink } from '@/payload/magic-link';
 
-type Props = { searchParams: Promise<{ token?: string }> };
+type Props = { searchParams: Promise<{ token?: string; next?: string }> };
 
 // per visitor, never cached or prerendered (the build has no database)
 export const dynamic = 'force-dynamic';
@@ -20,16 +20,17 @@ export async function generateMetadata(): Promise<Metadata> {
 /**
  * The link from the "Belépési link" e-mail. Opening it only shows whose login it is; the button
  * (a POST) logs in. Mail scanners open links, but don't press buttons, so they can't use it up.
+ * `next`: where to go afterwards (e.g. /fiokom from an application e-mail).
  */
 export default async function MagicLinkPage({ searchParams }: Props) {
-  const token = (await searchParams).token ?? '';
+  const { token = '', next } = await searchParams;
   const link = await peekMagicLink(await payloadClient(), token);
   if (!link) redirect('/belepes?hiba=link');
 
   return (
     <AccountShell eyebrow="Fiók" heading="Belépés *egy kattintással*">
       <Card>
-        <MagicLinkConfirm token={token} email={link.email} />
+        <MagicLinkConfirm token={token} email={link.email} next={next} />
       </Card>
     </AccountShell>
   );

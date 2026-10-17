@@ -9,6 +9,7 @@ import type { Field } from 'payload';
 
 import { contentAccess } from './access';
 import { importId } from './fields';
+import { navGroup } from './nav';
 import { collectionRevalidation } from './revalidate';
 
 export const redirectsConfig: RedirectsPluginConfig = {
@@ -28,7 +29,7 @@ export const redirectsConfig: RedirectsPluginConfig = {
     access: contentAccess,
     defaultSort: 'from',
     admin: {
-      group: 'Oldalak',
+      group: navGroup('redirects'),
       useAsTitle: 'from',
       defaultColumns: ['from', 'destination', 'type', 'updatedAt'],
       description:

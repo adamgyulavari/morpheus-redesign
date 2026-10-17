@@ -8,6 +8,7 @@ import type { Payload, TypedUser } from 'payload';
 
 import { relId, relIds } from '@/payload/rel';
 
+import { placeText } from './format';
 import type { SessionKind } from './labels';
 import { mayBookRooms, studentGroups } from './server';
 
@@ -165,15 +166,7 @@ export async function studentOverview(payload: Payload, user: TypedUser) {
         start: s.start,
         end: s.end,
         status: s.status as OverviewSession['status'],
-        place:
-          s.locationType === 'room'
-            ? relIds(s.rooms)
-                .map((id) => roomName.get(id))
-                .filter(Boolean)
-                .join(', ')
-            : s.locationType === 'external'
-              ? (s.externalLocation ?? undefined)
-              : undefined,
+        place: placeText(s, roomName),
       }),
     ),
     ownPractice: allPractice.filter((b) => relId(b.user) === user.id).map(toPractice),

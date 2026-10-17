@@ -14,7 +14,6 @@ export const Pages: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'path', '_status', 'updatedAt'],
-    group: 'Oldalak',
     description: 'A weboldal oldalai. Minden oldal blokkokból áll, amelyek sorrendje szabadon módosítható.',
     livePreview: { url: ({ data }) => (data?.path ? previewPath(data.path) : null) },
     preview: (data) => (data?.path ? previewPath(data.path as string) : null),

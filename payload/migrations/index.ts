@@ -8,6 +8,14 @@ import * as migration_20261011_190535_login_codes from './20261011_190535_login_
 import * as migration_20261011_214820_rooms_sessions from './20261011_214820_rooms_sessions';
 import * as migration_20261011_215504_booking_note from './20261011_215504_booking_note';
 import * as migration_20261012_061100_room_booking_permission from './20261012_061100_room_booking_permission';
+import * as migration_20261013_014650_applications from './20261013_014650_applications';
+import * as migration_20261013_021132_workshop_cutoff_job from './20261013_021132_workshop_cutoff_job';
+import * as migration_20261013_025650_signup_pages from './20261013_025650_signup_pages';
+import * as migration_20261013_030125_remove_static_dates from './20261013_030125_remove_static_dates';
+import * as migration_20261014_014745_workshop_defaults from './20261014_014745_workshop_defaults';
+import * as migration_20261014_051509_signup_mode from './20261014_051509_signup_mode';
+import * as migration_20261014_051547_remove_signup_enabled from './20261014_051547_remove_signup_enabled';
+import * as migration_20261014_151220_applications_course from './20261014_151220_applications_course';
 
 export const migrations = [
   {
@@ -58,6 +66,46 @@ export const migrations = [
   {
     up: migration_20261012_061100_room_booking_permission.up,
     down: migration_20261012_061100_room_booking_permission.down,
-    name: '20261012_061100_room_booking_permission'
+    name: '20261012_061100_room_booking_permission',
+  },
+  {
+    up: migration_20261013_014650_applications.up,
+    down: migration_20261013_014650_applications.down,
+    name: '20261013_014650_applications',
+  },
+  {
+    up: migration_20261013_021132_workshop_cutoff_job.up,
+    down: migration_20261013_021132_workshop_cutoff_job.down,
+    name: '20261013_021132_workshop_cutoff_job',
+  },
+  {
+    up: migration_20261013_025650_signup_pages.up,
+    down: migration_20261013_025650_signup_pages.down,
+    name: '20261013_025650_signup_pages',
+  },
+  {
+    up: migration_20261013_030125_remove_static_dates.up,
+    down: migration_20261013_030125_remove_static_dates.down,
+    name: '20261013_030125_remove_static_dates',
+  },
+  {
+    up: migration_20261014_014745_workshop_defaults.up,
+    down: migration_20261014_014745_workshop_defaults.down,
+    name: '20261014_014745_workshop_defaults',
+  },
+  {
+    up: migration_20261014_051509_signup_mode.up,
+    down: migration_20261014_051509_signup_mode.down,
+    name: '20261014_051509_signup_mode',
+  },
+  {
+    up: migration_20261014_051547_remove_signup_enabled.up,
+    down: migration_20261014_051547_remove_signup_enabled.down,
+    name: '20261014_051547_remove_signup_enabled',
+  },
+  {
+    up: migration_20261014_151220_applications_course.up,
+    down: migration_20261014_151220_applications_course.down,
+    name: '20261014_151220_applications_course'
   },
 ];

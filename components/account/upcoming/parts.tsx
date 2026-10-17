@@ -1,6 +1,7 @@
 /** Building blocks of the "Közelgő alkalmak" list: the next item's card, a day's date, a two-line entry. */
 import { PinIcon } from '@/components/icons';
 
+import ApplicationActions from './ApplicationActions';
 import type { UpcomingItem } from './items';
 import { dateParts, timeRange } from './items';
 import { CANCELLED, KIND_STYLE, KindBadge, KindLabel, NoPlace } from './kinds';
@@ -30,6 +31,12 @@ export function NextCard({ item }: { item: UpcomingItem }) {
           {item.place ?? <NoPlace />}
         </span>
         {item.booker && <span className="text-muted">Foglalta: {item.booker}</span>}
+        {item.note && <span className="italic text-muted">„{item.note}”</span>}
+        {(item.application || item.practice) && (
+          <span className="ml-auto">
+            <Actions item={item} />
+          </span>
+        )}
       </div>
     </article>
   );
@@ -70,6 +77,7 @@ function EntryText({ item }: { item: UpcomingItem }) {
       <p className={`truncate text-[15px] leading-6 ${item.cancelled ? 'text-muted' : 'text-ink2'}`}>
         {item.title} · {item.place ?? <NoPlace />}
         {item.booker && <span className="text-muted"> · {item.booker}</span>}
+        {item.note && <span className="italic text-muted"> · „{item.note}”</span>}
       </p>
     </div>
   );
@@ -81,7 +89,35 @@ export function Entry({ item }: { item: UpcomingItem }) {
     <div className="flex min-h-12 items-center gap-3.5">
       <KindBadge kind={item.kind} cancelled={item.cancelled} />
       <EntryText item={item} />
+      {(item.application || item.practice) && <Actions item={item} />}
     </div>
+  );
+}
+
+/** "Lemondás" / "Áthelyezés" on the person's own Nyitott Műhely date or practice booking. */
+function Actions({ item }: { item: UpcomingItem }) {
+  const d = dateParts(item.start);
+  const title = `${item.title} — ${d.month} ${d.dayNumber}., ${d.weekday} ${timeRange(item)}`;
+  if (item.practice)
+    return (
+      <ApplicationActions
+        practice
+        applicationId={item.practice.bookingId}
+        title={`Gyakorlás: ${title}${item.place ? ` · ${item.place}` : ''}`}
+        canCancel={item.practice.canCancel}
+        canMove={false}
+      />
+    );
+  const a = item.application;
+  if (!a) return null;
+  return (
+    <ApplicationActions
+      applicationId={a.id}
+      title={title}
+      canCancel={a.canCancel}
+      canMove={a.canMove}
+      moveTargets={a.moveTargets}
+    />
   );
 }
 
