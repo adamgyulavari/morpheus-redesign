@@ -8,7 +8,9 @@ import { workshopState } from '@/lib/applications/rules';
 import { NOBODY, takenBy, workshopFacts, workshopInfo } from '@/lib/applications/server';
 import { applicationSettings } from '@/lib/applications/settings';
 import { getCurrentUser, payloadClient } from '@/lib/auth';
+import { checkoutAction } from '@/lib/payments/actions';
 import { checkoutPath } from '@/lib/payments/links';
+import { checkoutMe } from '@/lib/payments/me';
 import { paymentProvider } from '@/lib/payments/providers';
 import { sessionByCode } from '@/lib/payments/service';
 import { billingSettings, PAUSED } from '@/lib/payments/settings';
@@ -52,7 +54,8 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
         notice(state.state === 'full' ? 'Ez az alkalom megtelt.' : 'Erre az alkalomra már nem lehet jelentkezni.')
       ) : (
         <CheckoutForm
-          code={s.code}
+          action={checkoutAction}
+          hidden={{ alkalom: s.code }}
           price={price}
           loginHref={`/belepes?vissza=${encodeURIComponent(checkoutPath(s.code))}`}
           provider={paymentProvider().brand}
@@ -70,23 +73,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
             `Legkésőbb ${settings.userCancelHours} órával a kezdés előtt a fiókodban áthelyezheted a jelentkezésed egy másik időpontra, vagy lemondhatod. Lemondás esetén a díjat nem térítjük vissza.`,
             `Ha ${settings.workshopCutoffHours} órával a kezdés előtt nincs legalább ${facts.minParticipants} fizetett jelentkező, az alkalom elmarad; a jelentkezésed a fiókodban áthelyezheted egy másik időpontra.`,
           ]}
-          me={
-            viewer
-              ? {
-                  name: [viewer.lastName, viewer.firstName].filter(Boolean).join(' '),
-                  email: viewer.email,
-                  phone: viewer.phone ?? '',
-                  billing: {
-                    billingName: viewer.billing?.name || [viewer.lastName, viewer.firstName].filter(Boolean).join(' '),
-                    zip: viewer.billing?.zip ?? '',
-                    city: viewer.billing?.city ?? '',
-                    address: viewer.billing?.address ?? '',
-                    country: viewer.billing?.country || 'HU',
-                    taxNumber: viewer.billing?.taxNumber ?? '',
-                  },
-                }
-              : null
-          }
+          me={checkoutMe(viewer)}
         />
       )}
     </AccountShell>

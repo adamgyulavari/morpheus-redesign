@@ -113,6 +113,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "code": {
+          "name": "code",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
         "type": {
           "name": "type",
           "type": "enum_course_groups_type",
@@ -218,6 +224,21 @@
         }
       },
       "indexes": {
+        "course_groups_code_idx": {
+          "name": "course_groups_code_idx",
+          "columns": [
+            {
+              "expression": "code",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "course_groups_course_idx": {
           "name": "course_groups_course_idx",
           "columns": [
@@ -20735,6 +20756,13 @@
           "primaryKey": false,
           "notNull": false
         },
+        "installments": {
+          "name": "installments",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 1
+        },
         "highlighted": {
           "name": "highlighted",
           "type": "boolean",
@@ -20885,6 +20913,13 @@
           "type": "timestamp(3) with time zone",
           "primaryKey": false,
           "notNull": false
+        },
+        "pay_online": {
+          "name": "pay_online",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         },
         "import_id": {
           "name": "import_id",
@@ -32932,6 +32967,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "0d6f439c-cf61-4d65-adaa-8c0cb48d5308",
+  "id": "3d25d9bc-a842-41a1-9356-24979e6271fc",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

@@ -1,6 +1,7 @@
 /**
  * Our payment logic, provider-agnostic (only `./types` and `./providers` — never a vendor SDK):
- * - checkout: a place is held (application `held` + order `pending`, one transaction, under the
+ * - checkout (a Nyitott Műhely date) / checkoutCourse (a kezdő group, or the course without a
+ *   group): a place is held (application `held` + order `pending`, one transaction, under the
  *   capacity lock), then the provider's payment page — or done at once when nothing is due;
  * - applyPaymentUpdate: what the webhook (and the result page) run — the provider is asked, the
  *   change is applied once (statuses only forward), the follow-ups queued;
@@ -12,17 +13,22 @@
 import { randomBytes } from 'node:crypto';
 
 import { sql } from '@payloadcms/db-postgres';
-import type { Payload, PayloadRequest, TypedUser } from 'payload';
+import type { Payload, PayloadRequest, TypedUser, Where } from 'payload';
 
 import { placesLeftFor } from '@/lib/applications/capacity';
-import { canSignUpWorkshop } from '@/lib/applications/rules';
+import { type Applicant, sendAccepted, type TargetInfo } from '@/lib/applications/notify';
+import { canApplyWithoutGroup, canSignUpCourse, canSignUpWorkshop, type RuleResult } from '@/lib/applications/rules';
 import {
   type ApplicantInput,
   applicantFor,
   applicantOf,
   countText,
+  courseFacts,
+  courseInfo,
   inTransaction,
+  joinGroup,
   NOBODY,
+  signupKindOf,
   takenBy,
   validateInput,
   workshopFacts,
@@ -36,8 +42,9 @@ import { errorMessage } from '@/lib/rooms/server';
 import { dbOf } from '@/payload/db';
 import { siteUrl } from '@/payload/email';
 import { relId } from '@/payload/rel';
-import type { Order, Payment, Session } from '@/payload-types';
+import type { Application, Course, CourseGroup, Order, Payment, Session } from '@/payload-types';
 
+import { checkoutPath, courseCheckoutPath } from './links';
 import { sendLateRefund, sendOrderPaid, sendPaymentLink, sendStaffAlert, sendStaffPaid } from './notify';
 import { paymentProvider } from './providers';
 import { billingSettings, PAUSED } from './settings';
@@ -83,6 +90,26 @@ export async function sessionByCode(payload: Payload, code: string) {
   return docs[0] ?? null;
 }
 
+/** A course by its slug (the kezdő checkout's link). */
+export async function courseBySlug(payload: Payload, slug: string) {
+  if (!slug || slug.length > 120) return null;
+  const { docs } = await payload.find({ collection: 'courses', where: { slug: { equals: slug } }, depth: 0, limit: 1 });
+  return docs[0] ?? null;
+}
+
+/** A course group by its public code. */
+export async function groupByCode(payload: Payload, code: string) {
+  if (!code || code.length > 32) return null;
+  const { docs } = await payload.find({
+    collection: 'courseGroups',
+    where: { code: { equals: code } },
+    depth: 0,
+    limit: 1,
+    overrideAccess: true,
+  });
+  return docs[0] ?? null;
+}
+
 /** The result page's address: by the order's token, never its id. */
 export const resultUrl = (token: string) => siteUrl(`/fizetes/eredmeny?rendeles=${encodeURIComponent(token)}`);
 const webhookUrl = () => siteUrl('/api/payments/webhook');
@@ -117,29 +144,129 @@ export async function checkout(
     await payload.update({ collection: 'users', id: applicant.userId, data: { billing } }).catch(() => {});
 
   // back again with an unpaid order for the date (held or lapsed): the same order, a new payment
+  const again = await heldOrderOf(payload, applicant.userId, { session: { equals: s.id } });
+  if (again) return payOrder(payload, again, applicant.email, now);
+
+  const price = Math.max(0, Math.round(s.workshop?.price ?? 0));
+  return placeOrder(payload, applicant, await workshopInfo(payload, s, settings), billingRules.holdMinutes, now, {
+    application: { kind: 'workshop', session: s.id },
+    order: {
+      kind: 'workshop',
+      label: `${s.displayTitle ?? 'Nyitott Műhely'} — ${whenText(s.start, s.end, 'long')}`,
+      amount: price,
+      billing,
+    },
+  });
+}
+
+export type CourseCheckoutInput = ApplicantInput & {
+  courseId: number;
+  /** null: without a group (the course takes those; staff place it later). */
+  groupId: number | null;
+  /** The chosen price option (the course's `prices`). */
+  optionId: string;
+  billing: Billing;
+};
+
+/** What is paid now for a price option: all of it, or the first of its instalments. */
+export function dueNow(option: { amount: number; installments?: number | null }) {
+  const parts = Math.max(1, Math.round(option.installments ?? 1));
+  return { parts, amount: Math.max(0, Math.round(option.amount / parts)) };
+}
+
+/**
+ * A kezdő sign-up with payment: a group (or the course, without one) and a price option. Paid
+ * means admitted (a group) or waiting to be placed (without one) — see afterPaid.
+ */
+export async function checkoutCourse(
+  payload: Payload,
+  viewer: TypedUser | null,
+  input: CourseCheckoutInput,
+  now = new Date(),
+): Promise<Result<{ token: string; checkoutUrl: string | null }>> {
+  const invalid = validateInput({ ...input, kind: 'beginner' }, viewer) ?? validateBilling(input.billing);
+  if (invalid) return { ok: false, reason: invalid };
+  const billing = clean(input.billing);
+  const billingRules = await billingSettings(payload);
+  if (!billingRules.online) return { ok: false, reason: PAUSED };
+
+  const course = await payload.findByID({ collection: 'courses', id: input.courseId, depth: 0, disableErrors: true });
+  if (course?.signupMode !== 'beginner' || !course.payOnline)
+    return { ok: false, reason: 'Erre a kurzusra így nem lehet jelentkezni.' };
+  const option = (course.prices ?? []).find((p) => p.id === input.optionId);
+  if (!option) return { ok: false, reason: 'Válaszd ki, hogyan fizetsz.' };
+  const { parts, amount } = dueNow(option);
+
+  let group: CourseGroup | null = null;
+  if (input.groupId) {
+    group = await payload.findByID({ collection: 'courseGroups', id: input.groupId, depth: 0, disableErrors: true });
+    if (!group || relId(group.course) !== course.id || signupKindOf(group) !== 'beginner')
+      return { ok: false, reason: 'Nincs ilyen csoport.' };
+  }
+  const target = await courseTarget(payload, course, group, now);
+  if (!target.verdict.ok) return target.verdict;
+
+  const { applicant, created } = await applicantFor(payload, viewer, input);
+  if (viewer || created)
+    await payload.update({ collection: 'users', id: applicant.userId, data: { billing } }).catch(() => {});
+
+  const again = await heldOrderOf(
+    payload,
+    applicant.userId,
+    sameTarget({ kind: 'beginner', courseGroup: group?.id, course: course.id }),
+  );
+  if (again) return payOrder(payload, again, applicant.email, now);
+
+  return placeOrder(payload, applicant, target.info, billingRules.holdMinutes, now, {
+    // with a group, the collection's hook sets its course
+    application: { kind: 'beginner', ...(group ? { courseGroup: group.id } : { course: course.id }) },
+    order: {
+      kind: 'beginner',
+      label: [course.title, group ? courseInfo(group).title : 'csoport nélkül', option.label]
+        .join(' — ')
+        .concat(parts > 1 ? ` (1. részlet a ${parts}-ből)` : ''),
+      amount,
+      billing,
+    },
+  });
+}
+
+/** The person's unpaid order for this target (held, or its hold ran out), if any. */
+async function heldOrderOf(payload: Payload, userId: number, target: Where): Promise<Order | null> {
   const held = await payload.find({
     collection: 'applications',
-    where: {
-      and: [{ user: { equals: applicant.userId } }, { session: { equals: s.id } }, { status: { equals: 'held' } }],
-    },
+    where: { and: [{ user: { equals: userId } }, target, { status: { equals: 'held' } }] },
     depth: 1,
     limit: 1,
   });
-  const heldOrder = held.docs[0]?.order;
-  if (heldOrder && typeof heldOrder === 'object' && heldOrder.status === 'pending')
-    return payOrder(payload, heldOrder, applicant.email, now);
+  const order = held.docs[0]?.order;
+  return order && typeof order === 'object' && order.status === 'pending' ? order : null;
+}
 
-  const price = Math.max(0, Math.round(s.workshop?.price ?? 0));
-  const holdUntil = new Date(now.getTime() + billingRules.holdMinutes * 60_000);
+/**
+ * The held application and its order in one transaction (the capacity is counted under a lock by
+ * the Applications collection), then the payment-link e-mail and the provider's page.
+ */
+async function placeOrder(
+  payload: Payload,
+  applicant: Applicant & { phone?: string | null },
+  info: TargetInfo,
+  holdMinutes: number,
+  now: Date,
+  d: {
+    application: Pick<Application, 'kind'> & Partial<Pick<Application, 'session' | 'courseGroup' | 'course'>>;
+    order: { kind: Order['kind']; label: string; amount: number; billing: Billing };
+  },
+): Promise<Result<{ token: string; checkoutUrl: string | null }>> {
+  const holdUntil = new Date(now.getTime() + holdMinutes * 60_000);
   let order: Order;
   try {
     order = await inTransaction(payload, async (req) => {
       const application = await payload.create({
         collection: 'applications',
         data: {
-          kind: 'workshop',
+          ...d.application,
           user: applicant.userId,
-          session: s.id,
           name: applicant.name,
           email: applicant.email,
           phone: applicant.phone,
@@ -153,13 +280,13 @@ export async function checkout(
         data: {
           user: applicant.userId,
           application: application.id,
-          kind: 'workshop',
-          label: `${s.displayTitle ?? 'Nyitott Műhely'} — ${whenText(s.start, s.end, 'long')}`,
-          price,
-          amountDue: price,
+          kind: d.order.kind,
+          label: d.order.label,
+          price: d.order.amount,
+          amountDue: d.order.amount,
           status: 'pending',
           expiresAt: holdUntil.toISOString(),
-          billing,
+          billing: d.order.billing,
           token: randomBytes(24).toString('base64url'),
         },
         req,
@@ -176,12 +303,69 @@ export async function checkout(
     return { ok: true, token: order.token, checkoutUrl: null };
   }
   // a backup: the order page, to pay later if the payment page was closed
-  await sendPaymentLink(payload, applicant, await workshopInfo(payload, s, settings), {
+  await sendPaymentLink(payload, applicant, info, {
     amount: order.amountDue,
     holdUntil: holdUntil.toISOString(),
     href: resultUrl(order.token),
   });
   return startPayment(payload, order, applicant.email);
+}
+
+// ── what an application is for (a date, a group, a course without a group) ─
+
+type Target = {
+  info: TargetInfo;
+  /** May one sign up (again) now? */
+  verdict: RuleResult;
+  /** The checkout for it ("Újra jelentkezem"). */
+  againPath: string;
+};
+
+/** Applications for the same thing (one person can't hold it twice). */
+const sameTarget = (a: Pick<Application, 'kind' | 'session' | 'courseGroup' | 'course'>): Where =>
+  a.kind === 'workshop'
+    ? { session: { equals: relId(a.session) } }
+    : relId(a.courseGroup)
+      ? { courseGroup: { equals: relId(a.courseGroup) } }
+      : { and: [{ course: { equals: relId(a.course) } }, { courseGroup: { exists: false } }] };
+
+async function courseTarget(payload: Payload, course: Course, group: CourseGroup | null, now: Date): Promise<Target> {
+  if (!group)
+    return {
+      info: { title: course.title, withoutGroup: true },
+      verdict: canApplyWithoutGroup(course, 'beginner')
+        ? { ok: true }
+        : { ok: false, reason: 'Erre a kurzusra most nem lehet jelentkezni.' },
+      againPath: courseCheckoutPath(course.slug),
+    };
+  const taken = (await takenBy(payload, 'course_group_id', [group.id])).get(group.id)?.taken ?? 0;
+  return {
+    info: courseInfo(group),
+    verdict: canSignUpCourse(courseFacts(group, taken), now),
+    againPath: courseCheckoutPath(course.slug, group.code ?? undefined),
+  };
+}
+
+async function targetOf(payload: Payload, a: Application, now: Date): Promise<Target> {
+  if (a.kind === 'workshop') {
+    const settings = await applicationSettings(payload);
+    const s = await payload.findByID({ collection: 'sessions', id: relId(a.session) ?? 0, depth: 0 });
+    const taken = (await takenBy(payload, 'session_id', [s.id])).get(s.id) ?? NOBODY;
+    return {
+      info: await workshopInfo(payload, s, settings),
+      verdict: canSignUpWorkshop(workshopFacts(s, taken), now, settings),
+      againPath: s.code ? checkoutPath(s.code) : '/nyitott-alkalmak/',
+    };
+  }
+  const group = relId(a.courseGroup)
+    ? await payload.findByID({ collection: 'courseGroups', id: relId(a.courseGroup) ?? 0, depth: 0 })
+    : null;
+  const course = await payload.findByID({
+    collection: 'courses',
+    id: relId(a.course) ?? relId(group?.course) ?? 0,
+    depth: 0,
+  });
+  return courseTarget(payload, course, group, now);
 }
 
 /** An unpaid order whose hold ran out (by its date — nothing marks it). */
@@ -204,17 +388,9 @@ async function payOrder(
     ? await payload.findByID({ collection: 'applications', id: applicationId, depth: 0, disableErrors: true })
     : null;
   if (a?.status !== 'held') return { ok: false, reason: 'Ez a foglalás már nem érvényes; jelentkezz újra.' };
-  const s = await payload.findByID({
-    collection: 'sessions',
-    id: relId(a.session) ?? 0,
-    depth: 0,
-    disableErrors: true,
-  });
-  if (!s) return { ok: false, reason: 'Nincs ilyen alkalom.' };
-  const [settings, billingRules] = await Promise.all([applicationSettings(payload), billingSettings(payload)]);
+  const billingRules = await billingSettings(payload);
   if (!billingRules.online) return { ok: false, reason: PAUSED };
-  const taken = (await takenBy(payload, 'session_id', [s.id])).get(s.id) ?? NOBODY;
-  const verdict = canSignUpWorkshop(workshopFacts(s, taken), now, settings);
+  const { verdict } = await targetOf(payload, a, now);
   if (!verdict.ok) return verdict;
   const holdUntil = new Date(now.getTime() + billingRules.holdMinutes * 60_000).toISOString();
   const renewed = await inTransaction(payload, async (req) => {
@@ -225,7 +401,11 @@ async function payOrder(
     await payload.update({ collection: 'applications', id: a.id, data: { holdUntil }, req });
     return payload.update({ collection: 'orders', id: o.id, data: { expiresAt: holdUntil }, req });
   });
-  if (!renewed) return { ok: false, reason: 'Ez az alkalom időközben megtelt.' };
+  if (!renewed)
+    return {
+      ok: false,
+      reason: a.kind === 'workshop' ? 'Ez az alkalom időközben megtelt.' : 'Ez a csoport időközben megtelt.',
+    };
   return startPayment(payload, renewed, email);
 }
 
@@ -394,7 +574,7 @@ export async function applyPaymentUpdate(
 
 /**
  * Can the paid application have its place? Within its hold, yes. After the hold ran out (late
- * payment), only if a place is still free and the person hasn't signed up for the date again.
+ * payment), only if a place is still free and the person hasn't signed up for it again.
  */
 async function mayKeepPlace(req: PayloadRequest, order: Order, now: Date): Promise<boolean> {
   const id = relId(order.application);
@@ -407,7 +587,7 @@ async function mayKeepPlace(req: PayloadRequest, order: Order, now: Date): Promi
     where: {
       and: [
         { user: { equals: relId(a.user) } },
-        { session: { equals: relId(a.session) } },
+        sameTarget(a),
         { status: { in: ['held', 'registered'] } },
         { id: { not_equals: a.id } },
       ],
@@ -472,10 +652,13 @@ async function refundAutomatically(
     return;
   }
   const application = typeof order.application === 'object' ? order.application : null;
-  if (why === 'late' && application) {
-    const s = await payload.findByID({ collection: 'sessions', id: relId(application.session) ?? 0, depth: 0 });
-    await sendLateRefund(payload, applicantOf(application), await workshopInfo(payload, s, settings), amount);
-  }
+  if (why === 'late' && application)
+    await sendLateRefund(
+      payload,
+      applicantOf(application),
+      (await targetOf(payload, application, new Date())).info,
+      amount,
+    );
   await sendStaffAlert(payload, settings, 'automatikus visszatérítés', [
     why === 'late'
       ? `A rendelés #${orderId} (${order.label}) fizetése a foglalási idő lejárta után érkezett, és a hely már betelt: ${amount} Ft-ot automatikusan visszautaltunk, a jelentkezőt értesítettük.`
@@ -491,7 +674,11 @@ async function queueFollowUps(payload: Payload, orderId: number) {
   await payload.jobs.queue({ task: 'orderPaid', input: { orderId }, queue: FOLLOW_UP_QUEUE });
 }
 
-/** The `orderPaid` job: confirmation (with .ics) to the participant, a notice to staff. */
+/**
+ * The `orderPaid` job: a workshop gets its confirmation (with .ics); a kezdő group admits the person
+ * (students, room booking, the welcome e-mail); without a group it waits for staff to place it.
+ * Staff get a notice; then the invoice. Safe to run again (a job retry).
+ */
 export async function afterPaid(payload: Payload, orderId: number) {
   const order = await payload.findByID({ collection: 'orders', id: orderId, depth: 1, disableErrors: true });
   // gone (deleted by staff): nothing to confirm
@@ -510,6 +697,24 @@ export async function afterPaid(payload: Payload, orderId: number) {
     });
     const taken = (await takenBy(payload, 'session_id', [s.id])).get(s.id) ?? NOBODY;
     await sendStaffPaid(payload, settings, applicant, info, money, countText(taken, s));
+  } else if (order.kind === 'beginner') {
+    const { info } = await targetOf(payload, application, new Date());
+    const groupId = relId(application.courseGroup);
+    const userId = relId(application.user);
+    if (groupId && userId) {
+      const g = await inTransaction(payload, async (req) => {
+        const group = await payload.findByID({ collection: 'courseGroups', id: groupId, depth: 0, req });
+        await joinGroup(req, userId, group);
+        return group;
+      });
+      await sendAccepted(payload, settings, applicant, courseInfo(g));
+    } else {
+      await sendOrderPaid(payload, applicant, info, money, {
+        loggedIn: false,
+        extra: ['Amint indul a következő csoport, beosztunk, és e-mailben írunk.'],
+      });
+    }
+    await sendStaffPaid(payload, settings, applicant, info, money);
   }
   // the invoice (Számlázz.hu e-mails it); never throws — failures are stored and reported
   await issueInvoice(payload, orderId);
@@ -577,8 +782,8 @@ export type OrderView = {
   lapsed: boolean;
   /** The provider is processing a payment (not just waiting for the person): worth waiting for. */
   processing: boolean;
-  /** The date's public code ("Újra jelentkezem"). */
-  sessionCode: string | null;
+  /** The checkout to sign up again ("Újra jelentkezem"). */
+  againPath: string | null;
 };
 
 /**
@@ -607,7 +812,12 @@ export async function orderStatus(payload: Payload, token: string, now = new Dat
     payment = await latest(order);
   }
   const application = relId(order.application)
-    ? await payload.findByID({ collection: 'applications', id: relId(order.application) ?? 0, depth: 0 })
+    ? await payload.findByID({
+        collection: 'applications',
+        id: relId(order.application) ?? 0,
+        depth: 0,
+        disableErrors: true,
+      })
     : null;
   return {
     status: order.status,
@@ -617,16 +827,7 @@ export async function orderStatus(payload: Payload, token: string, now = new Dat
     lastFailed: Boolean(payment && ['failed', 'expired', 'canceled'].includes(payment.status)),
     lapsed: lapsed(order, now),
     processing: payment?.status === 'pending',
-    sessionCode: relId(application?.session)
-      ? ((
-          await payload.findByID({
-            collection: 'sessions',
-            id: relId(application?.session) ?? 0,
-            depth: 0,
-            disableErrors: true,
-          })
-        )?.code ?? null)
-      : null,
+    againPath: application ? (await targetOf(payload, application, now)).againPath : null,
   };
 }
 

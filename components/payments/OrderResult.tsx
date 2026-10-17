@@ -11,7 +11,6 @@ import { useEffect, useState, useTransition } from 'react';
 import { Card } from '@/components/account/Card';
 import { formatHuf } from '@/lib/format';
 import { cancelOrderAction, orderStatusAction, retryPaymentAction } from '@/lib/payments/actions';
-import { checkoutPath } from '@/lib/payments/links';
 import type { OrderView } from '@/lib/payments/service';
 
 const POLL_MS = 3_000;
@@ -63,7 +62,7 @@ export default function OrderResult({
       const next = await orderStatusAction(token);
       if (next) setOrder(next);
     });
-  const again = order.sessionCode ? checkoutPath(order.sessionCode) : '/nyitott-alkalmak/';
+  const again = order.againPath ?? '/';
   const until =
     order.expiresAt &&
     new Intl.DateTimeFormat('hu-HU', { timeZone: 'Europe/Budapest', hour: '2-digit', minute: '2-digit' }).format(

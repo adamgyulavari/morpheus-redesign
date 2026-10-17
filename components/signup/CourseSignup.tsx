@@ -1,11 +1,15 @@
 /**
  * A course's sign-up button, by its "Jelentkezés módja": the external link, the beginner sign-up
  * (for one group, or a choice of the open ones) or the professional application form. With
- * "Jelentkezés csoport nélkül is" on the course, also without a group.
+ * "Jelentkezés csoport nélkül is" on the course, also without a group. A kezdő course with online
+ * payment leads to its checkout instead (/fizetes/kurzus/…).
  */
+import Link from 'next/link';
+
 import { ButtonLink } from '@/components/ui';
 import { canApplyWithoutGroup } from '@/lib/applications/rules';
 import { monthDayShort, weekday } from '@/lib/dates';
+import { courseCheckoutPath } from '@/lib/payments/links';
 import { momentText } from '@/lib/rooms/format';
 import type { Course, CourseStart } from '@/lib/types';
 
@@ -73,6 +77,12 @@ export default function CourseSignup({ course, label, variant, size = 'lg', arro
         <span className="text-[15px] font-semibold text-ink2">Jelentkezés: {momentText(start.signup.opensAt)}-tól</span>
       );
     if (start.signup.state !== 'open') return null;
+    if (course.payOnline)
+      return (
+        <Link href={courseCheckoutPath(course.slug, start.code)} className={buttonClassName}>
+          {label}
+        </Link>
+      );
     return (
       <SignupDialog
         label={label}
@@ -89,6 +99,12 @@ export default function CourseSignup({ course, label, variant, size = 'lg', arro
   }
   if (!open.length && !withoutGroup) return null;
   const only = open.length === 1 && !withoutGroup ? open[0] : undefined;
+  if (course.payOnline)
+    return (
+      <Link href={courseCheckoutPath(course.slug, only?.code)} className={buttonClassName}>
+        {label}
+      </Link>
+    );
   return (
     <SignupDialog
       label={label}

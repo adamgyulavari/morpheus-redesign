@@ -107,6 +107,8 @@ export type ContactPerson = { id: string; name: string; role: string; phone: str
 export type CourseStart = {
   id: string;
   groupId: number;
+  /** Public code: the checkout link's `csoport`. */
+  code: string;
   title: string;
   /** First day, "YYYY-MM-DD". */
   date: string;
@@ -127,6 +129,8 @@ export type PriceOption = {
   per?: string;
   note?: string;
   highlighted?: boolean;
+  /** Paid in this many parts; online sign-up pays the first (amount ÷ installments). */
+  installments: number;
 };
 
 export type Course = {
@@ -152,6 +156,8 @@ export type Course = {
   /** Courses with rolling enrolment announce a month instead of dated groups, e.g. "2026-09". */
   nextIntake?: string;
   prices: PriceOption[];
+  /** Kezdő: sign-up with online payment (the course's switch and the site-wide one). */
+  payOnline: boolean;
 };
 
 /** A Nyitott Műhely date (a `workshop` session) as the public page shows it. */

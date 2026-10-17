@@ -268,8 +268,35 @@ export const Courses: CollectionConfig = {
                     text('note', 'Megjegyzés', { description: 'Pl. „2 × 80 000 Ft”' }),
                   ],
                 },
-                { name: 'highlighted', label: 'Kiemelt', type: 'checkbox' },
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'installments',
+                      label: 'Részletek száma',
+                      type: 'number',
+                      min: 1,
+                      defaultValue: 1,
+                      admin: {
+                        description:
+                          'Online jelentkezéskor az első részletet fizeti (összeg ÷ részletek); a többit később.',
+                      },
+                    },
+                    { name: 'highlighted', label: 'Kiemelt', type: 'checkbox' },
+                  ],
+                },
               ],
+            },
+            {
+              name: 'payOnline',
+              label: 'Online fizetés jelentkezéskor',
+              type: 'checkbox',
+              defaultValue: false,
+              admin: {
+                condition: (_, s) => s?.signupMode === 'beginner',
+                description:
+                  'Kezdőnél: a jelentkező a fenti árak közül választ, és fizet (egy összegben vagy az első részletet); a fizetéssel felvesszük a csoportba. Kikapcsolva a jelentkezés ingyenes, a felvételről ti döntötök. (A Fizetési beállítások „Online fizetés” kapcsolója is kell hozzá.)',
+              },
             },
           ],
         },

@@ -299,6 +299,8 @@ export async function signUp(
     const taken = (await takenBy(payload, 'course_group_id', [g.id])).get(g.id)?.taken ?? 0;
     const verdict = canSignUpCourse(courseFacts(g, taken), now);
     if (!verdict.ok) return verdict;
+    if (input.kind === 'beginner' && (await paysOnline(payload, relId(g.course))))
+      return { ok: false, reason: 'Erre a kurzusra a fizetéssel lehet jelentkezni.' };
     target = courseInfo(g);
     input.courseId = null; // the group's own (the collection's hook)
   } else {
@@ -308,6 +310,8 @@ export async function signUp(
       : null;
     if (!c || !canApplyWithoutGroup(c, input.kind))
       return { ok: false, reason: 'Erre a kurzusra most nem lehet jelentkezni.' };
+    if (input.kind === 'beginner' && (await paysOnline(payload, c.id)))
+      return { ok: false, reason: 'Erre a kurzusra a fizetéssel lehet jelentkezni.' };
     target = { title: c.title, withoutGroup: true };
     input.courseGroupId = null;
   }
@@ -667,18 +671,7 @@ export async function admit(payload: Payload, staff: TypedUser, id: number, grou
       // a group-less kezdő application: placed first (the place is counted, under a lock)
       if (a.kind === 'beginner' && !relId(a.courseGroup))
         await payload.update({ collection: 'applications', id, data: { courseGroup: g.id }, req });
-      const students = relIds(g.students);
-      if (!students.includes(userId))
-        await payload.update({
-          collection: 'courseGroups',
-          id: g.id,
-          data: { students: [...students, userId] },
-          req,
-          user: staff,
-          overrideAccess: false,
-        });
-      // members of a course may book rooms (staff can take it back on the account)
-      await payload.update({ collection: 'users', id: userId, data: { roomBooking: true }, req });
+      await joinGroup(req, userId, g, staff);
       if (a.kind === 'professional')
         await payload.update({ collection: 'applications', id, data: { status: 'accepted', courseGroup: g.id }, req });
       return g;
@@ -690,6 +683,30 @@ export async function admit(payload: Payload, staff: TypedUser, id: number, grou
   const firstName = typeof a.user === 'object' ? a.user?.firstName : null;
   await sendAccepted(payload, settings, applicantOf(a, firstName), courseInfo(group));
   return { ok: true };
+}
+
+/**
+ * The person joins the group's students and may book rooms (staff can take that back on the
+ * account) — Felvétel by staff (their rights apply), or a paid kezdő sign-up (the system).
+ */
+export async function joinGroup(req: PayloadRequest, userId: number, g: CourseGroup, staff?: TypedUser) {
+  const students = relIds(g.students);
+  if (!students.includes(userId))
+    await req.payload.update({
+      collection: 'courseGroups',
+      id: g.id,
+      data: { students: [...students, userId] },
+      req,
+      ...(staff ? { user: staff, overrideAccess: false } : {}),
+    });
+  await req.payload.update({ collection: 'users', id: userId, data: { roomBooking: true }, req });
+}
+
+/** Kezdő sign-up for this course goes through the checkout (lib/payments). */
+export async function paysOnline(payload: Payload, courseId: number | null | undefined) {
+  if (!courseId || !(await billingSettings(payload)).online) return false;
+  const c = await payload.findByID({ collection: 'courses', id: courseId, depth: 0, disableErrors: true });
+  return c?.signupMode === 'beginner' && Boolean(c.payOnline);
 }
 
 /** "Interjú" / "Elutasítás" (no e-mail: Fruzsi writes personally). */

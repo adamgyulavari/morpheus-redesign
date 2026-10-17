@@ -10,7 +10,18 @@ import { redirect } from 'next/navigation';
 import { getCurrentUser, payloadClient } from '@/lib/auth';
 import { allow, clientIp } from '@/payload/magic-link';
 
-import { cancelOrder, checkout, orderStatus, resultUrl, retryPayment, sessionByCode } from './service';
+import { NO_GROUP } from './links';
+import {
+  cancelOrder,
+  checkout,
+  checkoutCourse,
+  courseBySlug,
+  groupByCode,
+  orderStatus,
+  resultUrl,
+  retryPayment,
+  sessionByCode,
+} from './service';
 
 export type CheckoutState = { error?: string; values?: Record<string, string> };
 
@@ -31,25 +42,20 @@ const FIELDS = [
   'taxNumber',
 ] as const;
 
-export async function checkoutAction(_: CheckoutState, form: FormData): Promise<CheckoutState> {
+/** What both checkouts share: the fields, the honeypot, the terms, the rate limits. */
+async function readCheckout(form: FormData) {
   const values = Object.fromEntries(FIELDS.map((f) => [f, str(form, f)])) as Record<(typeof FIELDS)[number], string>;
   values.email = values.email.toLowerCase();
   // honeypot: people don't see it; bots fill it in and get nowhere
-  if (str(form, 'website')) return { error: 'Hibás kérés.', values };
+  if (str(form, 'website')) return { values, error: 'Hibás kérés.' };
   if (form.get('terms') !== 'on')
-    return { error: 'A jelentkezéshez el kell fogadnod az ÁSZF-et és a lemondási feltételeket.', values };
-
+    return { values, error: 'A jelentkezéshez el kell fogadnod az ÁSZF-et és a lemondási feltételeket.' };
   const viewer = await getCurrentUser();
   const ip = clientIp(await headers());
   const email = viewer?.email ?? values.email;
   if (!allow(`checkout-ip:${ip}`, MAX_PER_IP) || (email && !allow(`checkout-email:${email}`, MAX_PER_EMAIL)))
-    return { error: 'Túl sok próbálkozás rövid időn belül. Próbáld újra negyedóra múlva.', values };
-
-  const payload = await payloadClient();
-  const session = await sessionByCode(payload, str(form, 'alkalom'));
-  if (!session) return { error: 'Nincs ilyen alkalom.', values };
-  const r = await checkout(payload, viewer, {
-    sessionId: session.id,
+    return { values, error: 'Túl sok próbálkozás rövid időn belül. Próbáld újra negyedóra múlva.' };
+  const input = {
     lastName: values.lastName,
     firstName: values.firstName,
     email: values.email,
@@ -62,6 +68,37 @@ export async function checkoutAction(_: CheckoutState, form: FormData): Promise<
       country: values.country,
       taxNumber: values.taxNumber,
     },
+  };
+  return { values, viewer, input, payload: await payloadClient() };
+}
+
+/** A Nyitott Műhely date (`alkalom`: its public code). */
+export async function checkoutAction(_: CheckoutState, form: FormData): Promise<CheckoutState> {
+  const c = await readCheckout(form);
+  if (!c.input) return { error: c.error, values: c.values };
+  const session = await sessionByCode(c.payload, str(form, 'alkalom'));
+  if (!session) return { error: 'Nincs ilyen alkalom.', values: c.values };
+  const r = await checkout(c.payload, c.viewer, { ...c.input, sessionId: session.id });
+  if (!r.ok) return { error: r.reason, values: c.values };
+  redirect(r.checkoutUrl ?? resultUrl(r.token));
+}
+
+/** A kezdő course (`kurzus`: its slug; `csoport`: a group's code, or "nincs"; `opcio`: the price option). */
+export async function courseCheckoutAction(_: CheckoutState, form: FormData): Promise<CheckoutState> {
+  const c = await readCheckout(form);
+  const values = { ...c.values, opcio: str(form, 'opcio'), csoport: str(form, 'csoport') };
+  if (!c.input) return { error: c.error, values };
+  const course = await courseBySlug(c.payload, str(form, 'kurzus'));
+  if (!course) return { error: 'Nincs ilyen kurzus.', values };
+  const code = str(form, 'csoport');
+  if (!code) return { error: 'Válaszd ki a csoportot.', values };
+  const group = code === NO_GROUP ? null : await groupByCode(c.payload, code);
+  if (code !== NO_GROUP && !group) return { error: 'Nincs ilyen csoport.', values };
+  const r = await checkoutCourse(c.payload, c.viewer, {
+    ...c.input,
+    courseId: course.id,
+    groupId: group?.id ?? null,
+    optionId: str(form, 'opcio'),
   });
   if (!r.ok) return { error: r.reason, values };
   redirect(r.checkoutUrl ?? resultUrl(r.token));

@@ -219,6 +219,7 @@ export interface CourseGroup {
    * Pl. „Kezdő kurzus — 2026 ősz, csütörtök”
    */
   title: string;
+  code?: string | null;
   type: 'kezdo' | 'szakmai' | 'egyeb';
   /**
    * Nem kötelező: melyik kurzus csoportja.
@@ -384,9 +385,17 @@ export interface Course {
      * Pl. „2 × 80 000 Ft”
      */
     note?: string | null;
+    /**
+     * Online jelentkezéskor az első részletet fizeti (összeg ÷ részletek); a többit később.
+     */
+    installments?: number | null;
     highlighted?: boolean | null;
     id?: string | null;
   }[];
+  /**
+   * Kezdőnél: a jelentkező a fenti árak közül választ, és fizet (egy összegben vagy az első részletet); a fizetéssel felvesszük a csoportba. Kikapcsolva a jelentkezés ingyenes, a felvételről ti döntötök. (A Fizetési beállítások „Online fizetés” kapcsolója is kell hozzá.)
+   */
+  payOnline?: boolean | null;
   importId?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -2939,6 +2948,7 @@ export interface PayloadMigration {
  */
 export interface CourseGroupsSelect<T extends boolean = true> {
   title?: T;
+  code?: T;
   type?: T;
   course?: T;
   startDate?: T;
@@ -4019,9 +4029,11 @@ export interface CoursesSelect<T extends boolean = true> {
         amount?: T;
         per?: T;
         note?: T;
+        installments?: T;
         highlighted?: T;
         id?: T;
       };
+  payOnline?: T;
   importId?: T;
   updatedAt?: T;
   createdAt?: T;

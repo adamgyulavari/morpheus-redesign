@@ -1,3 +1,5 @@
+import { randomBytes } from 'node:crypto';
+
 import type { CollectionConfig, Where } from 'payload';
 
 import { SIGNUP_KIND_OF_TYPE, SIGNUP_MODES } from '@/lib/applications/labels';
@@ -52,12 +54,15 @@ export const CourseGroups: CollectionConfig = {
       ({ data, originalDoc }) => {
         const type = data.type ?? originalDoc?.type;
         if (data.signup && !data.signup.kind) data.signup.kind = SIGNUP_KIND_OF_TYPE[type] ?? 'beginner';
+        // the group's public code: its checkout link (/fizetes/kurzus/…?csoport=…), not the id
+        data.code = originalDoc?.code || data.code || randomBytes(6).toString('base64url');
         return data;
       },
     ],
   },
   fields: [
     text('title', 'Név', { required: true, description: 'Pl. „Kezdő kurzus — 2026 ősz, csütörtök”' }),
+    { name: 'code', type: 'text', unique: true, index: true, admin: { hidden: true } },
     {
       type: 'row',
       fields: [

@@ -201,7 +201,7 @@ export const contactPerson = (c: P.ContactPerson): ContactPerson => ({
   photo: img(c.photo, 'card'),
 });
 
-export const course = (c: P.Course, starts: CourseStart[]): Course => ({
+export const course = (c: P.Course, starts: CourseStart[], onlinePayments = false): Course => ({
   id: String(c.id),
   slug: c.slug,
   title: c.title,
@@ -222,7 +222,9 @@ export const course = (c: P.Course, starts: CourseStart[]): Course => ({
     per: opt(p.per),
     note: opt(p.note),
     highlighted: p.highlighted ?? undefined,
+    installments: Math.max(1, Math.round(p.installments ?? 1)),
   })),
+  payOnline: onlinePayments && c.signupMode === 'beginner' && Boolean(c.payOnline),
 });
 
 /** A course group open for sign-up, with its state (lib/applications/rules courseSignupState). */
@@ -233,6 +235,7 @@ export const courseStart = (g: P.CourseGroup, s: CourseSignupState): CourseStart
   return {
     id: String(g.id),
     groupId: g.id,
+    code: g.code ?? '',
     title: g.title,
     date: first,
     startTime: entry?.startTime ?? undefined,

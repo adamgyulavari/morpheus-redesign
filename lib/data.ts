@@ -222,7 +222,15 @@ const findCourses = cache(async (): Promise<Course[]> => {
       where: { and: [SIGNUP_ON, { startDate: { greater_than_equal: fromToday() } }] },
       depth: 0,
       sort: 'startDate',
-      select: { title: true, type: true, course: true, startDate: true, defaultSchedule: true, signup: true },
+      select: {
+        title: true,
+        code: true,
+        type: true,
+        course: true,
+        startDate: true,
+        defaultSchedule: true,
+        signup: true,
+      },
       overrideAccess: true,
       ...all,
     }),
@@ -240,10 +248,12 @@ const findCourses = cache(async (): Promise<Course[]> => {
       courseSignupState(courseFacts(g as CourseGroup, taken.get(g.id)?.taken ?? 0), now),
     ),
   }));
+  const online = (await billingSettings(p)).online;
   return courses.map((c) =>
     map.course(
       c,
       starts.filter((s) => s.courseId === String(c.id)).map((s) => s.start),
+      online,
     ),
   );
 });

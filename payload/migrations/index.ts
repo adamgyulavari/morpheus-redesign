@@ -25,6 +25,7 @@ import * as migration_20261016_194816_payment_open_status from './20261016_19481
 import * as migration_20261017_003904_invoices from './20261017_003904_invoices';
 import * as migration_20261017_013547_drop_credit from './20261017_013547_drop_credit';
 import * as migration_20261017_015357_session_code from './20261017_015357_session_code';
+import * as migration_20261017_021712_course_payment from './20261017_021712_course_payment';
 
 export const migrations = [
   {
@@ -160,6 +161,11 @@ export const migrations = [
   {
     up: migration_20261017_015357_session_code.up,
     down: migration_20261017_015357_session_code.down,
-    name: '20261017_015357_session_code'
+    name: '20261017_015357_session_code',
+  },
+  {
+    up: migration_20261017_021712_course_payment.up,
+    down: migration_20261017_021712_course_payment.down,
+    name: '20261017_021712_course_payment'
   },
 ];
