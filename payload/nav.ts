@@ -28,6 +28,7 @@ const GROUP_OF: Record<string, NavGroup> = {
   // money: read-mostly lists (lib/payments)
   orders: 'Pénzügyek',
   payments: 'Pénzügyek',
+  invoices: 'Pénzügyek',
   // set up once, or the raw lists behind the dashboard and the room calendar
   ctaBands: 'Beállítások',
   legalPages: 'Beállítások',

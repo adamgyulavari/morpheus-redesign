@@ -8,6 +8,7 @@ export const billingSettings = cache(async (payload: Payload) => {
     /** Off: sign-ups are free again (pay on site); orders already started still finish. */
     online: doc.onlinePayments !== false,
     vatMode: doc.vatMode ?? 'AAM',
+    invoicePrefix: doc.invoicePrefix?.trim() ?? '',
     holdMinutes: typeof doc.ordersHoldMinutes === 'number' && doc.ordersHoldMinutes >= 5 ? doc.ordersHoldMinutes : 30,
   };
 });

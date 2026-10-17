@@ -15,7 +15,7 @@ import { CourseGroups } from './payload/collections/CourseGroups';
 import { LoginTokens } from './payload/collections/LoginTokens';
 import { Media } from './payload/collections/Media';
 import { Pages } from './payload/collections/Pages';
-import { MockPayments, Orders, Payments } from './payload/collections/payments';
+import { Invoices, MockPayments, Orders, Payments } from './payload/collections/payments';
 import { LegalPages, Productions, Shows } from './payload/collections/productions';
 import { RoomBookings } from './payload/collections/RoomBookings';
 import { Rooms, StudentLinks } from './payload/collections/Rooms';
@@ -139,6 +139,7 @@ export default buildConfig({
     LoginTokens,
     Orders,
     Payments,
+    Invoices,
     MockPayments,
   ]),
   globals: arrangeNav([SiteSettings, Ui, RoomBookingSettings, ApplicationSettings, BillingSettings]),

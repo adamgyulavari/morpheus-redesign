@@ -1,6 +1,6 @@
 /**
- * Money: orders (one checkout = one application), payments (one provider attempt each) and the
- * mock provider's fake payments. Written by lib/payments; the admin reads them (fixes: admins only).
+ * Money: orders (one checkout = one application), payments (one provider attempt each), invoices
+ * (lib/invoicing) and the mock provider's fake payments. Written by lib/payments; the admin reads them (fixes: admins only).
  * Amounts are whole forints.
  */
 import type { CollectionConfig } from 'payload';
@@ -132,6 +132,14 @@ export const Orders: CollectionConfig = {
       admin: { hidden: true },
     },
     {
+      name: 'invoices',
+      label: 'Számlák',
+      type: 'join',
+      collection: 'invoices',
+      on: 'order',
+      admin: { defaultColumns: ['kind', 'status', 'number', 'gross', 'createdAt'] },
+    },
+    {
       name: 'payments',
       label: 'Fizetések',
       type: 'join',
@@ -235,5 +243,99 @@ export const MockPayments: CollectionConfig = {
     { name: 'paidAt', type: 'date' },
     text('returnUrl', 'Vissza'),
     text('webhookUrl', 'Webhook'),
+  ],
+};
+
+export const INVOICE_STATUSES = {
+  draft: 'Piszkozat (számlázás kikapcsolva)',
+  sending: 'Küldés alatt',
+  issued: 'Kiállítva',
+  failed: 'Sikertelen',
+} as const;
+
+/** Invoices and stornos as sent to Számlázz.hu (lib/invoicing). Staff read; nobody edits. */
+export const Invoices: CollectionConfig = {
+  slug: 'invoices',
+  labels: { singular: 'Számla', plural: 'Számlák' },
+  access: {
+    // their own (/fiokom/szamlaim); the PDF comes through our own route, by owner check
+    read: ({ req: { user } }) => (userIsStaffOrAdmin(user) ? true : user ? { user: { equals: user.id } } : false),
+    create: () => false,
+    update: () => false,
+    delete: () => false,
+  },
+  admin: {
+    useAsTitle: 'number',
+    defaultColumns: ['number', 'kind', 'status', 'gross', 'order', 'mode', 'createdAt'],
+    description:
+      'A Számlázz.hu-n kiállított számlák (és sztornók), fizetett rendelésenként egy. A rendszer írja; javítani nem lehet — hibás számlát sztornóval lehet visszavonni.',
+  },
+  defaultSort: '-createdAt',
+  fields: [
+    {
+      // one invoice per order, one storno per invoice: retries can't make a second
+      name: 'key',
+      type: 'text',
+      required: true,
+      unique: true,
+      index: true,
+      admin: { hidden: true },
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'kind',
+          label: 'Fajta',
+          type: 'select',
+          required: true,
+          options: [
+            { label: 'Számla', value: 'invoice' },
+            { label: 'Sztornó', value: 'storno' },
+          ],
+        },
+        {
+          name: 'status',
+          label: 'Állapot',
+          type: 'select',
+          required: true,
+          index: true,
+          options: Object.entries(INVOICE_STATUSES).map(([value, label]) => ({ label, value })),
+        },
+        {
+          name: 'mode',
+          label: 'Mód',
+          type: 'select',
+          required: true,
+          options: [
+            { label: 'Kikapcsolva (nem küldtük el)', value: 'off' },
+            { label: 'Teszt fiók', value: 'test' },
+            { label: 'Éles', value: 'live' },
+          ],
+        },
+      ],
+    },
+    {
+      type: 'row',
+      fields: [
+        text('number', 'Számlaszám'),
+        { ...relationship('order', 'Rendelés', 'orders', { required: true }), index: true },
+        { ...relationship('user', 'Fiók', 'users', { required: true }), index: true },
+      ],
+    },
+    {
+      type: 'row',
+      fields: [huf('net', 'Nettó (Ft)'), huf('vat', 'ÁFA (Ft)'), huf('gross', 'Bruttó (Ft)')],
+    },
+    relationship('stornoOf', 'Ezt sztornózza', 'invoices'),
+    moment('issuedAt', 'Kiállítva'),
+    text('error', 'Hiba'),
+    {
+      // what we sent (without the key) — in "off" mode the whole invoice is here to check
+      name: 'data',
+      label: 'Adatok',
+      type: 'json',
+      admin: { readOnly: true },
+    },
   ],
 };

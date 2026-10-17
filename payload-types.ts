@@ -81,6 +81,7 @@ export interface Config {
     contactPeople: ContactPerson;
     orders: Order;
     payments: Payment;
+    invoices: Invoice;
     ctaBands: CtaBand;
     legalPages: LegalPage;
     venues: Venue;
@@ -110,6 +111,7 @@ export interface Config {
       courseGroups: 'courseGroups';
     };
     orders: {
+      invoices: 'invoices';
       payments: 'payments';
     };
     sessions: {
@@ -131,6 +133,7 @@ export interface Config {
     contactPeople: ContactPeopleSelect<false> | ContactPeopleSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
     payments: PaymentsSelect<false> | PaymentsSelect<true>;
+    invoices: InvoicesSelect<false> | InvoicesSelect<true>;
     ctaBands: CtaBandsSelect<false> | CtaBandsSelect<true>;
     legalPages: LegalPagesSelect<false> | LegalPagesSelect<true>;
     venues: VenuesSelect<false> | VenuesSelect<true>;
@@ -929,11 +932,49 @@ export interface Order {
     address?: string | null;
   };
   token: string;
+  invoices?: {
+    docs?: (number | Invoice)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
   payments?: {
     docs?: (number | Payment)[];
     hasNextPage?: boolean;
     totalDocs?: number;
   };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * A Számlázz.hu-n kiállított számlák (és sztornók), fizetett rendelésenként egy. A rendszer írja; javítani nem lehet — hibás számlát sztornóval lehet visszavonni.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "invoices".
+ */
+export interface Invoice {
+  id: number;
+  key: string;
+  kind: 'invoice' | 'storno';
+  status: 'draft' | 'sending' | 'issued' | 'failed';
+  mode: 'off' | 'test' | 'live';
+  number?: string | null;
+  order: number | Order;
+  user: number | User;
+  net: number;
+  vat: number;
+  gross: number;
+  stornoOf?: (number | null) | Invoice;
+  issuedAt?: string | null;
+  error?: string | null;
+  data?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2815,6 +2856,10 @@ export interface PayloadLockedDocument {
         value: number | Payment;
       } | null)
     | ({
+        relationTo: 'invoices';
+        value: number | Invoice;
+      } | null)
+    | ({
         relationTo: 'ctaBands';
         value: number | CtaBand;
       } | null)
@@ -4251,6 +4296,7 @@ export interface OrdersSelect<T extends boolean = true> {
         address?: T;
       };
   token?: T;
+  invoices?: T;
   payments?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -4285,6 +4331,28 @@ export interface PaymentsSelect<T extends boolean = true> {
         note?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "invoices_select".
+ */
+export interface InvoicesSelect<T extends boolean = true> {
+  key?: T;
+  kind?: T;
+  status?: T;
+  mode?: T;
+  number?: T;
+  order?: T;
+  user?: T;
+  net?: T;
+  vat?: T;
+  gross?: T;
+  stornoOf?: T;
+  issuedAt?: T;
+  error?: T;
+  data?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -4951,6 +5019,10 @@ export interface BillingSetting {
   onlinePayments?: boolean | null;
   vatMode: 'AAM' | '27' | '18' | '5';
   /**
+   * A Számlázz.hu-ban beállított számlatömb előtagja (pl. MSZ). Üresen: a fiók alapértelmezése.
+   */
+  invoicePrefix?: string | null;
+  /**
    * Ennyi ideig tartjuk a helyet, amíg a jelentkező fizet; utána felszabadul.
    */
   ordersHoldMinutes: number;
@@ -5306,6 +5378,7 @@ export interface ApplicationSettingsSelect<T extends boolean = true> {
 export interface BillingSettingsSelect<T extends boolean = true> {
   onlinePayments?: T;
   vatMode?: T;
+  invoicePrefix?: T;
   ordersHoldMinutes?: T;
   updatedAt?: T;
   createdAt?: T;

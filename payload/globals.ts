@@ -555,6 +555,14 @@ export const BillingSettings: GlobalConfig = {
           ],
         },
         {
+          name: 'invoicePrefix',
+          label: 'Számlaszám előtag',
+          type: 'text',
+          admin: {
+            description: 'A Számlázz.hu-ban beállított számlatömb előtagja (pl. MSZ). Üresen: a fiók alapértelmezése.',
+          },
+        },
+        {
           name: 'ordersHoldMinutes',
           label: 'Helyfoglalás fizetésig (perc)',
           type: 'number',

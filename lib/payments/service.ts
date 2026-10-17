@@ -29,6 +29,7 @@ import {
   workshopInfo,
 } from '@/lib/applications/server';
 import { applicationSettings } from '@/lib/applications/settings';
+import { issueInvoice } from '@/lib/invoicing/service';
 import { whenText } from '@/lib/rooms/format';
 import { icsFile } from '@/lib/rooms/ics';
 import { errorMessage } from '@/lib/rooms/server';
@@ -498,6 +499,8 @@ export async function afterPaid(payload: Payload, orderId: number) {
     const taken = (await takenBy(payload, 'session_id', [s.id])).get(s.id) ?? NOBODY;
     await sendStaffPaid(payload, settings, applicant, info, money, countText(taken, s));
   }
+  // the invoice (Számlázz.hu e-mails it); never throws — failures are stored and reported
+  await issueInvoice(payload, orderId);
 }
 
 const workshopIcs = (applicationId: number, s: Session, info: { title: string; place?: string }) =>
