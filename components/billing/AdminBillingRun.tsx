@@ -111,16 +111,17 @@ export default function AdminBillingRun() {
                 {l.done ? (
                   formatHuf(l.amount)
                 ) : (
-                  <input
-                    className={s.field}
-                    type="number"
-                    min={1}
-                    step={1}
-                    style={{ width: 110, textAlign: 'right' }}
-                    aria-label={`${l.name}: összeg`}
-                    value={amounts[l.key] ?? l.amount}
-                    onChange={(e) => setAmounts((a) => ({ ...a, [l.key]: Number(e.target.value) }))}
-                  />
+                  <span className={s.field}>
+                    <input
+                      type="number"
+                      min={1}
+                      step={1}
+                      style={{ width: 110, textAlign: 'right' }}
+                      aria-label={`${l.name}: összeg`}
+                      value={amounts[l.key] ?? l.amount}
+                      onChange={(e) => setAmounts((a) => ({ ...a, [l.key]: Number(e.target.value) }))}
+                    />
+                  </span>
                 )}
               </td>
               <td>
@@ -149,16 +150,15 @@ export default function AdminBillingRun() {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1100 }}>
-      <div className={s.row} style={{ gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-        <label className={s.row} style={{ gap: 8, alignItems: 'center' }}>
+    // the admin palette (its variables) for the shared buttons, fields and tables
+    <div
+      className={s.admin}
+      style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1100, color: 'var(--cal-text)' }}
+    >
+      <div className={s.row} style={{ gap: 16, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+        <label className={s.field}>
           Hónap
-          <input
-            className={s.field}
-            type="month"
-            value={month}
-            onChange={(e) => e.target.value && setMonth(e.target.value)}
-          />
+          <input type="month" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)} />
         </label>
         <span className={s.muted}>Számlázás: {MODE[data.mode] ?? data.mode}</span>
       </div>
