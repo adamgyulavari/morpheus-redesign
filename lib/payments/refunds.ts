@@ -38,11 +38,14 @@ export async function refundPayment(
   note: string,
   by?: number,
 ): Promise<Result<{ left: number }>> {
+  const provider = paymentProvider();
   const at = new Date().toISOString();
   const recorded = await inTransaction(payload, async (req) => {
     const first = await payload.findByID({ collection: 'payments', id: paymentId, depth: 0, req });
     await lockOrder(req, relId(first.order) ?? 0);
     const p = await payload.findByID({ collection: 'payments', id: paymentId, depth: 0, req });
+    // paid through another provider (e.g. the mock while developing): not ours to send back
+    if (p.provider !== provider.name) return { p, left: 0, ok: false as const };
     const left = p.amount - refundedOf(p);
     if (!paidOrLater(p.status as ProviderStatus) || amount < 1 || amount > left) return { p, left, ok: false as const };
     await payload.update({
@@ -63,7 +66,7 @@ export async function refundPayment(
   const p = recorded.p;
   try {
     const n = (p.refunds ?? []).length + 1;
-    const r = await paymentProvider().refund(p.providerPaymentId, amount, `Visszatérítés #${relId(p.order)}/${n}`);
+    const r = await provider.refund(p.providerPaymentId, amount, `Visszatérítés #${relId(p.order)}/${n}`);
     await setRow(payload, paymentId, at, (row) => ({ ...row, providerRefundId: r.providerRefundId }));
     return { ok: true, left: recorded.left - amount };
   } catch (err) {

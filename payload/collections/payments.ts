@@ -145,6 +145,12 @@ export const Orders: CollectionConfig = {
       admin: { hidden: true },
     },
     {
+      // admins: send money back (lib/payments/refunds)
+      name: 'refund',
+      type: 'ui',
+      admin: { components: { Field: '@/payload/components/OrderRefund#OrderRefund' } },
+    },
+    {
       name: 'invoices',
       label: 'Számlák',
       type: 'join',
