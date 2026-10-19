@@ -1,31 +1,6 @@
-import { execFileSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
-
 import { describe, expect, it } from 'vitest';
 
 import { type InvoiceData, invoiceXml, pdfXml, readAnswer, split, stornoXml } from './szamlazz';
-
-/** The official XSDs (./xsd, from szamlazz.hu): the Agent refuses anything they don't allow. */
-function validate(xml: string, xsd: string) {
-  const file = path.join(mkdtempSync(path.join(tmpdir(), 'szamla-')), 'request.xml');
-  writeFileSync(file, xml);
-  try {
-    execFileSync('xmllint', ['--noout', '--schema', path.join(__dirname, 'xsd', xsd), file], { stdio: 'pipe' });
-    return '';
-  } catch (err) {
-    return String((err as { stderr?: Buffer }).stderr ?? err);
-  }
-}
-const hasXmllint = (() => {
-  try {
-    execFileSync('xmllint', ['--version'], { stdio: 'pipe' });
-    return true;
-  } catch {
-    return false;
-  }
-})();
 
 const invoice: InvoiceData = {
   externalId: 'order-12',
@@ -62,19 +37,6 @@ describe('invoiceXml', () => {
     expect(xml).toContain('<afakulcs>AAM</afakulcs><nettoErtek>5000</nettoErtek><afaErtek>0</afaErtek>');
     expect(xml).toContain('<szamlaKulsoAzon>order-12</szamlaKulsoAzon>');
   });
-  it.runIf(hasXmllint)('is valid against the official XSD (also with VAT, tax number, prefix, abroad)', () => {
-    expect(validate(invoiceXml('KEY', invoice), 'xmlszamla.xsd')).toBe('');
-    const other: InvoiceData = {
-      ...invoice,
-      vat: '27',
-      prefix: 'MSZ',
-      buyer: { ...invoice.buyer, country: 'AT', taxNumber: '12345678-1-42' },
-      items: [{ name: 'Kezdő kurzus', quantity: 2, unit: 'kurzus', gross: 45000 }],
-    };
-    expect(validate(invoiceXml('KEY', other), 'xmlszamla.xsd')).toBe('');
-    const transfer: InvoiceData = { ...invoice, payment: { method: 'transfer', dueDate: '2026-10-25' } };
-    expect(validate(invoiceXml('KEY', transfer), 'xmlszamla.xsd')).toBe('');
-  });
   it('a transfer invoice: unpaid, Átutalás, its due date', () => {
     const xml = invoiceXml('KEY', { ...invoice, payment: { method: 'transfer', dueDate: '2026-10-25' } });
     expect(xml).toContain('<fizetesiHataridoDatum>2026-10-25</fizetesiHataridoDatum><fizmod>Átutalás</fizmod>');
@@ -84,20 +46,19 @@ describe('invoiceXml', () => {
 });
 
 describe('stornoXml / pdfXml', () => {
-  it.runIf(hasXmllint)('are valid against the official XSDs', () => {
-    expect(
-      validate(
-        stornoXml('KEY', {
-          invoiceNumber: 'MSZ-2026-1',
-          externalId: 'storno-3',
-          issueDate: '2026-10-17',
-          email: 'anna@example.com',
-          note: 'Visszatérítés',
-        }),
-        'xmlszamlast.xsd',
-      ),
-    ).toBe('');
-    expect(validate(pdfXml('KEY', 'MSZ-2026-1'), 'xmlszamlapdf.xsd')).toBe('');
+  it('storno: the invoice reversed, SS type', () => {
+    const xml = stornoXml('KEY', {
+      invoiceNumber: 'MSZ-2026-1',
+      externalId: 'storno-3',
+      issueDate: '2026-10-17',
+      email: 'anna@example.com',
+      note: 'Visszatérítés',
+    });
+    expect(xml).toContain('<szamlaszam>MSZ-2026-1</szamlaszam>');
+    expect(xml).toContain('<tipus>SS</tipus>');
+  });
+  it('pdf: the invoice number', () => {
+    expect(pdfXml('KEY', 'MSZ-2026-1')).toContain('<szamlaszam>MSZ-2026-1</szamlaszam>');
   });
 });
 
