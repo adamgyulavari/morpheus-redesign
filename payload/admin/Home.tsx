@@ -1,10 +1,8 @@
 import type { ServerProps } from 'payload';
-
-import { adminHome } from '@/lib/admin/home';
 import { KIND_PALETTE } from '@/lib/rooms/labels';
 import { userIsStaffOrAdmin } from '@/payload/access';
-
-import s from './admin-home.module.css';
+import s from './home.module.css';
+import { homeData } from './home-data';
 
 const QUICK = [
   { label: 'Hónap feltöltése', href: '/admin/teremnaptar?feltoltes=honap' },
@@ -13,9 +11,9 @@ const QUICK = [
 ];
 
 /** Above the admin's card grid: what needs doing, the coming week, quick actions. Staff only. */
-export async function AdminHome({ payload, user }: ServerProps) {
+export async function Home({ payload, user }: ServerProps) {
   if (!userIsStaffOrAdmin(user)) return null;
-  const { todos, fill, week } = await adminHome(payload);
+  const { todos, fill, week } = await homeData(payload);
   return (
     <div className={s.home}>
       <section className={s.panel} aria-labelledby="home-todo">

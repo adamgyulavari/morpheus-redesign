@@ -12,7 +12,6 @@
 import { type FormEvent, type ReactNode, useCallback, useEffect, useId, useState, useTransition } from 'react';
 
 import Dialog from '@/components/Dialog';
-import s from '@/components/rooms/calendar.module.css';
 import {
   addParticipantAction,
   dashboardData,
@@ -21,6 +20,7 @@ import {
 } from '@/lib/applications/admin-actions';
 import { APPLICATION_STATUSES, WORKSHOP_STATUSES } from '@/lib/applications/labels';
 import type { Decision } from '@/lib/applications/server';
+import s from './admin.module.css';
 
 type Data = NonNullable<Awaited<ReturnType<typeof dashboardData>>>;
 type App = Data['beginners'][number];
@@ -34,7 +34,7 @@ const date = (iso: string) =>
     new Date(iso),
   );
 
-export default function AdminApplications() {
+export default function Applications() {
   const [data, setData] = useState<Data | null>(null);
   const [toast, setToast] = useState<{ text: string; error?: boolean } | null>(null);
   const [open, setOpen] = useState<{ app: App; kind: Kind; context: string } | null>(null);

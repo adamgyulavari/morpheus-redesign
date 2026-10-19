@@ -1,7 +1,7 @@
 // Morpheus look for the Payload admin (dark theme only, see `admin.theme` in payload.config.ts).
 // Payload builds its whole palette from the --color-base-* and --color-success-* scales, so
 // re-tinting those turns the neutral greys into the site's teals (night → deep → mist → paper) and
-// the accents into the site teal. Fonts (Figtree / Instrument Serif) come from AdminTheme.tsx.
+// the accents into the site teal. Fonts (Figtree / Instrument Serif) come from payload/admin/Theme.tsx.
 // Payload's own styles live in `@layer payload-default`; these unlayered rules win over them.
 
 :root {
@@ -100,7 +100,7 @@ a:not(.btn):not(.card):hover {
   background-color: var(--morpheus-gold);
 }
 
-// ── branding (payload/components/Graphics.tsx) ───────────────────────────────────────────
+// ── branding (payload/admin/Graphics.tsx) ───────────────────────────────────────────
 .morpheus-logo {
   display: flex;
   flex-direction: column;

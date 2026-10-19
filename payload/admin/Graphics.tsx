@@ -1,10 +1,10 @@
-import Logo from '@/components/Logo';
+import SiteLogo from '@/components/Logo';
 
 /** Login page: the Morpheus logo and name instead of Payload's. */
-export function AdminLogo() {
+export function Logo() {
   return (
     <div className="morpheus-logo">
-      <Logo title={null} />
+      <SiteLogo title={null} />
       <span className="morpheus-logo__name">
         Morpheus <em>Színműhely</em>
       </span>
@@ -14,6 +14,6 @@ export function AdminLogo() {
 }
 
 /** Small logo in the sidebar / header. */
-export function AdminIcon() {
-  return <Logo title="Morpheus Színműhely" className="morpheus-icon" />;
+export function Icon() {
+  return <SiteLogo title="Morpheus Színműhely" className="morpheus-icon" />;
 }

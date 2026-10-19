@@ -4,7 +4,7 @@
  * Edit buttons for staff on the live site (loaded by EditMode only for them):
  * - "Szerkesztés" (bottom left): this page's document in the admin, plus the site-wide settings;
  * - "Blokkok mutatása": the block under the pointer gets an outline and a "Blokk szerkesztése"
- *   button, which opens the page in the admin at that block (payload/components/BlockFocus.tsx).
+ *   button, which opens the page in the admin at that block (payload/admin/BlockFocus.tsx).
  * Links open the admin in a new tab; the admin checks the real permissions. It reads the hidden
  * markers the pages render: `data-cms-doc` (the document) and `data-cms-block` (before each block).
  */

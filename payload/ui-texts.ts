@@ -36,7 +36,7 @@ export const UiTexts: CollectionConfig = {
       label: 'Szövegek',
       type: 'json',
       required: true,
-      admin: { components: { Field: '@/payload/components/UiTextsField#UiTextsField' } },
+      admin: { components: { Field: '@/payload/admin/UiTextsField#UiTextsField' } },
       hooks: { beforeChange: [({ value }) => storedTexts(value)] },
       validate: (value: unknown, { siblingData }: { siblingData: { lang?: string } }) => {
         if (siblingData.lang !== BASE_LANG) return true;

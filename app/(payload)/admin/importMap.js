@@ -11,26 +11,26 @@ import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { HeadingFeatureClient as HeadingFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ParagraphFeatureClient as ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
-import { FillMonthLink as FillMonthLink_3e10b527e91a7be1977956b871d79c02 } from '@/payload/components/FillMonthLink'
-import { BlockFocus as BlockFocus_a863bad74a8f7f4b5921b1522cd9a608 } from '@/payload/components/BlockFocus'
-import { BlockHelp as BlockHelp_e5a144e044fde489657218832730cc50 } from '@/payload/components/BlockHelp'
+import { FillMonthLink as FillMonthLink_4ce0b4c0b98a51629edb8cbcabe61672 } from '@/payload/admin/FillMonthLink'
+import { BlockFocus as BlockFocus_8044bd553ea8fc36f5b82d54e1ee7bbe } from '@/payload/admin/BlockFocus'
+import { BlockHelp as BlockHelp_67188de3ac65399b97c6103a7a4ea54b } from '@/payload/admin/BlockHelp'
 import { OverviewComponent as OverviewComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { MetaTitleComponent as MetaTitleComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { MetaDescriptionComponent as MetaDescriptionComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { MetaImageComponent as MetaImageComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { PreviewComponent as PreviewComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { SlugField as SlugField_2b8867833a34864a02ddf429b0728a40 } from '@payloadcms/next/client'
-import { OrderRefund as OrderRefund_cbd7566932866825bcacc9b838380f4c } from '@/payload/components/OrderRefund'
-import { UiTextsField as UiTextsField_00b1dc59843a412e15679c87c9750c57 } from '@/payload/components/UiTextsField'
-import { AdminIcon as AdminIcon_c7cc1027a67379fab4ede5a29a5bee3b } from '@/payload/components/Graphics'
-import { AdminLogo as AdminLogo_c7cc1027a67379fab4ede5a29a5bee3b } from '@/payload/components/Graphics'
-import { SiteLink as SiteLink_bf613e78b6eaaa1518bf2d3380563a7e } from '@/payload/components/SiteLink'
-import { AdminHome as AdminHome_5eba2b5874ba204e46553fc37fc80824 } from '@/payload/components/AdminHome'
-import { NavTop as NavTop_77444e8887db12c29b29d8771ea5886e } from '@/payload/components/NavTop'
-import { AdminTheme as AdminTheme_d51e05e162859c3d161662d24fe628c0 } from '@/payload/components/AdminTheme'
-import { RoomCalendarView as RoomCalendarView_222f16c347eac7557592e1fadc58105d } from '@/payload/views/RoomCalendarView'
-import { ApplicationsView as ApplicationsView_450f8a77033934c042a8d851a1db2341 } from '@/payload/views/ApplicationsView'
-import { BillingRunView as BillingRunView_6da6200d821bce7e56f4cfe420583bb3 } from '@/payload/views/BillingRunView'
+import { OrderRefund as OrderRefund_2fdb2c83acf518cf40f4dc71f406681c } from '@/payload/admin/OrderRefund'
+import { UiTextsField as UiTextsField_73b516e5921b843e921a02374d42da34 } from '@/payload/admin/UiTextsField'
+import { Icon as Icon_d43c264eeb853a721bfab269b703774e } from '@/payload/admin/Graphics'
+import { Logo as Logo_d43c264eeb853a721bfab269b703774e } from '@/payload/admin/Graphics'
+import { SiteLink as SiteLink_63d78dfb05c9b8e3e082f2741f86955a } from '@/payload/admin/SiteLink'
+import { Home as Home_efad1a80a4b7c3d12cd4630f9fe42966 } from '@/payload/admin/Home'
+import { NavTop as NavTop_897f595da4b512da693b87447d7ef483 } from '@/payload/admin/NavTop'
+import { Theme as Theme_4c07e566a6f8006cedee5019c29a1201 } from '@/payload/admin/Theme'
+import { RoomCalendarView as RoomCalendarView_3926d171d9d98eb65a012bdf532daed8 } from '@/payload/admin/views'
+import { ApplicationsView as ApplicationsView_3926d171d9d98eb65a012bdf532daed8 } from '@/payload/admin/views'
+import { BillingRunView as BillingRunView_3926d171d9d98eb65a012bdf532daed8 } from '@/payload/admin/views'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 
@@ -49,26 +49,26 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#HeadingFeatureClient": HeadingFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ParagraphFeatureClient": ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
-  "@/payload/components/FillMonthLink#FillMonthLink": FillMonthLink_3e10b527e91a7be1977956b871d79c02,
-  "@/payload/components/BlockFocus#BlockFocus": BlockFocus_a863bad74a8f7f4b5921b1522cd9a608,
-  "@/payload/components/BlockHelp#BlockHelp": BlockHelp_e5a144e044fde489657218832730cc50,
+  "@/payload/admin/FillMonthLink#FillMonthLink": FillMonthLink_4ce0b4c0b98a51629edb8cbcabe61672,
+  "@/payload/admin/BlockFocus#BlockFocus": BlockFocus_8044bd553ea8fc36f5b82d54e1ee7bbe,
+  "@/payload/admin/BlockHelp#BlockHelp": BlockHelp_67188de3ac65399b97c6103a7a4ea54b,
   "@payloadcms/plugin-seo/client#OverviewComponent": OverviewComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/plugin-seo/client#MetaTitleComponent": MetaTitleComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/plugin-seo/client#MetaDescriptionComponent": MetaDescriptionComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/plugin-seo/client#MetaImageComponent": MetaImageComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/plugin-seo/client#PreviewComponent": PreviewComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/next/client#SlugField": SlugField_2b8867833a34864a02ddf429b0728a40,
-  "@/payload/components/OrderRefund#OrderRefund": OrderRefund_cbd7566932866825bcacc9b838380f4c,
-  "@/payload/components/UiTextsField#UiTextsField": UiTextsField_00b1dc59843a412e15679c87c9750c57,
-  "@/payload/components/Graphics#AdminIcon": AdminIcon_c7cc1027a67379fab4ede5a29a5bee3b,
-  "@/payload/components/Graphics#AdminLogo": AdminLogo_c7cc1027a67379fab4ede5a29a5bee3b,
-  "@/payload/components/SiteLink#SiteLink": SiteLink_bf613e78b6eaaa1518bf2d3380563a7e,
-  "@/payload/components/AdminHome#AdminHome": AdminHome_5eba2b5874ba204e46553fc37fc80824,
-  "@/payload/components/NavTop#NavTop": NavTop_77444e8887db12c29b29d8771ea5886e,
-  "@/payload/components/AdminTheme#AdminTheme": AdminTheme_d51e05e162859c3d161662d24fe628c0,
-  "@/payload/views/RoomCalendarView#RoomCalendarView": RoomCalendarView_222f16c347eac7557592e1fadc58105d,
-  "@/payload/views/ApplicationsView#ApplicationsView": ApplicationsView_450f8a77033934c042a8d851a1db2341,
-  "@/payload/views/BillingRunView#BillingRunView": BillingRunView_6da6200d821bce7e56f4cfe420583bb3,
+  "@/payload/admin/OrderRefund#OrderRefund": OrderRefund_2fdb2c83acf518cf40f4dc71f406681c,
+  "@/payload/admin/UiTextsField#UiTextsField": UiTextsField_73b516e5921b843e921a02374d42da34,
+  "@/payload/admin/Graphics#Icon": Icon_d43c264eeb853a721bfab269b703774e,
+  "@/payload/admin/Graphics#Logo": Logo_d43c264eeb853a721bfab269b703774e,
+  "@/payload/admin/SiteLink#SiteLink": SiteLink_63d78dfb05c9b8e3e082f2741f86955a,
+  "@/payload/admin/Home#Home": Home_efad1a80a4b7c3d12cd4630f9fe42966,
+  "@/payload/admin/NavTop#NavTop": NavTop_897f595da4b512da693b87447d7ef483,
+  "@/payload/admin/Theme#Theme": Theme_4c07e566a6f8006cedee5019c29a1201,
+  "@/payload/admin/views#RoomCalendarView": RoomCalendarView_3926d171d9d98eb65a012bdf532daed8,
+  "@/payload/admin/views#ApplicationsView": ApplicationsView_3926d171d9d98eb65a012bdf532daed8,
+  "@/payload/admin/views#BillingRunView": BillingRunView_3926d171d9d98eb65a012bdf532daed8,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24
 }
