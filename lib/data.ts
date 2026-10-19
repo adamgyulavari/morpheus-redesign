@@ -17,6 +17,7 @@ import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical
 import { draftMode } from 'next/headers';
 import { getPayload } from 'payload';
 import { cache } from 'react';
+import { uiTexts } from '@/payload/ui-texts';
 import type { CourseGroup } from '@/payload-types';
 import { courseSignupState } from './applications/rules';
 import { courseFacts, SIGNUP_ON, takenBy, upcomingWorkshops } from './applications/server';
@@ -72,10 +73,8 @@ export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
   return map.siteSettings(await (await payload()).findGlobal({ slug: 'siteSettings', depth: 0 }));
 });
 
-/** Component text (labels, empty states, aria labels) — one editable dictionary. */
-export const getUi = cache(async (): Promise<UiStrings> => {
-  return map.ui(await (await payload()).findGlobal({ slug: 'ui', depth: 0 }));
-});
+/** Component text (labels, empty states, aria labels) — the UI texts of a language. */
+export const getUi = cache(async (lang?: string): Promise<UiStrings> => uiTexts(await payload(), lang));
 
 const PAGE_POPULATE = { pages: { path: true, title: true } } as const;
 

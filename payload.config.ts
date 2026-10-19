@@ -33,11 +33,12 @@ import {
 import { Users } from './payload/collections/Users';
 import { emailAdapter } from './payload/email';
 import { EmailTexts } from './payload/email-texts';
-import { ApplicationSettings, BillingSettings, RoomBookingSettings, SiteSettings, Ui } from './payload/globals';
+import { ApplicationSettings, BillingSettings, RoomBookingSettings, SiteSettings } from './payload/globals';
 import { migrations } from './payload/migrations';
 import { arrangeNav } from './payload/nav';
 import { redirectsConfig, redirectsTranslationsHu } from './payload/redirects';
 import { generateDescription, generateImage, generateTitle, generateURL, seoFields } from './payload/seo';
+import { UiTexts } from './payload/ui-texts';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -122,6 +123,7 @@ export default buildConfig({
     Pages,
     CtaBands,
     LegalPages,
+    UiTexts,
     Productions,
     Shows,
     Venues,
@@ -145,7 +147,7 @@ export default buildConfig({
     Invoices,
     MockPayments,
   ]),
-  globals: arrangeNav([SiteSettings, Ui, RoomBookingSettings, ApplicationSettings, BillingSettings, EmailTexts]),
+  globals: arrangeNav([SiteSettings, RoomBookingSettings, ApplicationSettings, BillingSettings, EmailTexts]),
   editor: lexicalEditor(),
   // SMTP when SMTP_HOST is set; otherwise e-mails (with their links) are written to the console
   email: emailAdapter(),

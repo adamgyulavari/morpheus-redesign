@@ -40,7 +40,7 @@ const GROUP_OF: Record<string, NavGroup> = {
   roomBookings: 'Beállítások',
   applications: 'Beállítások',
   siteSettings: 'Beállítások',
-  ui: 'Beállítások',
+  uiTexts: 'Beállítások',
   roomBookingSettings: 'Beállítások',
   applicationSettings: 'Beállítások',
   billingSettings: 'Beállítások',

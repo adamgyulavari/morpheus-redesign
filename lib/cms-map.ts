@@ -25,7 +25,6 @@ import type {
   Show,
   SiteSettings,
   TeamBuildingProgramme,
-  UiStrings,
   Venue,
   Workshop,
 } from '@/lib/types';
@@ -333,19 +332,6 @@ export const siteSettings = (s: P.SiteSetting): SiteSettings => ({
   map: { embedUrl: s.map.embedUrl, directionsUrl: s.map.directionsUrl, title: s.map.title },
   productionPage: { ctaBand: idOf(s.productionPage.ctaBand) },
 });
-
-/** The UI global is the dictionary itself, minus Payload's bookkeeping fields. */
-export function ui(u: P.Ui): UiStrings {
-  const strip = (v: unknown): unknown =>
-    v && typeof v === 'object'
-      ? Object.fromEntries(
-          Object.entries(v)
-            .filter(([k]) => !['id', 'globalType', 'createdAt', 'updatedAt'].includes(k))
-            .map(([k, x]) => [k, strip(x)]),
-        )
-      : v;
-  return strip(u) as UiStrings;
-}
 
 // ── pages & blocks ──────────────────────────────────────────────────────────
 
