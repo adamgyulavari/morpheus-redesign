@@ -1,10 +1,10 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import AccountShell from '@/components/account/AccountShell';
-import { Card } from '@/components/account/Card';
 import { accountMetadata } from '@/components/account/meta';
 import CheckoutForm from '@/components/payments/CheckoutForm';
+import CheckoutNotice from '@/components/payments/CheckoutNotice';
+import CheckoutSummary from '@/components/payments/CheckoutSummary';
 import { workshopState } from '@/lib/applications/rules';
 import { NOBODY, takenBy, workshopFacts, workshopInfo } from '@/lib/applications/server';
 import { applicationSettings } from '@/lib/applications/settings';
@@ -15,68 +15,70 @@ import { checkoutMe } from '@/lib/payments/me';
 import { paymentProvider } from '@/lib/payments/providers';
 import { sessionByCode } from '@/lib/payments/service';
 import { billingSettings, PAUSED } from '@/lib/payments/settings';
+import type { Session } from '@/payload-types';
 
 // per visitor and per moment (places, holds), never cached
 export const dynamic = 'force-dynamic';
 
 export const generateMetadata = () => accountMetadata('Jelentkezés és fizetés');
 
+const OTHER_DATES = { href: '/nyitott-alkalmak/', label: 'A többi időpont' };
+
 /** /fizetes?alkalom=<code>: a Nyitott Műhely date — your details on the left, the order and payment on the right. */
 export default async function CheckoutPage({ searchParams }: { searchParams: Promise<{ alkalom?: string }> }) {
   const payload = await payloadClient();
   const s = await sessionByCode(payload, (await searchParams).alkalom ?? '');
   if (!s?.code) notFound();
-  const [viewer, settings, billing] = await Promise.all([
+  return (
+    <AccountShell eyebrow="Jelentkezés" heading="*Nyitott Műhely*" wide>
+      <Body session={s} code={s.code} />
+    </AccountShell>
+  );
+}
+
+async function Body({ session: s, code }: { session: Session; code: string }) {
+  const payload = await payloadClient();
+  const [viewer, settings, billing, taken] = await Promise.all([
     getCurrentUser(),
     applicationSettings(payload),
     billingSettings(payload),
+    takenBy(payload, 'session_id', [s.id]),
   ]);
-  const taken = (await takenBy(payload, 'session_id', [s.id])).get(s.id) ?? NOBODY;
-  const facts = workshopFacts(s, taken);
+  if (!billing.online)
+    return (
+      <CheckoutNotice
+        text={`${PAUSED} Az időpontokra a Nyitott Műhely oldalán jelentkezhetsz; a díjat a helyszínen fizeted.`}
+        back={OTHER_DATES}
+      />
+    );
+
+  const facts = workshopFacts(s, taken.get(s.id) ?? NOBODY);
   const state = workshopState(facts, new Date(), settings);
+  if (state.state === 'full') return <CheckoutNotice text="Ez az alkalom megtelt." back={OTHER_DATES} />;
+  if (state.state !== 'open' && state.state !== 'confirmed')
+    return <CheckoutNotice text="Erre az alkalomra már nem lehet jelentkezni." back={OTHER_DATES} />;
+
   const info = await workshopInfo(payload, s, settings);
-  const price = Math.max(0, s.workshop?.price ?? 0);
-  const open = state.state === 'open' || state.state === 'confirmed';
-
-  const notice = (text: string) => (
-    <Card className="max-w-[680px]">
-      <p className="text-[17px]">{text}</p>
-      <Link href="/nyitott-alkalmak/" className="link self-start font-semibold">
-        A többi időpont
-      </Link>
-    </Card>
-  );
-
+  const needs = state.state === 'open' ? `Még ${state.needed} jelentkező kell az induláshoz` : 'Biztosan indul';
   return (
-    <AccountShell eyebrow="Jelentkezés" heading="*Nyitott Műhely*" wide>
-      {!billing.online ? (
-        notice(`${PAUSED} Az időpontokra a Nyitott Műhely oldalán jelentkezhetsz; a díjat a helyszínen fizeted.`)
-      ) : !open ? (
-        notice(state.state === 'full' ? 'Ez az alkalom megtelt.' : 'Erre az alkalomra már nem lehet jelentkezni.')
-      ) : (
-        <CheckoutForm
-          action={checkoutAction}
-          hidden={{ alkalom: s.code }}
-          price={price}
-          loginHref={`/belepes?vissza=${encodeURIComponent(checkoutPath(s.code))}`}
-          provider={paymentProvider().brand}
-          summary={
-            <div className="flex flex-col gap-1.5">
-              <h2 className="font-display text-[28px] leading-tight">{info.when}</h2>
-              {info.place && <p className="text-[16px] text-ink2">{info.place}</p>}
-              <p className="text-[13px] text-muted">
-                {state.state === 'open' ? `Még ${state.needed} jelentkező kell az induláshoz` : 'Biztosan indul'}
-                {state.left != null ? ` · ${state.left} szabad hely` : ''}
-              </p>
-            </div>
-          }
-          policy={[
-            `Legkésőbb ${settings.userCancelHours} órával a kezdés előtt a fiókodban áthelyezheted a jelentkezésed egy másik időpontra, vagy lemondhatod. Lemondás esetén a díjat nem térítjük vissza.`,
-            `Ha ${settings.workshopCutoffHours} órával a kezdés előtt nincs legalább ${facts.minParticipants} fizetett jelentkező, az alkalom elmarad; a jelentkezésed a fiókodban áthelyezheted egy másik időpontra.`,
-          ]}
-          me={checkoutMe(viewer)}
+    <CheckoutForm
+      action={checkoutAction}
+      hidden={{ alkalom: code }}
+      price={Math.max(0, s.workshop?.price ?? 0)}
+      loginHref={`/belepes?vissza=${encodeURIComponent(checkoutPath(code))}`}
+      provider={paymentProvider().brand}
+      summary={
+        <CheckoutSummary
+          title={info.when ?? info.title}
+          lines={info.place ? [info.place] : []}
+          meta={[needs, state.left != null ? `${state.left} szabad hely` : ''].filter(Boolean).join(' · ')}
         />
-      )}
-    </AccountShell>
+      }
+      policy={[
+        `Legkésőbb ${settings.userCancelHours} órával a kezdés előtt a fiókodban áthelyezheted a jelentkezésed egy másik időpontra, vagy lemondhatod. Lemondás esetén a díjat nem térítjük vissza.`,
+        `Ha ${settings.workshopCutoffHours} órával a kezdés előtt nincs legalább ${facts.minParticipants} fizetett jelentkező, az alkalom elmarad; a jelentkezésed a fiókodban áthelyezheted egy másik időpontra.`,
+      ]}
+      me={checkoutMe(viewer)}
+    />
   );
 }

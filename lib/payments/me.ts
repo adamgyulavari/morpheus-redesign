@@ -19,3 +19,5 @@ export function checkoutMe(viewer: TypedUser | null) {
     },
   };
 }
+
+export type CheckoutMe = ReturnType<typeof checkoutMe>;
