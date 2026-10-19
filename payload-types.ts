@@ -1029,6 +1029,7 @@ export interface Payment {
         amount: number;
         at?: string | null;
         by?: (number | null) | User;
+        note?: string | null;
         id?: string | null;
       }[]
     | null;
@@ -4368,6 +4369,7 @@ export interface PaymentsSelect<T extends boolean = true> {
         amount?: T;
         at?: T;
         by?: T;
+        note?: T;
         id?: T;
       };
   raw?: T;

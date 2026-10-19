@@ -23501,6 +23501,12 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": false
+        },
+        "note": {
+          "name": "note",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -34193,6 +34199,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "5750512e-8c6a-4232-bcf8-3876d653c862",
+  "id": "2322b1f7-d07e-47af-b288-84754b9d0985",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

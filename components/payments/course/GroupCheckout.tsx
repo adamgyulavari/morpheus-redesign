@@ -3,10 +3,10 @@ import Link from 'next/link';
 import CheckoutForm from '@/components/payments/CheckoutForm';
 import CheckoutSummary from '@/components/payments/CheckoutSummary';
 import { courseCheckoutAction } from '@/lib/payments/actions';
+import { dueNow } from '@/lib/payments/checkout';
 import { courseCheckoutPath } from '@/lib/payments/links';
 import type { CheckoutMe } from '@/lib/payments/me';
 import { paymentProvider } from '@/lib/payments/providers';
-import { dueNow } from '@/lib/payments/service';
 import type { Course, CourseStart } from '@/lib/types';
 
 import { placesLeft, startLine } from './startText';

@@ -11,7 +11,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { Card } from '@/components/account/Card';
 import { formatHuf } from '@/lib/format';
 import { cancelOrderAction, orderStatusAction, retryPaymentAction } from '@/lib/payments/actions';
-import type { OrderView } from '@/lib/payments/service';
+import type { OrderView } from '@/lib/payments/order-page';
 
 const POLL_MS = 3_000;
 const POLL_FOR_MS = 30_000;

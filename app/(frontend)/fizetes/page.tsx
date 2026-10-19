@@ -13,8 +13,8 @@ import { checkoutAction } from '@/lib/payments/actions';
 import { checkoutPath } from '@/lib/payments/links';
 import { checkoutMe } from '@/lib/payments/me';
 import { paymentProvider } from '@/lib/payments/providers';
-import { sessionByCode } from '@/lib/payments/service';
 import { billingSettings, PAUSED } from '@/lib/payments/settings';
+import { sessionByCode } from '@/lib/payments/target';
 import type { Session } from '@/payload-types';
 
 // per visitor and per moment (places, holds), never cached

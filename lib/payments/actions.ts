@@ -10,16 +10,10 @@ import { redirect } from 'next/navigation';
 import { getCurrentUser, payloadClient } from '@/lib/auth';
 import { allow, clientIp } from '@/payload/magic-link';
 
-import {
-  cancelOrder,
-  checkout,
-  checkoutCourse,
-  groupByCode,
-  orderStatus,
-  resultUrl,
-  retryPayment,
-  sessionByCode,
-} from './service';
+import { checkout, checkoutCourse, retryPayment } from './checkout';
+import { cancelOrder, orderStatus } from './order-page';
+import { resultUrl } from './orders';
+import { groupByCode, sessionByCode } from './target';
 
 export type CheckoutState = { error?: string; values?: Record<string, string> };
 

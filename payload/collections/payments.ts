@@ -213,6 +213,7 @@ export const Payments: CollectionConfig = {
             relationship('by', 'Indította', 'users'),
           ],
         },
+        text('note', 'Ok'),
       ],
     },
     { name: 'raw', label: 'Szolgáltató válasza', type: 'json', admin: { readOnly: true } },

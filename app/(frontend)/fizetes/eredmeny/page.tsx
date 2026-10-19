@@ -4,7 +4,7 @@ import AccountShell from '@/components/account/AccountShell';
 import { accountMetadata } from '@/components/account/meta';
 import OrderResult from '@/components/payments/OrderResult';
 import { payloadClient } from '@/lib/auth';
-import { orderStatus } from '@/lib/payments/service';
+import { orderStatus } from '@/lib/payments/order-page';
 
 export const dynamic = 'force-dynamic';
 

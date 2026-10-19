@@ -8,7 +8,7 @@ import config from '@payload-config';
 import { getPayload } from 'payload';
 
 import { paymentProvider } from '@/lib/payments/providers';
-import { applyPaymentUpdate } from '@/lib/payments/service';
+import { applyPaymentUpdate } from '@/lib/payments/updates';
 
 export async function POST(req: Request) {
   const payload = await getPayload({ config });

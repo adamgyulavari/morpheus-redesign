@@ -4,7 +4,7 @@ import type { Payload, TypedUser } from 'payload';
 import { relId } from '@/payload/rel';
 import type { Invoice } from '@/payload-types';
 
-import { lapsed } from './service';
+import { lapsed } from './orders';
 
 export type MyInvoice = { id: number; number: string; kind: Invoice['kind']; pdf: boolean };
 

@@ -218,7 +218,7 @@ export default buildConfig({
         inputSchema: [{ name: 'orderId', type: 'number', required: true }],
         retries: 3,
         handler: async ({ input, req }) => {
-          const { afterPaid } = await import('./lib/payments/service');
+          const { afterPaid } = await import('./lib/payments/after-paid');
           await afterPaid(req.payload, input.orderId);
           return { output: {} };
         },
