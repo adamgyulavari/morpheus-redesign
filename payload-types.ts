@@ -90,6 +90,7 @@ export interface Config {
     sessions: Session;
     roomBookings: RoomBooking;
     applications: Application;
+    uiTexts: UiText;
     loginTokens: LoginToken;
     mockPayments: MockPayment;
     redirects: Redirect;
@@ -142,6 +143,7 @@ export interface Config {
     sessions: SessionsSelect<false> | SessionsSelect<true>;
     roomBookings: RoomBookingsSelect<false> | RoomBookingsSelect<true>;
     applications: ApplicationsSelect<false> | ApplicationsSelect<true>;
+    uiTexts: UiTextsSelect<false> | UiTextsSelect<true>;
     loginTokens: LoginTokensSelect<false> | LoginTokensSelect<true>;
     mockPayments: MockPaymentsSelect<false> | MockPaymentsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
@@ -157,7 +159,6 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     siteSettings: SiteSetting;
-    ui: Ui;
     roomBookingSettings: RoomBookingSetting;
     applicationSettings: ApplicationSetting;
     billingSettings: BillingSetting;
@@ -166,7 +167,6 @@ export interface Config {
   };
   globalsSelect: {
     siteSettings: SiteSettingsSelect<false> | SiteSettingsSelect<true>;
-    ui: UiSelect<false> | UiSelect<true>;
     roomBookingSettings: RoomBookingSettingsSelect<false> | RoomBookingSettingsSelect<true>;
     applicationSettings: ApplicationSettingsSelect<false> | ApplicationSettingsSelect<true>;
     billingSettings: BillingSettingsSelect<false> | BillingSettingsSelect<true>;
@@ -2638,6 +2638,27 @@ export interface StudentLink {
   createdAt: string;
 }
 /**
+ * A weboldal szövegei, amelyek nem oldaltartalmak: gombok, üres állapotok, felolvasott feliratok, űrlapok. A {kapcsos} részeket a weboldal tölti ki — ezeket hagyd meg.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "uiTexts".
+ */
+export interface UiText {
+  id: number;
+  lang: 'hu';
+  texts:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "loginTokens".
  */
@@ -2922,6 +2943,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'applications';
         value: number | Application;
+      } | null)
+    | ({
+        relationTo: 'uiTexts';
+        value: number | UiText;
       } | null)
     | ({
         relationTo: 'loginTokens';
@@ -4594,6 +4619,16 @@ export interface ApplicationsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "uiTexts_select".
+ */
+export interface UiTextsSelect<T extends boolean = true> {
+  lang?: T;
+  texts?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "loginTokens_select".
  */
 export interface LoginTokensSelect<T extends boolean = true> {
@@ -4793,156 +4828,6 @@ export interface SiteSetting {
   };
   productionPage: {
     ctaBand: number | CtaBand;
-  };
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * Gombok, üres állapotok, űrlapok és felolvasott feliratok szövegei. A {kapcsos zárójeles} részeket a weboldal tölti ki — ezeket hagyd meg.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ui".
- */
-export interface Ui {
-  id: number;
-  common: {
-    close: string;
-    readMore: string;
-    more: string;
-    signup: string;
-    mainNav: string;
-    openMenu: string;
-    closeMenu: string;
-    sliderPage: string;
-    slideshow: string;
-    playVideo: string;
-    facebook: string;
-    instagram: string;
-    toc: string;
-    tocLabel: string;
-    links: string;
-  };
-  shows: {
-    ticket: string;
-    registration: string;
-    about: string;
-    info: string;
-    nextShow: string;
-    onStage: string;
-    upcomingCount: string;
-    empty: string;
-  };
-  production: {
-    backLink: string;
-    upcomingLink: string;
-    about: string;
-    highlights: string;
-    quotes: string;
-    video: string;
-    gallery: string;
-    galleryLabel: string;
-    dates: string;
-    noDates: string;
-    ctaDates: string;
-    ctaBook: string;
-    ctaConvinced: string;
-    invite: string;
-  };
-  repertoire: {
-    filter: string;
-    all: string;
-    company: string;
-    students: string;
-  };
-  reviews: {
-    previous: string;
-    next: string;
-    photoPlaceholder: string;
-  };
-  gallery: {
-    previous: string;
-    next: string;
-    previousImage: string;
-    nextImage: string;
-    zoom: string;
-  };
-  course: {
-    rhythm: string;
-    length: string;
-    admission: string;
-    price: string;
-    start: string;
-    startRolling: string;
-    startSoon: string;
-    details: string;
-    nextIntake: string;
-    startsEmpty: string;
-    startsEmptyLink: {
-      label: string;
-      href: string;
-    };
-  };
-  workshops: {
-    date: string;
-    time: string;
-    leader: string;
-    leaderHeading: string;
-    empty: string;
-    followUs: string;
-  };
-  sessions: {
-    book: string;
-    closed: string;
-    needed: string;
-    confirmed: string;
-    full: string;
-    left: string;
-    empty: string;
-  };
-  teamBuilding: {
-    duration: string;
-    venue: string;
-  };
-  quoteForm: {
-    title: string;
-    required: string;
-    fields: {
-      company: string;
-      lastName: string;
-      firstName: string;
-      email: string;
-      phone: string;
-      message: string;
-    };
-    messagePlaceholder: string;
-    error: string;
-    submit: string;
-    note: string;
-    subject: string;
-    mail: {
-      company: string;
-      contact: string;
-      email: string;
-      phone: string;
-    };
-  };
-  contact: {
-    person: string;
-    directions: string;
-  };
-  notFound: {
-    title: string;
-    eyebrow: string;
-    heading: string;
-    text: string;
-    primary: {
-      label: string;
-      href: string;
-    };
-    secondary: {
-      label: string;
-      href: string;
-    };
   };
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -5691,190 +5576,6 @@ export interface SiteSettingsSelect<T extends boolean = true> {
     | T
     | {
         ctaBand?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ui_select".
- */
-export interface UiSelect<T extends boolean = true> {
-  common?:
-    | T
-    | {
-        close?: T;
-        readMore?: T;
-        more?: T;
-        signup?: T;
-        mainNav?: T;
-        openMenu?: T;
-        closeMenu?: T;
-        sliderPage?: T;
-        slideshow?: T;
-        playVideo?: T;
-        facebook?: T;
-        instagram?: T;
-        toc?: T;
-        tocLabel?: T;
-        links?: T;
-      };
-  shows?:
-    | T
-    | {
-        ticket?: T;
-        registration?: T;
-        about?: T;
-        info?: T;
-        nextShow?: T;
-        onStage?: T;
-        upcomingCount?: T;
-        empty?: T;
-      };
-  production?:
-    | T
-    | {
-        backLink?: T;
-        upcomingLink?: T;
-        about?: T;
-        highlights?: T;
-        quotes?: T;
-        video?: T;
-        gallery?: T;
-        galleryLabel?: T;
-        dates?: T;
-        noDates?: T;
-        ctaDates?: T;
-        ctaBook?: T;
-        ctaConvinced?: T;
-        invite?: T;
-      };
-  repertoire?:
-    | T
-    | {
-        filter?: T;
-        all?: T;
-        company?: T;
-        students?: T;
-      };
-  reviews?:
-    | T
-    | {
-        previous?: T;
-        next?: T;
-        photoPlaceholder?: T;
-      };
-  gallery?:
-    | T
-    | {
-        previous?: T;
-        next?: T;
-        previousImage?: T;
-        nextImage?: T;
-        zoom?: T;
-      };
-  course?:
-    | T
-    | {
-        rhythm?: T;
-        length?: T;
-        admission?: T;
-        price?: T;
-        start?: T;
-        startRolling?: T;
-        startSoon?: T;
-        details?: T;
-        nextIntake?: T;
-        startsEmpty?: T;
-        startsEmptyLink?:
-          | T
-          | {
-              label?: T;
-              href?: T;
-            };
-      };
-  workshops?:
-    | T
-    | {
-        date?: T;
-        time?: T;
-        leader?: T;
-        leaderHeading?: T;
-        empty?: T;
-        followUs?: T;
-      };
-  sessions?:
-    | T
-    | {
-        book?: T;
-        closed?: T;
-        needed?: T;
-        confirmed?: T;
-        full?: T;
-        left?: T;
-        empty?: T;
-      };
-  teamBuilding?:
-    | T
-    | {
-        duration?: T;
-        venue?: T;
-      };
-  quoteForm?:
-    | T
-    | {
-        title?: T;
-        required?: T;
-        fields?:
-          | T
-          | {
-              company?: T;
-              lastName?: T;
-              firstName?: T;
-              email?: T;
-              phone?: T;
-              message?: T;
-            };
-        messagePlaceholder?: T;
-        error?: T;
-        submit?: T;
-        note?: T;
-        subject?: T;
-        mail?:
-          | T
-          | {
-              company?: T;
-              contact?: T;
-              email?: T;
-              phone?: T;
-            };
-      };
-  contact?:
-    | T
-    | {
-        person?: T;
-        directions?: T;
-      };
-  notFound?:
-    | T
-    | {
-        title?: T;
-        eyebrow?: T;
-        heading?: T;
-        text?: T;
-        primary?:
-          | T
-          | {
-              label?: T;
-              href?: T;
-            };
-        secondary?:
-          | T
-          | {
-              label?: T;
-              href?: T;
-            };
       };
   updatedAt?: T;
   createdAt?: T;

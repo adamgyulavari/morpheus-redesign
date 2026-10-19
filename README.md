@@ -128,10 +128,20 @@ A page, as `lib/data.ts` returns it (`Page` in `lib/types.ts`), looks like:
 ### UI dictionary
 
 Component text that isn't page content — button labels ("Jegyek", "Bővebben"), empty states, form
-labels, aria labels — lives in one editable dictionary, the **UI dictionary** global in the admin
-(*Felületi szövegek*, typed as `UiStrings`). Server components read it with `getUi()`; client components with `useUi()` (provided once in
-the root layout). Only UI strings may contain placeholders (`"{count} előadás a következő hetekben"`);
-page content never does.
+labels, aria labels — is in the admin, **Beállítások → Felületi szövegek**: the `uiTexts` collection,
+one document per language with its texts as one JSON value (`payload/ui-texts.ts`).
+`payload/ui-catalogue.ts` lists the keys, grouped, with their admin labels; it builds the admin's form
+and the `UiStrings` type. The wording itself is only in the database.
+
+- Server components read the texts with `getUi()`, client components with `useUi()` (provided in the
+  root layout). The server loads every language once and reloads them when one is saved.
+- A new text: its key and label in the catalogue, and its Hungarian wording in a migration that
+  adds it to the `hu` document (a data change — no new column).
+- Hungarian is complete (saving refuses a blank text); another language falls back to it text by
+  text, and a key missing everywhere shows as its path (`common.close`).
+- The texts follow ICU MessageFormat so they can be translated later: `{name}` is filled in by the
+  site. Headings mark their highlighted part with `*asterisks*`, as the page content does. Page
+  content never has placeholders.
 
 ### Server vs client components
 

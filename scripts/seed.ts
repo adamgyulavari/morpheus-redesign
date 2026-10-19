@@ -472,7 +472,11 @@ async function seed() {
       productionPage: { ctaBand: idOf('ctaBand', settings.productionPage.ctaBand as string) },
     } as never,
   });
-  await payload.updateGlobal({ slug: 'ui', context: ctx, data: (await json<Obj>('ui.json')) as never });
+  const uiHu = await payload.find({ collection: 'uiTexts', where: { lang: { equals: 'hu' } }, limit: 1 });
+  const uiJson = await json<Obj>('ui.json');
+  if (uiHu.docs[0])
+    await payload.update({ collection: 'uiTexts', id: uiHu.docs[0].id, context: ctx, data: { texts: uiJson } });
+  else await payload.create({ collection: 'uiTexts', context: ctx, data: { lang: 'hu', texts: uiJson } });
   payload.logger.info('seeded globals');
 
   const { totalDocs } = await payload.count({ collection: 'users' });
