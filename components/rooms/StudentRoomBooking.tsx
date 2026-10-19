@@ -10,6 +10,8 @@ import { useRouter } from 'next/navigation';
 import { type FormEvent, useCallback, useState } from 'react';
 
 import Dialog from '@/components/Dialog';
+import { Field, TextField } from '@/components/forms/Field';
+import Notice from '@/components/forms/Notice';
 import { whenText } from '@/lib/rooms/format';
 import type { ScheduleEvent } from '@/lib/rooms/server';
 import type { OverviewPractice } from '@/lib/rooms/student';
@@ -150,33 +152,16 @@ export default function StudentRoomBooking({ rooms, groups, productions, booking
             <h2 id="room-sheet-title" className="pr-12 font-display text-[32px] leading-none">
               Teremfoglalás
             </h2>
-            <label className="field-label">
-              Nap
-              <input className="field" type="date" name="day" required defaultValue={dayOf(sheet.start)} />
-            </label>
+            <TextField label="Nap" type="date" name="day" value={dayOf(sheet.start)} />
             <div className="grid grid-cols-2 gap-4">
-              <label className="field-label">
-                Kezdés
-                <input
-                  className="field"
-                  type="time"
-                  name="startTime"
-                  required
-                  step={slotMinutes * 60}
-                  defaultValue={clockOf(sheet.start)}
-                />
-              </label>
-              <label className="field-label">
-                Vége
-                <input
-                  className="field"
-                  type="time"
-                  name="endTime"
-                  required
-                  step={slotMinutes * 60}
-                  defaultValue={clockOf(sheet.end)}
-                />
-              </label>
+              <TextField
+                label="Kezdés"
+                type="time"
+                name="startTime"
+                step={slotMinutes * 60}
+                value={clockOf(sheet.start)}
+              />
+              <TextField label="Vége" type="time" name="endTime" step={slotMinutes * 60} value={clockOf(sheet.end)} />
             </div>
             <fieldset className="flex flex-col gap-2">
               <legend className="mb-1.5 text-sm font-semibold">Terem</legend>
@@ -195,8 +180,11 @@ export default function StudentRoomBooking({ rooms, groups, productions, booking
                 </label>
               ))}
             </fieldset>
-            <label className="field-label">
-              Mihez gyakorolsz? <span className="font-normal text-muted">(nem kötelező)</span>
+            <Field
+              label="Mihez gyakorolsz?"
+              hint="(nem kötelező)"
+              note="Ha kiválasztod, a csoporttársaid látják a fiókjukban, hogy gyakorolsz."
+            >
               <select className="field" name="link" defaultValue="">
                 <option value="">—</option>
                 {groups.length > 0 && (
@@ -218,20 +206,11 @@ export default function StudentRoomBooking({ rooms, groups, productions, booking
                   </optgroup>
                 )}
               </select>
-              <span className="text-xs font-normal text-muted">
-                Ha kiválasztod, a csoporttársaid látják a fiókjukban, hogy gyakorolsz.
-              </span>
-            </label>
-            <label className="field-label">
-              Megjegyzés{' '}
-              <span className="font-normal text-muted">(nem kötelező, csak te és a munkatársak látjátok)</span>
+            </Field>
+            <Field label="Megjegyzés" hint="(nem kötelező, csak te és a munkatársak látjátok)">
               <textarea className="field min-h-[80px]" name="note" maxLength={500} />
-            </label>
-            {error && (
-              <p role="alert" className="rounded-xl bg-rust/10 px-4 py-3 text-[15px] font-semibold text-rust-dark">
-                {error}
-              </p>
-            )}
+            </Field>
+            <Notice error={error} />
             <div className="flex flex-wrap gap-3">
               <button type="submit" className="btn btn-lg btn-primary" disabled={busy}>
                 {busy ? 'Egy pillanat…' : 'Foglalás'}
@@ -250,11 +229,7 @@ export default function StudentRoomBooking({ rooms, groups, productions, booking
             <p className="text-[16px] text-ink2">
               {sheet.when} · {sheet.rooms}
             </p>
-            {error && (
-              <p role="alert" className="rounded-xl bg-rust/10 px-4 py-3 text-[15px] font-semibold text-rust-dark">
-                {error}
-              </p>
-            )}
+            <Notice error={error} />
             <div className="flex flex-wrap gap-3">
               <button type="button" className="btn btn-lg btn-primary" onClick={cancel} disabled={busy}>
                 Igen, lemondom

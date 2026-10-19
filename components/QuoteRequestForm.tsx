@@ -7,6 +7,7 @@
  */
 import { type FormEvent, useState } from 'react';
 
+import { Field, TextField } from '@/components/forms/Field';
 import { fill } from '@/lib/format';
 import { type QuoteRequest, submitQuoteRequest } from '@/lib/quote-request';
 
@@ -53,34 +54,18 @@ export default function QuoteRequestForm({ recipient }: { recipient: string }) {
     >
       <h3 className="font-display text-[32px] leading-none lg:text-[40px]">{content.title}</h3>
       <p className="text-sm text-muted">{content.required}</p>
-      <label className="field-label">
-        {fields.company}
-        <input className="field" name="company" required autoComplete="organization" />
-      </label>
+      <TextField label={fields.company} name="company" autoComplete="organization" />
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="field-label">
-          {fields.lastName}
-          <input className="field" name="lastName" required autoComplete="family-name" />
-        </label>
-        <label className="field-label">
-          {fields.firstName}
-          <input className="field" name="firstName" required autoComplete="given-name" />
-        </label>
+        <TextField label={fields.lastName} name="lastName" autoComplete="family-name" />
+        <TextField label={fields.firstName} name="firstName" autoComplete="given-name" />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="field-label">
-          {fields.email}
-          <input className="field" type="email" name="email" required autoComplete="email" />
-        </label>
-        <label className="field-label">
-          {fields.phone}
-          <input className="field" type="tel" name="phone" required autoComplete="tel" />
-        </label>
+        <TextField label={fields.email} type="email" name="email" autoComplete="email" />
+        <TextField label={fields.phone} type="tel" name="phone" autoComplete="tel" />
       </div>
-      <label className="field-label">
-        {fields.message}
+      <Field label={fields.message}>
         <textarea className="field min-h-[140px]" name="message" rows={5} placeholder={content.messagePlaceholder} />
-      </label>
+      </Field>
       <p className="text-sm font-semibold text-rust-dark" hidden={!showError} role="alert">
         {content.error}
       </p>

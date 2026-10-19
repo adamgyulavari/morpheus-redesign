@@ -1,7 +1,7 @@
 import AccountShell from '@/components/account/AccountShell';
 import { Card } from '@/components/account/Card';
-import { Notice } from '@/components/account/forms';
 import { accountMetadata } from '@/components/account/meta';
+import Notice from '@/components/forms/Notice';
 import { ButtonLink } from '@/components/ui';
 import { payloadClient } from '@/lib/auth';
 
@@ -27,14 +27,9 @@ export default async function VerifyEmailPage({ searchParams }: Props) {
     <AccountShell eyebrow="Fiók" heading={verified ? 'Megerősítve, *köszönjük!*' : 'E-mail-cím *megerősítése*'}>
       <Card>
         {verified ? (
-          <Notice info="Az e-mail-címed megerősítve. Most már be tudsz lépni." />
+          <Notice message="Az e-mail-címed megerősítve. Most már be tudsz lépni." />
         ) : (
-          <Notice
-            state={{
-              error:
-                'Ez a megerősítő link érvénytelen vagy már felhasználták. Ha korábban már megerősítetted a címed, egyszerűen lépj be.',
-            }}
-          />
+          <Notice error="Ez a megerősítő link érvénytelen vagy már felhasználták. Ha korábban már megerősítetted a címed, egyszerűen lépj be." />
         )}
         <ButtonLink
           link={{ label: 'Belépés', href: '/belepes' }}

@@ -6,10 +6,14 @@
  * up with one click; guests give name, e-mail and phone (an account is made for them).
  */
 import Link from 'next/link';
-import { type ReactNode, useActionState, useEffect, useId, useState } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useActionState, useEffect, useId, useState } from 'react';
 
 import Dialog from '@/components/Dialog';
+import Checkbox from '@/components/forms/Checkbox';
+import { Field, RequiredMarks, TextField } from '@/components/forms/Field';
+import Honeypot from '@/components/forms/Honeypot';
+import Notice from '@/components/forms/Notice';
+import Submit from '@/components/forms/Submit';
 import { ArrowRight } from '@/components/icons';
 import { type SignUpState, signUpAction, whoAmI } from '@/lib/applications/actions';
 import { MIN_MOTIVATION } from '@/lib/applications/rules';
@@ -34,21 +38,6 @@ export type SignupTarget = {
   /** The course takes applications without a group: this option in the select ("none"). */
   noGroupLabel?: string;
 };
-
-function Submit({ children }: { children: ReactNode }) {
-  const { pending } = useFormStatus();
-  return (
-    <button
-      type="submit"
-      className="btn btn-lg btn-primary self-stretch disabled:opacity-60 sm:self-start"
-      disabled={pending}
-      aria-busy={pending}
-    >
-      {pending ? 'Egy pillanat…' : children}
-      {!pending && <ArrowRight />}
-    </button>
-  );
-}
 
 const DONE: Record<Kind, string> = {
   workshop:
@@ -139,156 +128,104 @@ function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string
           </p>
         </div>
       ) : (
-        <form action={action} className="flex flex-col gap-4 lg:gap-5">
-          {state.error && (
-            <p role="alert" className="rounded-xl bg-rust/10 px-4 py-3 text-[15px] font-semibold text-rust-dark">
-              {state.error}
-            </p>
-          )}
-          <input type="hidden" name="kind" value={target.kind} />
-          {target.sessionId && <input type="hidden" name="session" value={target.sessionId} />}
-          {(target.courseGroupId ??
-            (target.groups?.length === 1 && !target.noGroupLabel ? target.groups[0]?.id : undefined)) && (
-            <input type="hidden" name="courseGroup" value={target.courseGroupId ?? target.groups?.[0]?.id} />
-          )}
-          {target.courseId && <input type="hidden" name="course" value={target.courseId} />}
+        <RequiredMarks>
+          <form action={action} className="flex flex-col gap-4 lg:gap-5">
+            <Notice error={state.error} />
+            <input type="hidden" name="kind" value={target.kind} />
+            {target.sessionId && <input type="hidden" name="session" value={target.sessionId} />}
+            {(target.courseGroupId ??
+              (target.groups?.length === 1 && !target.noGroupLabel ? target.groups[0]?.id : undefined)) && (
+              <input type="hidden" name="courseGroup" value={target.courseGroupId ?? target.groups?.[0]?.id} />
+            )}
+            {target.courseId && <input type="hidden" name="course" value={target.courseId} />}
 
-          {me === undefined ? (
-            <p className="text-[15px] text-muted">Betöltés…</p>
-          ) : me ? (
-            <>
-              <p className="rounded-2xl bg-sand px-4 py-3 text-[15px] leading-relaxed text-ink2">
-                Bejelentkezve: <strong className="font-semibold text-ink">{me.name}</strong> ({me.email})
-              </p>
-              <label className="field-label">
-                Telefonszám *
-                <input
-                  className="field"
+            {me === undefined ? (
+              <p className="text-[15px] text-muted">Betöltés…</p>
+            ) : me ? (
+              <>
+                <p className="rounded-2xl bg-sand px-4 py-3 text-[15px] leading-relaxed text-ink2">
+                  Bejelentkezve: <strong className="font-semibold text-ink">{me.name}</strong> ({me.email})
+                </p>
+                <TextField
+                  label="Telefonszám"
                   type="tel"
                   name="phone"
-                  required
                   autoComplete="tel"
-                  defaultValue={v('phone') ?? me.phone}
+                  value={v('phone') ?? me.phone}
                 />
-              </label>
-            </>
-          ) : (
-            <>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="field-label">
-                  Vezetéknév *
-                  <input
-                    className="field"
-                    name="lastName"
-                    required
-                    autoComplete="family-name"
-                    defaultValue={v('lastName')}
-                  />
-                </label>
-                <label className="field-label">
-                  Keresztnév *
-                  <input
-                    className="field"
-                    name="firstName"
-                    required
-                    autoComplete="given-name"
-                    defaultValue={v('firstName')}
-                  />
-                </label>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="field-label">
-                  E-mail-cím *
-                  <input
-                    className="field"
-                    type="email"
-                    name="email"
-                    required
-                    autoComplete="email"
-                    defaultValue={v('email')}
-                  />
-                </label>
-                <label className="field-label">
-                  Telefonszám *
-                  <input
-                    className="field"
-                    type="tel"
-                    name="phone"
-                    required
-                    autoComplete="tel"
-                    defaultValue={v('phone')}
-                  />
-                </label>
-              </div>
-            </>
-          )}
+              </>
+            ) : (
+              <>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <TextField label="Vezetéknév" name="lastName" autoComplete="family-name" value={v('lastName')} />
+                  <TextField label="Keresztnév" name="firstName" autoComplete="given-name" value={v('firstName')} />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <TextField label="E-mail-cím" type="email" name="email" autoComplete="email" value={v('email')} />
+                  <TextField label="Telefonszám" type="tel" name="phone" autoComplete="tel" value={v('phone')} />
+                </div>
+              </>
+            )}
 
-          {!target.courseGroupId && target.groups && target.groups.length > (target.noGroupLabel ? 0 : 1) && (
-            <label className="field-label">
-              Melyik csoportba jelentkezel? *
-              <select className="field" name="courseGroup" required defaultValue={v('courseGroup') ?? ''}>
-                <option value="" disabled>
-                  Válassz…
-                </option>
-                {target.groups.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.label}
+            {!target.courseGroupId && target.groups && target.groups.length > (target.noGroupLabel ? 0 : 1) && (
+              <Field label="Melyik csoportba jelentkezel?" required>
+                <select className="field" name="courseGroup" required defaultValue={v('courseGroup') ?? ''}>
+                  <option value="" disabled>
+                    Válassz…
                   </option>
-                ))}
-                {target.noGroupLabel && <option value="none">{target.noGroupLabel}</option>}
-              </select>
-            </label>
-          )}
-          {professional && (
-            <label className="field-label">
-              Motiváció és tapasztalat *
-              <span className="font-normal text-muted">
-                Miért szeretnél szakmai kurzusra jönni, és mi a színházi (vagy más színpadi) tapasztalatod?
-              </span>
-              <textarea
-                className="field min-h-[160px]"
-                name="message"
+                  {target.groups.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.label}
+                    </option>
+                  ))}
+                  {target.noGroupLabel && <option value="none">{target.noGroupLabel}</option>}
+                </select>
+              </Field>
+            )}
+            {professional && (
+              <Field
+                label="Motiváció és tapasztalat"
                 required
-                minLength={MIN_MOTIVATION}
-                value={motivation}
-                onChange={(e) => setMotivation(e.target.value)}
-              />
-              <span
-                className={`text-[13px] font-normal ${motivation.trim().length >= MIN_MOTIVATION ? 'text-teal' : 'text-muted'}`}
+                note={
+                  <span className={motivation.trim().length >= MIN_MOTIVATION ? 'text-teal' : undefined}>
+                    {motivation.trim().length} / legalább {MIN_MOTIVATION} karakter
+                  </span>
+                }
               >
-                {motivation.trim().length} / legalább {MIN_MOTIVATION} karakter
-              </span>
-            </label>
-          )}
+                <span className="font-normal text-muted">
+                  Miért szeretnél szakmai kurzusra jönni, és mi a színházi (vagy más színpadi) tapasztalatod?
+                </span>
+                <textarea
+                  className="field min-h-[160px]"
+                  name="message"
+                  required
+                  minLength={MIN_MOTIVATION}
+                  value={motivation}
+                  onChange={(e) => setMotivation(e.target.value)}
+                />
+              </Field>
+            )}
 
-          {/* honeypot: hidden from people (and screen readers), filled in by bots */}
-          <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
-            <label>
-              Weboldal
-              <input name="website" tabIndex={-1} autoComplete="off" />
-            </label>
-          </div>
-          <label className="flex items-start gap-3 text-[15px] leading-relaxed text-ink2">
-            <input type="checkbox" name="privacy" required className="mt-1 h-5 w-5 shrink-0 accent-teal" />
-            <span>
+            <Honeypot />
+            <Checkbox name="privacy">
               Elolvastam és elfogadom az{' '}
               <Link href="/adatkezelesi-tajekoztato/" className="link font-semibold text-ink" target="_blank">
                 adatkezelési tájékoztatót
               </Link>
-              . *
-            </span>
-          </label>
-          {me !== undefined && <Submit>{professional ? 'Jelentkezés elküldése' : 'Jelentkezem'}</Submit>}
-          {!me && me !== undefined && (
-            <p className="text-[14px] leading-relaxed text-muted">
-              Van már fiókod?{' '}
-              <Link href="/belepes" className="link font-semibold text-ink">
-                Lépj be
-              </Link>
-              , és egy kattintással jelentkezhetsz. Ha nincs, a jelentkezéssel létrehozzuk.
-            </p>
-          )}
-        </form>
+              .
+            </Checkbox>
+            {me !== undefined && <Submit>{professional ? 'Jelentkezés elküldése' : 'Jelentkezem'}</Submit>}
+            {!me && me !== undefined && (
+              <p className="text-[14px] leading-relaxed text-muted">
+                Van már fiókod?{' '}
+                <Link href="/belepes" className="link font-semibold text-ink">
+                  Lépj be
+                </Link>
+                , és egy kattintással jelentkezhetsz. Ha nincs, a jelentkezéssel létrehozzuk.
+              </p>
+            )}
+          </form>
+        </RequiredMarks>
       )}
     </div>
   );

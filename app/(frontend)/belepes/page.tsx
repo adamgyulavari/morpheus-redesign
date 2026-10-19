@@ -3,8 +3,9 @@ import { redirect } from 'next/navigation';
 
 import AccountShell from '@/components/account/AccountShell';
 import { Card } from '@/components/account/Card';
-import { LoginForms, Notice } from '@/components/account/forms';
+import { LoginForms } from '@/components/account/forms';
 import { accountMetadata } from '@/components/account/meta';
+import Notice from '@/components/forms/Notice';
 import { getCurrentUser, safeReturnPath } from '@/lib/auth';
 
 type Props = { searchParams: Promise<{ vissza?: string; hiba?: string }> };
@@ -34,11 +35,7 @@ export default async function LoginPage({ searchParams }: Props) {
       }
     >
       {hiba === 'link' && (
-        <Notice
-          state={{
-            error: 'Ez a belépési link érvénytelen, lejárt vagy már felhasználták. Kérj újat, vagy lépj be jelszóval.',
-          }}
-        />
+        <Notice error="Ez a belépési link érvénytelen, lejárt vagy már felhasználták. Kérj újat, vagy lépj be jelszóval." />
       )}
       <Card>
         <LoginForms returnTo={returnTo} />

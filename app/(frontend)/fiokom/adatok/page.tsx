@@ -4,6 +4,7 @@ import { Card } from '@/components/account/Card';
 import { BillingForm, ProfileForm } from '@/components/account/forms';
 import { accountMetadata } from '@/components/account/meta';
 import { requireUser } from '@/lib/auth';
+import { billingOf } from '@/lib/payments/me';
 import { mayBookRooms } from '@/lib/rooms/server';
 import { userIsStaffOrAdmin } from '@/payload/access';
 
@@ -25,16 +26,7 @@ export default async function ProfilePage() {
           />
         </Card>
         <Card>
-          <BillingForm
-            billing={{
-              name: user.billing?.name || [user.lastName, user.firstName].filter(Boolean).join(' '),
-              zip: user.billing?.zip ?? '',
-              city: user.billing?.city ?? '',
-              address: user.billing?.address ?? '',
-              country: user.billing?.country || 'HU',
-              taxNumber: user.billing?.taxNumber ?? '',
-            }}
-          />
+          <BillingForm billing={billingOf(user)} />
         </Card>
       </div>
     </AccountShell>
