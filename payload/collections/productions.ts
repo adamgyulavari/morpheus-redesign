@@ -237,7 +237,7 @@ export const Shows: CollectionConfig = {
     defaultColumns: ['date', 'time', 'production', 'venue', 'label'],
     description:
       'Az előadások időpontjai. Elöl a legkésőbbi; a múltbeli időpontok másnap automatikusan eltűnnek az oldalról. A Facebook-eseményekből a „Szinkronizálás a Facebookról” gombbal jönnek.',
-    components: { beforeListTable: ['@/payload/components/FacebookSync#FacebookSync'] },
+    components: { beforeListTable: ['@/payload/admin/FacebookSync#FacebookSync'] },
   },
   defaultSort: '-date',
   hooks: collectionRevalidation('shows'),
