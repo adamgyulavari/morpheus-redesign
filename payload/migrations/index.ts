@@ -29,6 +29,7 @@ import * as migration_20261017_021712_course_payment from './20261017_021712_cou
 import * as migration_20261017_023534_group_payment_options from './20261017_023534_group_payment_options';
 import * as migration_20261017_025423_monthly_billing from './20261017_025423_monthly_billing';
 import * as migration_20261019_170346_email_texts from './20261019_170346_email_texts';
+import * as migration_20261019_182112_facebook_sync from './20261019_182112_facebook_sync';
 import * as migration_20261019_202633_refund_note from './20261019_202633_refund_note';
 import * as migration_20261019_225500_ui_texts from './20261019_225500_ui_texts';
 
@@ -187,6 +188,11 @@ export const migrations = [
     up: migration_20261019_170346_email_texts.up,
     down: migration_20261019_170346_email_texts.down,
     name: '20261019_170346_email_texts',
+  },
+  {
+    up: migration_20261019_182112_facebook_sync.up,
+    down: migration_20261019_182112_facebook_sync.down,
+    name: '20261019_182112_facebook_sync',
   },
   {
     up: migration_20261019_202633_refund_note.up,

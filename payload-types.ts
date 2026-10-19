@@ -1055,13 +1055,21 @@ export interface Payment {
   createdAt: string;
 }
 /**
- * Az előadások időpontjai. Elöl a legkésőbbi; a múltbeli időpontok másnap automatikusan eltűnnek az oldalról.
+ * Az előadások időpontjai. Elöl a legkésőbbi; a múltbeli időpontok másnap automatikusan eltűnnek az oldalról. A Facebook-eseményekből a „Szinkronizálás a Facebookról” gombbal jönnek.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "shows".
  */
 export interface Show {
   id: number;
+  /**
+   * A szinkron tölti ki.
+   */
+  facebookEventId?: string | null;
+  /**
+   * Nem jelenik meg az oldalon. A szinkron kapcsolja be, ha az esemény a Facebookon elmarad vagy törölték.
+   */
+  hidden?: boolean | null;
   production: number | Production;
   date: string;
   /**
@@ -3061,6 +3069,8 @@ export interface CourseGroupsSelect<T extends boolean = true> {
  * via the `definition` "shows_select".
  */
 export interface ShowsSelect<T extends boolean = true> {
+  facebookEventId?: T;
+  hidden?: T;
   production?: T;
   date?: T;
   time?: T;
