@@ -37,6 +37,3 @@ export default function AccountShell({
     </SiteLayout>
   );
 }
-
-// the card is its own module so client components can use it without this (server) shell
-export { Card } from './Card';

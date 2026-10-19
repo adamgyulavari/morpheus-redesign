@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
-import AccountShell, { Card } from '@/components/account/AccountShell';
+import AccountShell from '@/components/account/AccountShell';
+import { Card } from '@/components/account/Card';
 import { LoginForms, Notice } from '@/components/account/forms';
 import { accountMetadata } from '@/components/account/meta';
 import { getCurrentUser, safeReturnPath } from '@/lib/auth';

@@ -4,7 +4,8 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 import AccountNav from '@/components/account/AccountNav';
-import AccountShell, { Card } from '@/components/account/AccountShell';
+import AccountShell from '@/components/account/AccountShell';
+import { Card } from '@/components/account/Card';
 import { accountMetadata } from '@/components/account/meta';
 import ApplicationActions from '@/components/account/upcoming/ApplicationActions';
 import { upcomingItems } from '@/components/account/upcoming/items';

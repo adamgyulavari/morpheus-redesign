@@ -2,7 +2,8 @@ import config from '@payload-config';
 import { notFound } from 'next/navigation';
 import { getPayload } from 'payload';
 
-import AccountShell, { Card } from '@/components/account/AccountShell';
+import AccountShell from '@/components/account/AccountShell';
+import { Card } from '@/components/account/Card';
 import { formatHuf } from '@/lib/format';
 import { mockActive } from '@/lib/payments/providers';
 import { mockOutcomeAction } from '@/lib/payments/providers/mock-actions';

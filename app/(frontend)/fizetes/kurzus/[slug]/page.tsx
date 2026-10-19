@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import AccountShell, { Card } from '@/components/account/AccountShell';
+import AccountShell from '@/components/account/AccountShell';
+import { Card } from '@/components/account/Card';
 import { accountMetadata } from '@/components/account/meta';
 import { ArrowRight } from '@/components/icons';
 import CheckoutForm from '@/components/payments/CheckoutForm';
