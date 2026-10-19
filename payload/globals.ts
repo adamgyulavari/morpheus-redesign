@@ -417,9 +417,6 @@ export const RoomBookingSettings: GlobalConfig = {
   ],
 };
 
-const emailText = (name: string, label: string, description: string): Field =>
-  textarea(name, label, { description: `${description} Üresen az alapszöveg megy.` });
-
 export const ApplicationSettings: GlobalConfig = {
   slug: 'applicationSettings',
   label: 'Jelentkezési beállítások',
@@ -499,19 +496,6 @@ export const ApplicationSettings: GlobalConfig = {
             { name: 'maxParticipants', label: 'Maximum létszám', type: 'number', min: 1, defaultValue: 16 },
           ],
         },
-      ],
-    },
-    {
-      name: 'texts',
-      label: 'E-mailek bevezető bekezdése',
-      type: 'group',
-      fields: [
-        emailText('signupReceived', 'Jelentkezés visszaigazolása', 'Nyitott Műhely és kezdő kurzus.'),
-        emailText('applicationReceived', 'Szakmai jelentkezés visszaigazolása', ''),
-        emailText('confirmed', 'Biztosan indul', 'A Nyitott Műhely résztvevőinek a határidőkor.'),
-        emailText('cancelledMinimum', 'Elmarad (nincs elég jelentkező)', 'A következő időpontok listája automatikus.'),
-        emailText('cancellation', 'Lemondás visszaigazolása', ''),
-        emailText('accepted', 'Felvétel a kurzusba', 'A belépési link automatikus.'),
       ],
     },
   ],

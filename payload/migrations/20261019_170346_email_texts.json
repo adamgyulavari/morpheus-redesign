@@ -30546,42 +30546,6 @@
           "notNull": false,
           "default": 16
         },
-        "texts_signup_received": {
-          "name": "texts_signup_received",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "texts_application_received": {
-          "name": "texts_application_received",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "texts_confirmed": {
-          "name": "texts_confirmed",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "texts_cancelled_minimum": {
-          "name": "texts_cancelled_minimum",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "texts_cancellation": {
-          "name": "texts_cancellation",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "texts_accepted": {
-          "name": "texts_accepted",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp(3) with time zone",
@@ -30778,6 +30742,1069 @@
           "primaryKey": false,
           "notNull": true,
           "default": 30
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.email_texts": {
+      "name": "email_texts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "signup_signup_workshop_subject": {
+          "name": "signup_signup_workshop_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_signup_workshop_preheader": {
+          "name": "signup_signup_workshop_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signup_signup_workshop_heading": {
+          "name": "signup_signup_workshop_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_signup_workshop_text": {
+          "name": "signup_signup_workshop_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_signup_workshop_button": {
+          "name": "signup_signup_workshop_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_signup_beginner_subject": {
+          "name": "signup_signup_beginner_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_signup_beginner_preheader": {
+          "name": "signup_signup_beginner_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signup_signup_beginner_heading": {
+          "name": "signup_signup_beginner_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_signup_beginner_text": {
+          "name": "signup_signup_beginner_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_signup_beginner_button": {
+          "name": "signup_signup_beginner_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_signup_beginner_no_group_subject": {
+          "name": "signup_signup_beginner_no_group_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_signup_beginner_no_group_preheader": {
+          "name": "signup_signup_beginner_no_group_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signup_signup_beginner_no_group_heading": {
+          "name": "signup_signup_beginner_no_group_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_signup_beginner_no_group_text": {
+          "name": "signup_signup_beginner_no_group_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_signup_beginner_no_group_button": {
+          "name": "signup_signup_beginner_no_group_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_application_received_subject": {
+          "name": "signup_application_received_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_application_received_preheader": {
+          "name": "signup_application_received_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signup_application_received_heading": {
+          "name": "signup_application_received_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_application_received_text": {
+          "name": "signup_application_received_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_application_received_button": {
+          "name": "signup_application_received_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_moved_subject": {
+          "name": "signup_moved_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_moved_preheader": {
+          "name": "signup_moved_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signup_moved_heading": {
+          "name": "signup_moved_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_moved_text": {
+          "name": "signup_moved_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_moved_button": {
+          "name": "signup_moved_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_cancelled_by_self_subject": {
+          "name": "signup_cancelled_by_self_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_cancelled_by_self_preheader": {
+          "name": "signup_cancelled_by_self_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signup_cancelled_by_self_heading": {
+          "name": "signup_cancelled_by_self_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_cancelled_by_self_text": {
+          "name": "signup_cancelled_by_self_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_cancelled_by_self_button": {
+          "name": "signup_cancelled_by_self_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_cancelled_by_staff_subject": {
+          "name": "signup_cancelled_by_staff_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_cancelled_by_staff_preheader": {
+          "name": "signup_cancelled_by_staff_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signup_cancelled_by_staff_heading": {
+          "name": "signup_cancelled_by_staff_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_cancelled_by_staff_text": {
+          "name": "signup_cancelled_by_staff_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_cancelled_by_staff_button": {
+          "name": "signup_cancelled_by_staff_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_workshop_confirmed_subject": {
+          "name": "signup_workshop_confirmed_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_workshop_confirmed_preheader": {
+          "name": "signup_workshop_confirmed_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signup_workshop_confirmed_heading": {
+          "name": "signup_workshop_confirmed_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_workshop_confirmed_text": {
+          "name": "signup_workshop_confirmed_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_workshop_confirmed_button": {
+          "name": "signup_workshop_confirmed_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_workshop_cancelled_subject": {
+          "name": "signup_workshop_cancelled_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_workshop_cancelled_preheader": {
+          "name": "signup_workshop_cancelled_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signup_workshop_cancelled_heading": {
+          "name": "signup_workshop_cancelled_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_workshop_cancelled_text": {
+          "name": "signup_workshop_cancelled_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_workshop_cancelled_button": {
+          "name": "signup_workshop_cancelled_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_workshop_cancelled_next_dates": {
+          "name": "signup_workshop_cancelled_next_dates",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signup_workshop_cancelled_no_next_dates": {
+          "name": "signup_workshop_cancelled_no_next_dates",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signup_workshop_cancelled_cancelled_label": {
+          "name": "signup_workshop_cancelled_cancelled_label",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signup_workshop_cancelled_next_label": {
+          "name": "signup_workshop_cancelled_next_label",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signup_accepted_subject": {
+          "name": "signup_accepted_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_accepted_preheader": {
+          "name": "signup_accepted_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signup_accepted_heading": {
+          "name": "signup_accepted_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_accepted_text": {
+          "name": "signup_accepted_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_accepted_button": {
+          "name": "signup_accepted_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_staff_new_subject": {
+          "name": "signup_staff_new_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_staff_new_preheader": {
+          "name": "signup_staff_new_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signup_staff_new_heading": {
+          "name": "signup_staff_new_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_staff_new_text": {
+          "name": "signup_staff_new_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_staff_new_button": {
+          "name": "signup_staff_new_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_staff_cancelled_subject": {
+          "name": "signup_staff_cancelled_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_staff_cancelled_preheader": {
+          "name": "signup_staff_cancelled_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signup_staff_cancelled_heading": {
+          "name": "signup_staff_cancelled_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_staff_cancelled_text": {
+          "name": "signup_staff_cancelled_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_staff_moved_subject": {
+          "name": "signup_staff_moved_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_staff_moved_preheader": {
+          "name": "signup_staff_moved_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signup_staff_moved_heading": {
+          "name": "signup_staff_moved_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "signup_staff_moved_text": {
+          "name": "signup_staff_moved_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_payment_link_subject": {
+          "name": "payment_payment_link_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_payment_link_preheader": {
+          "name": "payment_payment_link_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payment_payment_link_heading": {
+          "name": "payment_payment_link_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_payment_link_text": {
+          "name": "payment_payment_link_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_payment_link_button": {
+          "name": "payment_payment_link_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_order_paid_subject": {
+          "name": "payment_order_paid_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_order_paid_preheader": {
+          "name": "payment_order_paid_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payment_order_paid_heading": {
+          "name": "payment_order_paid_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_order_paid_text": {
+          "name": "payment_order_paid_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_order_paid_button": {
+          "name": "payment_order_paid_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_order_paid_calendar_note": {
+          "name": "payment_order_paid_calendar_note",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payment_order_paid_waiting_for_group": {
+          "name": "payment_order_paid_waiting_for_group",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payment_late_refund_subject": {
+          "name": "payment_late_refund_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_late_refund_preheader": {
+          "name": "payment_late_refund_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payment_late_refund_heading": {
+          "name": "payment_late_refund_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_late_refund_text": {
+          "name": "payment_late_refund_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_late_refund_button": {
+          "name": "payment_late_refund_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_staff_paid_subject": {
+          "name": "payment_staff_paid_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_staff_paid_preheader": {
+          "name": "payment_staff_paid_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payment_staff_paid_heading": {
+          "name": "payment_staff_paid_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_staff_paid_text": {
+          "name": "payment_staff_paid_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_staff_paid_button": {
+          "name": "payment_staff_paid_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_booking_confirmed_subject": {
+          "name": "rooms_booking_confirmed_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_booking_confirmed_preheader": {
+          "name": "rooms_booking_confirmed_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rooms_booking_confirmed_heading": {
+          "name": "rooms_booking_confirmed_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_booking_confirmed_text": {
+          "name": "rooms_booking_confirmed_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_booking_confirmed_button": {
+          "name": "rooms_booking_confirmed_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_booking_confirmed_footnote": {
+          "name": "rooms_booking_confirmed_footnote",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rooms_booking_cancelled_by_self_subject": {
+          "name": "rooms_booking_cancelled_by_self_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_booking_cancelled_by_self_preheader": {
+          "name": "rooms_booking_cancelled_by_self_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rooms_booking_cancelled_by_self_heading": {
+          "name": "rooms_booking_cancelled_by_self_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_booking_cancelled_by_self_text": {
+          "name": "rooms_booking_cancelled_by_self_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_booking_cancelled_by_self_button": {
+          "name": "rooms_booking_cancelled_by_self_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_booking_cancelled_by_staff_subject": {
+          "name": "rooms_booking_cancelled_by_staff_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_booking_cancelled_by_staff_preheader": {
+          "name": "rooms_booking_cancelled_by_staff_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rooms_booking_cancelled_by_staff_heading": {
+          "name": "rooms_booking_cancelled_by_staff_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_booking_cancelled_by_staff_text": {
+          "name": "rooms_booking_cancelled_by_staff_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_booking_cancelled_by_staff_button": {
+          "name": "rooms_booking_cancelled_by_staff_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_booking_moved_subject": {
+          "name": "rooms_booking_moved_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_booking_moved_preheader": {
+          "name": "rooms_booking_moved_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rooms_booking_moved_heading": {
+          "name": "rooms_booking_moved_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_booking_moved_text": {
+          "name": "rooms_booking_moved_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_booking_moved_button": {
+          "name": "rooms_booking_moved_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_session_cancelled_subject": {
+          "name": "rooms_session_cancelled_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_session_cancelled_preheader": {
+          "name": "rooms_session_cancelled_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rooms_session_cancelled_heading": {
+          "name": "rooms_session_cancelled_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_session_cancelled_text": {
+          "name": "rooms_session_cancelled_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_session_cancelled_button": {
+          "name": "rooms_session_cancelled_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_session_reinstated_subject": {
+          "name": "rooms_session_reinstated_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_session_reinstated_preheader": {
+          "name": "rooms_session_reinstated_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rooms_session_reinstated_heading": {
+          "name": "rooms_session_reinstated_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_session_reinstated_text": {
+          "name": "rooms_session_reinstated_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_session_reinstated_button": {
+          "name": "rooms_session_reinstated_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_session_changed_subject": {
+          "name": "rooms_session_changed_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_session_changed_preheader": {
+          "name": "rooms_session_changed_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rooms_session_changed_heading": {
+          "name": "rooms_session_changed_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_session_changed_text": {
+          "name": "rooms_session_changed_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_session_changed_button": {
+          "name": "rooms_session_changed_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_session_changed_changed_time": {
+          "name": "rooms_session_changed_changed_time",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rooms_session_changed_changed_place": {
+          "name": "rooms_session_changed_changed_place",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rooms_session_changed_changed_both": {
+          "name": "rooms_session_changed_changed_both",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "account_verify_email_subject": {
+          "name": "account_verify_email_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_verify_email_preheader": {
+          "name": "account_verify_email_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "account_verify_email_heading": {
+          "name": "account_verify_email_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_verify_email_text": {
+          "name": "account_verify_email_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_verify_email_button": {
+          "name": "account_verify_email_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_verify_email_footnote": {
+          "name": "account_verify_email_footnote",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "account_reset_password_subject": {
+          "name": "account_reset_password_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_reset_password_preheader": {
+          "name": "account_reset_password_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "account_reset_password_heading": {
+          "name": "account_reset_password_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_reset_password_text": {
+          "name": "account_reset_password_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_reset_password_button": {
+          "name": "account_reset_password_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_reset_password_footnote": {
+          "name": "account_reset_password_footnote",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "account_magic_link_subject": {
+          "name": "account_magic_link_subject",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_magic_link_preheader": {
+          "name": "account_magic_link_preheader",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "account_magic_link_heading": {
+          "name": "account_magic_link_heading",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_magic_link_text": {
+          "name": "account_magic_link_text",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_magic_link_button": {
+          "name": "account_magic_link_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_magic_link_footnote": {
+          "name": "account_magic_link_footnote",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "account_magic_link_code_intro": {
+          "name": "account_magic_link_code_intro",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "common_greeting": {
+          "name": "common_greeting",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_greeting_no_name": {
+          "name": "common_greeting_no_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_account_created": {
+          "name": "common_account_created",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_account_existing": {
+          "name": "common_account_existing",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_my_account_button": {
+          "name": "common_my_account_button",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_login_link_note": {
+          "name": "common_login_link_note",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_button_help": {
+          "name": "common_button_help",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_footer": {
+          "name": "common_footer",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_label_what": {
+          "name": "common_label_what",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_label_when": {
+          "name": "common_label_when",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_label_where": {
+          "name": "common_label_where",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_label_price": {
+          "name": "common_label_price",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_label_paid": {
+          "name": "common_label_paid",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_label_due": {
+          "name": "common_label_due",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_label_refunded": {
+          "name": "common_label_refunded",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_label_payment": {
+          "name": "common_label_payment",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_label_name": {
+          "name": "common_label_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_label_email": {
+          "name": "common_label_email",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_label_phone": {
+          "name": "common_label_phone",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_label_message": {
+          "name": "common_label_message",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_label_count": {
+          "name": "common_label_count",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_label_for": {
+          "name": "common_label_for",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_label_note": {
+          "name": "common_label_note",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_label_reason": {
+          "name": "common_label_reason",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "common_place_pending": {
+          "name": "common_place_pending",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
         },
         "updated_at": {
           "name": "updated_at",
@@ -33166,6 +34193,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "229637a9-42fe-4f16-a9a5-d21b302b2fe1",
+  "id": "5750512e-8c6a-4232-bcf8-3876d653c862",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

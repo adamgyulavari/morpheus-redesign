@@ -32,6 +32,7 @@ import {
 } from './payload/collections/simple';
 import { Users } from './payload/collections/Users';
 import { emailAdapter } from './payload/email';
+import { EmailTexts } from './payload/email-texts';
 import { ApplicationSettings, BillingSettings, RoomBookingSettings, SiteSettings, Ui } from './payload/globals';
 import { migrations } from './payload/migrations';
 import { arrangeNav } from './payload/nav';
@@ -144,7 +145,7 @@ export default buildConfig({
     Invoices,
     MockPayments,
   ]),
-  globals: arrangeNav([SiteSettings, Ui, RoomBookingSettings, ApplicationSettings, BillingSettings]),
+  globals: arrangeNav([SiteSettings, Ui, RoomBookingSettings, ApplicationSettings, BillingSettings, EmailTexts]),
   editor: lexicalEditor(),
   // SMTP when SMTP_HOST is set; otherwise e-mails (with their links) are written to the console
   email: emailAdapter(),

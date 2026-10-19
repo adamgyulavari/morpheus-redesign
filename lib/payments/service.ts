@@ -41,6 +41,7 @@ import { icsFile } from '@/lib/rooms/ics';
 import { errorMessage } from '@/lib/rooms/server';
 import { dbOf } from '@/payload/db';
 import { siteUrl } from '@/payload/email';
+import { emailTexts } from '@/payload/email-texts';
 import { relId } from '@/payload/rel';
 import type { Application, Course, CourseGroup, Order, Payment, Session } from '@/payload-types';
 
@@ -718,17 +719,18 @@ export async function afterPaid(payload: Payload, orderId: number) {
         return group;
       });
       const parts = order.plan?.parts ?? 1;
+      const { common } = await emailTexts(payload);
       await sendAccepted(payload, settings, applicant, courseInfo(g), [
         {
-          label: 'Fizetés',
-          value: `${order.plan?.label ? `${order.plan.label} — ` : ''}${formatHuf(order.amountDue)} befizetve${parts > 1 ? ` (1. részlet a ${parts}-ből)` : ''}`,
+          label: common.labelPaid,
+          value: [formatHuf(order.amountDue), order.plan?.label, parts > 1 ? `(1/${parts})` : '']
+            .filter(Boolean)
+            .join(' — ')
+            .replace(' — (', ' ('),
         },
       ]);
     } else {
-      await sendOrderPaid(payload, applicant, info, money, {
-        loggedIn: false,
-        extra: ['Amint indul a következő csoport, beosztunk, és e-mailben írunk.'],
-      });
+      await sendOrderPaid(payload, applicant, info, money, { loggedIn: false, waitingForGroup: true });
     }
     await sendStaffPaid(payload, settings, applicant, info, money);
   }

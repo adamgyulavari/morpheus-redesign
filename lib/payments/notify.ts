@@ -1,21 +1,15 @@
 /**
- * Payment e-mails, in the shared layout: to the participant (the payment link, paid, late payment
- * refunded) and to staff (new paid sign-up, alerts). Failures are logged, never thrown.
+ * Payment e-mails: to the participant (the payment link, paid, late payment refunded) and to staff
+ * (new paid sign-up). Their texts are in the admin (Beállítások → E-mailek); the technical staff
+ * alerts (sendStaffAlert) are not — they stay here. Failures are logged, never thrown.
  */
 import type { Payload } from 'payload';
 
-import {
-  type Applicant,
-  details,
-  hello,
-  LINK_NOTE,
-  myApplicationsButton,
-  send,
-  type TargetInfo,
-} from '@/lib/applications/notify';
+import { type Applicant, details, myAccountLink, send, type TargetInfo, varsOf } from '@/lib/applications/notify';
 import type { ApplicationSettings } from '@/lib/applications/settings';
 import { formatHuf } from '@/lib/format';
-import { emailLayout, siteUrl } from '@/payload/email';
+import { emailLayout, fromTemplate, siteUrl } from '@/payload/email';
+import { emailTexts } from '@/payload/email-texts';
 
 export type PaidInfo = {
   /** HUF */
@@ -23,33 +17,28 @@ export type PaidInfo = {
   amountDue: number;
 };
 
-const paidRows = (p: PaidInfo) => [{ label: 'Fizetve', value: formatHuf(p.amountDue) }];
-
 /** Payment received: the place is theirs. A workshop gets its calendar file. */
 export async function sendOrderPaid(
   payload: Payload,
   a: Applicant,
   t: TargetInfo,
   p: PaidInfo,
-  opts: { loggedIn: boolean; ics?: string; extra?: string[] },
+  opts: { loggedIn: boolean; ics?: string; waitingForGroup?: boolean },
 ) {
+  const texts = await emailTexts(payload);
+  const tpl = texts.template('orderPaid');
+  const vars = { ...varsOf(a, t), osszeg: formatHuf(p.amountDue) };
   await send(
     payload,
     a.email,
-    `Sikeres fizetés: ${t.title}`,
-    emailLayout({
-      preheader: [t.title, t.when].filter(Boolean).join(' · '),
-      heading: 'Megkaptuk a fizetést',
-      paragraphs: [
-        hello(a),
-        'Köszönjük, a fizetés rendben megérkezett — a helyed biztos.',
-        ...(opts.extra ?? []),
-        ...(opts.ics ? ['A naptáradba a mellékelt fájllal veheted fel.'] : []),
-        'A jelentkezésed a fiókodban követheted.',
-      ],
-      details: details(t, paidRows(p)),
-      button: await myApplicationsButton(payload, a.userId, !opts.loggedIn),
-      footnote: opts.loggedIn ? undefined : LINK_NOTE,
+    fromTemplate(texts, 'orderPaid', vars, {
+      greet: { firstName: a.firstName },
+      after: [opts.waitingForGroup ? tpl.waitingForGroup : undefined, opts.ics ? tpl.calendarNote : undefined].filter(
+        (x): x is string => Boolean(x),
+      ),
+      details: details(texts.common, t, [{ label: texts.common.labelPaid, value: formatHuf(p.amountDue) }]),
+      href: await myAccountLink(payload, a.userId, !opts.loggedIn),
+      footnote: opts.loggedIn ? undefined : texts.common.loginLinkNote,
     }),
     opts.ics,
   );
@@ -62,7 +51,8 @@ export async function sendPaymentLink(
   t: TargetInfo,
   p: { amount: number; holdUntil: string; href: string },
 ) {
-  const until = new Intl.DateTimeFormat('hu-HU', {
+  const texts = await emailTexts(payload);
+  const hatarido = new Intl.DateTimeFormat('hu-HU', {
     timeZone: 'Europe/Budapest',
     month: 'long',
     day: 'numeric',
@@ -72,38 +62,35 @@ export async function sendPaymentLink(
   await send(
     payload,
     a.email,
-    `Jelentkezésed fizetése: ${t.title}`,
-    emailLayout({
-      preheader: `A helyedet ${until}-ig tartjuk.`,
-      heading: 'Már csak a fizetés van hátra',
-      paragraphs: [
-        hello(a),
-        `Megkaptuk a jelentkezésed; a helyed a fizetéssel lesz biztos. ${until}-ig tartjuk neked.`,
-        'Ha a fizetési oldal bezárult vagy a fizetés megszakadt, ezen a linken folytathatod — később is, amíg van szabad hely. Ha már fizettél, a link a fizetés állapotát mutatja.',
-      ],
-      details: details(t, [{ label: 'Fizetendő', value: formatHuf(p.amount) }]),
-      button: { label: 'Fizetés', href: p.href },
-    }),
+    fromTemplate(
+      texts,
+      'paymentLink',
+      { ...varsOf(a, t), osszeg: formatHuf(p.amount), hatarido },
+      {
+        greet: { firstName: a.firstName },
+        details: details(texts.common, t, [{ label: texts.common.labelDue, value: formatHuf(p.amount) }]),
+        href: p.href,
+      },
+    ),
   );
 }
 
 /** Paid after the hold ran out and the place was taken meanwhile: the money goes back. */
 export async function sendLateRefund(payload: Payload, a: Applicant, t: TargetInfo, amount: number) {
+  const texts = await emailTexts(payload);
   await send(
     payload,
     a.email,
-    `Visszautaltuk a befizetésed: ${t.title}`,
-    emailLayout({
-      preheader: 'A hely időközben betelt.',
-      heading: 'Visszautaltuk a befizetésed',
-      paragraphs: [
-        hello(a),
-        'A fizetésed a foglalási idő lejárta után érkezett meg, és a helyet közben más foglalta el. Az összeget teljes egészében visszautaltuk; néhány munkanapon belül jelenik meg a számládon.',
-        'Elnézést a kellemetlenségért! A többi időpontot a weboldalon találod.',
-      ],
-      details: details(t, [{ label: 'Visszautalva', value: formatHuf(amount) }]),
-      button: { label: 'Időpontok', href: siteUrl('/nyitott-alkalmak/') },
-    }),
+    fromTemplate(
+      texts,
+      'lateRefund',
+      { ...varsOf(a, t), osszeg: formatHuf(amount) },
+      {
+        greet: { firstName: a.firstName },
+        details: details(texts.common, t, [{ label: texts.common.labelRefunded, value: formatHuf(amount) }]),
+        href: siteUrl('/nyitott-alkalmak/'),
+      },
+    ),
   );
 }
 
@@ -118,26 +105,38 @@ export async function sendStaffPaid(
   p: PaidInfo,
   count?: string,
 ) {
+  const texts = await emailTexts(payload);
+  const c = texts.common;
   await send(
     payload,
     s.notifyEmails,
-    `Új fizetett jelentkezés: ${a.name} — ${t.title}`,
-    emailLayout({
-      preheader: `${a.name}, ${formatHuf(p.price)}`,
-      heading: 'Új fizetett jelentkezés',
-      paragraphs: [`${a.name} (${a.email}${a.phone ? `, ${a.phone}` : ''}) jelentkezett és fizetett.`],
-      details: details(t, [...paidRows(p), ...(count ? [{ label: 'Létszám', value: count }] : [])]),
-      button: { label: 'Jelentkezések', href: siteUrl('/admin/jelentkezesek') },
-    }),
+    fromTemplate(
+      texts,
+      'staffPaid',
+      { ...varsOf(a, t), osszeg: formatHuf(p.amountDue) },
+      {
+        greet: false,
+        details: details(c, t, [
+          { label: c.labelPaid, value: formatHuf(p.amountDue) },
+          ...(count ? [{ label: c.labelCount, value: count }] : []),
+        ]),
+        href: siteUrl('/admin/jelentkezesek'),
+      },
+    ),
   );
 }
 
 /** Something needs a person: an amount mismatch, an automatic refund, a failing invoice… */
 export async function sendStaffAlert(payload: Payload, s: ApplicationSettings, subject: string, lines: string[]) {
-  await send(
-    payload,
-    s.notifyEmails,
-    `Figyelem: ${subject}`,
-    emailLayout({ preheader: subject, heading: subject, paragraphs: lines }),
-  );
+  // technical: stays in code (not in E-mailek); the layout's own lines still come from there
+  const { common } = await emailTexts(payload);
+  await send(payload, s.notifyEmails, {
+    subject: `Figyelem: ${subject}`,
+    html: emailLayout({
+      preheader: subject,
+      heading: subject,
+      paragraphs: lines,
+      chrome: { buttonHelp: common.buttonHelp, footer: common.footer },
+    }),
+  });
 }

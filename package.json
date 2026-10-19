@@ -8,6 +8,7 @@
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:e2e": "tsx --tsconfig tests/e2e/tsconfig.json tests/e2e/run.ts",
     "lint": "biome check",
     "format": "biome check --write",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",

@@ -44,6 +44,7 @@ const GROUP_OF: Record<string, NavGroup> = {
   roomBookingSettings: 'Beállítások',
   applicationSettings: 'Beállítások',
   billingSettings: 'Beállítások',
+  emailTexts: 'Beállítások',
 };
 
 /** "Napi munka" after Jelentkezések and Teremnaptár, in this order (NavTop). */

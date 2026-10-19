@@ -27,13 +27,16 @@ export const Users: CollectionConfig = {
   labels: { singular: 'Felhasználó', plural: 'Felhasználók' },
   auth: {
     tokenExpiration: TOKEN_EXPIRATION,
+    // the texts: Beállítások → E-mailek (payload/email-texts.ts)
     verify: {
-      generateEmailSubject: () => verifyEmail.subject,
-      generateEmailHTML: ({ token, user }) => verifyEmail.html(token, user),
+      generateEmailSubject: async ({ req, token, user }) => (await verifyEmail(req.payload, token, user)).subject,
+      generateEmailHTML: async ({ req, token, user }) => (await verifyEmail(req.payload, token, user)).html,
     },
     forgotPassword: {
-      generateEmailSubject: () => resetPassword.subject,
-      generateEmailHTML: (args) => resetPassword.html(args?.token ?? '', args?.user),
+      generateEmailSubject: async (args) =>
+        args?.req ? (await resetPassword(args.req.payload, args.token ?? '', args.user)).subject : 'Új jelszó',
+      generateEmailHTML: async (args) =>
+        args?.req ? (await resetPassword(args.req.payload, args.token ?? '', args.user)).html : '',
     },
     maxLoginAttempts: 5,
     lockTime: 10 * 60 * 1000,

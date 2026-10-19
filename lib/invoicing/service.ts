@@ -141,7 +141,8 @@ export async function issueTransferInvoice(
   const dueDate = todayInBudapest(new Date(now.getTime() + rules.transferDueDays * 864e5));
   const data: InvoiceData = {
     externalId: c.key,
-    orderRef: c.period ?? (c.part ? `${c.part}. részlet` : ''),
+    // Számlázz.hu refuses a repeated order reference: the line's own key (once per person and month)
+    orderRef: c.key,
     issueDate,
     fulfilmentDate: issueDate,
     prefix: rules.invoicePrefix || undefined,
