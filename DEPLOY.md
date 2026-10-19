@@ -81,6 +81,7 @@ media bucket.
    | `MOLLIE_API_KEY` | Mollie dashboard → Developers → API keys: `test_…` on staging, `live_…` on the live site. Secret |
    | `INVOICING_MODE` | `live` on the live site only (refused anywhere else); `test` on staging with a Számlázz.hu test account; `off` (default): invoices are only prepared, never sent |
    | `SZAMLAZZ_AGENT_KEY` | Számlázz.hu → Számla Agent kulcsok. The real account's key only on the live site; staging gets a test account's key. Secret |
+   | `FACEBOOK_PAGE_ID`, `FACEBOOK_PAGE_TOKEN` | the Facebook page's id (`162350683629276`) and a never-expiring Page access token of Morpheus's own Meta app (`pages_show_list`, `pages_read_engagement`), made once by a page admin. Without them the sync button says it isn't set up. Secret |
 
    Don't set `TZ`; dates are handled in Budapest time by the code.
 
@@ -114,6 +115,18 @@ media bucket.
 - A failed invoice is stored with the error and staff get an e-mail. "Küldés alatt" that stays
   means Számlázz.hu didn't answer: check in Számlázz.hu whether it exists (external id
   `order-<id>`).
+
+### Facebook events
+
+- Előadás-időpontok → **Szinkronizálás a Facebookról** turns the page's upcoming events into dates:
+  the production from the event's name (its title must be in it), the venue from the place's name;
+  date, time, venue, label (Bemutató / Nyilvános főpróba) and ticket link follow Facebook. An
+  event cancelled or deleted there hides its date (Elrejtve). Events it can't match are listed,
+  not saved. Nothing runs in the background.
+- The token: Meta for Developers → your app (development mode is enough) → add the page admin as
+  Tester → in Graph API Explorer the admin gets a Page token for the page → exchange it for a
+  long-lived one. It stops working if the admin loses the page role, changes their Facebook
+  password or removes the app.
 
 ### Deploy webhook (GitHub → Coolify)
 

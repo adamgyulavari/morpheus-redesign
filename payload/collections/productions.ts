@@ -236,11 +236,33 @@ export const Shows: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['date', 'time', 'production', 'venue', 'label'],
     description:
-      'Az előadások időpontjai. Elöl a legkésőbbi; a múltbeli időpontok másnap automatikusan eltűnnek az oldalról.',
+      'Az előadások időpontjai. Elöl a legkésőbbi; a múltbeli időpontok másnap automatikusan eltűnnek az oldalról. A Facebook-eseményekből a „Szinkronizálás a Facebookról” gombbal jönnek.',
+    components: { beforeListTable: ['@/payload/components/FacebookSync#FacebookSync'] },
   },
   defaultSort: '-date',
   hooks: collectionRevalidation('shows'),
   fields: [
+    {
+      // the Facebook event it comes from (lib/facebook/sync): its date, time, venue, ticket follow it
+      name: 'facebookEventId',
+      label: 'Facebook-esemény',
+      type: 'text',
+      unique: true,
+      index: true,
+      admin: { position: 'sidebar', readOnly: true, description: 'A szinkron tölti ki.' },
+    },
+    {
+      name: 'hidden',
+      label: 'Elrejtve',
+      type: 'checkbox',
+      defaultValue: false,
+      index: true,
+      admin: {
+        position: 'sidebar',
+        description:
+          'Nem jelenik meg az oldalon. A szinkron kapcsolja be, ha az esemény a Facebookon elmarad vagy törölték.',
+      },
+    },
     relationship('production', 'Előadás', 'productions', { required: true }),
     { type: 'row', fields: [date('date', 'Dátum', { required: true }), time('time', 'Kezdés', { required: true })] },
     relationship('venue', 'Helyszín', 'venues', { required: true }),

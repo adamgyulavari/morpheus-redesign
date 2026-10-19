@@ -145,7 +145,7 @@ const findUpcomingShows = cache(async (): Promise<ShowWithRelations[]> => {
   const [{ docs }, productions] = await Promise.all([
     p.find({
       collection: 'shows',
-      where: { date: { greater_than_equal: fromToday() } },
+      where: { and: [{ date: { greater_than_equal: fromToday() } }, { hidden: { not_equals: true } }] },
       sort: ['date', 'time'],
       depth: 1,
       ...all,
