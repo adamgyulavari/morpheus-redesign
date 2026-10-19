@@ -6,10 +6,11 @@
  * - a session cancelled, reinstated, moved or placed elsewhere: one e-mail per student of its
  *   group (or of the groups playing its production) per save, with old and new details.
  *   Not for sessions created by fill month, nor more than 30 days ahead, nor in the past.
- * A failed e-mail never fails the save; it is logged.
+ * Their texts are in the admin (Beállítások → E-mailek). A failed e-mail never fails the save; it is logged.
  */
 import type { PayloadRequest } from 'payload';
-import { emailLayout, siteUrl } from '@/payload/email';
+import { fromTemplate, siteUrl } from '@/payload/email';
+import { emailTexts } from '@/payload/email-texts';
 import { relId, relIds } from '@/payload/rel';
 
 import { whenText } from './format';
@@ -22,8 +23,6 @@ const STUDIO = 'Morpheus Színműhely';
 
 type Doc = Record<string, unknown>;
 type Recipient = { id: number; email: string; firstName?: string | null };
-
-const hello = (u: Recipient) => (u.firstName ? `Kedves ${u.firstName}!` : 'Kedves Hallgatónk!');
 
 async function send(
   req: PayloadRequest,
@@ -98,47 +97,40 @@ export async function notifyPractice(
         location: `${STUDIO}, ${rooms}`,
         cancelled,
       });
+    const texts = await emailTexts(req.payload);
+    const c = texts.common;
+    const when = whenText(start, end, 'long');
     const details = [
-      { label: 'Mikor', value: whenText(start, end, 'long') },
-      { label: 'Hol', value: rooms },
-      ...(owner ? [{ label: 'Mihez', value: String(owner) }] : []),
-      ...(doc.note ? [{ label: 'Megjegyzés', value: String(doc.note) }] : []),
+      { label: c.labelWhen, value: when },
+      { label: c.labelWhere, value: rooms },
+      ...(owner ? [{ label: c.labelFor, value: String(owner) }] : []),
+      ...(doc.note ? [{ label: c.labelNote, value: String(doc.note) }] : []),
     ];
-    const button = { label: 'Foglalásaim', href: siteUrl('/fiokom/terem') };
+    const href = siteUrl('/fiokom/terem');
+    const vars = (u: Recipient) => ({ keresztnev: u.firstName, mikor: when, hol: rooms });
 
     const wasConfirmed = previous?.status === 'confirmed';
     if (operation === 'create' && doc.status === 'confirmed') {
       return await send(req, [user], (u) => ({
-        subject: 'Teremfoglalás visszaigazolása',
+        ...fromTemplate(texts, 'bookingConfirmed', vars(u), { greet: u, details, href }),
         ics: ics(),
-        html: emailLayout({
-          preheader: `${whenText(start, end, 'long')} · ${rooms}`,
-          heading: 'Lefoglaltad a termet',
-          paragraphs: [hello(u), 'A teremfoglalásod rögzítettük. A csatolt fájllal felveheted a naptáradba.'],
-          details,
-          button,
-          footnote: 'Ha mégsem jössz, mondd le a foglalást a fiókodban, hogy más használhassa a termet.',
-        }),
       }));
     }
     if (wasConfirmed && doc.status === 'cancelled') {
       const byStaff = relId(doc.cancelledBy) !== userId;
       const reason = byStaff && doc.cancelReason ? String(doc.cancelReason) : undefined;
       return await send(req, [user], (u) => ({
-        subject: 'Teremfoglalás lemondva',
+        ...fromTemplate(
+          texts,
+          byStaff ? 'bookingCancelledByStaff' : 'bookingCancelledBySelf',
+          { ...vars(u), ok: reason },
+          {
+            greet: u,
+            details: [...details, ...(reason ? [{ label: c.labelReason, value: reason }] : [])],
+            href,
+          },
+        ),
         ics: ics(true),
-        html: emailLayout({
-          preheader: `${whenText(start, end, 'long')} · ${rooms}`,
-          heading: 'Lemondott teremfoglalás',
-          paragraphs: [
-            hello(u),
-            byStaff
-              ? 'Sajnos le kellett mondanunk a teremfoglalásodat. Elnézést kérünk; kérjük, foglalj másik időpontot.'
-              : 'Lemondtad a teremfoglalásodat. A terem újra szabad mások számára.',
-          ],
-          details: [...details, ...(reason ? [{ label: 'Ok', value: reason }] : [])],
-          button,
-        }),
       }));
     }
     // moved by staff
@@ -152,22 +144,15 @@ export async function notifyPractice(
       const oldRooms = await roomNames(req.payload, relIds(previous.rooms), req);
       const oldWhen = whenText(new Date(String(previous.start)), new Date(String(previous.end)), 'long');
       return await send(req, [user], (u) => ({
-        subject: 'Teremfoglalás módosítva',
-        ics: ics(),
-        html: emailLayout({
-          preheader: `${whenText(start, end, 'long')} · ${rooms}`,
-          heading: 'Módosult a teremfoglalásod',
-          paragraphs: [hello(u), 'A munkatársaink módosították a teremfoglalásodat. Az új adatok:'],
+        ...fromTemplate(texts, 'bookingMoved', vars(u), {
+          greet: u,
           details: [
-            {
-              label: 'Mikor',
-              value: whenText(start, end, 'long'),
-              ...(oldWhen !== whenText(start, end, 'long') ? { was: oldWhen } : {}),
-            },
-            { label: 'Hol', value: rooms, ...(oldRooms !== rooms ? { was: oldRooms } : {}) },
+            { label: c.labelWhen, value: when, ...(oldWhen !== when ? { was: oldWhen } : {}) },
+            { label: c.labelWhere, value: rooms, ...(oldRooms !== rooms ? { was: oldRooms } : {}) },
           ],
-          button,
+          href,
         }),
+        ics: ics(),
       }));
     }
   } catch (err) {
@@ -177,8 +162,8 @@ export async function notifyPractice(
 
 // ── sessions ────────────────────────────────────────────────────────────────
 
-const placeOrPending = async (req: PayloadRequest, s: Doc) =>
-  (await placeOf(req.payload, s, req)) ?? 'Helyszín egyeztetés alatt';
+const placeOrPending = async (req: PayloadRequest, s: Doc, pending: string) =>
+  (await placeOf(req.payload, s, req)) ?? pending;
 
 /** Students of the session's group, or of the groups playing its production. */
 async function studentsOf(req: PayloadRequest, s: Doc): Promise<Recipient[]> {
@@ -241,7 +226,12 @@ export async function notifySessionChange(
     const oldStart = new Date(String(previous.start));
     const oldEnd = new Date(String(previous.end));
     const timeChanged = start.getTime() !== oldStart.getTime() || end.getTime() !== oldEnd.getTime();
-    const [place, oldPlace] = await Promise.all([placeOrPending(req, doc), placeOrPending(req, previous)]);
+    const texts = await emailTexts(req.payload);
+    const c = texts.common;
+    const [place, oldPlace] = await Promise.all([
+      placeOrPending(req, doc, c.placePending),
+      placeOrPending(req, previous, c.placePending),
+    ]);
     const placeChanged = place !== oldPlace;
     if (!cancelled && !reinstated && !timeChanged && !placeChanged) return;
 
@@ -250,32 +240,36 @@ export async function notifySessionChange(
     const title = String(doc.displayTitle ?? '');
     const when = whenText(start, end, 'long');
     const oldWhen = whenText(oldStart, oldEnd, 'long');
-    const details = [
-      { label: 'Mikor', value: when, ...(timeChanged ? { was: oldWhen } : {}) },
-      { label: 'Hol', value: place, ...(placeChanged ? { was: oldPlace } : {}) },
-    ];
-    await send(req, to, (u) => ({
-      subject: cancelled ? `Elmarad: ${title}` : reinstated ? `Mégis lesz: ${title}` : `Változás: ${title}`,
-      html: emailLayout({
-        preheader: cancelled ? `${title} — ${when}` : `${title}: ${when} · ${place}`,
-        heading: cancelled ? 'Elmarad egy alkalom' : reinstated ? 'Mégis lesz az alkalom' : 'Változott egy alkalom',
-        paragraphs: [
-          hello(u),
-          cancelled
-            ? `Az alábbi alkalom elmarad: ${title}.`
-            : reinstated
-              ? `Az elmaradtnak jelzett alkalom mégis megtartásra kerül: ${title}.`
-              : `Változott a(z) ${title} alkalom${timeChanged && placeChanged ? ' ideje és helyszíne' : timeChanged ? ' ideje' : ' helyszíne'}.`,
-        ],
-        details: cancelled
-          ? [
-              { label: 'Mikor', value: oldWhen },
-              { label: 'Hol', value: oldPlace },
-            ]
-          : details,
-        button: { label: 'Fiókom', href: siteUrl('/fiokom') },
-      }),
-    }));
+    const changed = texts.template('sessionChanged');
+    const key = cancelled ? 'sessionCancelled' : reinstated ? 'sessionReinstated' : 'sessionChanged';
+    const valtozas =
+      timeChanged && placeChanged ? changed.changedBoth : timeChanged ? changed.changedTime : changed.changedPlace;
+    await send(req, to, (u) =>
+      fromTemplate(
+        texts,
+        key,
+        {
+          keresztnev: u.firstName,
+          cim: title,
+          mikor: cancelled ? oldWhen : when,
+          hol: cancelled ? oldPlace : place,
+          valtozas,
+        },
+        {
+          greet: u,
+          details: cancelled
+            ? [
+                { label: c.labelWhen, value: oldWhen },
+                { label: c.labelWhere, value: oldPlace },
+              ]
+            : [
+                { label: c.labelWhen, value: when, ...(timeChanged ? { was: oldWhen } : {}) },
+                { label: c.labelWhere, value: place, ...(placeChanged ? { was: oldPlace } : {}) },
+              ],
+          href: siteUrl('/fiokom'),
+        },
+      ),
+    );
   } catch (err) {
     req.payload.logger.error({ err, msg: 'session e-mail failed' });
   }

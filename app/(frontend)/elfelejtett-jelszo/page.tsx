@@ -1,4 +1,5 @@
-import AccountShell, { Card } from '@/components/account/AccountShell';
+import AccountShell from '@/components/account/AccountShell';
+import { Card } from '@/components/account/Card';
 import { ForgotPasswordForm } from '@/components/account/forms';
 import { accountMetadata } from '@/components/account/meta';
 

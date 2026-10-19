@@ -5,13 +5,6 @@ import { relIds } from '@/payload/rel';
 
 import { type ApplicationRules, DEFAULT_RULES } from './rules';
 
-export type EmailTexts = Partial<
-  Record<
-    'signupReceived' | 'applicationReceived' | 'confirmed' | 'cancelledMinimum' | 'cancellation' | 'accepted',
-    string
-  >
->;
-
 /** What "Hónap feltöltése" creates a Nyitott Műhely date with. */
 export type WorkshopDefaults = {
   weekday: number;
@@ -25,7 +18,6 @@ export type WorkshopDefaults = {
 
 export type ApplicationSettings = ApplicationRules & {
   notifyEmails: string[];
-  texts: EmailTexts;
   workshopDefaults: WorkshopDefaults;
 };
 
@@ -34,14 +26,12 @@ export function settingsFrom(doc: Record<string, unknown> | null | undefined): A
   const emails = Array.isArray(doc?.notifyEmails)
     ? (doc.notifyEmails as { email?: string | null }[]).flatMap((e) => (e.email?.trim() ? [e.email.trim()] : []))
     : [];
-  const texts = (doc?.texts ?? {}) as Record<string, string | null | undefined>;
   const w = (doc?.workshopDefaults ?? {}) as Record<string, unknown>;
   const clock = (v: unknown, fallback: string) => (typeof v === 'string' && /^\d\d:\d\d$/.test(v) ? v : fallback);
   return {
     workshopCutoffHours: num(doc?.workshopCutoffHours, DEFAULT_RULES.workshopCutoffHours),
     userCancelHours: num(doc?.userCancelHours, DEFAULT_RULES.userCancelHours),
     notifyEmails: emails,
-    texts: Object.fromEntries(Object.entries(texts).filter(([, v]) => typeof v === 'string' && v.trim())) as EmailTexts,
     workshopDefaults: {
       weekday: Number(w.weekday) || 6,
       startTime: clock(w.startTime, '14:00'),

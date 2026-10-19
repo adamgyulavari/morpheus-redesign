@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
-import AccountShell, { Card } from '@/components/account/AccountShell';
+import AccountShell from '@/components/account/AccountShell';
+import { Card } from '@/components/account/Card';
 import { MagicLinkConfirm } from '@/components/account/forms';
 import { accountMetadata } from '@/components/account/meta';
 import { payloadClient } from '@/lib/auth';

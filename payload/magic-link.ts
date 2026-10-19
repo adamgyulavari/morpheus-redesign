@@ -90,11 +90,8 @@ export async function requestMagicLink(payload: Payload, rawEmail: string, ip: s
     // unverified accounts too: using the link proves the address (and verifies it)
     if (!user || locked) return 'sent';
     const { url, code } = await createLoginLink(payload, user.id, { ttlMs: TOKEN_TTL_MS, withCode: true });
-    await payload.sendEmail({
-      to: user.email,
-      subject: magicLink.subject,
-      html: magicLink.html(url, code ?? '', user),
-    });
+    const { subject, html } = await magicLink(payload, url, code ?? '', user);
+    await payload.sendEmail({ to: user.email, subject, html });
   } catch (err) {
     payload.logger.error({ err, msg: 'magic link: sending failed' });
   }

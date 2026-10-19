@@ -79,6 +79,9 @@ export interface Config {
     media: Media;
     users: User;
     contactPeople: ContactPerson;
+    orders: Order;
+    payments: Payment;
+    invoices: Invoice;
     ctaBands: CtaBand;
     legalPages: LegalPage;
     venues: Venue;
@@ -88,6 +91,7 @@ export interface Config {
     roomBookings: RoomBooking;
     applications: Application;
     loginTokens: LoginToken;
+    mockPayments: MockPayment;
     redirects: Redirect;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
@@ -106,6 +110,10 @@ export interface Config {
     users: {
       courseGroups: 'courseGroups';
     };
+    orders: {
+      invoices: 'invoices';
+      payments: 'payments';
+    };
     sessions: {
       applications: 'applications';
     };
@@ -123,6 +131,9 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     contactPeople: ContactPeopleSelect<false> | ContactPeopleSelect<true>;
+    orders: OrdersSelect<false> | OrdersSelect<true>;
+    payments: PaymentsSelect<false> | PaymentsSelect<true>;
+    invoices: InvoicesSelect<false> | InvoicesSelect<true>;
     ctaBands: CtaBandsSelect<false> | CtaBandsSelect<true>;
     legalPages: LegalPagesSelect<false> | LegalPagesSelect<true>;
     venues: VenuesSelect<false> | VenuesSelect<true>;
@@ -132,6 +143,7 @@ export interface Config {
     roomBookings: RoomBookingsSelect<false> | RoomBookingsSelect<true>;
     applications: ApplicationsSelect<false> | ApplicationsSelect<true>;
     loginTokens: LoginTokensSelect<false> | LoginTokensSelect<true>;
+    mockPayments: MockPaymentsSelect<false> | MockPaymentsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
@@ -148,6 +160,8 @@ export interface Config {
     ui: Ui;
     roomBookingSettings: RoomBookingSetting;
     applicationSettings: ApplicationSetting;
+    billingSettings: BillingSetting;
+    emailTexts: EmailText;
     'payload-jobs-stats': PayloadJobsStat;
   };
   globalsSelect: {
@@ -155,6 +169,8 @@ export interface Config {
     ui: UiSelect<false> | UiSelect<true>;
     roomBookingSettings: RoomBookingSettingsSelect<false> | RoomBookingSettingsSelect<true>;
     applicationSettings: ApplicationSettingsSelect<false> | ApplicationSettingsSelect<true>;
+    billingSettings: BillingSettingsSelect<false> | BillingSettingsSelect<true>;
+    emailTexts: EmailTextsSelect<false> | EmailTextsSelect<true>;
     'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
   };
   locale: null;
@@ -166,6 +182,7 @@ export interface Config {
     tasks: {
       revalidateDates: TaskRevalidateDates;
       workshopCutoff: TaskWorkshopCutoff;
+      orderPaid: TaskOrderPaid;
       inline: {
         input: unknown;
         output: unknown;
@@ -204,6 +221,7 @@ export interface CourseGroup {
    * Pl. „Kezdő kurzus — 2026 ősz, csütörtök”
    */
   title: string;
+  code?: string | null;
   type: 'kezdo' | 'szakmai' | 'egyeb';
   /**
    * Nem kötelező: melyik kurzus csoportja.
@@ -243,6 +261,32 @@ export interface CourseGroup {
      * Csak kezdőnél számít. Üresen: nincs korlát.
      */
     capacity?: number | null;
+    /**
+     * A jelentkező a lenti lehetőségek közül választ és fizet (egy összegben vagy az első részletet); a fizetéssel felvesszük a csoportba. Kikapcsolva a jelentkezés ingyenes, a felvételről ti döntötök. (A Fizetési beállítások „Online fizetés” kapcsolója is kell hozzá.)
+     */
+    payOnline?: boolean | null;
+    /**
+     * A kurzus oldalán és a fizetésnél ezek látszanak. Új kezdő csoportnál a kurzus árai kerülnek ide; csoportonként módosíthatod.
+     */
+    options?:
+      | {
+          /**
+           * Pl. „Két részletben”
+           */
+          label: string;
+          amount: number;
+          /**
+           * Jelentkezéskor az első részletet fizeti (összeg ÷ részletek).
+           */
+          installments?: number | null;
+          /**
+           * Pl. „kedvezményesen”
+           */
+          note?: string | null;
+          highlighted?: boolean | null;
+          id?: string | null;
+        }[]
+      | null;
     /**
      * Üresen: azonnal.
      */
@@ -387,9 +431,11 @@ export interface Application {
   displayTitle?: string | null;
   kind: 'workshop' | 'beginner' | 'professional';
   /**
-   * Nyitott Műhely és kezdő: Jelentkezett / Lemondva / Áthelyezve. Szakmai: Új / Interjú / Felvéve / Elutasítva / Visszavonta.
+   * Nyitott Műhely és kezdő: Fizetésre vár / Jelentkezett (fizetett) / Lemondva / Áthelyezve. Szakmai: Új / Interjú / Felvéve / Elutasítva / Visszavonta.
    */
-  status?: ('registered' | 'cancelled' | 'moved' | 'new' | 'interview' | 'accepted' | 'rejected' | 'withdrawn') | null;
+  status?:
+    | ('held' | 'registered' | 'cancelled' | 'moved' | 'new' | 'interview' | 'accepted' | 'rejected' | 'withdrawn')
+    | null;
   user: number | User;
   session?: (number | null) | Session;
   courseGroup?: (number | null) | CourseGroup;
@@ -405,8 +451,13 @@ export interface Application {
   movedTo?: (number | null) | Application;
   cancelReason?: string | null;
   cancelledAt?: string | null;
+  order?: (number | null) | Order;
   /**
-   * Átutalás / készpénz (az online fizetésig).
+   * Addig tartjuk a helyet, amíg a fizetés lezajlik.
+   */
+  holdUntil?: string | null;
+  /**
+   * Átutalás / készpénz — ha nem online fizetett.
    */
   paidOffline?: boolean | null;
   paymentNote?: string | null;
@@ -428,6 +479,23 @@ export interface User {
   lastName: string;
   firstName: string;
   phone?: string | null;
+  billing?: {
+    /**
+     * Üresen: a saját neve.
+     */
+    name?: string | null;
+    /**
+     * Csak cégnek.
+     */
+    taxNumber?: string | null;
+    zip?: string | null;
+    city?: string | null;
+    /**
+     * Kétbetűs kód.
+     */
+    country?: string | null;
+    address?: string | null;
+  };
   name?: string | null;
   /**
    * Foglalhat termet gyakorláshoz a Fiókom → Teremfoglalás oldalon. Csak ezzel lehet foglalni; a kurzus-tagság önmagában nem ad jogot.
@@ -473,6 +541,7 @@ export interface User {
 export interface Session {
   id: number;
   displayTitle?: string | null;
+  code?: string | null;
   /**
    * Üresen a csoport vagy az előadás nevéből készül.
    */
@@ -848,6 +917,140 @@ export interface RoomBooking {
    * Csak adminisztrátor: az ütköző diák-gyakorlásokat lemondja (a diákok e-mailt kapnak). Alkalommal és bérléssel ütközni nem lehet.
    */
   overridePractice?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Online jelentkezések fizetése: egy rendelés = egy jelentkezés. A rendszer írja; javítani csak adminisztrátor tud.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders".
+ */
+export interface Order {
+  id: number;
+  user: number | User;
+  application?: (number | null) | Application;
+  kind: 'workshop' | 'beginner' | 'monthlyFee';
+  status: 'pending' | 'paid' | 'expired' | 'canceled' | 'refunded' | 'partially_refunded';
+  label: string;
+  price: number;
+  /**
+   * Ennyit fizet kártyával.
+   */
+  amountDue: number;
+  expiresAt?: string | null;
+  paidAt?: string | null;
+  plan?: {
+    label?: string | null;
+    total?: number | null;
+    parts?: number | null;
+  };
+  billing?: {
+    name?: string | null;
+    taxNumber?: string | null;
+    zip?: string | null;
+    city?: string | null;
+    country?: string | null;
+    address?: string | null;
+  };
+  token: string;
+  invoices?: {
+    docs?: (number | Invoice)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  payments?: {
+    docs?: (number | Payment)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * A Számlázz.hu-n kiállított számlák (és sztornók), fizetett rendelésenként egy. A rendszer írja; javítani nem lehet — hibás számlát sztornóval lehet visszavonni.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "invoices".
+ */
+export interface Invoice {
+  id: number;
+  key: string;
+  kind: 'invoice' | 'storno';
+  status: 'draft' | 'sending' | 'issued' | 'failed';
+  mode: 'off' | 'test' | 'live';
+  number?: string | null;
+  order?: (number | null) | Order;
+  user: number | User;
+  courseGroup?: (number | null) | CourseGroup;
+  /**
+   * Havidíjnál, pl. 2026-11
+   */
+  period?: string | null;
+  part?: number | null;
+  method?: ('card' | 'transfer') | null;
+  dueDate?: string | null;
+  paidAt?: string | null;
+  net: number;
+  vat: number;
+  gross: number;
+  stornoOf?: (number | null) | Invoice;
+  issuedAt?: string | null;
+  error?: string | null;
+  data?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Fizetési kísérletek a fizetési szolgáltatónál (egy rendeléshez több is lehet, pl. újrapróbálás).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payments".
+ */
+export interface Payment {
+  id: number;
+  order: number | Order;
+  provider: string;
+  providerPaymentId: string;
+  amount: number;
+  status: 'open' | 'pending' | 'paid' | 'failed' | 'expired' | 'canceled' | 'refunded' | 'partially_refunded';
+  paidAt?: string | null;
+  refunds?:
+    | {
+        providerRefundId?: string | null;
+        amount: number;
+        at?: string | null;
+        by?: (number | null) | User;
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  raw?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  log?:
+    | {
+        at?: string | null;
+        source?: string | null;
+        status?: string | null;
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2450,6 +2653,23 @@ export interface LoginToken {
   createdAt: string;
 }
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mockPayments".
+ */
+export interface MockPayment {
+  id: number;
+  orderId: string;
+  amount: number;
+  amountRefunded?: number | null;
+  description?: string | null;
+  status: 'pending' | 'paid' | 'failed' | 'expired' | 'canceled';
+  paidAt?: string | null;
+  returnUrl?: string | null;
+  webhookUrl?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Régi vagy megszűnt címek továbbítása egy mostani oldalra (pl. a korábbi weboldal /rolunk-2/ címe → Rólunk).
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2555,7 +2775,7 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'revalidateDates' | 'workshopCutoff';
+        taskSlug: 'inline' | 'revalidateDates' | 'workshopCutoff' | 'orderPaid';
         taskID: string;
         input?:
           | {
@@ -2588,7 +2808,7 @@ export interface PayloadJob {
         id?: string | null;
       }[]
     | null;
-  taskSlug?: ('inline' | 'revalidateDates' | 'workshopCutoff') | null;
+  taskSlug?: ('inline' | 'revalidateDates' | 'workshopCutoff' | 'orderPaid') | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
@@ -2660,6 +2880,18 @@ export interface PayloadLockedDocument {
         value: number | ContactPerson;
       } | null)
     | ({
+        relationTo: 'orders';
+        value: number | Order;
+      } | null)
+    | ({
+        relationTo: 'payments';
+        value: number | Payment;
+      } | null)
+    | ({
+        relationTo: 'invoices';
+        value: number | Invoice;
+      } | null)
+    | ({
         relationTo: 'ctaBands';
         value: number | CtaBand;
       } | null)
@@ -2694,6 +2926,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'loginTokens';
         value: number | LoginToken;
+      } | null)
+    | ({
+        relationTo: 'mockPayments';
+        value: number | MockPayment;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -2747,6 +2983,7 @@ export interface PayloadMigration {
  */
 export interface CourseGroupsSelect<T extends boolean = true> {
   title?: T;
+  code?: T;
   type?: T;
   course?: T;
   startDate?: T;
@@ -2761,6 +2998,17 @@ export interface CourseGroupsSelect<T extends boolean = true> {
         price?: T;
         priceLabel?: T;
         capacity?: T;
+        payOnline?: T;
+        options?:
+          | T
+          | {
+              label?: T;
+              amount?: T;
+              installments?: T;
+              note?: T;
+              highlighted?: T;
+              id?: T;
+            };
         opensAt?: T;
         closesAt?: T;
       };
@@ -4018,6 +4266,16 @@ export interface UsersSelect<T extends boolean = true> {
   lastName?: T;
   firstName?: T;
   phone?: T;
+  billing?:
+    | T
+    | {
+        name?: T;
+        taxNumber?: T;
+        zip?: T;
+        city?: T;
+        country?: T;
+        address?: T;
+      };
   name?: T;
   roomBooking?: T;
   roles?: T;
@@ -4053,6 +4311,105 @@ export interface ContactPeopleSelect<T extends boolean = true> {
   photo?: T;
   order?: T;
   importId?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders_select".
+ */
+export interface OrdersSelect<T extends boolean = true> {
+  user?: T;
+  application?: T;
+  kind?: T;
+  status?: T;
+  label?: T;
+  price?: T;
+  amountDue?: T;
+  expiresAt?: T;
+  paidAt?: T;
+  plan?:
+    | T
+    | {
+        label?: T;
+        total?: T;
+        parts?: T;
+      };
+  billing?:
+    | T
+    | {
+        name?: T;
+        taxNumber?: T;
+        zip?: T;
+        city?: T;
+        country?: T;
+        address?: T;
+      };
+  token?: T;
+  invoices?: T;
+  payments?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payments_select".
+ */
+export interface PaymentsSelect<T extends boolean = true> {
+  order?: T;
+  provider?: T;
+  providerPaymentId?: T;
+  amount?: T;
+  status?: T;
+  paidAt?: T;
+  refunds?:
+    | T
+    | {
+        providerRefundId?: T;
+        amount?: T;
+        at?: T;
+        by?: T;
+        note?: T;
+        id?: T;
+      };
+  raw?: T;
+  log?:
+    | T
+    | {
+        at?: T;
+        source?: T;
+        status?: T;
+        note?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "invoices_select".
+ */
+export interface InvoicesSelect<T extends boolean = true> {
+  key?: T;
+  kind?: T;
+  status?: T;
+  mode?: T;
+  number?: T;
+  order?: T;
+  user?: T;
+  courseGroup?: T;
+  period?: T;
+  part?: T;
+  method?: T;
+  dueDate?: T;
+  paidAt?: T;
+  net?: T;
+  vat?: T;
+  gross?: T;
+  stornoOf?: T;
+  issuedAt?: T;
+  error?: T;
+  data?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -4145,6 +4502,7 @@ export interface StudentLinksSelect<T extends boolean = true> {
  */
 export interface SessionsSelect<T extends boolean = true> {
   displayTitle?: T;
+  code?: T;
   title?: T;
   kind?: T;
   status?: T;
@@ -4226,6 +4584,8 @@ export interface ApplicationsSelect<T extends boolean = true> {
   movedTo?: T;
   cancelReason?: T;
   cancelledAt?: T;
+  order?: T;
+  holdUntil?: T;
   paidOffline?: T;
   paymentNote?: T;
   staffNotes?: T;
@@ -4243,6 +4603,22 @@ export interface LoginTokensSelect<T extends boolean = true> {
   attempts?: T;
   expiresAt?: T;
   usedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mockPayments_select".
+ */
+export interface MockPaymentsSelect<T extends boolean = true> {
+  orderId?: T;
+  amount?: T;
+  amountRefunded?: T;
+  description?: T;
+  status?: T;
+  paidAt?: T;
+  returnUrl?: T;
+  webhookUrl?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -4658,31 +5034,568 @@ export interface ApplicationSetting {
     minParticipants?: number | null;
     maxParticipants?: number | null;
   };
-  texts?: {
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Online fizetés és számlázás. A kulcsok (fizetési szolgáltató, Számlázz.hu) nem itt, hanem a szerver beállításaiban vannak.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "billingSettings".
+ */
+export interface BillingSetting {
+  id: number;
+  /**
+   * Kikapcsolva a Nyitott Műhely-jelentkezés újra fizetés nélküli (a helyszínen fizetnek); a már elkezdett fizetések rendben lezárulnak.
+   */
+  onlinePayments?: boolean | null;
+  vatMode: 'AAM' | '27' | '18' | '5';
+  /**
+   * A havidíj- és részletszámlák fizetési határideje a kiállítástól.
+   */
+  transferDueDays?: number | null;
+  /**
+   * A Számlázz.hu-ban beállított számlatömb előtagja (pl. MSZ). Üresen: a fiók alapértelmezése.
+   */
+  invoicePrefix?: string | null;
+  /**
+   * Ennyi ideig tartjuk a helyet, amíg a jelentkező fizet; utána felszabadul.
+   */
+  ordersHoldMinutes: number;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Az automatikus levelek szövegei. A {kapcsos} szavak helyére küldéskor kerül az adat (mindegyiknél ott a lista). A levél felépítése (logó, sorok, gomb) automatikus.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "emailTexts".
+ */
+export interface EmailText {
+  id: number;
+  signup: {
     /**
-     * Nyitott Műhely és kezdő kurzus. Üresen az alapszöveg megy.
+     * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai); {hol} — helyszín; {minimum} — a minimális létszám; {dontes} — mikor dől el, hogy indul-e; {lemondas} — hány órával előtte lehet lemondani.
      */
-    signupReceived?: string | null;
+    signupWorkshop: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
     /**
-     *  Üresen az alapszöveg megy.
+     * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai).
      */
-    applicationReceived?: string | null;
+    signupBeginner: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
     /**
-     * A Nyitott Műhely résztvevőinek a határidőkor. Üresen az alapszöveg megy.
+     * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve).
      */
-    confirmed?: string | null;
+    signupBeginnerNoGroup: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
     /**
-     * A következő időpontok listája automatikus. Üresen az alapszöveg megy.
+     * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve).
      */
-    cancelledMinimum?: string | null;
+    applicationReceived: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
     /**
-     *  Üresen az alapszöveg megy.
+     * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai); {regi} — a régi időpont; {hol} — helyszín.
      */
-    cancellation?: string | null;
+    moved: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
     /**
-     * A belépési link automatikus. Üresen az alapszöveg megy.
+     * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai).
      */
-    accepted?: string | null;
+    cancelledBySelf: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
+    /**
+     * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai).
+     */
+    cancelledByStaff: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
+    /**
+     * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai); {hol} — helyszín.
+     */
+    workshopConfirmed: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
+    /**
+     * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai).
+     */
+    workshopCancelled: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+      /**
+       * Utána jön az időpontok listája.
+       */
+      nextDates?: string | null;
+      noNextDates?: string | null;
+      /**
+       * Pl. „Elmarad”
+       */
+      cancelledLabel?: string | null;
+      /**
+       * Pl. „Új időpont”
+       */
+      nextLabel?: string | null;
+    };
+    /**
+     * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai).
+     */
+    accepted: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
+    /**
+     * Beírható: {nev} — a jelentkező teljes neve; {email} — a jelentkező e-mail-címe; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai); {fajta} — a jelentkezés fajtája.
+     */
+    staffNew: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
+    /**
+     * Beírható: {nev} — a jelentkező teljes neve; {email} — a jelentkező e-mail-címe; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai).
+     */
+    staffCancelled: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+    };
+    /**
+     * Beírható: {nev} — a jelentkező teljes neve; {email} — a jelentkező e-mail-címe; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai); {regi} — a régi időpont.
+     */
+    staffMoved: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+    };
+  };
+  payment: {
+    /**
+     * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai); {osszeg} — összeg (pl. 5000 Ft); {hatarido} — meddig tartjuk a helyet / fizetési határidő.
+     */
+    paymentLink: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
+    /**
+     * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai); {hol} — helyszín; {osszeg} — összeg (pl. 5000 Ft).
+     */
+    orderPaid: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+      /**
+       * Nyitott Műhelynél csatoljuk.
+       */
+      calendarNote?: string | null;
+      /**
+       * Amikor még nincs csoportja.
+       */
+      waitingForGroup?: string | null;
+    };
+    /**
+     * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai); {osszeg} — összeg (pl. 5000 Ft).
+     */
+    lateRefund: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
+    /**
+     * Beírható: {nev} — a jelentkező teljes neve; {email} — a jelentkező e-mail-címe; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai); {osszeg} — összeg (pl. 5000 Ft).
+     */
+    staffPaid: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
+  };
+  rooms: {
+    /**
+     * Beírható: {keresztnev} — a címzett keresztneve; {mikor} — mikor (időpont vagy a kurzus dátumai); {hol} — helyszín.
+     */
+    bookingConfirmed: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+      footnote?: string | null;
+    };
+    /**
+     * Beírható: {keresztnev} — a címzett keresztneve; {mikor} — mikor (időpont vagy a kurzus dátumai); {hol} — helyszín.
+     */
+    bookingCancelledBySelf: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
+    /**
+     * Beírható: {keresztnev} — a címzett keresztneve; {mikor} — mikor (időpont vagy a kurzus dátumai); {hol} — helyszín; {ok} — az ok (ha megadták).
+     */
+    bookingCancelledByStaff: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
+    /**
+     * Beírható: {keresztnev} — a címzett keresztneve; {mikor} — mikor (időpont vagy a kurzus dátumai); {hol} — helyszín.
+     */
+    bookingMoved: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
+    /**
+     * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai); {hol} — helyszín.
+     */
+    sessionCancelled: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
+    /**
+     * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai); {hol} — helyszín.
+     */
+    sessionReinstated: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
+    /**
+     * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai); {hol} — helyszín; {valtozas} — mi változott (ideje / helyszíne / ideje és helyszíne).
+     */
+    sessionChanged: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+      /**
+       * Pl. „ideje”
+       */
+      changedTime?: string | null;
+      /**
+       * Pl. „helyszíne”
+       */
+      changedPlace?: string | null;
+      /**
+       * Pl. „ideje és helyszíne”
+       */
+      changedBoth?: string | null;
+    };
+  };
+  account: {
+    /**
+     * Beírható: {keresztnev} — a címzett keresztneve.
+     */
+    verifyEmail: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+      footnote?: string | null;
+    };
+    /**
+     * Beírható: {keresztnev} — a címzett keresztneve.
+     */
+    resetPassword: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+      footnote?: string | null;
+    };
+    /**
+     * Beírható: {keresztnev} — a címzett keresztneve; {kod} — a belépési kód.
+     */
+    magicLink: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+      footnote?: string | null;
+      codeIntro?: string | null;
+    };
+  };
+  common: {
+    /**
+     * Pl. „Kedves {keresztnev}!”
+     */
+    greeting: string;
+    /**
+     * Pl. „Kedves Jelentkezőnk!”
+     */
+    greetingNoName: string;
+    /**
+     * A jelentkezési levelek végén.
+     */
+    accountCreated: string;
+    /**
+     * A jelentkezési levelek végén.
+     */
+    accountExisting: string;
+    /**
+     * Pl. „Fiókom”
+     */
+    myAccountButton: string;
+    /**
+     * A belépési linkes gomb alatt.
+     */
+    loginLinkNote: string;
+    buttonHelp: string;
+    footer: string;
+    labelWhat: string;
+    labelWhen: string;
+    labelWhere: string;
+    labelPrice: string;
+    labelPaid: string;
+    labelDue: string;
+    labelRefunded: string;
+    labelPayment: string;
+    labelName: string;
+    labelEmail: string;
+    labelPhone: string;
+    labelMessage: string;
+    labelCount: string;
+    labelFor: string;
+    labelNote: string;
+    labelReason: string;
+    /**
+     * Pl. „Helyszín egyeztetés alatt”
+     */
+    placePending: string;
   };
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -5015,15 +5928,328 @@ export interface ApplicationSettingsSelect<T extends boolean = true> {
         minParticipants?: T;
         maxParticipants?: T;
       };
-  texts?:
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "billingSettings_select".
+ */
+export interface BillingSettingsSelect<T extends boolean = true> {
+  onlinePayments?: T;
+  vatMode?: T;
+  transferDueDays?: T;
+  invoicePrefix?: T;
+  ordersHoldMinutes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "emailTexts_select".
+ */
+export interface EmailTextsSelect<T extends boolean = true> {
+  signup?:
     | T
     | {
-        signupReceived?: T;
-        applicationReceived?: T;
-        confirmed?: T;
-        cancelledMinimum?: T;
-        cancellation?: T;
-        accepted?: T;
+        signupWorkshop?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+        signupBeginner?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+        signupBeginnerNoGroup?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+        applicationReceived?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+        moved?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+        cancelledBySelf?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+        cancelledByStaff?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+        workshopConfirmed?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+        workshopCancelled?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+              nextDates?: T;
+              noNextDates?: T;
+              cancelledLabel?: T;
+              nextLabel?: T;
+            };
+        accepted?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+        staffNew?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+        staffCancelled?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+            };
+        staffMoved?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+            };
+      };
+  payment?:
+    | T
+    | {
+        paymentLink?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+        orderPaid?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+              calendarNote?: T;
+              waitingForGroup?: T;
+            };
+        lateRefund?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+        staffPaid?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+      };
+  rooms?:
+    | T
+    | {
+        bookingConfirmed?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+              footnote?: T;
+            };
+        bookingCancelledBySelf?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+        bookingCancelledByStaff?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+        bookingMoved?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+        sessionCancelled?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+        sessionReinstated?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+        sessionChanged?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+              changedTime?: T;
+              changedPlace?: T;
+              changedBoth?: T;
+            };
+      };
+  account?:
+    | T
+    | {
+        verifyEmail?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+              footnote?: T;
+            };
+        resetPassword?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+              footnote?: T;
+            };
+        magicLink?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+              footnote?: T;
+              codeIntro?: T;
+            };
+      };
+  common?:
+    | T
+    | {
+        greeting?: T;
+        greetingNoName?: T;
+        accountCreated?: T;
+        accountExisting?: T;
+        myAccountButton?: T;
+        loginLinkNote?: T;
+        buttonHelp?: T;
+        footer?: T;
+        labelWhat?: T;
+        labelWhen?: T;
+        labelWhere?: T;
+        labelPrice?: T;
+        labelPaid?: T;
+        labelDue?: T;
+        labelRefunded?: T;
+        labelPayment?: T;
+        labelName?: T;
+        labelEmail?: T;
+        labelPhone?: T;
+        labelMessage?: T;
+        labelCount?: T;
+        labelFor?: T;
+        labelNote?: T;
+        labelReason?: T;
+        placePending?: T;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -5063,6 +6289,16 @@ export interface TaskRevalidateDates {
  */
 export interface TaskWorkshopCutoff {
   input?: unknown;
+  output?: unknown;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskOrderPaid".
+ */
+export interface TaskOrderPaid {
+  input: {
+    orderId: number;
+  };
   output?: unknown;
 }
 /**

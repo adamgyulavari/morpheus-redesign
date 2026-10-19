@@ -1,2 +1,0 @@
-# Schema snapshots of the migrations: generated, only the newest is kept (scripts/migration-snapshot.ts)
-payload/migrations/*.json linguist-generated=true -diff

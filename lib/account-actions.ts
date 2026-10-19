@@ -20,6 +20,7 @@ import {
 import { issueSession } from '@/payload/session';
 
 import { clearSessionCookies, getCurrentUser, payloadClient, safeReturnPath, setSessionCookies } from './auth';
+import { clean, validateBilling } from './payments/billing';
 
 export type FormState = { error?: string; message?: string; done?: boolean; values?: Record<string, string> };
 
@@ -217,4 +218,35 @@ export async function updateProfile(_: FormState, form: FormData): Promise<FormS
     return { error: 'Nem sikerült menteni. Próbáld újra.', values };
   }
   return { message: 'Elmentettük.', values };
+}
+
+/** Own billing details (prefilled at checkout; the invoice shows them). */
+export async function updateBilling(_: FormState, form: FormData): Promise<FormState> {
+  const user = await getCurrentUser();
+  if (!user) redirect('/belepes?vissza=/fiokom/adatok');
+  const values = {
+    name: str(form, 'billingName'),
+    zip: str(form, 'zip'),
+    city: str(form, 'city'),
+    address: str(form, 'address'),
+    country: str(form, 'country'),
+    taxNumber: str(form, 'taxNumber'),
+  };
+  const formValues = { ...values, billingName: values.name };
+  const invalid = validateBilling(values);
+  if (invalid) return { error: invalid, values: formValues };
+  const payload = await payloadClient();
+  try {
+    await payload.update({
+      collection: 'users',
+      id: user.id,
+      data: { billing: clean(values) },
+      overrideAccess: false,
+      user,
+    });
+  } catch (err) {
+    payload.logger.error({ err, msg: 'billing update failed' });
+    return { error: 'Nem sikerült menteni. Próbáld újra.', values: formValues };
+  }
+  return { message: 'Elmentettük. A következő számlán már ezek szerepelnek.', values: formValues };
 }

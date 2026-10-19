@@ -226,13 +226,26 @@ export const course = (c: P.Course, starts: CourseStart[]): Course => ({
 });
 
 /** A course group open for sign-up, with its state (lib/applications/rules courseSignupState). */
-export const courseStart = (g: P.CourseGroup, s: CourseSignupState): CourseStart => {
+export const courseStart = (g: P.CourseGroup, s: CourseSignupState, onlinePayments = false): CourseStart => {
   const first = dayOf(new Date(g.startDate));
   const schedule = g.defaultSchedule ?? [];
   const entry = schedule.find((e) => Number(e.weekday) === weekdayOf(first)) ?? schedule[0];
+  const beginner = (g.signup?.kind ?? (g.type === 'szakmai' ? 'professional' : 'beginner')) === 'beginner';
+  const options = beginner
+    ? (g.signup?.options ?? []).map((o) => ({
+        id: o.id ?? o.label,
+        label: o.label,
+        amount: o.amount,
+        installments: Math.max(1, Math.round(o.installments ?? 1)),
+        note: opt(o.note),
+        highlighted: o.highlighted ?? undefined,
+      }))
+    : [];
+  const lowest = options.length ? Math.min(...options.map((o) => o.amount)) : null;
   return {
     id: String(g.id),
     groupId: g.id,
+    code: g.code ?? '',
     title: g.title,
     date: first,
     startTime: entry?.startTime ?? undefined,
@@ -241,13 +254,20 @@ export const courseStart = (g: P.CourseGroup, s: CourseSignupState): CourseStart
       state: s.state,
       left: s.state === 'open' ? s.left : null,
       opensAt: s.state === 'notYet' ? s.opensAt.toISOString() : undefined,
-      price: g.signup?.priceLabel || (g.signup?.price != null ? formatHuf(g.signup.price) : undefined),
+      // kezdő: from the payment options; otherwise the group's own price (label)
+      price:
+        lowest != null
+          ? `${formatHuf(lowest)}${options.length > 1 ? '-tól' : ''}`
+          : g.signup?.priceLabel || (g.signup?.price != null ? formatHuf(g.signup.price) : undefined),
     },
+    payOnline: onlinePayments && beginner && Boolean(g.signup?.payOnline) && options.length > 0,
+    options,
   };
 };
 
 export const openWorkshopSession = (w: OpenWorkshop): OpenWorkshopSession => ({
   id: w.id,
+  code: w.code,
   title: w.title,
   description: opt(w.description),
   date: dayOf(new Date(w.start)),

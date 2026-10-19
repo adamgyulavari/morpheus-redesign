@@ -21,7 +21,7 @@ npm run dev                   # http://localhost:3000, admin at http://localhost
 | `npm run dev` / `build` / `start` | Next.js. The build needs **no database** (nothing is rendered at build time). |
 | `npm run migrate` | apply pending migrations (`payload/migrations/`) |
 | `npm run migrate:create -- <name>` | generate a migration after changing collections/blocks |
-| `npm run migrate:snapshot` | rebuild the schema snapshot from the config — after merging branches that both added migrations |
+| `npm run migrate:snapshot` | rebuild the (local) schema snapshot from the config — on a fresh clone, or after merging branches that both added migrations |
 | `npm run seed` | import `content/` + `public/images`, `public/video` into Payload; safe to re-run (updates, no duplicates) |
 | `npm run generate:types` | regenerate `payload-types.ts` after a schema change |
 | `npm run generate:importmap` | regenerate the admin import map after adding an admin component |
@@ -33,10 +33,11 @@ npm run dev                   # http://localhost:3000, admin at http://localhost
 commit the migration. Production applies it on container start.
 
 Next to the newest migration there is one generated `.json`: the schema snapshot `migrate:create`
-diffs against (running migrations never reads it). Only the newest is kept — older ones are deleted
-after each `migrate:create` — and git shows it as a binary file, so reviews show just the `.ts`.
-After merging two branches that each added a migration, run `npm run migrate:snapshot` once, or the
-next `migrate:create` would repeat one side's changes.
+diffs against (running migrations never reads it). It is local only (gitignored): `migrate:create`
+builds it from the config when there is none (the models must be as committed), and keeps only the
+newest. After merging two branches that each added a migration, run `npm run migrate:snapshot` once,
+or the next `migrate:create` would repeat one side's changes. So model changes are committed
+together with their migration.
 
 Uploads go to `./media` locally and to Leafcloud Object Storage in production (when `S3_BUCKET` is
 set). Deployment, environment variables and backups: see **[DEPLOY.md](DEPLOY.md)**.

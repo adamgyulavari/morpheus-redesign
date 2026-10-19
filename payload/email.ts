@@ -7,9 +7,11 @@
  * site's tokens (app/(frontend)/globals.css).
  */
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer';
-import type { EmailAdapter } from 'payload';
+import type { EmailAdapter, Payload } from 'payload';
 
 import { serverUrl } from '@/lib/env';
+
+import { type EmailTextsRead, emailTexts, fill, paragraphs } from './email-texts';
 
 /**
  * Development fallback. Payload's own console adapter prints only the subject; this one also
@@ -84,9 +86,20 @@ type Layout = {
   footnote?: string;
   /** Label / value rows under the paragraphs ("Mikor", "Hol"…); `was` shows a crossed-out old value. */
   details?: { label: string; value: string; was?: string }[];
+  /** The layout's own lines (E-mailek → Közös): under the button, the footer. */
+  chrome: { buttonHelp: string; footer: string };
 };
 
-export function emailLayout({ preheader, heading, paragraphs, button, code, footnote, details }: Layout): string {
+export function emailLayout({
+  preheader,
+  heading,
+  paragraphs,
+  button,
+  code,
+  footnote,
+  details,
+  chrome,
+}: Layout): string {
   const p = (text: string) =>
     `<p style="margin:0 0 16px;font:16px/1.6 ${FONT};color:${C.ink2}">${escapeHtml(text)}</p>`;
   const rows = details?.length
@@ -107,7 +120,7 @@ export function emailLayout({ preheader, heading, paragraphs, button, code, foot
     ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 24px"><tr><td style="border-radius:999px;background:${C.teal}">
         <a href="${escapeHtml(button.href)}" style="display:inline-block;padding:14px 28px;font:600 16px/1 ${FONT};color:${C.cream};text-decoration:none;border-radius:999px">${escapeHtml(button.label)}</a>
       </td></tr></table>
-      <p style="margin:0 0 16px;font:13px/1.6 ${FONT};color:${C.muted}">Ha a gomb nem működik, másold be ezt a címet a böngésződbe:<br><a href="${escapeHtml(button.href)}" style="color:${C.teal};word-break:break-all">${escapeHtml(button.href)}</a></p>`
+      <p style="margin:0 0 16px;font:13px/1.6 ${FONT};color:${C.muted}">${escapeHtml(chrome.buttonHelp)}<br><a href="${escapeHtml(button.href)}" style="color:${C.teal};word-break:break-all">${escapeHtml(button.href)}</a></p>`
     : '';
   const codeBlock = code
     ? `<p style="margin:8px 0 8px;font:16px/1.6 ${FONT};color:${C.ink2}">${escapeHtml(code.intro)}</p>
@@ -136,7 +149,7 @@ export function emailLayout({ preheader, heading, paragraphs, button, code, foot
       ${note}
     </td></tr>
     <tr><td style="padding:20px 8px 0;font:12px/1.6 ${FONT};color:${C.muted}">
-      Ezt a levelet a Morpheus Színműhely rendszere küldte automatikusan, kérjük, ne válaszolj rá.<br>
+      ${escapeHtml(chrome.footer)}<br>
       <a href="${escapeHtml(siteUrl('/'))}" style="color:${C.muted}">${escapeHtml(serverUrl().replace(/^https?:\/\//, '') || 'morpheus-szinmuhely.hu')}</a>
     </td></tr>
   </table>
@@ -144,59 +157,90 @@ export function emailLayout({ preheader, heading, paragraphs, button, code, foot
 </body></html>`;
 }
 
+// ── from the texts (E-mailek, payload/email-texts.ts) ───────────────────────
+
+type Row = { label: string; value: string; was?: string };
+
+/**
+ * An e-mail from its template: the greeting, the text's paragraphs (placeholders filled), the
+ * rows, the button (its label from the template), a code, the footnote.
+ */
+export function fromTemplate(
+  texts: EmailTextsRead,
+  key: string,
+  vars: Record<string, string | number | null | undefined>,
+  o: {
+    /** The recipient's first name for the greeting; false: no greeting (staff e-mails). */
+    greet?: { firstName?: string | null } | false;
+    /** More paragraphs after the text (already filled). */
+    after?: string[];
+    details?: Row[];
+    href?: string;
+    /** A one-time code under the button (its intro: the template's `codeIntro`). */
+    code?: string;
+    /** Instead of the template's footnote (e.g. the login link's note). */
+    footnote?: string;
+  } = {},
+): { subject: string; html: string } {
+  const t = texts.template(key);
+  const c = texts.common;
+  const first = o.greet ? o.greet.firstName?.trim() : undefined;
+  const greeting =
+    o.greet === false ? [] : [first ? fill(c.greeting, { ...vars, keresztnev: first }) : c.greetingNoName];
+  return {
+    subject: fill(t.subject, vars),
+    html: emailLayout({
+      preheader: fill(t.preheader || t.subject, vars),
+      heading: fill(t.heading, vars),
+      paragraphs: [...greeting, ...paragraphs(t.text, vars), ...(o.after ?? [])],
+      details: o.details,
+      button: o.href && t.button ? { label: fill(t.button, vars), href: o.href } : undefined,
+      code: o.code ? { intro: fill(t.codeIntro, vars), value: o.code } : undefined,
+      footnote: o.footnote ?? (t.footnote ? fill(t.footnote, vars) : undefined),
+      chrome: { buttonHelp: c.buttonHelp, footer: c.footer },
+    }),
+  };
+}
+
 type Recipient = { firstName?: string | null } | null | undefined;
-const hello = (user: Recipient) => (user?.firstName ? `Kedves ${user.firstName}!` : 'Kedves Hallgatónk!');
 
-export const verifyEmail = {
-  subject: 'Erősítsd meg az e-mail-címed',
-  html: (token: string, user: Recipient) =>
-    emailLayout({
-      preheader: 'Egy kattintás, és kész a Morpheus-fiókod.',
-      heading: 'Erősítsd meg az e-mail-címed',
-      paragraphs: [
-        hello(user),
-        'Köszönjük, hogy regisztráltál a Morpheus Színműhely oldalán. A fiókod használatához erősítsd meg az e-mail-címed az alábbi gombbal.',
-      ],
-      button: {
-        label: 'E-mail-cím megerősítése',
-        href: siteUrl(`/email-megerosites?token=${encodeURIComponent(token)}`),
-      },
-      footnote: 'Ha nem te regisztráltál, nyugodtan hagyd figyelmen kívül ezt a levelet.',
-    }),
-};
+/** E-mail address confirmation (Payload's verify e-mail). */
+export async function verifyEmail(payload: Payload, token: string, user: Recipient) {
+  return fromTemplate(
+    await emailTexts(payload),
+    'verifyEmail',
+    { keresztnev: user?.firstName },
+    {
+      greet: { firstName: user?.firstName },
+      href: siteUrl(`/email-megerosites?token=${encodeURIComponent(token)}`),
+    },
+  );
+}
 
-export const resetPassword = {
-  subject: 'Új jelszó beállítása',
-  html: (token: string, user: Recipient) =>
-    emailLayout({
-      preheader: 'Állíts be új jelszót a Morpheus-fiókodhoz.',
-      heading: 'Új jelszó beállítása',
-      paragraphs: [
-        hello(user),
-        'Valaki (remélhetőleg te) új jelszót kért a Morpheus-fiókodhoz. Az alábbi gombbal állíthatod be.',
-      ],
-      button: {
-        label: 'Új jelszó beállítása',
-        href: siteUrl(`/jelszo-visszaallitas?token=${encodeURIComponent(token)}`),
-      },
-      footnote:
-        'A link egy órán át érvényes. Ha nem te kérted, hagyd figyelmen kívül ezt a levelet: a jelszavad nem változik.',
-    }),
-};
+/** A new password (Payload's forgot-password e-mail). */
+export async function resetPassword(payload: Payload, token: string, user: Recipient) {
+  return fromTemplate(
+    await emailTexts(payload),
+    'resetPassword',
+    { keresztnev: user?.firstName },
+    {
+      greet: { firstName: user?.firstName },
+      href: siteUrl(`/jelszo-visszaallitas?token=${encodeURIComponent(token)}`),
+    },
+  );
+}
 
-export const magicLink = {
-  subject: 'Belépési link',
-  html: (href: string, code: string, user: Recipient) =>
-    emailLayout({
-      preheader: `Belépési kódod: ${code}`,
-      heading: 'Belépés jelszó nélkül',
-      paragraphs: [hello(user), 'Az alábbi gombbal jelszó nélkül beléphetsz a Morpheus-fiókodba.'],
-      button: { label: 'Belépés', href },
-      code: {
-        intro: 'Ha a belépést egy másik eszközön kérted, ott ezt a kódot írd be:',
-        value: `${code.slice(0, 3)} ${code.slice(3)}`,
-      },
-      footnote:
-        'A link és a kód 15 percig érvényes, és csak egyszer használható. Ha nem te kérted, hagyd figyelmen kívül ezt a levelet.',
-    }),
-};
+/** The login link with its one-time code. */
+export async function magicLink(payload: Payload, href: string, code: string, user: Recipient) {
+  const kod = `${code.slice(0, 3)} ${code.slice(3)}`;
+  return fromTemplate(
+    await emailTexts(payload),
+    'magicLink',
+    { keresztnev: user?.firstName, kod },
+    {
+      greet: { firstName: user?.firstName },
+      href,
+      code: kod,
+    },
+  );
+}

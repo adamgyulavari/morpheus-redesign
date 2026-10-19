@@ -23,6 +23,7 @@ import { courseFacts, SIGNUP_ON, takenBy, upcomingWorkshops } from './applicatio
 
 import * as map from './cms-map';
 import { todayInBudapest } from './dates';
+import { billingSettings } from './payments/settings';
 import type {
   ContactPerson,
   Course,
@@ -221,7 +222,15 @@ const findCourses = cache(async (): Promise<Course[]> => {
       where: { and: [SIGNUP_ON, { startDate: { greater_than_equal: fromToday() } }] },
       depth: 0,
       sort: 'startDate',
-      select: { title: true, type: true, course: true, startDate: true, defaultSchedule: true, signup: true },
+      select: {
+        title: true,
+        code: true,
+        type: true,
+        course: true,
+        startDate: true,
+        defaultSchedule: true,
+        signup: true,
+      },
       overrideAccess: true,
       ...all,
     }),
@@ -232,11 +241,13 @@ const findCourses = cache(async (): Promise<Course[]> => {
     groups.map((g) => g.id),
   );
   const now = new Date();
+  const online = (await billingSettings(p)).online;
   const starts = groups.map((g) => ({
     courseId: g.course == null ? null : String(typeof g.course === 'object' ? g.course.id : g.course),
     start: map.courseStart(
       g as CourseGroup,
-      courseSignupState(courseFacts(g as CourseGroup, taken.get(g.id) ?? 0), now),
+      courseSignupState(courseFacts(g as CourseGroup, taken.get(g.id)?.taken ?? 0), now),
+      online,
     ),
   }));
   return courses.map((c) =>
@@ -338,3 +349,6 @@ export async function getRedirect(path: string): Promise<{ href: string; permane
         : ref && 'path' in ref && ref.path;
   return href ? { href, permanent: r.type !== '302' } : undefined;
 }
+
+/** Whether workshop sign-ups go through the online checkout ("Fizetési beállítások"). */
+export const getOnlinePayments = cache(async () => (await billingSettings(await payload())).online);

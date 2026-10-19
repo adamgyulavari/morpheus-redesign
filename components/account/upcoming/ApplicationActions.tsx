@@ -22,6 +22,8 @@ type Props = {
   moveTargets?: { id: number; label: string }[];
   /** "Visszavonás" for a professional application. */
   cancelLabel?: string;
+  /** Shown before cancelling (a workshop: no refund — moving is the alternative). */
+  cancelNote?: string;
 };
 
 const linkButton = 'link text-[14px] font-semibold';
@@ -34,6 +36,7 @@ export default function ApplicationActions({
   canMove,
   moveTargets = [],
   cancelLabel,
+  cancelNote,
 }: Props) {
   const [mode, setMode] = useState<'cancel' | 'move' | null>(null);
   const [error, setError] = useState('');
@@ -85,6 +88,7 @@ export default function ApplicationActions({
             </h2>
             <p className="text-[15px] text-ink2">{title}</p>
           </div>
+          {mode === 'cancel' && cancelNote && <p className="text-[15px] leading-relaxed">{cancelNote}</p>}
           {mode === 'move' && (
             <fieldset className="flex flex-col gap-2">
               <legend className="sr-only">Új időpont</legend>

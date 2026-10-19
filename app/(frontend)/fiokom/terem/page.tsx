@@ -1,5 +1,6 @@
 import AccountNav from '@/components/account/AccountNav';
-import AccountShell, { Card } from '@/components/account/AccountShell';
+import AccountShell from '@/components/account/AccountShell';
+import { Card } from '@/components/account/Card';
 import { accountMetadata } from '@/components/account/meta';
 import StudentRoomBooking from '@/components/rooms/StudentRoomBooking';
 import { payloadClient, requireUser } from '@/lib/auth';

@@ -1,6 +1,8 @@
-import AccountShell, { Card } from '@/components/account/AccountShell';
-import { Notice, ResetPasswordForm } from '@/components/account/forms';
+import AccountShell from '@/components/account/AccountShell';
+import { Card } from '@/components/account/Card';
+import { ResetPasswordForm } from '@/components/account/forms';
 import { accountMetadata } from '@/components/account/meta';
+import Notice from '@/components/forms/Notice';
 import { ButtonLink } from '@/components/ui';
 
 type Props = { searchParams: Promise<{ token?: string }> };
@@ -23,9 +25,7 @@ export default async function ResetPasswordPage({ searchParams }: Props) {
           <ResetPasswordForm token={token} />
         ) : (
           <>
-            <Notice
-              state={{ error: 'Hiányzik a visszaállító kód. Nyisd meg újra a levélben kapott linket, vagy kérj újat.' }}
-            />
+            <Notice error="Hiányzik a visszaállító kód. Nyisd meg újra a levélben kapott linket, vagy kérj újat." />
             <ButtonLink
               link={{ label: 'Új link kérése', href: '/elfelejtett-jelszo' }}
               variant="primary"

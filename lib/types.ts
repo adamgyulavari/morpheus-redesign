@@ -107,6 +107,8 @@ export type ContactPerson = { id: string; name: string; role: string; phone: str
 export type CourseStart = {
   id: string;
   groupId: number;
+  /** Public code: the checkout link's `csoport`. */
+  code: string;
   title: string;
   /** First day, "YYYY-MM-DD". */
   date: string;
@@ -114,6 +116,9 @@ export type CourseStart = {
   startTime?: string;
   endTime?: string;
   signup: { state: 'open' | 'full' | 'notYet' | 'closed'; left: number | null; opensAt?: string; price?: string };
+  /** Kezdő: sign-up with online payment (the group's switch and the site-wide one). */
+  payOnline: boolean;
+  options: PayChoice[];
 };
 
 export type SignupMode = 'external' | 'beginner' | 'professional';
@@ -125,6 +130,18 @@ export type PriceOption = {
   amount: number;
   /** Billing period for recurring fees, e.g. "hó" → "45 000 Ft / hó". */
   per?: string;
+  note?: string;
+  highlighted?: boolean;
+};
+
+/** A kezdő group's payment option (its sign-up's "Fizetési lehetőségek"). */
+export type PayChoice = {
+  id: string;
+  label: string;
+  /** HUF, all of it */
+  amount: number;
+  /** Paid in this many parts; online sign-up pays the first (amount ÷ installments). */
+  installments: number;
   note?: string;
   highlighted?: boolean;
 };
@@ -157,6 +174,8 @@ export type Course = {
 /** A Nyitott Műhely date (a `workshop` session) as the public page shows it. */
 export type OpenWorkshopSession = {
   id: number;
+  /** Public code: the checkout link (/fizetes?alkalom=…). */
+  code: string;
   title: string;
   description?: string;
   /** Budapest day "YYYY-MM-DD" and clock times. */

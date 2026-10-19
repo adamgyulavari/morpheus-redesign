@@ -1,16 +1,18 @@
 /**
- * The e-mails of sign-ups and applications, in the shared layout (payload/email.ts). Every
- * applicant e-mail leads to /fiokom (the overview lists them) — with a week-long login link when it goes to
- * someone who may not be logged in. A failed e-mail never fails what caused it; it is logged.
+ * The e-mails of sign-ups and applications. Their texts are in the admin (Beállítások → E-mailek,
+ * payload/email-texts.ts); this fills them in: who, what, when, the rows and the button. Every
+ * applicant e-mail leads to /fiokom — with a week-long login link when it goes to someone who may
+ * not be logged in. A failed e-mail never fails what caused it; it is logged.
  */
 import type { Payload } from 'payload';
 
 import { formatHuf } from '@/lib/format';
 import { momentText } from '@/lib/rooms/format';
-import { emailLayout, siteUrl } from '@/payload/email';
+import { fromTemplate, siteUrl } from '@/payload/email';
+import { type Common, type EmailTextsRead, emailTexts } from '@/payload/email-texts';
 import { APPLICATION_LINK_TTL_MS, createLoginLink } from '@/payload/magic-link';
 
-import type { ApplicationSettings, EmailTexts } from './settings';
+import type { ApplicationSettings } from './settings';
 
 export type Applicant = {
   userId: number;
@@ -36,46 +38,109 @@ export type TargetInfo = {
 };
 
 const MY_ACCOUNT = '/fiokom';
-const hello = (a: Applicant) => (a.firstName?.trim() ? `Kedves ${a.firstName.trim()}!` : 'Kedves Jelentkezőnk!');
-const intro = (texts: EmailTexts, key: keyof EmailTexts, fallback: string) => texts[key] ?? fallback;
 
 /** The site's price format ("6000 Ft", "45 000 Ft"); undefined without a price. */
 export const huf = (n: number | null | undefined) => (n == null ? undefined : formatHuf(n));
 
-const details = (t: TargetInfo, extra: { label: string; value: string }[] = []) => [
-  { label: 'Mire', value: t.title },
-  ...(t.when ? [{ label: 'Mikor', value: t.when }] : []),
-  ...(t.place ? [{ label: 'Hol', value: t.place }] : []),
-  ...(t.price ? [{ label: 'Ár', value: t.price }] : []),
+export type Row = { label: string; value: string; was?: string };
+
+/** The rows about the date or course (labels: E-mailek → Közös). */
+export const details = (c: Common, t: TargetInfo, extra: Row[] = []): Row[] => [
+  { label: c.labelWhat, value: t.title },
+  ...(t.when ? [{ label: c.labelWhen, value: t.when }] : []),
+  ...(t.place ? [{ label: c.labelWhere, value: t.place }] : []),
+  ...(t.price ? [{ label: c.labelPrice, value: t.price }] : []),
   ...extra,
 ];
 
-async function send(payload: Payload, to: string | string[], subject: string, html: string) {
+/** The placeholders every sign-up e-mail can use. */
+export const varsOf = (a: Applicant, t: TargetInfo) => ({
+  keresztnev: a.firstName?.trim(),
+  nev: a.name,
+  email: a.email,
+  cim: t.title,
+  mikor: t.when,
+  hol: t.place,
+});
+
+/** Sends (never throws: a failed e-mail is logged). `ics`: a calendar file attached. */
+export async function send(
+  payload: Payload,
+  to: string | string[],
+  e: { subject: string; html: string },
+  ics?: string,
+) {
   const list = (Array.isArray(to) ? to : [to]).filter(Boolean);
   if (!list.length) return;
   try {
-    await payload.sendEmail({ to: list, subject, html });
+    await payload.sendEmail({
+      to: list,
+      subject: e.subject,
+      html: e.html,
+      ...(ics
+        ? {
+            attachments: [
+              { filename: 'alkalom.ics', content: ics, contentType: 'text/calendar; charset=utf-8; method=PUBLISH' },
+            ],
+          }
+        : {}),
+    });
   } catch (err) {
-    payload.logger.error({ err, msg: `application e-mail failed: ${subject}` });
+    payload.logger.error({ err, msg: `application e-mail failed: ${e.subject}` });
   }
 }
 
-/** The "Fiókom" button: a login link for those who may not be logged in, else the page. */
-async function myApplicationsButton(payload: Payload, userId: number, login: boolean) {
-  if (!login) return { label: 'Fiókom', href: siteUrl(MY_ACCOUNT) };
+/** The account's address for the button: a login link for those who may not be logged in. */
+export async function myAccountLink(payload: Payload, userId: number, login: boolean) {
+  if (!login) return siteUrl(MY_ACCOUNT);
   try {
     const { url } = await createLoginLink(payload, userId, { ttlMs: APPLICATION_LINK_TTL_MS });
-    return { label: 'Fiókom', href: `${url}&next=${encodeURIComponent(MY_ACCOUNT)}` };
+    return `${url}&next=${encodeURIComponent(MY_ACCOUNT)}`;
   } catch (err) {
     payload.logger.error({ err, msg: 'application e-mail: login link failed' });
-    return { label: 'Fiókom', href: siteUrl(MY_ACCOUNT) };
+    return siteUrl(MY_ACCOUNT);
   }
 }
-const LINK_NOTE = 'A gomb egy hétig belépteti a fiókodba. Később a belépés oldalon kérhetsz új belépési linket.';
+
+/** One applicant e-mail: its template, the person, the rows, the account button. */
+async function toApplicant(
+  payload: Payload,
+  texts: EmailTextsRead,
+  key: string,
+  a: Applicant,
+  t: TargetInfo,
+  o: {
+    vars?: Record<string, string | number | undefined>;
+    after?: string[];
+    rows?: Row[];
+    login?: boolean;
+    href?: string;
+  } = {},
+  ics?: string,
+) {
+  const login = o.login ?? false;
+  await send(
+    payload,
+    a.email,
+    fromTemplate(
+      texts,
+      key,
+      { ...varsOf(a, t), ...o.vars },
+      {
+        greet: { firstName: a.firstName },
+        after: o.after,
+        details: o.rows ?? details(texts.common, t),
+        href: o.href ?? (await myAccountLink(payload, a.userId, login)),
+        footnote: login ? texts.common.loginLinkNote : undefined,
+      },
+    ),
+    ics,
+  );
+}
 
 // ── to the applicant ────────────────────────────────────────────────────────
 
-/** Workshop or beginner sign-up received; professional application received. */
+/** Workshop or beginner sign-up received (without online payment); professional application received. */
 export async function sendReceived(
   payload: Payload,
   s: ApplicationSettings,
@@ -84,210 +149,100 @@ export async function sendReceived(
   t: TargetInfo,
   account: { created: boolean; loggedIn: boolean },
 ) {
-  const accountLine = account.created
-    ? 'Fiókod elkészült — a lenti gombbal belépve itt követheted a jelentkezésed.'
-    : 'A jelentkezésed a fiókodban követheted.';
-  const paragraphs =
+  const texts = await emailTexts(payload);
+  const key =
     kind === 'professional'
-      ? [
-          hello(a),
-          intro(
-            s.texts,
-            'applicationReceived',
-            'Köszönjük a jelentkezésed a szakmai kurzusra! Elolvassuk, és hamarosan jelentkezünk az interjú részleteivel.',
-          ),
-          accountLine,
-        ]
-      : kind === 'beginner' && t.withoutGroup
-        ? [
-            hello(a),
-            'Köszönjük a jelentkezésed! Még nem soroltunk csoportba: hamarosan jelentkezünk, melyik csoportban kezdhetsz.',
-            accountLine,
-          ]
-        : [
-            hello(a),
-            intro(s.texts, 'signupReceived', 'Köszönjük a jelentkezésed, rögzítettük a helyed.'),
-            'A fizetés részleteit hamarosan e-mailben küldjük.',
-            ...(kind === 'workshop' && t.minParticipants && t.cutoff
-              ? [
-                  `Az alkalom legalább ${t.minParticipants} jelentkezővel indul; ez ${momentText(t.cutoff)}-kor dől el, és e-mailben értesítünk róla.`,
-                  `Ha mégsem tudsz jönni, a fiókodban mondhatod le, legkésőbb ${s.userCancelHours} órával a kezdés előtt.`,
-                ]
-              : []),
-            accountLine,
-          ];
-  await send(
-    payload,
-    a.email,
-    kind === 'professional' ? 'Megkaptuk a jelentkezésed' : `Jelentkezés: ${t.title}`,
-    emailLayout({
-      preheader: kind === 'professional' ? 'Hamarosan jelentkezünk.' : [t.title, t.when].filter(Boolean).join(' · '),
-      heading: 'Megkaptuk a jelentkezésed',
-      paragraphs,
-      details: details(t),
-      button: await myApplicationsButton(payload, a.userId, !account.loggedIn),
-      footnote: account.loggedIn ? undefined : LINK_NOTE,
-    }),
-  );
+      ? 'applicationReceived'
+      : kind === 'workshop'
+        ? 'signupWorkshop'
+        : t.withoutGroup
+          ? 'signupBeginnerNoGroup'
+          : 'signupBeginner';
+  await toApplicant(payload, texts, key, a, t, {
+    vars: {
+      minimum: t.minParticipants,
+      dontes: t.cutoff ? momentText(t.cutoff) : undefined,
+      lemondas: s.userCancelHours,
+    },
+    after: [account.created ? texts.common.accountCreated : texts.common.accountExisting],
+    login: !account.loggedIn,
+  });
 }
 
 /** Moved to another date (by the participant). */
 export async function sendMoved(payload: Payload, a: Applicant, from: TargetInfo, to: TargetInfo) {
-  await send(
-    payload,
-    a.email,
-    `Áthelyezve: ${to.title}, ${to.when ?? ''}`.trim(),
-    emailLayout({
-      preheader: [to.title, to.when].filter(Boolean).join(' · '),
-      heading: 'Áthelyeztük a jelentkezésed',
-      paragraphs: [hello(a), 'A jelentkezésed átkerült az új időpontra.'],
-      details: [
-        { label: 'Mikor', value: to.when ?? '', was: from.when },
-        ...(to.place ? [{ label: 'Hol', value: to.place }] : []),
-      ],
-      button: { label: 'Fiókom', href: siteUrl(MY_ACCOUNT) },
-    }),
-  );
+  const texts = await emailTexts(payload);
+  const c = texts.common;
+  await toApplicant(payload, texts, 'moved', a, to, {
+    vars: { regi: from.when },
+    rows: [
+      { label: c.labelWhen, value: to.when ?? '', was: from.when },
+      ...(to.place ? [{ label: c.labelWhere, value: to.place }] : []),
+    ],
+  });
 }
 
 /** Cancelled by the participant, or by staff. */
 export async function sendCancellation(
   payload: Payload,
-  s: ApplicationSettings,
+  _s: ApplicationSettings,
   a: Applicant,
   t: TargetInfo,
   by: 'self' | 'staff',
 ) {
-  await send(
-    payload,
-    a.email,
-    `Lemondva: ${t.title}`,
-    emailLayout({
-      preheader: [t.title, t.when].filter(Boolean).join(' · '),
-      heading: by === 'self' ? 'Lemondtad a jelentkezésed' : 'Lemondtuk a jelentkezésed',
-      paragraphs: [
-        hello(a),
-        by === 'self'
-          ? intro(s.texts, 'cancellation', 'Rögzítettük a lemondásod. Reméljük, legközelebb találkozunk!')
-          : 'A jelentkezésed lemondtuk. Ha kérdésed van, írj nekünk.',
-      ],
-      details: details(t),
-      button: { label: 'Fiókom', href: siteUrl(MY_ACCOUNT) },
-    }),
-  );
+  await toApplicant(payload, await emailTexts(payload), by === 'self' ? 'cancelledBySelf' : 'cancelledByStaff', a, t);
 }
 
 /** The workshop runs (at the cutoff). */
-export async function sendWorkshopConfirmed(payload: Payload, s: ApplicationSettings, a: Applicant, t: TargetInfo) {
-  await send(
-    payload,
-    a.email,
-    `Biztosan indul: ${t.title}, ${t.when ?? ''}`.trim(),
-    emailLayout({
-      preheader: 'Megvan a létszám, találkozunk!',
-      heading: 'Biztosan indul!',
-      paragraphs: [
-        hello(a),
-        intro(
-          s.texts,
-          'confirmed',
-          'Összegyűlt a szükséges létszám, az alkalom biztosan megvalósul. Várunk szeretettel!',
-        ),
-      ],
-      details: details(t),
-      button: await myApplicationsButton(payload, a.userId, true),
-      footnote: LINK_NOTE,
-    }),
-  );
+export async function sendWorkshopConfirmed(payload: Payload, _s: ApplicationSettings, a: Applicant, t: TargetInfo) {
+  await toApplicant(payload, await emailTexts(payload), 'workshopConfirmed', a, t, { login: true });
 }
 
 /** The workshop doesn't run (minimum not met), with the next open dates. */
 export async function sendWorkshopCancelled(
   payload: Payload,
-  s: ApplicationSettings,
+  _s: ApplicationSettings,
   a: Applicant,
   t: TargetInfo,
   next: { when: string; left: string }[],
 ) {
-  await send(
-    payload,
-    a.email,
-    `Elmarad: ${t.title}, ${t.when ?? ''}`.trim(),
-    emailLayout({
-      preheader: 'Nem gyűlt össze a létszám — válassz másik időpontot.',
-      heading: 'Elmarad az alkalom',
-      paragraphs: [
-        hello(a),
-        intro(
-          s.texts,
-          'cancelledMinimum',
-          'Sajnos erre az időpontra nem gyűlt össze a szükséges létszám, ezért az alkalom elmarad.',
-        ),
-        next.length
-          ? 'A fiókodban egy kattintással átteheted a jelentkezésed egy másik időpontra:'
-          : 'Új időpontokat hamarosan meghirdetünk a weboldalon.',
-      ],
-      details: [
-        { label: 'Elmarad', value: t.when ?? t.title },
-        ...next.map((n) => ({ label: 'Új időpont', value: `${n.when} (${n.left})` })),
-      ],
-      button: await myApplicationsButton(payload, a.userId, true),
-      footnote: LINK_NOTE,
-    }),
-  );
+  const texts = await emailTexts(payload);
+  const tpl = texts.template('workshopCancelled');
+  await toApplicant(payload, texts, 'workshopCancelled', a, t, {
+    after: [(next.length ? tpl.nextDates : tpl.noNextDates) ?? ''].filter(Boolean),
+    rows: [
+      { label: tpl.cancelledLabel ?? '', value: t.when ?? t.title },
+      ...next.map((n) => ({ label: tpl.nextLabel ?? '', value: `${n.when} (${n.left})` })),
+    ],
+    login: true,
+  });
 }
 
 /** Admitted into the course ("Felvétel a kurzusba"), with a login link. */
-export async function sendAccepted(payload: Payload, s: ApplicationSettings, a: Applicant, t: TargetInfo) {
-  let button = { label: 'Belépés a fiókomba', href: siteUrl('/fiokom') };
-  try {
-    const { url } = await createLoginLink(payload, a.userId, { ttlMs: APPLICATION_LINK_TTL_MS });
-    button = { label: 'Belépés a fiókomba', href: `${url}&next=${encodeURIComponent('/fiokom')}` };
-  } catch (err) {
-    payload.logger.error({ err, msg: 'accepted e-mail: login link failed' });
-  }
-  await send(
-    payload,
-    a.email,
-    `Felvételt nyertél: ${t.title}`,
-    emailLayout({
-      preheader: 'Üdv a csoportban!',
-      heading: 'Üdv a csoportban!',
-      paragraphs: [
-        hello(a),
-        intro(
-          s.texts,
-          'accepted',
-          'Örömmel értesítünk, hogy felvettünk a kurzusra. A fiókodban megtalálod a csoport időpontjait és tudnivalóit, és termet is foglalhatsz gyakorláshoz.',
-        ),
-      ],
-      details: details(t),
-      button,
-      footnote: LINK_NOTE,
-    }),
-  );
+export async function sendAccepted(
+  payload: Payload,
+  _s: ApplicationSettings,
+  a: Applicant,
+  t: TargetInfo,
+  /** More rows, e.g. what was paid at the checkout. */
+  extra: Row[] = [],
+) {
+  const texts = await emailTexts(payload);
+  await toApplicant(payload, texts, 'accepted', a, t, { rows: details(texts.common, t, extra), login: true });
 }
 
-/** A message from staff to everyone registered for a date. */
+/** A message from staff to everyone registered for a date (their own words; the layout's button). */
 export async function sendMessage(payload: Payload, a: Applicant, t: TargetInfo, subject: string, message: string) {
-  await send(
-    payload,
-    a.email,
-    subject,
-    emailLayout({
-      preheader: message.slice(0, 90),
-      heading: subject,
-      paragraphs: [
-        hello(a),
-        ...message
-          .split(/\n\s*\n/)
-          .map((p) => p.trim())
-          .filter(Boolean),
-      ],
-      details: details(t),
-      button: { label: 'Fiókom', href: siteUrl(MY_ACCOUNT) },
-    }),
+  const texts = await emailTexts(payload);
+  const c = texts.common;
+  const e = fromTemplate(
+    // the staff's own message: the shared parts only (greeting, rows, the account button)
+    { common: c, template: () => ({ subject, heading: subject, text: message, button: c.myAccountButton }) },
+    'message',
+    {},
+    { greet: { firstName: a.firstName }, details: details(c, t), href: siteUrl(MY_ACCOUNT) },
   );
+  await send(payload, a.email, e);
 }
 
 // ── to staff (notifyEmails) ─────────────────────────────────────────────────
@@ -301,23 +256,27 @@ export async function sendStaffNew(
   t: TargetInfo,
   message?: string | null,
 ) {
+  const texts = await emailTexts(payload);
+  const c = texts.common;
   await send(
     payload,
     s.notifyEmails,
-    `Új jelentkezés: ${a.name} — ${t.title}`,
-    emailLayout({
-      preheader: `${kind} · ${t.when ?? t.title}`,
-      heading: 'Új jelentkezés',
-      paragraphs: [`${a.name} jelentkezett (${kind}).`],
-      details: [
-        { label: 'Név', value: a.name },
-        { label: 'E-mail', value: a.email },
-        ...(a.phone ? [{ label: 'Telefon', value: a.phone }] : []),
-        ...details(t),
-        ...(message ? [{ label: 'Üzenet', value: message }] : []),
-      ],
-      button: { label: 'Megnyitás az adminban', href: siteUrl(`/admin/collections/applications/${applicationId}`) },
-    }),
+    fromTemplate(
+      texts,
+      'staffNew',
+      { ...varsOf(a, t), fajta: kind },
+      {
+        greet: false,
+        details: [
+          { label: c.labelName, value: a.name },
+          { label: c.labelEmail, value: a.email },
+          ...(a.phone ? [{ label: c.labelPhone, value: a.phone }] : []),
+          ...details(c, t),
+          ...(message ? [{ label: c.labelMessage, value: message }] : []),
+        ],
+        href: siteUrl(`/admin/collections/applications/${applicationId}`),
+      },
+    ),
   );
 }
 
@@ -329,20 +288,24 @@ export async function sendStaffCancellation(
   count: string,
   movedTo?: string,
 ) {
+  const texts = await emailTexts(payload);
+  const c = texts.common;
   await send(
     payload,
     s.notifyEmails,
-    `${movedTo ? 'Áthelyezés' : 'Lemondás'}: ${a.name} — ${t.title}${t.when ? `, ${t.when}` : ''}`,
-    emailLayout({
-      preheader: count,
-      heading: movedTo ? 'Egy résztvevő időpontot váltott' : 'Egy résztvevő lemondta',
-      paragraphs: [movedTo ? `${a.name} áttette a jelentkezését: ${movedTo}.` : `${a.name} lemondta a jelentkezését.`],
-      details: [
-        { label: 'Név', value: a.name },
-        { label: 'E-mail', value: a.email },
-        ...details(t),
-        { label: 'Létszám most', value: count },
-      ],
-    }),
+    fromTemplate(
+      texts,
+      movedTo ? 'staffMoved' : 'staffCancelled',
+      { ...varsOf(a, t), regi: t.when, ...(movedTo ? { mikor: movedTo } : {}) },
+      {
+        greet: false,
+        details: [
+          { label: c.labelName, value: a.name },
+          { label: c.labelEmail, value: a.email },
+          ...details(c, t),
+          { label: c.labelCount, value: count },
+        ],
+      },
+    ),
   );
 }

@@ -1,11 +1,20 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import SmartLink from '@/components/SmartLink';
 import SignupDialog from '@/components/signup/SignupDialog';
 import { SectionHeading, SectionIntro } from '@/components/ui';
 import WorkshopFeature from '@/components/WorkshopFeature';
-import { getOpenWorkshopSessions, getPastWorkshops, getSiteSettings, getUi, getUpcomingWorkshops } from '@/lib/data';
+import {
+  getOnlinePayments,
+  getOpenWorkshopSessions,
+  getPastWorkshops,
+  getSiteSettings,
+  getUi,
+  getUpcomingWorkshops,
+} from '@/lib/data';
 import { dateRange, dayOfMonth, monthDayShort, monthShort, weekday } from '@/lib/dates';
 import { fill } from '@/lib/format';
+import { checkoutPath } from '@/lib/payments/links';
 
 import type { BlockProps } from './types';
 
@@ -82,7 +91,11 @@ export async function PastWorkshops({ block, className }: BlockProps<'pastWorksh
 
 /** The next Nyitott Műhely dates: live places and state, "Jelentkezem" opens the sign-up form. */
 export async function OpenWorkshopSessions({ block, className }: BlockProps<'openWorkshopSessions'>) {
-  const [ui, sessions] = await Promise.all([getUi(), getOpenWorkshopSessions(block.limit)]);
+  const [ui, sessions, online] = await Promise.all([
+    getUi(),
+    getOpenWorkshopSessions(block.limit),
+    getOnlinePayments(),
+  ]);
   const leftText = (left: number | null) =>
     left == null ? undefined : fill(ui.sessions.left, { count: String(left) });
   return (
@@ -116,7 +129,6 @@ export async function OpenWorkshopSessions({ block, className }: BlockProps<'ope
                   ? { text: ui.sessions.full, tone: 'text-rust-dark' }
                   : { text: ui.sessions.closed, tone: 'text-muted' };
           const bookable = state.state === 'open' || state.state === 'confirmed';
-          const when = `${monthDayShort(session.date)}, ${weekday(session.date)} · ${session.startTime}–${session.endTime}`;
           return (
             <div
               key={session.id}
@@ -145,19 +157,30 @@ export async function OpenWorkshopSessions({ block, className }: BlockProps<'ope
                 {status.sub && <span className="text-sm text-muted">{status.sub}</span>}
               </div>
               <div className="col-start-2 sm:col-start-auto">
-                {bookable && (
-                  <SignupDialog
-                    label={ui.sessions.book}
-                    buttonClassName="btn btn-md btn-primary"
-                    target={{
-                      kind: 'workshop',
-                      sessionId: session.id,
-                      title: `${block.title} — ${monthDayShort(session.date)}`,
-                      details: [when, session.place, session.description].filter(Boolean) as string[],
-                      price: session.price,
-                    }}
-                  />
-                )}
+                {bookable &&
+                  (online ? (
+                    // sign-up with payment: the checkout page (lib/payments)
+                    <Link href={checkoutPath(session.code)} className="btn btn-md btn-primary">
+                      {ui.sessions.book}
+                    </Link>
+                  ) : (
+                    // online payment switched off: the free sign-up, paid on site
+                    <SignupDialog
+                      label={ui.sessions.book}
+                      buttonClassName="btn btn-md btn-primary"
+                      target={{
+                        kind: 'workshop',
+                        sessionId: session.id,
+                        title: `${block.title} — ${monthDayShort(session.date)}`,
+                        details: [
+                          `${monthDayShort(session.date)}, ${weekday(session.date)} · ${session.startTime}–${session.endTime}`,
+                          session.place,
+                          session.description,
+                        ].filter(Boolean) as string[],
+                        price: session.price,
+                      }}
+                    />
+                  ))}
               </div>
             </div>
           );

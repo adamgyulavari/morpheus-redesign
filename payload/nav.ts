@@ -1,12 +1,12 @@
 /**
  * The admin sidebar in one place: which group each collection and global is in, and the groups'
  * order. "Napi munka" is drawn by payload/components/NavTop (beforeNavLinks), because it also holds
- * the custom views (Jelentkezések, Teremnaptár): its collections are left out of Payload's groups
+ * the custom views (Jelentkezések, Teremnaptár, Havi számlázás): its collections are left out of Payload's groups
  * (`group: false` — their pages stay as they are) and listed in DAILY.
  */
 import type { CollectionConfig, GlobalConfig } from 'payload';
 
-export const NAV_GROUPS = ['Napi munka', 'Weboldal', 'Emberek', 'Beállítások'] as const;
+export const NAV_GROUPS = ['Napi munka', 'Weboldal', 'Emberek', 'Pénzügyek', 'Beállítások'] as const;
 type NavGroup = (typeof NAV_GROUPS)[number];
 
 const GROUP_OF: Record<string, NavGroup> = {
@@ -25,6 +25,10 @@ const GROUP_OF: Record<string, NavGroup> = {
   // accounts and contacts
   users: 'Emberek',
   contactPeople: 'Emberek',
+  // money: read-mostly lists (lib/payments)
+  orders: 'Pénzügyek',
+  payments: 'Pénzügyek',
+  invoices: 'Pénzügyek',
   // set up once, or the raw lists behind the dashboard and the room calendar
   ctaBands: 'Beállítások',
   legalPages: 'Beállítások',
@@ -39,6 +43,8 @@ const GROUP_OF: Record<string, NavGroup> = {
   ui: 'Beállítások',
   roomBookingSettings: 'Beállítások',
   applicationSettings: 'Beállítások',
+  billingSettings: 'Beállítások',
+  emailTexts: 'Beállítások',
 };
 
 /** "Napi munka" after Jelentkezések and Teremnaptár, in this order (NavTop). */

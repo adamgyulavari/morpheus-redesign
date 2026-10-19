@@ -27,13 +27,16 @@ export const Users: CollectionConfig = {
   labels: { singular: 'Felhasználó', plural: 'Felhasználók' },
   auth: {
     tokenExpiration: TOKEN_EXPIRATION,
+    // the texts: Beállítások → E-mailek (payload/email-texts.ts)
     verify: {
-      generateEmailSubject: () => verifyEmail.subject,
-      generateEmailHTML: ({ token, user }) => verifyEmail.html(token, user),
+      generateEmailSubject: async ({ req, token, user }) => (await verifyEmail(req.payload, token, user)).subject,
+      generateEmailHTML: async ({ req, token, user }) => (await verifyEmail(req.payload, token, user)).html,
     },
     forgotPassword: {
-      generateEmailSubject: () => resetPassword.subject,
-      generateEmailHTML: (args) => resetPassword.html(args?.token ?? '', args?.user),
+      generateEmailSubject: async (args) =>
+        args?.req ? (await resetPassword(args.req.payload, args.token ?? '', args.user)).subject : 'Új jelszó',
+      generateEmailHTML: async (args) =>
+        args?.req ? (await resetPassword(args.req.payload, args.token ?? '', args.user)).html : '',
     },
     maxLoginAttempts: 5,
     lockTime: 10 * 60 * 1000,
@@ -88,6 +91,36 @@ export const Users: CollectionConfig = {
       fields: [text('lastName', 'Vezetéknév', { required: true }), text('firstName', 'Keresztnév', { required: true })],
     },
     text('phone', 'Telefonszám'),
+    {
+      // the buyer on invoices; prefilled at checkout (/fizetes), editable in /fiokom/adatok
+      name: 'billing',
+      label: 'Számlázási adatok',
+      type: 'group',
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            text('name', 'Számlázási név', { description: 'Üresen: a saját neve.' }),
+            text('taxNumber', 'Adószám', { description: 'Csak cégnek.' }),
+          ],
+        },
+        {
+          type: 'row',
+          fields: [
+            text('zip', 'Irányítószám'),
+            text('city', 'Város'),
+            {
+              name: 'country',
+              label: 'Ország',
+              type: 'text',
+              defaultValue: 'HU',
+              admin: { description: 'Kétbetűs kód.' },
+            },
+          ],
+        },
+        text('address', 'Cím (utca, házszám)'),
+      ],
+    },
     {
       name: 'name',
       label: 'Név',

@@ -117,6 +117,11 @@ function Actions({ item }: { item: UpcomingItem }) {
       canCancel={a.canCancel}
       canMove={a.canMove}
       moveTargets={a.moveTargets}
+      cancelNote={
+        a.canMove
+          ? 'A befizetett díjat lemondás esetén nem térítjük vissza. Ha egy másik időpont jó, inkább helyezd át.'
+          : undefined
+      }
     />
   );
 }

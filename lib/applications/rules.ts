@@ -16,12 +16,27 @@ const HOUR = 3_600_000;
 // ── what counts ─────────────────────────────────────────────────────────────
 
 /** Statuses that hold the person's one application for a date or course (the database guard uses them too). */
-export const ACTIVE_STATUSES = ['registered', 'new', 'interview', 'accepted'] as const satisfies ApplicationStatus[];
-/** Statuses that take a place and count toward a workshop's minimum. 3B: registered and paid. */
+export const ACTIVE_STATUSES = [
+  'held',
+  'registered',
+  'new',
+  'interview',
+  'accepted',
+] as const satisfies ApplicationStatus[];
+/**
+ * Statuses that take a place: paid (or paid offline), and awaiting payment while the hold lasts
+ * (`holdUntil`; a hold that ran out simply stops counting — nothing changes its status).
+ */
+export const PLACE_STATUSES = ['held', 'registered'] as const satisfies ApplicationStatus[];
+/** Statuses that count toward a workshop's minimum: paid only. */
 export const COUNTED_STATUSES = ['registered'] as const satisfies ApplicationStatus[];
 
 export const isActive = (status: ApplicationStatus) => (ACTIVE_STATUSES as readonly string[]).includes(status);
 export const isCounted = (status: ApplicationStatus) => (COUNTED_STATUSES as readonly string[]).includes(status);
+
+/** Does this application take a place now? */
+export const takesPlace = (status: ApplicationStatus, holdUntil: Date | null | undefined, now: Date) =>
+  status === 'registered' || (status === 'held' && Boolean(holdUntil) && (holdUntil as Date) > now);
 
 /** Places left (null: no limit). Never negative. */
 export function placesLeft(max: number | null | undefined, taken: number): number | null {
@@ -46,8 +61,10 @@ export type WorkshopFacts = {
   bookable: boolean;
   minParticipants: number;
   maxParticipants: number | null;
-  /** Counted sign-ups (COUNTED_STATUSES). */
+  /** Places taken (PLACE_STATUSES: paid, and awaiting payment within the hold). */
   taken: number;
+  /** Paid sign-ups (COUNTED_STATUSES): what the minimum is checked against. */
+  paid: number;
 };
 
 export const cutoffAt = (start: Date, hours: number) => new Date(start.getTime() - hours * HOUR);
@@ -68,7 +85,7 @@ export function workshopState(w: WorkshopFacts, now: Date, r: ApplicationRules):
   if (w.workshopStatus === 'confirmed') return { state: 'confirmed', left };
   // past the cutoff and not decided yet (the job runs every few minutes): not open any more
   if (now >= cutoffAt(w.start, r.workshopCutoffHours)) return { state: 'closed' };
-  const needed = Math.max(0, w.minParticipants - w.taken);
+  const needed = Math.max(0, w.minParticipants - w.paid);
   return needed === 0 ? { state: 'confirmed', left } : { state: 'open', needed, left };
 }
 
@@ -87,8 +104,8 @@ export function isCutoffDue(w: WorkshopFacts, now: Date, r: ApplicationRules): b
 }
 
 /** The decision at the cutoff. */
-export const cutoffOutcome = (taken: number, minParticipants: number): 'confirmed' | 'cancelled' =>
-  taken >= minParticipants ? 'confirmed' : 'cancelled';
+export const cutoffOutcome = (paid: number, minParticipants: number): 'confirmed' | 'cancelled' =>
+  paid >= minParticipants ? 'confirmed' : 'cancelled';
 
 /** May the participant cancel now? (Until `userCancelHours` before the start.) */
 export function canCancel(start: Date, now: Date, r: ApplicationRules): RuleResult {

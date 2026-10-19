@@ -48,6 +48,15 @@ export function CheckIcon({ className = 'h-5 w-5 shrink-0' }: IconProps) {
   );
 }
 
+export function LockIcon({ className = 'h-4 w-4 shrink-0' }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" strokeWidth={1.8} {...stroke} aria-hidden="true">
+      <rect x="5" y="11" width="14" height="10" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </svg>
+  );
+}
+
 export function PersonIcon({ className = 'h-5 w-5' }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" strokeWidth={1.6} {...stroke} aria-hidden="true">
@@ -78,6 +87,15 @@ export function CalendarIcon({ className = 'h-[18px] w-[18px]' }: IconProps) {
     <svg className={className} viewBox="0 0 24 24" strokeWidth={1.8} {...stroke} aria-hidden="true">
       <rect x="4" y="5.5" width="16" height="14.5" rx="2" />
       <path d="M4 10h16M8.5 3.5v4M15.5 3.5v4" />
+    </svg>
+  );
+}
+
+export function ReceiptIcon({ className = 'h-[18px] w-[18px]' }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" strokeWidth={1.8} {...stroke} aria-hidden="true">
+      <path d="M6 3.5h12v17l-2.5-1.5-2 1.5-1.5-1.5-1.5 1.5-2-1.5L6 20.5z" />
+      <path d="M9 8h6M9 11.5h6M9 15h3.5" />
     </svg>
   );
 }
