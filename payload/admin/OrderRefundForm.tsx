@@ -2,10 +2,9 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-
-import s from '@/components/rooms/calendar.module.css';
 import { formatHuf } from '@/lib/format';
 import { refundOrderAction } from '@/lib/payments/admin-actions';
+import s from './admin.module.css';
 
 /** The refund box: amount (default: all that is left), the reason, then a second click to confirm. */
 export function OrderRefundForm({

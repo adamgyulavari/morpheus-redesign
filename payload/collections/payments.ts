@@ -148,7 +148,7 @@ export const Orders: CollectionConfig = {
       // admins: send money back (lib/payments/refunds)
       name: 'refund',
       type: 'ui',
-      admin: { components: { Field: '@/payload/components/OrderRefund#OrderRefund' } },
+      admin: { components: { Field: '@/payload/admin/OrderRefund#OrderRefund' } },
     },
     {
       name: 'invoices',

@@ -78,7 +78,7 @@ const block = ({ slug, label, description, fields = [], lists = [], dependsOn = 
             name: 'help',
             type: 'ui',
             admin: {
-              components: { Field: '@/payload/components/BlockHelp#BlockHelp' },
+              components: { Field: '@/payload/admin/BlockHelp#BlockHelp' },
               custom: { text: description, lists },
             },
           } as Field,

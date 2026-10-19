@@ -21,7 +21,7 @@ export type WeekItem = { time: string; title: string; kind: SessionKind; place: 
 export const unplacedListHref = (now = new Date()) =>
   `/admin/collections/sessions?where[and][0][locationType][equals]=unplaced&where[and][1][status][equals]=scheduled&where[and][2][start][greater_than]=${encodeURIComponent(now.toISOString())}&sort=start`;
 
-export async function adminHome(payload: Payload, now = new Date()) {
+export async function homeData(payload: Payload, now = new Date()) {
   const [apps, waiting, unplaced, settings, roomName] = await Promise.all([
     dashboard(payload, now),
     countWaiting(payload),
@@ -116,4 +116,4 @@ export async function adminHome(payload: Payload, now = new Date()) {
   return { todos, fill, week };
 }
 
-export type AdminHome = Awaited<ReturnType<typeof adminHome>>;
+export type HomeData = Awaited<ReturnType<typeof homeData>>;

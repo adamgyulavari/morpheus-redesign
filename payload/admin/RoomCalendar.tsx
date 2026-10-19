@@ -14,6 +14,7 @@ import { useSearchParams } from 'next/navigation';
 import { type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
 import Dialog from '@/components/Dialog';
+import Calendar from '@/components/rooms/RoomCalendar';
 import { todayInBudapest } from '@/lib/dates';
 import {
   adminSchedule,
@@ -41,8 +42,7 @@ import {
 import type { ScheduleEvent, WorkshopFill } from '@/lib/rooms/server';
 import { addDays, at, clockOf, dayOf, daysOfMonth } from '@/lib/rooms/time';
 
-import s from './calendar.module.css';
-import RoomCalendar from './RoomCalendar';
+import s from './admin.module.css';
 
 type Options = NonNullable<Awaited<ReturnType<typeof calendarOptions>>>;
 type Unplaced = NonNullable<Awaited<ReturnType<typeof adminSchedule>>>['unplaced'];
@@ -64,7 +64,7 @@ type Draft = {
 
 const EDITOR = 'cal-editor';
 
-export default function AdminRoomCalendar({ isAdmin }: { isAdmin: boolean }) {
+export default function RoomCalendar({ isAdmin }: { isAdmin: boolean }) {
   const [opts, setOpts] = useState<Options | null>(null);
   const [version, setVersion] = useState(0);
   const [clearSelection, setClearSelection] = useState(0);
@@ -144,7 +144,7 @@ export default function AdminRoomCalendar({ isAdmin }: { isAdmin: boolean }) {
   return (
     <div className={s.admin}>
       <div className={s.layout}>
-        <RoomCalendar
+        <Calendar
           theme="admin"
           rooms={opts.rooms}
           load={load}

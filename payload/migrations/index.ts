@@ -31,6 +31,7 @@ import * as migration_20261017_025423_monthly_billing from './20261017_025423_mo
 import * as migration_20261019_170346_email_texts from './20261019_170346_email_texts';
 import * as migration_20261019_182112_facebook_sync from './20261019_182112_facebook_sync';
 import * as migration_20261019_202633_refund_note from './20261019_202633_refund_note';
+import * as migration_20261019_225500_ui_texts from './20261019_225500_ui_texts';
 
 export const migrations = [
   {
@@ -197,5 +198,10 @@ export const migrations = [
     up: migration_20261019_202633_refund_note.up,
     down: migration_20261019_202633_refund_note.down,
     name: '20261019_202633_refund_note',
+  },
+  {
+    up: migration_20261019_225500_ui_texts.up,
+    down: migration_20261019_225500_ui_texts.down,
+    name: '20261019_225500_ui_texts',
   },
 ];

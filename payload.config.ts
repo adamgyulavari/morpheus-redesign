@@ -33,11 +33,12 @@ import {
 import { Users } from './payload/collections/Users';
 import { emailAdapter } from './payload/email';
 import { EmailTexts } from './payload/email-texts';
-import { ApplicationSettings, BillingSettings, RoomBookingSettings, SiteSettings, Ui } from './payload/globals';
+import { ApplicationSettings, BillingSettings, RoomBookingSettings, SiteSettings } from './payload/globals';
 import { migrations } from './payload/migrations';
 import { arrangeNav } from './payload/nav';
 import { redirectsConfig, redirectsTranslationsHu } from './payload/redirects';
 import { generateDescription, generateImage, generateTitle, generateURL, seoFields } from './payload/seo';
+import { UiTexts } from './payload/ui-texts';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -88,23 +89,23 @@ export default buildConfig({
     theme: 'dark',
     components: {
       graphics: {
-        Logo: '@/payload/components/Graphics#AdminLogo',
-        Icon: '@/payload/components/Graphics#AdminIcon',
+        Logo: '@/payload/admin/Graphics#Logo',
+        Icon: '@/payload/admin/Graphics#Icon',
       },
-      providers: ['@/payload/components/AdminTheme#AdminTheme'],
+      providers: ['@/payload/admin/Theme#Theme'],
       // back to the website, in the header
-      actions: ['@/payload/components/SiteLink#SiteLink'],
+      actions: ['@/payload/admin/SiteLink#SiteLink'],
       // Irányítópult, Jelentkezések, Teremnaptár above the groups (payload/nav.ts)
-      beforeNavLinks: ['@/payload/components/NavTop#NavTop'],
+      beforeNavLinks: ['@/payload/admin/NavTop#NavTop'],
       // the admin home: to-dos, the coming week, quick actions — above the card grid
-      beforeDashboard: ['@/payload/components/AdminHome#AdminHome'],
+      beforeDashboard: ['@/payload/admin/Home#Home'],
       views: {
         // the room calendar (lib/rooms, components/rooms)
-        teremnaptar: { Component: '@/payload/views/RoomCalendarView#RoomCalendarView', path: '/teremnaptar' },
+        teremnaptar: { Component: '@/payload/admin/views#RoomCalendarView', path: '/teremnaptar' },
         // payments, admissions, reviews (lib/applications, components/applications)
-        jelentkezesek: { Component: '@/payload/views/ApplicationsView#ApplicationsView', path: '/jelentkezesek' },
+        jelentkezesek: { Component: '@/payload/admin/views#ApplicationsView', path: '/jelentkezesek' },
         // the monthly invoices: szakmai fees, kezdő instalments (lib/invoicing/run)
-        szamlazas: { Component: '@/payload/views/BillingRunView#BillingRunView', path: '/szamlazas' },
+        szamlazas: { Component: '@/payload/admin/views#BillingRunView', path: '/szamlazas' },
       },
     },
     dateFormat: 'yyyy. MM. dd. HH:mm',
@@ -122,6 +123,7 @@ export default buildConfig({
     Pages,
     CtaBands,
     LegalPages,
+    UiTexts,
     Productions,
     Shows,
     Venues,
@@ -145,7 +147,7 @@ export default buildConfig({
     Invoices,
     MockPayments,
   ]),
-  globals: arrangeNav([SiteSettings, Ui, RoomBookingSettings, ApplicationSettings, BillingSettings, EmailTexts]),
+  globals: arrangeNav([SiteSettings, RoomBookingSettings, ApplicationSettings, BillingSettings, EmailTexts]),
   editor: lexicalEditor(),
   // SMTP when SMTP_HOST is set; otherwise e-mails (with their links) are written to the console
   email: emailAdapter(),

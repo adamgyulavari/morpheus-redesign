@@ -128,10 +128,20 @@ A page, as `lib/data.ts` returns it (`Page` in `lib/types.ts`), looks like:
 ### UI dictionary
 
 Component text that isn't page content — button labels ("Jegyek", "Bővebben"), empty states, form
-labels, aria labels — lives in one editable dictionary, the **UI dictionary** global in the admin
-(*Felületi szövegek*, typed as `UiStrings`). Server components read it with `getUi()`; client components with `useUi()` (provided once in
-the root layout). Only UI strings may contain placeholders (`"{count} előadás a következő hetekben"`);
-page content never does.
+labels, aria labels — is in the admin, **Beállítások → Felületi szövegek**: the `uiTexts` collection,
+one document per language with its texts as one JSON value (`payload/ui-texts.ts`).
+`payload/ui-catalogue.ts` lists the keys, grouped, with their admin labels; it builds the admin's form
+and the `UiStrings` type. The wording itself is only in the database.
+
+- Server components read the texts with `getUi()`, client components with `useUi()` (provided in the
+  root layout). The server loads every language once and reloads them when one is saved.
+- A new text: its key and label in the catalogue, and its Hungarian wording in a migration that
+  adds it to the `hu` document (a data change — no new column).
+- Hungarian is complete (saving refuses a blank text); another language falls back to it text by
+  text, and a key missing everywhere shows as its path (`common.close`).
+- The texts follow ICU MessageFormat so they can be translated later: `{name}` is filled in by the
+  site. Headings mark their highlighted part with `*asterisks*`, as the page content does. Page
+  content never has placeholders.
 
 ### Server vs client components
 
@@ -248,7 +258,7 @@ that block. Links open the admin in a new tab.
   `components/edit/EditMode.tsx` decides in the browser, from the hint cookie
   (`morpheus-signed-in=staff`), whether to load the overlay (`EditOverlay.tsx`, a separate chunk
   visitors never download). The admin checks the real permissions. Not shown in live preview.
-- `payload/components/BlockFocus.tsx` (a UI field on Pages) handles `?blokk=<block id>`. It relies on
+- `payload/admin/BlockFocus.tsx` (a UI field on Pages) handles `?blokk=<block id>`. It relies on
   Payload's DOM ids for block rows (`blocks-row-<n>`): check it after a Payload upgrade.
 - The role is read at login: someone who becomes staff sees the buttons after logging in again.
 
