@@ -14,3 +14,6 @@ dev.dump
 
 # in-app-prototype runtime (never committed)
 /dev/Prototype.tsx
+
+# schema snapshots of the migrations: generated locally (scripts/migration-snapshot.ts)
+/payload/migrations/*.json
