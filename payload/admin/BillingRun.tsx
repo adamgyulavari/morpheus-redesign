@@ -6,10 +6,9 @@
  * Below: the transfer invoices not yet paid, with "Befizetve".
  */
 import { useCallback, useEffect, useState, useTransition } from 'react';
-
-import s from '@/components/rooms/calendar.module.css';
 import { formatHuf } from '@/lib/format';
 import { billingRunData, issueRunAction, markPaidAction } from '@/lib/invoicing/admin-actions';
+import s from './admin.module.css';
 
 type Data = NonNullable<Awaited<ReturnType<typeof billingRunData>>>;
 type Line = Data['lines'][number];
@@ -25,7 +24,7 @@ const MODE: Record<string, string> = {
   live: 'Éles számlázás',
 };
 
-export default function AdminBillingRun() {
+export default function BillingRun() {
   const [month, setMonth] = useState(thisMonth);
   const [data, setData] = useState<Data | null>(null);
   const [picked, setPicked] = useState<Record<string, boolean>>({});

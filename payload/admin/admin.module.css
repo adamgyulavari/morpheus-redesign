@@ -1,0 +1,262 @@
+/*
+ * The admin's own tools (the Teremnaptár, Jelentkezések and Havi számlázás pages, the refund box):
+ * Payload's theme variables, no Tailwind. The calendar inside is styled by
+ * components/rooms/calendar.module.css (theme "admin").
+ */
+
+.admin {
+  --accent: #f9c86a;
+  --accent-text: #0b3a3f;
+  --danger: #e0603a;
+  color: var(--theme-text);
+}
+
+/* buttons in panels and dialogs */
+.group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.btn {
+  border: 1px solid var(--theme-elevation-150);
+  background: var(--theme-elevation-50);
+  color: var(--theme-text);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1.2;
+  text-decoration: none;
+}
+.btn:hover {
+  border-color: var(--accent);
+}
+.btn[aria-pressed="true"],
+.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+.danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* side panel, sheets and dialogs */
+.layout {
+  display: grid;
+  gap: 16px;
+}
+@media (min-width: 1100px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 280px;
+  }
+}
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-self: start;
+  min-width: 0;
+}
+.panel {
+  background: var(--theme-elevation-50);
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-self: start;
+}
+.side > .panel {
+  align-self: stretch;
+}
+.panelTitle {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+}
+.chip {
+  border: 1px dashed var(--danger);
+  border-radius: 10px;
+  padding: 8px 10px;
+  cursor: grab;
+  background: var(--theme-elevation-0);
+  font-size: 13px;
+}
+.muted {
+  color: var(--theme-elevation-500);
+  font-size: 13px;
+  margin: 0;
+}
+.error {
+  color: var(--danger);
+  font-weight: 600;
+  font-size: 14px;
+  margin: 0;
+}
+.notice {
+  font-size: 14px;
+  margin: 0;
+}
+
+.dialog {
+  position: relative;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 8px;
+  background: var(--theme-elevation-50);
+  color: var(--theme-text);
+  padding: 20px;
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  overflow: auto;
+}
+.close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid var(--theme-elevation-150);
+  background: var(--theme-elevation-0);
+  color: var(--theme-text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.close:hover {
+  border-color: var(--accent);
+}
+.dialog::backdrop {
+  background: rgb(8 31 34 / 0.6);
+}
+.dialog h2 {
+  font-size: 20px;
+  margin: 0 48px 12px 0;
+}
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  color: var(--theme-elevation-500);
+}
+.steps [aria-current="step"] {
+  color: var(--theme-text);
+  font-weight: 700;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--theme-elevation-150);
+  padding-top: 12px;
+}
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+/* a group of checkboxes laid out like a field */
+.fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.field input,
+.field select,
+.field textarea {
+  font: inherit;
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--theme-text);
+  background: var(--theme-elevation-0);
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.check {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 14px;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.table td,
+.table th {
+  text-align: left;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--theme-elevation-150);
+  vertical-align: top;
+}
+.clash {
+  color: var(--danger);
+}
+
+/* open / close: a short fade and rise (native <dialog>, no script) */
+@media (prefers-reduced-motion: no-preference) {
+  .dialog {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease,
+      overlay 0.2s allow-discrete,
+      display 0.2s allow-discrete;
+  }
+  .dialog[open] {
+    opacity: 1;
+    transform: none;
+  }
+  @starting-style {
+    .dialog[open] {
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+    }
+  }
+  .dialog::backdrop {
+    background-color: transparent;
+    transition:
+      background-color 0.2s ease,
+      overlay 0.2s allow-discrete,
+      display 0.2s allow-discrete;
+  }
+  .dialog[open]::backdrop {
+    background-color: rgb(8 31 34 / 0.6);
+  }
+  @starting-style {
+    .dialog[open]::backdrop {
+      background-color: transparent;
+    }
+  }
+}

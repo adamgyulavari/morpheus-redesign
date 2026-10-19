@@ -258,7 +258,7 @@ that block. Links open the admin in a new tab.
   `components/edit/EditMode.tsx` decides in the browser, from the hint cookie
   (`morpheus-signed-in=staff`), whether to load the overlay (`EditOverlay.tsx`, a separate chunk
   visitors never download). The admin checks the real permissions. Not shown in live preview.
-- `payload/components/BlockFocus.tsx` (a UI field on Pages) handles `?blokk=<block id>`. It relies on
+- `payload/admin/BlockFocus.tsx` (a UI field on Pages) handles `?blokk=<block id>`. It relies on
   Payload's DOM ids for block rows (`blocks-row-<n>`): check it after a Payload upgrade.
 - The role is read at login: someone who becomes staff sees the buttons after logging in again.
 

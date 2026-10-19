@@ -315,7 +315,7 @@ export const CourseGroups: CollectionConfig = {
     {
       name: 'fillMonth',
       type: 'ui',
-      admin: { components: { Field: '@/payload/components/FillMonthLink#FillMonthLink' } },
+      admin: { components: { Field: '@/payload/admin/FillMonthLink#FillMonthLink' } },
     },
     {
       name: 'sessions',

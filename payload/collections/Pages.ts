@@ -55,7 +55,7 @@ export const Pages: CollectionConfig = {
             {
               name: 'blockFocus',
               type: 'ui',
-              admin: { components: { Field: '@/payload/components/BlockFocus#BlockFocus' } },
+              admin: { components: { Field: '@/payload/admin/BlockFocus#BlockFocus' } },
             },
             {
               name: 'blocks',

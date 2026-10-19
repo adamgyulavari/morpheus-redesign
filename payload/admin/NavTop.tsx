@@ -1,11 +1,10 @@
 import { NavGroup } from '@payloadcms/ui';
 import type { ServerProps } from 'payload';
-
-import { unplacedListHref } from '@/lib/admin/home';
 import { countWaiting } from '@/lib/applications/server';
 import { countUnplaced } from '@/lib/rooms/server';
 import { userIsStaffOrAdmin } from '@/payload/access';
 import { DAILY } from '@/payload/nav';
+import { unplacedListHref } from './home-data';
 
 const row = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 } as const;
 

@@ -1,4 +1,4 @@
-/* The admin home (AdminHome): Payload's theme variables, no Tailwind. */
+/* The admin home (Home.tsx): Payload's theme variables, no Tailwind. */
 
 .home {
   display: grid;
