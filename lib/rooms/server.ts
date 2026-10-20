@@ -351,8 +351,9 @@ async function scheduleGroups(payload: Payload, ids: number[] | null): Promise<S
   return docs.map((g) => ({
     id: g.id,
     title: g.title,
-    startDate: dayOf(new Date(g.startDate)),
-    endDate: dayOf(new Date(g.endDate)),
+    // a társulat without dates: every month
+    startDate: g.startDate ? dayOf(new Date(g.startDate)) : '0000-01-01',
+    endDate: g.endDate ? dayOf(new Date(g.endDate)) : '9999-12-31',
     schedule: (g.defaultSchedule ?? []).map((e) => ({
       weekday: Number(e.weekday),
       startTime: e.startTime,

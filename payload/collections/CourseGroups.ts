@@ -126,6 +126,7 @@ export const CourseGroups: CollectionConfig = {
           options: [
             { label: 'Kezdő', value: 'kezdo' },
             { label: 'Szakmai', value: 'szakmai' },
+            { label: 'Társulat', value: 'tarsulat' },
             { label: 'Egyéb', value: 'egyeb' },
           ],
         },
@@ -137,14 +138,21 @@ export const CourseGroups: CollectionConfig = {
     {
       type: 'row',
       fields: [
-        date('startDate', 'Kezdés', { required: true }),
+        {
+          ...date('startDate', 'Kezdés', { description: 'A társulatnál nem kell.' }),
+          validate: (value: unknown, { siblingData }: { siblingData: { type?: string | null } }) =>
+            value || siblingData.type === 'tarsulat' ? true : 'Add meg a kezdés napját.',
+        },
         {
           ...date('endDate', 'Befejezés', {
-            required: true,
-            description: 'Eddig a napig számít aktív hallgatónak, aki a csoportban van.',
+            description:
+              'Eddig a napig számít aktív hallgatónak, aki a csoportban van. A társulatnál üresen: folyamatos.',
           }),
-          validate: (value: unknown, { siblingData }: { siblingData: { startDate?: string | null } }) => {
-            if (!value) return 'Add meg a befejezés napját.';
+          validate: (
+            value: unknown,
+            { siblingData }: { siblingData: { startDate?: string | null; type?: string | null } },
+          ) => {
+            if (!value) return siblingData.type === 'tarsulat' ? true : 'Add meg a befejezés napját.';
             const start = siblingData.startDate;
             return !start || String(value).slice(0, 10) >= String(start).slice(0, 10)
               ? true
@@ -387,7 +395,7 @@ export const CourseGroups: CollectionConfig = {
   ],
 };
 
-/** True until the end of the group's last day (Budapest). */
+/** True until the end of the group's last day (Budapest); without an end (a társulat) always. */
 export function isOngoing(endDate: string | null | undefined): boolean {
-  return Boolean(endDate) && String(endDate).slice(0, 10) >= todayInBudapest();
+  return !endDate || String(endDate).slice(0, 10) >= todayInBudapest();
 }

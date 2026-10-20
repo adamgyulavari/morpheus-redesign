@@ -135,7 +135,7 @@ export function courseFacts(g: CourseGroup, taken: number): CourseFacts {
     enabled: mode !== 'closed',
     opensAt: inWindow && g.signup?.opensAt ? new Date(g.signup.opensAt) : null,
     // without an end: until the course starts
-    closesAt: inWindow && g.signup?.closesAt ? new Date(g.signup.closesAt) : new Date(g.startDate),
+    closesAt: inWindow && g.signup?.closesAt ? new Date(g.signup.closesAt) : g.startDate ? new Date(g.startDate) : null,
     capacity: g.signup?.capacity ?? null,
     taken,
   };
@@ -155,7 +155,7 @@ export async function workshopInfo(payload: Payload, s: Session, rules: Applicat
 export function courseInfo(g: CourseGroup): TargetInfo {
   return {
     title: g.title,
-    when: dateRange(g.startDate.slice(0, 10), g.endDate.slice(0, 10)),
+    when: g.startDate && g.endDate ? dateRange(g.startDate.slice(0, 10), g.endDate.slice(0, 10)) : undefined,
     // kezdő: no price here — it depends on the chosen payment option (the e-mails show what was
     // paid); otherwise the group's price (label)
     price: signupKindOf(g) === 'beginner' ? undefined : g.signup?.priceLabel || huf(g.signup?.price),
@@ -408,7 +408,7 @@ export async function allowedActions(
       : null;
     if (a.status !== 'registered') return { cancel: no, move: false };
     // without a group (waiting to be placed): always
-    return { cancel: g ? canCancelCourse(new Date(g.startDate), now) : { ok: true }, move: false };
+    return { cancel: g?.startDate ? canCancelCourse(new Date(g.startDate), now) : { ok: true }, move: false };
   }
   const s = relId(a.session)
     ? await payload.findByID({ collection: 'sessions', id: relId(a.session) ?? 0, depth: 0, disableErrors: true })

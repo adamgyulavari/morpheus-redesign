@@ -104,7 +104,7 @@ export async function billingRun(payload: Payload, month: string): Promise<RunLi
       const a = apps.find((x) => relId(x.order) === o.id);
       const g = a && typeof a.courseGroup === 'object' ? a.courseGroup : null;
       const userId = relId(a?.user);
-      if (!a || !g || !userId || !o.plan?.parts || !o.plan.total) continue;
+      if (!a || !g?.startDate || !userId || !o.plan?.parts || !o.plan.total) continue;
       const startMonth = g.startDate.slice(0, 7);
       for (let k = 2; k <= o.plan.parts; k++) {
         if (addMonths(startMonth, k - 1) > month) break;

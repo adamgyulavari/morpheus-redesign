@@ -222,16 +222,19 @@ export interface CourseGroup {
    */
   title: string;
   code?: string | null;
-  type: 'kezdo' | 'szakmai' | 'egyeb';
+  type: 'kezdo' | 'szakmai' | 'tarsulat' | 'egyeb';
   /**
    * Nem kötelező: melyik kurzus csoportja.
    */
   course?: (number | null) | Course;
-  startDate: string;
   /**
-   * Eddig a napig számít aktív hallgatónak, aki a csoportban van.
+   * A társulatnál nem kell.
    */
-  endDate: string;
+  startDate?: string | null;
+  /**
+   * Eddig a napig számít aktív hallgatónak, aki a csoportban van. A társulatnál üresen: folyamatos.
+   */
+  endDate?: string | null;
   /**
    * A havi számlázáshoz (később).
    */

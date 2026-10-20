@@ -127,7 +127,7 @@ export default async function AccountPage() {
                   <Card key={g.id}>
                     <h3 className="font-display text-[26px] leading-tight lg:text-[30px]">{g.title}</h3>
                     <p className="text-[15px] font-semibold text-teal">
-                      {dateRange(day(g.startDate), day(g.endDate))}
+                      {g.startDate && g.endDate && dateRange(day(g.startDate), day(g.endDate))}
                       {g.instructors.length > 0 && (
                         <span className="font-normal text-ink2"> · {g.instructors.join(', ')}</span>
                       )}

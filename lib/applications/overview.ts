@@ -151,7 +151,7 @@ export async function myApplications(payload: Payload, user: TypedUser, activeGr
       applicationId: a.id,
       kind: a.kind,
       title: g?.title ?? course?.title ?? APPLICATION_KINDS.professional,
-      when: g ? dateRange(dayOf(new Date(g.startDate)), dayOf(new Date(g.endDate))) : undefined,
+      when: g?.startDate && g.endDate ? dateRange(dayOf(new Date(g.startDate)), dayOf(new Date(g.endDate))) : undefined,
       status: a.kind === 'professional' && a.status === 'interview' ? 'interview' : g ? 'sent' : 'waiting',
       canCancel: actions.cancel.ok,
     });
