@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 
 import type { CollectionConfig, Where } from 'payload';
 
-import { SIGNUP_KIND_OF_TYPE, SIGNUP_MODES } from '@/lib/applications/labels';
+import { GROUP_TYPES, SIGNUP_KIND_OF_TYPE, SIGNUP_MODES } from '@/lib/applications/labels';
 import { todayInBudapest } from '@/lib/dates';
 import { options, WEEKDAYS } from '@/lib/rooms/labels';
 import type { CourseGroup } from '@/payload-types';
@@ -28,6 +28,8 @@ const inWindow = (_: unknown, sibling: Partial<Signup>) => sibling?.mode === 'wi
 const isBeginner = (data: Partial<CourseGroup> | undefined, sibling?: Partial<Signup>) =>
   (sibling?.kind || SIGNUP_KIND_OF_TYPE[data?.type ?? ''] || 'beginner') === 'beginner';
 const notBeginner = (data: Partial<CourseGroup>, sibling: Partial<Signup>) => !isBeginner(data, sibling);
+/** A társulat has no weekly slot: its sessions and bookings are made by hand. */
+const notTarsulat = (data: Partial<CourseGroup>) => data?.type !== 'tarsulat';
 const opensAt = dateTime('opensAt', 'Jelentkezés kezdete', { description: 'Üresen: azonnal.' });
 const closesAt = dateTime('closesAt', 'Jelentkezés vége', { description: 'Üresen: a kurzus kezdéséig.' });
 
@@ -45,6 +47,7 @@ export const CourseGroups: CollectionConfig = {
     delete: isStaffOrAdmin,
   },
   admin: {
+    components: { beforeListTable: ['@/payload/admin/GroupImport#GroupImport'] },
     useAsTitle: 'title',
     defaultColumns: ['title', 'type', 'startDate', 'endDate', 'studentCount', 'isActive'],
     description:
@@ -87,6 +90,7 @@ export const CourseGroups: CollectionConfig = {
       // the sign-up kind follows the group's type unless set (kezdő → beginner, szakmai → professional)
       async ({ data, originalDoc, operation, req }) => {
         const type = data.type ?? originalDoc?.type;
+        if (type === 'tarsulat') data.defaultSchedule = [];
         if (data.signup && !data.signup.kind) data.signup.kind = SIGNUP_KIND_OF_TYPE[type] ?? 'beginner';
         // a new kezdő group starts with its course's prices as the payment options
         const courseId = relId(data.course ?? originalDoc?.course);
@@ -123,12 +127,7 @@ export const CourseGroups: CollectionConfig = {
           label: 'Típus',
           type: 'select',
           required: true,
-          options: [
-            { label: 'Kezdő', value: 'kezdo' },
-            { label: 'Szakmai', value: 'szakmai' },
-            { label: 'Társulat', value: 'tarsulat' },
-            { label: 'Egyéb', value: 'egyeb' },
-          ],
+          options: options(GROUP_TYPES),
         },
         relationship('course', 'Kurzus (a weboldalon)', 'courses', {
           description: 'Nem kötelező: melyik kurzus csoportja.',
@@ -327,6 +326,7 @@ export const CourseGroups: CollectionConfig = {
       labels: { singular: 'Időpont', plural: 'Időpontok' },
       type: 'array',
       admin: {
+        condition: notTarsulat,
         description:
           'A heti órák. A Teremnaptár „Hónap feltöltése” gombja ezekből hozza létre az alkalmakat a kezdés és a befejezés között.',
       },
@@ -352,7 +352,7 @@ export const CourseGroups: CollectionConfig = {
     {
       name: 'fillMonth',
       type: 'ui',
-      admin: { components: { Field: '@/payload/admin/FillMonthLink#FillMonthLink' } },
+      admin: { condition: notTarsulat, components: { Field: '@/payload/admin/FillMonthLink#FillMonthLink' } },
     },
     {
       name: 'sessions',

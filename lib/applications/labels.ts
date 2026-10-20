@@ -43,6 +43,9 @@ export const SIGNUP_MODES = {
 } as const;
 export type SignupMode = keyof typeof SIGNUP_MODES;
 
+/** A course group's type. */
+export const GROUP_TYPES = { kezdo: 'Kezdő', szakmai: 'Szakmai', tarsulat: 'Társulat', egyeb: 'Egyéb' } as const;
+
 /** Course group type → the sign-up kind it takes. */
 export const SIGNUP_KIND_OF_TYPE: Record<string, 'beginner' | 'professional' | undefined> = {
   kezdo: 'beginner',
