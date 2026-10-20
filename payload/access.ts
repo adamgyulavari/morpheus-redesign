@@ -4,15 +4,19 @@ import type { Access, FieldAccess } from 'payload';
  * Roles (a user can have several):
  * - `admin`: everything, including users and roles;
  * - `staff`: edits all content and courses in /admin, cannot manage roles (or delete legal pages);
- * - `student`: logs in on the public site only (/belepes, /fiokom), never in /admin.
+ * - `student`: in a course group (or was) — logs in on the public site only (/belepes, /fiokom);
+ * - `guest`: an account made by registering, a sign-up or a ticket — logs in on the public site,
+ *   sees their own bookings and payments; becomes a student once in a course group.
+ * Neither ever gets into /admin. Room booking is a separate permission (users.roomBooking).
  * Visitors (no user) read published content.
  */
-export type Role = 'admin' | 'staff' | 'student';
+export type Role = 'admin' | 'staff' | 'student' | 'guest';
 
 export const ROLES: { label: string; value: Role }[] = [
   { label: 'Adminisztrátor', value: 'admin' },
   { label: 'Munkatárs', value: 'staff' },
   { label: 'Hallgató', value: 'student' },
+  { label: 'Vendég', value: 'guest' },
 ];
 
 type MaybeUser = { id?: number | string; roles?: Role[] | null } | null | undefined;

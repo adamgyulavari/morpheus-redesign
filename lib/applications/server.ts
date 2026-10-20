@@ -210,7 +210,7 @@ export async function applicantFor(
           lastName: input.lastName,
           firstName: input.firstName,
           phone: input.phone || undefined,
-          roles: ['student'],
+          roles: ['guest'],
           _verified: false,
         },
         disableVerificationEmail: true,

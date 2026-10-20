@@ -504,9 +504,9 @@ export interface User {
    */
   roomBooking?: boolean | null;
   /**
-   * Hallgató: csak a weboldalon lép be. Munkatárs: tartalmat és csoportokat szerkeszt. Adminisztrátor: mindent, a felhasználókat is.
+   * Vendég: csak a weboldalon lép be (jelentkezett vagy jegyet foglalt). Hallgató: egy csoportunk tagja — automatikus, amikor csoportba kerül. Munkatárs: tartalmat és csoportokat szerkeszt. Adminisztrátor: mindent, a felhasználókat is.
    */
-  roles: ('admin' | 'staff' | 'student')[];
+  roles: ('admin' | 'staff' | 'student' | 'guest')[];
   courseGroups?: {
     docs?: (number | CourseGroup)[];
     hasNextPage?: boolean;

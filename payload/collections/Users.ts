@@ -63,9 +63,9 @@ export const Users: CollectionConfig = {
         if (operation === 'create') {
           const { totalDocs } = await req.payload.count({ collection: 'users', req });
           // the very first account (the admin's "create first user" screen) is an admin;
-          // registration and everyone else's requests make students
+          // registration and everyone else's requests make guests (a course group makes students)
           if (totalDocs === 0) data.roles = ['admin'];
-          else if (!userIsAdmin(req.user)) data.roles = ['student'];
+          else if (!userIsAdmin(req.user)) data.roles = ['guest'];
           // a request from outside can't create a pre-verified account (server code can)
           if (!userIsAdmin(req.user) && req.payloadAPI !== 'local') delete data._verified;
         }
@@ -146,14 +146,14 @@ export const Users: CollectionConfig = {
       type: 'select',
       hasMany: true,
       required: true,
-      defaultValue: ['student'],
+      defaultValue: ['guest'],
       saveToJWT: true,
       options: ROLES,
       access: { create: isAdminField, update: isAdminField },
       admin: {
         position: 'sidebar',
         description:
-          'Hallgató: csak a weboldalon lép be. Munkatárs: tartalmat és csoportokat szerkeszt. Adminisztrátor: mindent, a felhasználókat is.',
+          'Vendég: csak a weboldalon lép be (jelentkezett vagy jegyet foglalt). Hallgató: egy csoportunk tagja — automatikus, amikor csoportba kerül. Munkatárs: tartalmat és csoportokat szerkeszt. Adminisztrátor: mindent, a felhasználókat is.',
       },
     },
     {

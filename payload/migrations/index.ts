@@ -34,6 +34,7 @@ import * as migration_20261019_202633_refund_note from './20261019_202633_refund
 import * as migration_20261019_225500_ui_texts from './20261019_225500_ui_texts';
 import * as migration_20261020_000234_show_booking from './20261020_000234_show_booking';
 import * as migration_20261020_003021_show_rooms from './20261020_003021_show_rooms';
+import * as migration_20261020_014055_guest_role from './20261020_014055_guest_role';
 
 export const migrations = [
   {
@@ -215,5 +216,10 @@ export const migrations = [
     up: migration_20261020_003021_show_rooms.up,
     down: migration_20261020_003021_show_rooms.down,
     name: '20261020_003021_show_rooms',
+  },
+  {
+    up: migration_20261020_014055_guest_role.up,
+    down: migration_20261020_014055_guest_role.down,
+    name: '20261020_014055_guest_role'
   },
 ];
