@@ -4,20 +4,21 @@ import Link from 'next/link';
 import Emph from '@/components/Emph';
 import Logo from '@/components/Logo';
 import { FilterChips } from '@/components/RepertoireFilter';
+import Rotator from '@/components/Rotator';
 import SmartLink from '@/components/SmartLink';
 import { ButtonLink, Facts, HeroButtons, PageHero } from '@/components/ui';
-import { getPage, getProductions, getSiteSettings, getUi, getUpcomingShows, getUpcomingWorkshops } from '@/lib/data';
+import { getFeaturedShows, getPage, getProductions, getSiteSettings, getUi, getUpcomingWorkshops } from '@/lib/data';
 import { showDateLine } from '@/lib/dates';
 
 import { resolveFacts } from './shared';
 import type { BlockProps } from './types';
 
-/** Homepage hero: keywords, heading, buttons, the logo with photos, and the next-show card. */
+/** Homepage hero: keywords, heading, buttons, the logo with photos, and the next shows' card (rotating). */
 export async function HomeHero({ block, className }: BlockProps<'homeHero'>) {
-  const [ui, settings, [nextShow]] = await Promise.all([
+  const [ui, settings, shows] = await Promise.all([
     getUi(),
     getSiteSettings(),
-    block.nextShow ? getUpcomingShows(1) : [],
+    block.nextShow ? getFeaturedShows() : [],
   ]);
   return (
     <section
@@ -75,20 +76,30 @@ export async function HomeHero({ block, className }: BlockProps<'homeHero'>) {
             className="absolute bottom-[6%] right-[4%] h-[29%] w-[29%] rounded-full border-[5px] border-paper object-cover shadow-[0_22px_44px_-20px_rgba(11,58,63,0.5)] lg:border-[7px]"
           />
         </div>
-        {nextShow && (
-          <SmartLink
-            href={`${settings.urls.upcomingShows}#eloadas-${nextShow.id}`}
-            className="mt-6 flex flex-col gap-1.5 rounded-[18px] border border-line bg-paper px-5 py-4 shadow-[0_18px_40px_-18px_rgba(11,58,63,0.35)] transition-colors hover:border-teal lg:absolute lg:bottom-5 lg:left-0 lg:mt-0 lg:w-[272px] lg:px-[22px] lg:py-5"
+        {shows.length > 0 && (
+          <Rotator
+            variant="slide"
+            className="mt-6 rounded-[18px] border border-line bg-paper py-4 shadow-[0_18px_40px_-18px_rgba(11,58,63,0.35)] transition-colors hover:border-teal lg:absolute lg:bottom-5 lg:left-0 lg:mt-0 lg:w-[272px] lg:py-5"
+            top={
+              <span className="block px-5 pb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-rust-dark lg:px-[22px] lg:text-xs">
+                {ui.shows.nextShow}
+              </span>
+            }
           >
-            <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-rust-dark lg:text-xs">
-              {ui.shows.nextShow}
-            </span>
-            <span className="font-display text-[28px] leading-tight lg:text-[32px]">{nextShow.production.title}</span>
-            <span className="text-sm text-ink2 lg:text-[15px]">{showDateLine(nextShow.date, nextShow.time)}</span>
-            <span className="text-sm text-muted">
-              {nextShow.production.byline} · {nextShow.venue.shortName}
-            </span>
-          </SmartLink>
+            {shows.map((show) => (
+              <SmartLink
+                key={show.id}
+                href={`${settings.urls.upcomingShows}#eloadas-${show.id}`}
+                className="flex flex-col gap-1.5 px-5 lg:px-[22px]"
+              >
+                <span className="font-display text-[28px] leading-tight lg:text-[32px]">{show.production.title}</span>
+                <span className="text-sm text-ink2 lg:text-[15px]">{showDateLine(show.date, show.time)}</span>
+                <span className="text-sm text-muted">
+                  {show.production.byline} · {show.venue.shortName}
+                </span>
+              </SmartLink>
+            ))}
+          </Rotator>
         )}
       </div>
     </section>
