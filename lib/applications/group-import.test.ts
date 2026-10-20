@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { addHours, datesOf, planGroups, splitName, typeOf, weekdayOf } from './group-import';
+import { addHours, datesOf, parseImportFile, planGroups, splitName, typeOf, weekdayOf } from './group-import';
 
 describe('group import', () => {
   it('reads the type from the name', () => {
@@ -34,6 +34,18 @@ describe('group import', () => {
     const [ended] = planGroups({ groups: [{ name: 'Régi kezdő', weekday: 'Monday', members: [] }] }, '2026-03-05');
     expect(ended?.endDate).toBe('2026-02-28');
     expect(ended?.schedule).toBeNull();
+    const [tarsulat] = planGroups(
+      { groups: [{ name: 'Társulat', weekday: 'Monday', startTime: '18:00', members: [] }] },
+      '2026-10-20',
+    );
+    expect(tarsulat?.schedule).toBeNull();
+  });
+
+  it('reads the file, or says what is wrong with it', () => {
+    expect(parseImportFile('{"groups":[{"name":"A","members":[]}]}')).toEqual({ groups: [{ name: 'A', members: [] }] });
+    expect(parseImportFile('nem json')).toBe('A fájl nem érvényes JSON.');
+    expect(parseImportFile('{"csoportok":[]}')).toBe('A fájlban nincs „groups” lista.');
+    expect(parseImportFile('{"groups":[{"name":"A","members":[]},{"name":""}]}')).toMatch(/^A\(z\) 2\./);
   });
 
   it('splits Hungarian names, the family name first', () => {

@@ -1,9 +1,10 @@
 /**
- * Importing course groups and their members (scripts/import-groups.ts): what the file's groups
- * become, decided here (pure, tested), applied by importGroups.
+ * Importing course groups and their members (Csoportok → Importálás fájlból): what the file's
+ * groups become, decided here (pure, tested), applied by importGroups.
  *
  * - the type from the name ("kezdő" → Kezdő, "szakmai" → Szakmai, "társulat" → Társulat, else Egyéb)
- * - a weekly slot from the weekday and start time: kezdő 2 hours, everything else 3
+ * - a weekly slot from the weekday and start time: kezdő 2 hours, everything else 3; a társulat
+ *   has none (its sessions are made by hand)
  * - dates: this year (Jan 1 – Dec 31); without a start time the group is over (it ended at the end
  *   of last month); a társulat has none
  * - members by e-mail: their account, or a new unverified one (no e-mail); the name is
@@ -52,6 +53,21 @@ export function weekdayOf(name: string | undefined): Weekday | null {
   return i < 0 ? null : (String(i + 1) as Weekday);
 }
 
+/** The file's text as an import, or what is wrong with it. */
+export function parseImportFile(text: string): ImportFile | string {
+  let data: unknown;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return 'A fájl nem érvényes JSON.';
+  }
+  const groups = (data as ImportFile | null)?.groups;
+  if (!Array.isArray(groups)) return 'A fájlban nincs „groups” lista.';
+  const bad = groups.findIndex((g) => typeof g?.name !== 'string' || !g.name.trim() || !Array.isArray(g.members));
+  if (bad >= 0) return `A(z) ${bad + 1}. csoportnak nincs neve vagy „members” listája.`;
+  return { groups };
+}
+
 const isClock = (v: string | undefined): v is string => Boolean(v && /^\d{1,2}:\d{2}$/.test(v.trim()));
 
 /** The group's dates: this year; over (no start time): until the end of last month; a társulat: none. */
@@ -88,12 +104,13 @@ export function planGroups(file: ImportFile, today: string): PlannedGroup[] {
     const type = typeOf(g.name);
     const weekday = weekdayOf(g.weekday);
     const running = isClock(g.startTime) && Boolean(weekday);
+    const slot = running && type !== 'tarsulat';
     return {
       title: g.name.trim(),
       type,
       ...datesOf(type, running, today),
       schedule:
-        running && weekday && g.startTime
+        slot && weekday && g.startTime
           ? {
               weekday,
               startTime: g.startTime.trim().padStart(5, '0'),
@@ -108,7 +125,7 @@ export function planGroups(file: ImportFile, today: string): PlannedGroup[] {
 }
 
 export type ImportResult = {
-  groups: { title: string; created: boolean; added: number; members: number }[];
+  groups: (Omit<PlannedGroup, 'members'> & { created: boolean; added: number; members: number })[];
   accountsCreated: number;
   emailsSent: number;
 };
@@ -166,7 +183,13 @@ export async function importGroups(
       doc = existing
         ? await payload.update({ collection: 'courseGroups', id: existing.id, data, context: ctx })
         : await payload.create({ collection: 'courseGroups', data: data as never, context: ctx });
-    result.groups.push({ title: g.title, created: !existing, added: joined.length, members: students.size });
+    const { members: _, ...planned } = g;
+    result.groups.push({
+      ...planned,
+      created: !existing,
+      added: joined.length,
+      members: students.size + (o.dryRun ? joined.length : 0),
+    });
 
     // an ended group's members aren't welcomed
     const over = Boolean(g.endDate && g.endDate < todayInBudapest());
