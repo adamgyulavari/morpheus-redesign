@@ -19,6 +19,7 @@
     "migrate:snapshot": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/migration-snapshot.ts",
     "migrate": "cross-env NODE_OPTIONS=--no-deprecation payload migrate",
     "seed": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/seed.ts",
+    "import:groups": "cross-env NODE_OPTIONS=--no-deprecation tsx --env-file-if-exists=.env scripts/import-groups.ts",
     "db:up": "docker compose -f docker-compose.dev.yml up -d",
     "block-thumbnails": "tsx scripts/block-thumbnails.ts",
     "upload-media": "tsx --env-file=.env scripts/upload-media.ts"
