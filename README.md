@@ -236,6 +236,13 @@ course group or a production and has one place: a booking it owns, an external p
   place unplaced sessions; "Hónap feltöltése" from the groups' weekly schedules, with a tickable
   preview; idempotent). Admins can override clashing student practice (it is cancelled, the student
   is told why).
+- **Shows at our venue** (`lib/rooms/show-rooms.ts`): a show at *Teremfoglalási szabályok → A
+  termek helyszíne* (Frankel Leó út), saved by hand or by the Facebook sync, keeps a session of
+  kind "Előadás" in every room — from 90 min before to 150 min after its start (settings; the
+  session can be changed by hand). Everything in the way is cancelled: student practice (the
+  student gets the usual e-mail), other bookings and sessions (no e-mail — listed in the show's
+  "Teremfoglalás" note and the sync's result, for the staff). The session follows the show's date,
+  time and venue, and goes when the show is hidden, moved elsewhere or deleted.
 - **Students:** `/fiokom` (courses, upcoming sessions, groupmates' practice, links),
   `/fiokom/terem` (book practice — rules in `lib/rooms/rules.ts`, settings in
   *Teremnaptár → Teremfoglalási szabályok*), `/fiokom/adatok`. Only active students (a group whose

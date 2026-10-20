@@ -212,7 +212,8 @@ export async function notifySessionChange(
   operation: 'create' | 'update',
 ) {
   try {
-    if (operation !== 'update' || !previous || req.context.generating) return;
+    // `silent`: a show took the rooms (its staff note says so)
+    if (operation !== 'update' || !previous || req.context.generating || req.context.silent) return;
     const now = Date.now();
     const starts = [new Date(String(doc.start)).getTime(), new Date(String(previous.start)).getTime()];
     const ends = [new Date(String(doc.end)).getTime(), new Date(String(previous.end)).getTime()];

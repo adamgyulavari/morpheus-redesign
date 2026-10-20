@@ -1,6 +1,7 @@
 /** Productions (the repertoire), their shows, and the legal pages. */
 import { type CollectionConfig, slugField } from 'payload';
 
+import { placeShow, releaseShow } from '@/lib/rooms/show-rooms';
 import { slugify } from '@/lib/slugify';
 
 import {
@@ -240,7 +241,21 @@ export const Shows: CollectionConfig = {
     components: { beforeListTable: ['@/payload/admin/FacebookSync#FacebookSync'] },
   },
   defaultSort: '-date',
-  hooks: collectionRevalidation('shows'),
+  hooks: {
+    ...collectionRevalidation('shows'),
+    afterChange: [
+      // at our own venue: its session takes every room (lib/rooms/show-rooms.ts)
+      async ({ doc, previousDoc, operation, req }) => {
+        const note = await placeShow(req, doc, operation === 'update' ? previousDoc : undefined);
+        return note ? { ...doc, roomNote: note } : doc;
+      },
+      ...(collectionRevalidation('shows').afterChange ?? []),
+    ],
+    afterDelete: [
+      async ({ doc, req }) => releaseShow(req, doc.id),
+      ...(collectionRevalidation('shows').afterDelete ?? []),
+    ],
+  },
   fields: [
     {
       // the Facebook event it comes from (lib/facebook/sync): its date, time, venue, ticket follow it
@@ -304,6 +319,17 @@ export const Shows: CollectionConfig = {
             return [production?.title, `${day} ${siblingData.time ?? ''}`.trim()].filter(Boolean).join(' — ');
           },
         ],
+      },
+    },
+    {
+      name: 'roomNote',
+      label: 'Teremfoglalás',
+      type: 'textarea',
+      admin: {
+        readOnly: true,
+        position: 'sidebar',
+        description:
+          'A saját helyszínen az előadás minden termet lefoglal; ami az útjában volt, itt látszik (a diákok e-mailt kaptak, a többiekkel egyeztess).',
       },
     },
     importId,

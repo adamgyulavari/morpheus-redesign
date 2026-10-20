@@ -35,7 +35,7 @@ function Lines({ title, lines, tone }: { title: string; lines: SyncLine[]; tone?
             <a href={l.link} target="_blank" rel="noopener" style={muted}>
               (Facebook)
             </a>
-            {l.note && <div style={tone ? { color: tone } : muted}>{l.note}</div>}
+            {l.note && <div style={{ whiteSpace: 'pre-line', ...(tone ? { color: tone } : muted) }}>{l.note}</div>}
           </li>
         ))}
       </ul>
@@ -57,7 +57,12 @@ export function FacebookSync() {
       router.refresh();
     });
   const nothing =
-    result && !result.created.length && !result.updated.length && !result.hidden.length && !result.problems.length;
+    result &&
+    !result.created.length &&
+    !result.updated.length &&
+    !result.hidden.length &&
+    !result.problems.length &&
+    !result.rooms.length;
   return (
     <div style={box}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
@@ -77,6 +82,11 @@ export function FacebookSync() {
           <Lines title="Frissítve" lines={result.updated} />
           <Lines title="Elrejtve" lines={result.hidden} />
           <Lines title="Nézd meg — nem mentettük" lines={result.problems} tone="var(--theme-warning-500, #d9822b)" />
+          <Lines
+            title="A termek miatt lemondva — egyeztess, akit kell"
+            lines={result.rooms}
+            tone="var(--theme-warning-500, #d9822b)"
+          />
           {!nothing && result.unchanged > 0 && (
             <p style={{ margin: '12px 0 0', ...muted }}>Változatlan: {result.unchanged}.</p>
           )}

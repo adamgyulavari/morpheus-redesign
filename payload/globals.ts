@@ -152,6 +152,33 @@ export const RoomBookingSettings: GlobalConfig = {
       'A diákok teremfoglalásának szabályai. A munkatársakra nem vonatkoznak (az ütközés tilalma mindenkire igen).',
   },
   fields: [
+    relationship('homeVenue', 'A termek helyszíne', 'venues', {
+      description:
+        'A Nyitott Műhely, a képzések és a diákfoglalások helye. Az ide kiírt előadás (kézzel vagy a Facebookról) minden termet lefoglal, és lemond mindent, ami az útjában van.',
+    }),
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'showRoomsBefore',
+          label: 'Előadás: termek a kezdés előtt (perc)',
+          type: 'number',
+          required: true,
+          min: 0,
+          defaultValue: 90,
+          admin: { description: 'Beállás, bemelegítés.' },
+        },
+        {
+          name: 'showRoomsAfter',
+          label: 'Előadás: termek a kezdés után (perc)',
+          type: 'number',
+          required: true,
+          min: 1,
+          defaultValue: 150,
+          admin: { description: 'Az előadás és a bontás. Egy-egy előadásnál az alkalmát módosítva változtatható.' },
+        },
+      ],
+    },
     {
       type: 'row',
       fields: [
