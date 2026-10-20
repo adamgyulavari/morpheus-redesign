@@ -1,8 +1,9 @@
 import { ArrowRight, MailIcon, PhoneIcon } from '@/components/icons';
 import Logo from '@/components/Logo';
+import Rotator from '@/components/Rotator';
 import SmartLink from '@/components/SmartLink';
 import SocialLinks from '@/components/SocialLinks';
-import { getContactPerson, getSiteSettings, getUi, getUpcomingShows } from '@/lib/data';
+import { getContactPerson, getFeaturedShows, getSiteSettings, getUi } from '@/lib/data';
 import { showDateLine } from '@/lib/dates';
 import { formatPhone } from '@/lib/format';
 
@@ -22,15 +23,16 @@ export async function BioIntro({ block, className }: BlockProps<'bioIntro'>) {
   );
 }
 
-/** The next show with its ticket/registration button. */
+/** The next shows (rotating), each with its ticket/registration button. */
 export async function BioNextShow({ block, className }: BlockProps<'bioNextShow'>) {
-  const [ui, [next]] = await Promise.all([getUi(), getUpcomingShows(1)]);
-  if (!next) return null;
-  const action = next.ticketUrl
-    ? { label: ui.shows.ticket, href: next.ticketUrl }
-    : next.registrationUrl
-      ? { label: ui.shows.registration, href: next.registrationUrl }
-      : undefined;
+  const [ui, shows] = await Promise.all([getUi(), getFeaturedShows()]);
+  if (!shows.length) return null;
+  const action = (show: (typeof shows)[number]) =>
+    show.ticketUrl
+      ? { label: ui.shows.ticket, href: show.ticketUrl }
+      : show.registrationUrl
+        ? { label: ui.shows.registration, href: show.registrationUrl }
+        : undefined;
   return (
     <section
       id={block.anchor}
@@ -38,17 +40,26 @@ export async function BioNextShow({ block, className }: BlockProps<'bioNextShow'
       className={`on-dark relative flex w-full flex-col gap-3 rounded-[22px] bg-deep p-5 text-cream ${className}`}
     >
       <span className="text-xs font-bold uppercase tracking-[0.16em] text-gold">{ui.shows.nextShow}</span>
-      <div className="flex flex-col gap-0.5">
-        <span className="font-display text-[30px] leading-tight">{next.production.title}</span>
-        <span className="font-semibold">{showDateLine(next.date, next.time)}</span>
-        <span className="text-sm text-mist">{next.venue.name}</span>
-      </div>
-      {action && (
-        <a href={action.href} className="btn btn-md btn-gold self-start">
-          {action.label}
-          <ArrowRight />
-        </a>
-      )}
+      <Rotator>
+        {shows.map((show) => {
+          const a = action(show);
+          return (
+            <div key={show.id} className="flex flex-col gap-3">
+              <div className="flex flex-col gap-0.5">
+                <span className="font-display text-[30px] leading-tight">{show.production.title}</span>
+                <span className="font-semibold">{showDateLine(show.date, show.time)}</span>
+                <span className="text-sm text-mist">{show.venue.name}</span>
+              </div>
+              {a && (
+                <a href={a.href} className="btn btn-md btn-gold self-start">
+                  {a.label}
+                  <ArrowRight />
+                </a>
+              )}
+            </div>
+          );
+        })}
+      </Rotator>
     </section>
   );
 }

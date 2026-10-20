@@ -173,6 +173,11 @@ export async function getUpcomingShows(limit?: number): Promise<ShowWithRelation
   return limit === undefined ? upcoming : upcoming.slice(0, limit);
 }
 
+/** The next shows of different productions, soonest first (the rotating "Következő előadás" cards). */
+export async function getFeaturedShows(count = 5): Promise<ShowWithRelations[]> {
+  return [...(await getNextShowByProduction()).values()].slice(0, count);
+}
+
 /** The next show of each production that has one, keyed by production id. */
 export async function getNextShowByProduction(): Promise<Map<string, ShowWithRelations>> {
   const next = new Map<string, ShowWithRelations>();

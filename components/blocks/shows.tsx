@@ -2,11 +2,19 @@ import { ArrowRight } from '@/components/icons';
 import PosterFit from '@/components/PosterFit';
 import ProductionCard from '@/components/ProductionCard';
 import { FilterGroup } from '@/components/RepertoireFilter';
+import Rotator from '@/components/Rotator';
 import ShowDetails from '@/components/ShowDetails';
 import ShowRow from '@/components/ShowRow';
 import SmartLink from '@/components/SmartLink';
 import { ArrowLink, Eyebrow } from '@/components/ui';
-import { getNextShowByProduction, getProductions, getSiteSettings, getUi, getUpcomingShows } from '@/lib/data';
+import {
+  getFeaturedShows,
+  getNextShowByProduction,
+  getProductions,
+  getSiteSettings,
+  getUi,
+  getUpcomingShows,
+} from '@/lib/data';
 import { monthLong, showDateLine, year } from '@/lib/dates';
 import { fill } from '@/lib/format';
 import type { ShowWithRelations, UiStrings } from '@/lib/types';
@@ -80,11 +88,10 @@ export async function UpcomingShows({ block, className }: BlockProps<'upcomingSh
   );
 }
 
-/** Dark banner: "Műsoron · 5 előadás a következő hetekben — next show", linking to the upcoming shows. */
+/** Dark banner: "Műsoron · 5 előadás a következő hetekben — the next shows (rotating)", linking to the upcoming shows. */
 export async function NextShowBanner({ block, className }: BlockProps<'nextShowBanner'>) {
-  const [ui, upcoming] = await Promise.all([getUi(), getUpcomingShows()]);
-  const next = upcoming[0];
-  if (!next) return null;
+  const [ui, upcoming, featured] = await Promise.all([getUi(), getUpcomingShows(), getFeaturedShows()]);
+  if (!featured.length) return null;
   return (
     <section id={block.anchor} className={`mx-auto max-w-[1440px] px-5 lg:px-20 ${className}`}>
       <SmartLink
@@ -96,9 +103,13 @@ export async function NextShowBanner({ block, className }: BlockProps<'nextShowB
             <span className="h-2 w-2 rounded-full bg-rust" aria-hidden="true" />
             {ui.shows.onStage} · {fill(ui.shows.upcomingCount, { count: String(upcoming.length) })}
           </span>
-          <span className="font-display text-[26px] leading-tight lg:text-[34px]">
-            {next.production.title} <span className="text-mist">— {showDateLine(next.date, next.time)}</span>
-          </span>
+          <Rotator>
+            {featured.map((show) => (
+              <span key={show.id} className="font-display text-[26px] leading-tight lg:text-[34px]">
+                {show.production.title} <span className="text-mist">— {showDateLine(show.date, show.time)}</span>
+              </span>
+            ))}
+          </Rotator>
         </span>
         <span className="flex items-center gap-2 font-semibold">
           <span className="link-nav">{block.link.label}</span>
