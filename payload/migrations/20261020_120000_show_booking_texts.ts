@@ -13,8 +13,9 @@ const SHOW_BOOKING = {
   noRefund: 'A megvásárolt jegyet nem lehet lemondani; ha mégsem tudsz jönni, írj nekünk.',
   closed: 'Erre az előadásra már nem lehet jegyet venni.',
   back: 'Vissza az előadáshoz',
-  loginAfter: ', és egy kattintással foglalhatsz. Ha nincs, a foglalással létrehozzuk.',
-  checkoutLoginAfter: ', és kitöltjük helyetted. Ha nincs, a vásárlással létrehozzuk.',
+  loginAfter: ', és egy kattintással foglalhatsz. Ha nincs, a foglaláskor létrehozunk egyet.',
+  checkoutLoginAfter:
+    ', és kitöltjük helyetted az adataidat. Ha nincs, a vásárláskor létrehozunk egyet: ott látod majd a jegyeidet.',
   terms: 'A jegyvásárláshoz el kell fogadnod az ÁSZF-et.',
   orderHeading: '*Jegyvásárlás*',
   orderCancelled: 'Megszakítottad a jegyvásárlást',
