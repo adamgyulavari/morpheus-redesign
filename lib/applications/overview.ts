@@ -84,6 +84,7 @@ export async function myApplications(payload: Payload, user: TypedUser, activeGr
     const course = typeof a.course === 'object' ? (a.course as Course | null) : null;
     // admitted (in the group): the group itself is in "Kurzusaim"
     if (g && activeGroupIds.includes(g.id)) continue;
+    if (a.kind === 'show') continue; // show bookings aren't courses
     if (a.kind === 'beginner' && a.status !== 'registered') continue;
     const actions = await allowedActions(payload, a, settings, now);
     pending.push({

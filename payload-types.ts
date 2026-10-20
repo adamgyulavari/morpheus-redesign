@@ -429,7 +429,7 @@ export interface Course {
 export interface Application {
   id: number;
   displayTitle?: string | null;
-  kind: 'workshop' | 'beginner' | 'professional';
+  kind: 'workshop' | 'beginner' | 'professional' | 'show';
   /**
    * Nyitott Műhely és kezdő: Fizetésre vár / Jelentkezett (fizetett) / Lemondva / Áthelyezve. Szakmai: Új / Interjú / Felvéve / Elutasítva / Visszavonta.
    */
@@ -439,6 +439,8 @@ export interface Application {
   user: number | User;
   session?: (number | null) | Session;
   courseGroup?: (number | null) | CourseGroup;
+  show?: (number | null) | Show;
+  seats?: number | null;
   course?: (number | null) | Course;
   target?: string | null;
   name: string;
@@ -596,7 +598,7 @@ export interface Session {
      */
     description?: string | null;
     /**
-     * A kezdés előtt ennyivel (Jelentkezési beállítások) dől el, hogy indul-e.
+     * A kezdés előtt ennyivel (Nyitott Műhely jelentkezési beállítások) dől el, hogy indul-e.
      */
     cutoffAt?: string | null;
   };
@@ -912,6 +914,10 @@ export interface Show {
    */
   label?: string | null;
   /**
+   * Saját foglalásnál a nézők a weboldalon foglalnak (ingyenes regisztráció vagy jegyvásárlás); ehhez az előadásnak saját aloldala kell legyen.
+   */
+  bookingMode: 'external' | 'internal';
+  /**
    * Pl. a Tixa-oldal.
    */
   ticketUrl?: string | null;
@@ -919,6 +925,21 @@ export interface Show {
    * Ingyenes, regisztrációs előadásnál a jegy helyett.
    */
   registrationUrl?: string | null;
+  booking?: {
+    /**
+     * Az alapár a Fizetési beállításokból. 0: ingyenes, regisztrációval.
+     */
+    price?: number | null;
+    /**
+     * Az alapérték a Fizetési beállításokból.
+     */
+    seats?: number | null;
+    /**
+     * Kikapcsolva a foglalás szünetel (az időpont látszik, a gomb nem).
+     */
+    open?: boolean | null;
+  };
+  code?: string | null;
   /**
    * Gyakorlati információk a nézőknek, soronként.
    */
@@ -1007,7 +1028,7 @@ export interface Order {
   id: number;
   user: number | User;
   application?: (number | null) | Application;
-  kind: 'workshop' | 'beginner' | 'monthlyFee';
+  kind: 'workshop' | 'beginner' | 'show' | 'monthlyFee';
   status: 'pending' | 'paid' | 'expired' | 'canceled' | 'refunded' | 'partially_refunded';
   label: string;
   price: number;
@@ -3084,8 +3105,17 @@ export interface ShowsSelect<T extends boolean = true> {
   time?: T;
   venue?: T;
   label?: T;
+  bookingMode?: T;
   ticketUrl?: T;
   registrationUrl?: T;
+  booking?:
+    | T
+    | {
+        price?: T;
+        seats?: T;
+        open?: T;
+      };
+  code?: T;
   info?:
     | T
     | {
@@ -4620,6 +4650,8 @@ export interface ApplicationsSelect<T extends boolean = true> {
   user?: T;
   session?: T;
   courseGroup?: T;
+  show?: T;
+  seats?: T;
   course?: T;
   target?: T;
   name?: T;
@@ -4979,6 +5011,14 @@ export interface BillingSetting {
    * Ennyi ideig tartjuk a helyet, amíg a jelentkező fizet; utána felszabadul.
    */
   ordersHoldMinutes: number;
+  /**
+   * Ha egy előadás-időpontnál nincs külön megadva.
+   */
+  showDefaults: {
+    price: number;
+    seats: number;
+    maxPerBooking: number;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -5412,6 +5452,144 @@ export interface EmailText {
       changedBoth?: string | null;
     };
   };
+  tickets: {
+    /**
+     * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai); {hol} — helyszín; {jegyek} — a foglalt jegyek száma.
+     */
+    ticketBooked: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+      /**
+       * A levél végén.
+       */
+      accountCreated?: string | null;
+      /**
+       * A levél végén.
+       */
+      accountExisting?: string | null;
+    };
+    /**
+     * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai); {hol} — helyszín; {jegyek} — a foglalt jegyek száma; {osszeg} — összeg (pl. 5000 Ft); {hatarido} — meddig tartjuk a helyet / fizetési határidő.
+     */
+    ticketPaymentLink: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
+    /**
+     * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai); {hol} — helyszín; {jegyek} — a foglalt jegyek száma; {osszeg} — összeg (pl. 5000 Ft).
+     */
+    ticketPaid: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+      calendarNote?: string | null;
+    };
+    /**
+     * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai); {jegyek} — a foglalt jegyek száma.
+     */
+    ticketCancelledBySelf: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
+    /**
+     * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai); {jegyek} — a foglalt jegyek száma.
+     */
+    ticketCancelledByStaff: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
+    /**
+     * Beírható: {nev} — a jelentkező teljes neve; {email} — a jelentkező e-mail-címe; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai); {jegyek} — a foglalt jegyek száma.
+     */
+    staffTicketBooked: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
+    /**
+     * Beírható: {nev} — a jelentkező teljes neve; {email} — a jelentkező e-mail-címe; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai); {jegyek} — a foglalt jegyek száma; {osszeg} — összeg (pl. 5000 Ft).
+     */
+    staffTicketPaid: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+    };
+    /**
+     * Beírható: {nev} — a jelentkező teljes neve; {email} — a jelentkező e-mail-címe; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai); {jegyek} — a foglalt jegyek száma.
+     */
+    staffTicketCancelled: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+    };
+  };
   account: {
     /**
      * Beírható: {keresztnev} — a címzett keresztneve.
@@ -5497,6 +5675,7 @@ export interface EmailText {
     labelWhen: string;
     labelWhere: string;
     labelPrice: string;
+    labelSeats: string;
     labelPaid: string;
     labelDue: string;
     labelRefunded: string;
@@ -5678,6 +5857,13 @@ export interface BillingSettingsSelect<T extends boolean = true> {
   transferDueDays?: T;
   invoicePrefix?: T;
   ordersHoldMinutes?: T;
+  showDefaults?:
+    | T
+    | {
+        price?: T;
+        seats?: T;
+        maxPerBooking?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -5923,6 +6109,84 @@ export interface EmailTextsSelect<T extends boolean = true> {
               changedBoth?: T;
             };
       };
+  tickets?:
+    | T
+    | {
+        ticketBooked?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+              accountCreated?: T;
+              accountExisting?: T;
+            };
+        ticketPaymentLink?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+        ticketPaid?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+              calendarNote?: T;
+            };
+        ticketCancelledBySelf?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+        ticketCancelledByStaff?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+        staffTicketBooked?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+        staffTicketPaid?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+            };
+        staffTicketCancelled?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+            };
+      };
   account?:
     | T
     | {
@@ -5973,6 +6237,7 @@ export interface EmailTextsSelect<T extends boolean = true> {
         labelWhen?: T;
         labelWhere?: T;
         labelPrice?: T;
+        labelSeats?: T;
         labelPaid?: T;
         labelDue?: T;
         labelRefunded?: T;

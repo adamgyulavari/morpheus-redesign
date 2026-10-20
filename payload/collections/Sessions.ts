@@ -329,7 +329,7 @@ export const Sessions: CollectionConfig = {
           admin: {
             readOnly: true,
             date: { pickerAppearance: 'dayAndTime', displayFormat: 'yyyy. MM. dd. HH:mm' },
-            description: 'A kezdés előtt ennyivel (Jelentkezési beállítások) dől el, hogy indul-e.',
+            description: 'A kezdés előtt ennyivel (Nyitott Műhely jelentkezési beállítások) dől el, hogy indul-e.',
           },
           hooks: {
             afterRead: [

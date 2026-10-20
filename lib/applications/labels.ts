@@ -4,6 +4,7 @@ export const APPLICATION_KINDS = {
   workshop: 'Nyitott Műhely',
   beginner: 'Kezdő kurzus',
   professional: 'Szakmai kurzus',
+  show: 'Előadás',
 } as const;
 export type ApplicationKind = keyof typeof APPLICATION_KINDS;
 

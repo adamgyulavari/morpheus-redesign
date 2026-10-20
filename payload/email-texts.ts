@@ -36,6 +36,7 @@ export const EMAIL_VARS: Record<string, string> = {
   ok: 'az ok (ha megadták)',
   valtozas: 'mi változott (ideje / helyszíne / ideje és helyszíne)',
   kod: 'a belépési kód',
+  jegyek: 'a foglalt jegyek száma',
 };
 
 /** Every e-mail, by tab. The fields: subject, preheader, heading, text (+ button, footnote, extras). */
@@ -151,6 +152,55 @@ export const EMAILS: Record<string, { label: string; templates: Record<string, T
       },
     },
   },
+  tickets: {
+    label: 'Jegyfoglalás',
+    templates: {
+      ticketBooked: {
+        label: 'Ingyenes előadás: jegyfoglalás',
+        vars: ['keresztnev', 'cim', 'mikor', 'hol', 'jegyek'],
+        button: true,
+        extra: [
+          { name: 'accountCreated', label: 'Új fiók készült', description: 'A levél végén.' },
+          { name: 'accountExisting', label: 'Meglévő fiók', description: 'A levél végén.' },
+        ],
+      },
+      ticketPaymentLink: {
+        label: 'Jegyvásárlás: fizetési link',
+        vars: ['keresztnev', 'cim', 'mikor', 'hol', 'jegyek', 'osszeg', 'hatarido'],
+        button: true,
+      },
+      ticketPaid: {
+        label: 'Jegyvásárlás: sikeres fizetés',
+        vars: ['keresztnev', 'cim', 'mikor', 'hol', 'jegyek', 'osszeg'],
+        button: true,
+        extra: [{ name: 'calendarNote', label: 'A naptárfájlról' }],
+      },
+      ticketCancelledBySelf: {
+        label: 'Lemondott jegyfoglalás (a néző mondta le)',
+        vars: ['keresztnev', 'cim', 'mikor', 'jegyek'],
+        button: true,
+      },
+      ticketCancelledByStaff: {
+        label: 'Lemondott jegyfoglalás (mi mondtuk le)',
+        vars: ['keresztnev', 'cim', 'mikor', 'jegyek'],
+        button: true,
+      },
+      staffTicketBooked: {
+        label: 'Munkatársaknak: új jegyfoglalás',
+        vars: ['nev', 'email', 'cim', 'mikor', 'jegyek'],
+        button: true,
+      },
+      staffTicketPaid: {
+        label: 'Munkatársaknak: új jegyvásárlás',
+        vars: ['nev', 'email', 'cim', 'mikor', 'jegyek', 'osszeg'],
+        button: true,
+      },
+      staffTicketCancelled: {
+        label: 'Munkatársaknak: lemondott jegyfoglalás',
+        vars: ['nev', 'email', 'cim', 'mikor', 'jegyek'],
+      },
+    },
+  },
   account: {
     label: 'Fiók',
     templates: {
@@ -186,6 +236,7 @@ export const COMMON = [
   { name: 'labelWhen', label: 'Sor: mikor' },
   { name: 'labelWhere', label: 'Sor: hol' },
   { name: 'labelPrice', label: 'Sor: ár' },
+  { name: 'labelSeats', label: 'Sor: jegyek' },
   { name: 'labelPaid', label: 'Sor: fizetve' },
   { name: 'labelDue', label: 'Sor: fizetendő' },
   { name: 'labelRefunded', label: 'Sor: visszautalva' },
