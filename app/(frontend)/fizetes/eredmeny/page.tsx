@@ -4,6 +4,7 @@ import AccountShell from '@/components/account/AccountShell';
 import { accountMetadata } from '@/components/account/meta';
 import OrderResult from '@/components/payments/OrderResult';
 import { payloadClient } from '@/lib/auth';
+import { getUi } from '@/lib/data';
 import { orderStatus } from '@/lib/payments/order-page';
 
 export const dynamic = 'force-dynamic';
@@ -23,7 +24,10 @@ export default async function ResultPage({
   const order = await orderStatus(await payloadClient(), token);
   if (!order) notFound();
   return (
-    <AccountShell eyebrow="Fizetés" heading="*Jelentkezés*">
+    <AccountShell
+      eyebrow="Fizetés"
+      heading={order.kind === 'show' ? (await getUi()).showBooking.orderHeading : '*Jelentkezés*'}
+    >
       <OrderResult token={token} initial={order} returned={vissza === '1'} />
     </AccountShell>
   );

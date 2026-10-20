@@ -56,7 +56,11 @@ export default async function ShowCheckoutPage({ params }: Props) {
           action={showCheckoutAction}
           hidden={{ eloadas: s.code ?? '' }}
           price={price}
-          perSeat={{ max: Math.min(state.left, billing.showDefaults.maxPerBooking), label: ui.showBooking.seats }}
+          perSeat={{
+            max: Math.min(state.left, billing.showDefaults.maxPerBooking),
+            label: ui.showBooking.seats,
+            loginAfter: ui.showBooking.checkoutLoginAfter,
+          }}
           loginHref={`/belepes?vissza=${encodeURIComponent(showCheckoutPath(s.code ?? ''))}`}
           provider={paymentProvider().brand}
           summary={

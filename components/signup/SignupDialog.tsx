@@ -248,7 +248,7 @@ function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string
                 <Link href="/belepes" className="link font-semibold text-ink">
                   Lépj be
                 </Link>
-                , és egy kattintással jelentkezhetsz. Ha nincs, a jelentkezéssel létrehozzuk.
+                {show ? ui.loginAfter : ', és egy kattintással jelentkezhetsz. Ha nincs, a jelentkezéssel létrehozzuk.'}
               </p>
             )}
           </form>

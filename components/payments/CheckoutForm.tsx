@@ -30,8 +30,8 @@ type Props = {
   hidden: Record<string, string>;
   /** A fixed price, or a choice of options. */
   price?: number;
-  /** Tickets: `price` is one ticket's, the person picks how many (sent as `jegyek`). */
-  perSeat?: { max: number; label: string };
+  /** Tickets: `price` is one ticket's, the person picks how many (sent as `jegyek`); `loginAfter`: the "Van már fiókod?" line's end. */
+  perSeat?: { max: number; label: string; loginAfter: string };
   options?: PayOption[];
   defaultOption?: string;
   loginHref: string;
@@ -97,7 +97,7 @@ export default function CheckoutForm({
                   <Link href={loginHref} className="link font-semibold text-ink">
                     Lépj be
                   </Link>
-                  , és kitöltjük helyetted. Ha nincs, a jelentkezéssel létrehozzuk.
+                  {perSeat?.loginAfter ?? ', és kitöltjük helyetted. Ha nincs, a jelentkezéssel létrehozzuk.'}
                 </p>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <TextField label="Vezetéknév" name="lastName" autoComplete="family-name" value={v('lastName')} />

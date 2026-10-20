@@ -13,6 +13,12 @@ const SHOW_BOOKING = {
   noRefund: 'A megvásárolt jegyet nem lehet lemondani; ha mégsem tudsz jönni, írj nekünk.',
   closed: 'Erre az előadásra már nem lehet jegyet venni.',
   back: 'Vissza az előadáshoz',
+  loginAfter: ', és egy kattintással foglalhatsz. Ha nincs, a foglalással létrehozzuk.',
+  checkoutLoginAfter: ', és kitöltjük helyetted. Ha nincs, a vásárlással létrehozzuk.',
+  terms: 'A jegyvásárláshoz el kell fogadnod az ÁSZF-et.',
+  orderHeading: '*Jegyvásárlás*',
+  orderCancelled: 'Megszakítottad a jegyvásárlást',
+  orderAgain: 'Mégis kérem a jegyeket',
 };
 
 export async function up({ db }: MigrateUpArgs): Promise<void> {
