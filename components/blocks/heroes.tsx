@@ -77,16 +77,21 @@ export async function HomeHero({ block, className }: BlockProps<'homeHero'>) {
           />
         </div>
         {shows.length > 0 && (
-          <Rotator className="mt-6 lg:absolute lg:bottom-5 lg:left-0 lg:mt-0 lg:w-[272px]">
+          <Rotator
+            variant="slide"
+            className="mt-6 rounded-[18px] border border-line bg-paper py-4 shadow-[0_18px_40px_-18px_rgba(11,58,63,0.35)] transition-colors hover:border-teal lg:absolute lg:bottom-5 lg:left-0 lg:mt-0 lg:w-[272px] lg:py-5"
+            top={
+              <span className="block px-5 pb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-rust-dark lg:px-[22px] lg:text-xs">
+                {ui.shows.nextShow}
+              </span>
+            }
+          >
             {shows.map((show) => (
               <SmartLink
                 key={show.id}
                 href={`${settings.urls.upcomingShows}#eloadas-${show.id}`}
-                className="flex h-full flex-col gap-1.5 rounded-[18px] border border-line bg-paper px-5 py-4 shadow-[0_18px_40px_-18px_rgba(11,58,63,0.35)] transition-colors hover:border-teal lg:px-[22px] lg:py-5"
+                className="flex flex-col gap-1.5 px-5 lg:px-[22px]"
               >
-                <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-rust-dark lg:text-xs">
-                  {ui.shows.nextShow}
-                </span>
                 <span className="font-display text-[28px] leading-tight lg:text-[32px]">{show.production.title}</span>
                 <span className="text-sm text-ink2 lg:text-[15px]">{showDateLine(show.date, show.time)}</span>
                 <span className="text-sm text-muted">
