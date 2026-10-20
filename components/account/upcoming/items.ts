@@ -28,6 +28,8 @@ export type UpcomingItem = {
   cancelled: boolean;
   /** The person's own practice booking, and whether it may still be cancelled. */
   practice?: { bookingId: number; canCancel: boolean };
+  /** The person's show booking: its tickets' page (QR codes). */
+  tickets?: string;
   /** The person's own Nyitott Műhely sign-up: what they may do with it. */
   application?: { id: number; canCancel: boolean; canMove: boolean; moveTargets: { id: number; label: string }[] };
 };
@@ -86,6 +88,7 @@ export function upcomingItems(
         end: s.start,
         place: s.place,
         cancelled: false,
+        tickets: `/fiokom/jegyek/${s.applicationId}`,
         application: { id: s.applicationId, canCancel: s.canCancel, canMove: false, moveTargets: [] },
       }),
     ),

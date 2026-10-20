@@ -86,6 +86,8 @@ type Layout = {
   footnote?: string;
   /** Label / value rows under the paragraphs ("Mikor", "Hol"…); `was` shows a crossed-out old value. */
   details?: { label: string; value: string; was?: string }[];
+  /** A show's tickets: each one's QR code (an inline attachment: `cid`), its caption and link. */
+  tickets?: { cid: string; caption: string; href: string }[];
   /** The layout's own lines (E-mailek → Közös): under the button, the footer. */
   chrome: { buttonHelp: string; footer: string };
 };
@@ -98,6 +100,7 @@ export function emailLayout({
   code,
   footnote,
   details,
+  tickets,
   chrome,
 }: Layout): string {
   const p = (text: string) =>
@@ -126,6 +129,18 @@ export function emailLayout({
     ? `<p style="margin:8px 0 8px;font:16px/1.6 ${FONT};color:${C.ink2}">${escapeHtml(code.intro)}</p>
       <p style="margin:0 0 24px;padding:14px 20px;background:${C.cream};border:1px solid ${C.line};border-radius:16px;text-align:center;font:700 32px/1 ${FONT};letter-spacing:8px;color:${C.deep}">${escapeHtml(code.value)}</p>`
     : '';
+  const ticketBlock = tickets?.length
+    ? tickets
+        .map(
+          (
+            t,
+          ) => `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 20px;text-align:center"><tr><td style="padding:16px;background:#ffffff;border:1px solid ${C.line};border-radius:16px">
+        <a href="${escapeHtml(t.href)}"><img src="cid:${escapeHtml(t.cid)}" width="180" height="180" alt="${escapeHtml(t.caption)}" style="display:block;border:0"></a>
+        <p style="margin:10px 0 0;font:600 14px/1.4 ${FONT};color:${C.ink}">${escapeHtml(t.caption)}</p>
+      </td></tr></table>`,
+        )
+        .join('\n      ')
+    : '';
   const note = footnote ? `<p style="margin:0;font:13px/1.6 ${FONT};color:${C.muted}">${escapeHtml(footnote)}</p>` : '';
   return `<!doctype html>
 <html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${escapeHtml(heading)}</title></head>
@@ -144,6 +159,7 @@ export function emailLayout({
       <h1 style="margin:0 0 20px;font:400 32px/1.1 Georgia, 'Times New Roman', serif;color:${C.ink}">${escapeHtml(heading)}</h1>
       ${paragraphs.map(p).join('\n      ')}
       ${rows}
+      ${ticketBlock}
       ${cta}
       ${codeBlock}
       ${note}
@@ -180,6 +196,8 @@ export function fromTemplate(
     code?: string;
     /** Instead of the template's footnote (e.g. the login link's note). */
     footnote?: string;
+    /** A show's tickets (their QR codes, attached inline by the sender). */
+    tickets?: { cid: string; n: number; href: string }[];
   } = {},
 ): { subject: string; html: string } {
   const t = texts.template(key);
@@ -194,6 +212,7 @@ export function fromTemplate(
       heading: fill(t.heading, vars),
       paragraphs: [...greeting, ...paragraphs(t.text, vars), ...(o.after ?? [])],
       details: o.details,
+      tickets: o.tickets?.map((t) => ({ cid: t.cid, href: t.href, caption: fill(c.labelTicket, { n: t.n }) })),
       button: o.href && t.button ? { label: fill(t.button, vars), href: o.href } : undefined,
       code: o.code ? { intro: fill(t.codeIntro, vars), value: o.code } : undefined,
       footnote: o.footnote ?? (t.footnote ? fill(t.footnote, vars) : undefined),

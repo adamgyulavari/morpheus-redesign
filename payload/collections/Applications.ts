@@ -1,3 +1,5 @@
+import { randomBytes } from 'node:crypto';
+
 import type { CollectionConfig, PayloadRequest, Where } from 'payload';
 import { fits } from '@/lib/applications/capacity';
 import {
@@ -27,6 +29,7 @@ type ApplicationDoc = {
   course?: Rel;
   show?: Rel;
   seats?: number | null;
+  tickets?: { id?: string | null; code: string; usedAt?: string | null; usedBy?: Rel }[] | null;
   holdUntil?: string | null;
   name?: string;
 };
@@ -200,6 +203,18 @@ export const Applications: CollectionConfig = {
           );
 
         if (CLOSED.includes(status) && before.status !== status) data.cancelledAt ??= new Date().toISOString();
+        // a show booking that holds: a ticket (its code) per seat — the ones it has are kept
+        if (kind === 'show' && status === 'registered') {
+          const have = a.tickets ?? [];
+          const seats = Math.max(1, a.seats ?? 1);
+          if (have.length !== seats)
+            data.tickets = [
+              ...have.slice(0, seats),
+              ...Array.from({ length: Math.max(0, seats - have.length) }, () => ({
+                code: randomBytes(12).toString('base64url'),
+              })),
+            ];
+        }
         const target = await targetOf(req, a);
         data.target = target;
         data.displayTitle = `${a.name ?? ''} — ${target}`;
@@ -259,6 +274,33 @@ export const Applications: CollectionConfig = {
       min: 1,
       defaultValue: 1,
       admin: { condition: (_, s) => s?.kind === 'show' },
+    },
+    {
+      // one per seat, once the booking holds (free: at once; paid: when paid) — each a QR code
+      name: 'tickets',
+      label: 'Jegyek (QR-kódok)',
+      labels: { singular: 'Jegy', plural: 'Jegyek' },
+      type: 'array',
+      admin: {
+        condition: (_, s) => s?.kind === 'show',
+        readOnly: true,
+        description: 'Automatikus. A bejáratnál a QR-kód a /jegy/… oldalra visz; ott a munkatárs felhasználja.',
+      },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            { name: 'code', label: 'Kód', type: 'text', required: true, unique: true, index: true },
+            {
+              name: 'usedAt',
+              label: 'Felhasználva',
+              type: 'date',
+              admin: { date: { pickerAppearance: 'dayAndTime' } },
+            },
+            relationship('usedBy', 'Beengedte', 'users'),
+          ],
+        },
+      ],
     },
     {
       ...relationship('course', 'Kurzus', 'courses', {

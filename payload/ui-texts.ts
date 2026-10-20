@@ -58,7 +58,8 @@ export const UiTexts: CollectionConfig = {
 
 // ── reading them ────────────────────────────────────────────────────────────
 
-type Store = { loading?: Promise<Map<string, UiStrings>> };
+/** `catalogue`: the keys it was built for — new ones (a deploy, or a dev server's reload) mean a reload. */
+type Store = { loading?: Promise<Map<string, UiStrings>>; catalogue?: string };
 // on globalThis: the admin's and the site's bundles share it (one server process)
 const shared = globalThis as { __uiTexts?: Store };
 shared.__uiTexts ??= {};
@@ -66,6 +67,11 @@ const store = shared.__uiTexts;
 
 /** Every language's texts, complete (missing ones from the base language). Loaded once. */
 function languages(payload: Payload): Promise<Map<string, UiStrings>> {
+  const catalogue = UI_TEXTS.map((t) => t.path.join('.')).join();
+  if (store.catalogue !== catalogue) {
+    store.loading = undefined;
+    store.catalogue = catalogue;
+  }
   store.loading ??= payload
     .find({ collection: 'uiTexts', depth: 0, limit: 0, pagination: false })
     .then(({ docs }) => {

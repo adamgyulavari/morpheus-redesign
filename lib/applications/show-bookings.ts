@@ -10,6 +10,7 @@ import { todayInBudapest } from '@/lib/dates';
 import { billingSettings } from '@/lib/payments/settings';
 import { errorMessage } from '@/lib/rooms/server';
 import { relId } from '@/payload/rel';
+import type { Application } from '@/payload-types';
 
 import { APPLICATION_KINDS } from './labels';
 import { sendShowRegistered, sendStaffNew } from './notify';
@@ -17,6 +18,7 @@ import { canBookShow, takesPlace } from './rules';
 import { type ApplicantInput, applicantFor, type Result, validateInput } from './server';
 import { applicationSettings } from './settings';
 import { seatsTaken, showFacts, showInfo, showStart, ticketPrice } from './shows';
+import { ticketImages } from './tickets';
 
 export type ShowBookingInput = ApplicantInput & { showId: number; seats: number };
 
@@ -37,9 +39,9 @@ export async function bookFreeShow(
   if (!verdict.ok) return verdict;
 
   const { applicant, created } = await applicantFor(payload, viewer, input);
-  let applicationId: number;
+  let booking: Application;
   try {
-    const doc = await payload.create({
+    booking = await payload.create({
       collection: 'applications',
       data: {
         kind: 'show',
@@ -51,22 +53,20 @@ export async function bookFreeShow(
         phone: applicant.phone,
       },
     });
-    applicationId = doc.id;
   } catch (err) {
     return { ok: false, reason: errorMessage(err) };
   }
 
   const info = showInfo(s, input.seats);
-  await sendShowRegistered(payload, applicant, info, { created, loggedIn: Boolean(viewer) });
-  await sendStaffNew(
+  await sendShowRegistered(
     payload,
-    await applicationSettings(payload),
-    applicationId,
-    APPLICATION_KINDS.show,
     applicant,
     info,
+    { created, loggedIn: Boolean(viewer) },
+    await ticketImages(booking),
   );
-  return { ok: true, applicationId };
+  await sendStaffNew(payload, await applicationSettings(payload), booking.id, APPLICATION_KINDS.show, applicant, info);
+  return { ok: true, applicationId: booking.id };
 }
 
 /** Jelentkezések → Előadások: the upcoming shows booked here, each with its bookings (the door list). */
@@ -112,12 +112,15 @@ export async function showDashboard(payload: Payload, now = new Date()) {
       price: ticketPrice(s),
       seats: s.booking?.seats ?? 0,
       taken: mine.reduce((n, b) => n + (b.seats ?? 1), 0),
+      arrived: mine.reduce((n, b) => n + (b.tickets ?? []).filter((t) => t.usedAt).length, 0),
       bookings: mine.map((b) => ({
         id: b.id,
         name: b.name,
         email: b.email,
         phone: b.phone ?? '',
         seats: b.seats ?? 1,
+        /** Tickets used at the door. */
+        used: (b.tickets ?? []).filter((t) => t.usedAt).length,
         state: b.status === 'held' ? ('waiting' as const) : relId(b.order) ? ('paid' as const) : ('free' as const),
       })),
     };

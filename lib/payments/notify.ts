@@ -5,7 +5,15 @@
  */
 import type { Payload } from 'payload';
 
-import { type Applicant, details, myAccountLink, send, type TargetInfo, varsOf } from '@/lib/applications/notify';
+import {
+  type Applicant,
+  details,
+  myAccountLink,
+  send,
+  type TargetInfo,
+  type TicketImage,
+  varsOf,
+} from '@/lib/applications/notify';
 import type { ApplicationSettings } from '@/lib/applications/settings';
 import { formatHuf } from '@/lib/format';
 import { emailLayout, fromTemplate, siteUrl } from '@/payload/email';
@@ -23,7 +31,7 @@ export async function sendOrderPaid(
   a: Applicant,
   t: TargetInfo,
   p: PaidInfo,
-  opts: { loggedIn: boolean; ics?: string; waitingForGroup?: boolean },
+  opts: { loggedIn: boolean; ics?: string; waitingForGroup?: boolean; tickets?: TicketImage[] },
 ) {
   const texts = await emailTexts(payload);
   const key = t.seats ? 'ticketPaid' : 'orderPaid';
@@ -40,8 +48,10 @@ export async function sendOrderPaid(
       details: details(texts.common, t, [{ label: texts.common.labelPaid, value: formatHuf(p.amountDue) }]),
       href: await myAccountLink(payload, a.userId, !opts.loggedIn),
       footnote: opts.loggedIn ? undefined : texts.common.loginLinkNote,
+      tickets: opts.tickets,
     }),
     opts.ics,
+    opts.tickets,
   );
 }
 

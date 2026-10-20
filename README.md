@@ -270,6 +270,11 @@ as before) or on the site (*Saját foglalás*, which needs the production's own 
   `lib/applications/rules.ts` (showState, canBookShow, canCancelShow).
 - The site's buttons come from one place (`components/ShowButton.tsx`): booked here, never the
   stored external link; "Megtelt" when the seats are gone. Bookings re-render the show lists.
+- **Tickets:** a booking that holds (free: at once; paid: when paid) gets a ticket per seat, each
+  with a QR code — in the e-mail (inline images) and on `/fiokom/jegyek/<booking>`. The code opens
+  `/jegy/<code>`: staff logged in on a phone get one button, "Jegy felhasználása" (once — the
+  update only touches an unused ticket, so two phones can't both let it in); anyone else sees the
+  ticket and whether it is still valid (`lib/applications/tickets.ts`).
 - Staff see each date's bookings (the door list) in *Jelentkezések → Előadások*. The Facebook sync
   leaves a date booked here alone (its ticket link included).
 

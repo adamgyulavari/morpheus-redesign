@@ -237,6 +237,7 @@ export const COMMON = [
   { name: 'labelWhere', label: 'Sor: hol' },
   { name: 'labelPrice', label: 'Sor: ár' },
   { name: 'labelSeats', label: 'Sor: jegyek' },
+  { name: 'labelTicket', label: 'Jegy a QR-kód alatt', description: 'Pl. „{n}. jegy” — {n}: hányadik.' },
   { name: 'labelPaid', label: 'Sor: fizetve' },
   { name: 'labelDue', label: 'Sor: fizetendő' },
   { name: 'labelRefunded', label: 'Sor: visszautalva' },
