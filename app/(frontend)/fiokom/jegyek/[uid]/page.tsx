@@ -15,14 +15,20 @@ export const dynamic = 'force-dynamic';
 
 export const generateMetadata = async () => accountMetadata((await getUi()).showBooking.myTickets);
 
-type Props = { params: Promise<{ id: string }> };
+type Props = { params: Promise<{ uid: string }> };
 
-/** /fiokom/jegyek/<booking>: the person's tickets for a show, one QR code each — to show at the door. */
+/** /fiokom/jegyek/<booking's uid>: the person's tickets for a show, one QR code each — to show at the door. */
 export default async function MyTicketsPage({ params }: Props) {
-  const { id } = await params;
-  const user = await requireUser(`/fiokom/jegyek/${id}`);
+  const { uid } = await params;
+  const user = await requireUser(`/fiokom/jegyek/${uid}`);
   const payload = await payloadClient();
-  const a = await payload.findByID({ collection: 'applications', id: Number(id) || 0, depth: 0, disableErrors: true });
+  const { docs } = await payload.find({
+    collection: 'applications',
+    where: { uid: { equals: uid } },
+    depth: 0,
+    limit: 1,
+  });
+  const a = docs[0];
   if (a?.kind !== 'show' || relId(a.user) !== user.id || a.status !== 'registered' || !a.tickets?.length) notFound();
   const s = await payload.findByID({ collection: 'shows', id: relId(a.show) ?? 0, depth: 1, disableErrors: true });
   if (!s) notFound();

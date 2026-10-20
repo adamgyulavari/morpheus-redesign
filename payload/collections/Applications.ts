@@ -14,7 +14,7 @@ import { whenText } from '@/lib/rooms/format';
 import { options } from '@/lib/rooms/labels';
 
 import { isStaffOrAdmin, userIsStaffOrAdmin } from '../access';
-import { relationship, text, textarea } from '../fields';
+import { publicId, relationship, text, textarea } from '../fields';
 import { type Rel, relId } from '../rel';
 import { collectionRevalidation } from '../revalidate';
 import { failer } from './placement';
@@ -224,6 +224,7 @@ export const Applications: CollectionConfig = {
   },
   fields: [
     { name: 'displayTitle', label: 'Megnevezés', type: 'text', admin: { readOnly: true, hidden: true } },
+    publicId(),
     {
       type: 'row',
       fields: [

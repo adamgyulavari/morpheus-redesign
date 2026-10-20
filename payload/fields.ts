@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 /**
  * Reusable field builders, so every collection and block describes the same kinds of content the
  * same way (labels and hints in Hungarian, for the editors).
@@ -264,4 +266,17 @@ export const paragraphsRichText = lexicalEditor({ features: () => [ParagraphFeat
 /** Paragraphs with links — for short texts that contain an inline link. */
 export const linksRichText = lexicalEditor({
   features: () => [ParagraphFeature(), LinkFeature(), InlineToolbarFeature()],
+});
+
+/**
+ * A random, unguessable id for the document's public links (e.g. /fiokom/jegyek/…):
+ * never the sequential id in a URL. Filled when empty.
+ */
+export const publicId = (): Field => ({
+  name: 'uid',
+  type: 'text',
+  unique: true,
+  index: true,
+  admin: { hidden: true },
+  hooks: { beforeChange: [({ value }) => value || randomUUID()] },
 });

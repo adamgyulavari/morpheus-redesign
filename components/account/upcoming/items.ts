@@ -88,7 +88,7 @@ export function upcomingItems(
         end: s.start,
         place: s.place,
         cancelled: false,
-        tickets: `/fiokom/jegyek/${s.applicationId}`,
+        tickets: `/fiokom/jegyek/${s.uid}`,
         application: { id: s.applicationId, canCancel: s.canCancel, canMove: false, moveTargets: [] },
       }),
     ),

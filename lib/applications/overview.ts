@@ -32,6 +32,8 @@ export type MyWorkshop = {
 
 export type MyShow = {
   applicationId: number;
+  /** Its tickets' link (/fiokom/jegyek/<uid>). */
+  uid: string;
   /** The production. */
   title: string;
   seats: number;
@@ -134,6 +136,7 @@ export async function myApplications(payload: Payload, user: TypedUser, activeGr
       if (start <= now) continue;
       shows.push({
         applicationId: a.id,
+        uid: a.uid ?? '',
         title: productions.get(relId(s.production) ?? 0) ?? s.title ?? '',
         seats: a.seats ?? 1,
         start: start.toISOString(),

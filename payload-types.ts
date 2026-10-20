@@ -429,6 +429,7 @@ export interface Course {
 export interface Application {
   id: number;
   displayTitle?: string | null;
+  uid?: string | null;
   kind: 'workshop' | 'beginner' | 'professional' | 'show';
   /**
    * Nyitott Műhely és kezdő: Fizetésre vár / Jelentkezett (fizetett) / Lemondva / Áthelyezve. Szakmai: Új / Interjú / Felvéve / Elutasítva / Visszavonta.
@@ -4656,6 +4657,7 @@ export interface RoomBookingsSelect<T extends boolean = true> {
  */
 export interface ApplicationsSelect<T extends boolean = true> {
   displayTitle?: T;
+  uid?: T;
   kind?: T;
   status?: T;
   user?: T;
