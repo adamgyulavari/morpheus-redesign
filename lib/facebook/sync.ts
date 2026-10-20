@@ -23,6 +23,8 @@ export type SyncResult = {
   hidden: SyncLine[];
   /** Not saved: a person needs to look (no production / venue found). */
   problems: SyncLine[];
+  /** A date at our venue took the rooms: what it cancelled (its note). */
+  rooms: SyncLine[];
 };
 
 const all = { limit: 0, pagination: false } as const;
@@ -50,7 +52,7 @@ export async function syncFromFacebook(payload: Payload, events?: FbEvent[]): Pr
     payload.find({ collection: 'venues', depth: 0, select: { name: true }, ...all }),
     payload.find({ collection: 'shows', where: { date: { greater_than_equal: today } }, depth: 0, ...all }),
   ]);
-  const result: SyncResult = { created: [], updated: [], unchanged: 0, hidden: [], problems: [] };
+  const result: SyncResult = { created: [], updated: [], unchanged: 0, hidden: [], problems: [], rooms: [] };
   const seen = new Set<string>();
 
   for (const e of list) {
@@ -86,12 +88,15 @@ export async function syncFromFacebook(payload: Payload, events?: FbEvent[]): Pr
     if (!target) {
       const doc = await payload.create({ collection: 'shows', data: { ...w, facebookEventId: e.id, hidden: false } });
       result.created.push({ ...line, showId: doc.id });
+      if (doc.roomNote) result.rooms.push({ ...line, showId: doc.id, note: doc.roomNote });
     } else if (!own || differs(target, w)) {
-      await payload.update({
+      const doc = await payload.update({
         collection: 'shows',
         id: target.id,
         data: { ...w, facebookEventId: e.id, hidden: false },
       });
+      if (doc.roomNote && doc.roomNote !== target.roomNote)
+        result.rooms.push({ ...line, showId: target.id, note: doc.roomNote });
       result.updated.push({
         ...line,
         showId: target.id,

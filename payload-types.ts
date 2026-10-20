@@ -565,6 +565,10 @@ export interface Session {
   rooms?: (number | Room)[] | null;
   externalLocation?: string | null;
   /**
+   * Automatikus: a saját helyszínen tartott előadás-időponté.
+   */
+  show?: (number | null) | Show;
+  /**
    * Automatikus: az alkalom ideje és termei szerint.
    */
   booking?: (number | null) | RoomBooking;
@@ -881,6 +885,79 @@ export interface Room {
   createdAt: string;
 }
 /**
+ * Az előadások időpontjai. Elöl a legkésőbbi; a múltbeli időpontok másnap automatikusan eltűnnek az oldalról. A Facebook-eseményekből a „Szinkronizálás a Facebookról” gombbal jönnek.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "shows".
+ */
+export interface Show {
+  id: number;
+  /**
+   * A szinkron tölti ki.
+   */
+  facebookEventId?: string | null;
+  /**
+   * Nem jelenik meg az oldalon. A szinkron kapcsolja be, ha az esemény a Facebookon elmarad vagy törölték.
+   */
+  hidden?: boolean | null;
+  production: number | Production;
+  date: string;
+  /**
+   * Óra:perc, pl. 18:00
+   */
+  time: string;
+  venue: number | Venue;
+  /**
+   * Nem kötelező, pl. „Nyilvános főpróba”.
+   */
+  label?: string | null;
+  /**
+   * Pl. a Tixa-oldal.
+   */
+  ticketUrl?: string | null;
+  /**
+   * Ingyenes, regisztrációs előadásnál a jegy helyett.
+   */
+  registrationUrl?: string | null;
+  /**
+   * Gyakorlati információk a nézőknek, soronként.
+   */
+  info?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  title?: string | null;
+  /**
+   * A saját helyszínen az előadás minden termet lefoglal; ami az útjában volt, itt látszik (a diákok e-mailt kaptak, a többiekkel egyeztess).
+   */
+  roomNote?: string | null;
+  importId?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Ahol az előadásokat tartjuk.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "venues".
+ */
+export interface Venue {
+  id: number;
+  /**
+   * Pl. „1027 Budapest, Frankel Leó út 6.”
+   */
+  name: string;
+  /**
+   * Listákban ez jelenik meg, pl. „Frankel Leó út 6.”
+   */
+  shortName: string;
+  importId?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Ki és mi foglal termet. Az alkalmak (órák, próbák) foglalását az alkalom kezeli; itt a bérléseket, egyéb foglalásokat és a diákok gyakorlásait látod.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1051,75 +1128,6 @@ export interface Payment {
         id?: string | null;
       }[]
     | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Az előadások időpontjai. Elöl a legkésőbbi; a múltbeli időpontok másnap automatikusan eltűnnek az oldalról. A Facebook-eseményekből a „Szinkronizálás a Facebookról” gombbal jönnek.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "shows".
- */
-export interface Show {
-  id: number;
-  /**
-   * A szinkron tölti ki.
-   */
-  facebookEventId?: string | null;
-  /**
-   * Nem jelenik meg az oldalon. A szinkron kapcsolja be, ha az esemény a Facebookon elmarad vagy törölték.
-   */
-  hidden?: boolean | null;
-  production: number | Production;
-  date: string;
-  /**
-   * Óra:perc, pl. 18:00
-   */
-  time: string;
-  venue: number | Venue;
-  /**
-   * Nem kötelező, pl. „Nyilvános főpróba”.
-   */
-  label?: string | null;
-  /**
-   * Pl. a Tixa-oldal.
-   */
-  ticketUrl?: string | null;
-  /**
-   * Ingyenes, regisztrációs előadásnál a jegy helyett.
-   */
-  registrationUrl?: string | null;
-  /**
-   * Gyakorlati információk a nézőknek, soronként.
-   */
-  info?:
-    | {
-        text: string;
-        id?: string | null;
-      }[]
-    | null;
-  title?: string | null;
-  importId?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Ahol az előadásokat tartjuk.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "venues".
- */
-export interface Venue {
-  id: number;
-  /**
-   * Pl. „1027 Budapest, Frankel Leó út 6.”
-   */
-  name: string;
-  /**
-   * Listákban ez jelenik meg, pl. „Frankel Leó út 6.”
-   */
-  shortName: string;
-  importId?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -3085,6 +3093,7 @@ export interface ShowsSelect<T extends boolean = true> {
         id?: T;
       };
   title?: T;
+  roomNote?: T;
   importId?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -4548,6 +4557,7 @@ export interface SessionsSelect<T extends boolean = true> {
   locationType?: T;
   rooms?: T;
   externalLocation?: T;
+  show?: T;
   booking?: T;
   notes?: T;
   workshop?:
@@ -4850,6 +4860,18 @@ export interface SiteSetting {
  */
 export interface RoomBookingSetting {
   id: number;
+  /**
+   * A Nyitott Műhely, a képzések és a diákfoglalások helye. Az ide kiírt előadás (kézzel vagy a Facebookról) minden termet lefoglal, és lemond mindent, ami az útjában van.
+   */
+  homeVenue?: (number | null) | Venue;
+  /**
+   * Beállás, bemelegítés.
+   */
+  showRoomsBefore: number;
+  /**
+   * Az előadás és a bontás. Egy-egy előadásnál az alkalmát módosítva változtatható.
+   */
+  showRoomsAfter: number;
   /**
    * Üresen: éjjel-nappal.
    */
@@ -5596,6 +5618,9 @@ export interface SiteSettingsSelect<T extends boolean = true> {
  * via the `definition` "roomBookingSettings_select".
  */
 export interface RoomBookingSettingsSelect<T extends boolean = true> {
+  homeVenue?: T;
+  showRoomsBefore?: T;
+  showRoomsAfter?: T;
   studentHoursFrom?: T;
   studentHoursTo?: T;
   slotMinutes?: T;

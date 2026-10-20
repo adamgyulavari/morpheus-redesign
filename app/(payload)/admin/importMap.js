@@ -12,7 +12,7 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { HeadingFeatureClient as HeadingFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ParagraphFeatureClient as ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { FillMonthLink as FillMonthLink_4ce0b4c0b98a51629edb8cbcabe61672 } from '@/payload/admin/FillMonthLink'
-import { FacebookSync as FacebookSync_b3fd352c96445c30fde04a592882b729 } from '@/payload/components/FacebookSync'
+import { FacebookSync as FacebookSync_c50f154f8ecb23785210e5c45ecead4f } from '@/payload/admin/FacebookSync'
 import { BlockFocus as BlockFocus_8044bd553ea8fc36f5b82d54e1ee7bbe } from '@/payload/admin/BlockFocus'
 import { BlockHelp as BlockHelp_67188de3ac65399b97c6103a7a4ea54b } from '@/payload/admin/BlockHelp'
 import { OverviewComponent as OverviewComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
@@ -50,8 +50,8 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#HeadingFeatureClient": HeadingFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ParagraphFeatureClient": ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
-  "@/payload/components/FacebookSync#FacebookSync": FacebookSync_b3fd352c96445c30fde04a592882b729,
   "@/payload/admin/FillMonthLink#FillMonthLink": FillMonthLink_4ce0b4c0b98a51629edb8cbcabe61672,
+  "@/payload/admin/FacebookSync#FacebookSync": FacebookSync_c50f154f8ecb23785210e5c45ecead4f,
   "@/payload/admin/BlockFocus#BlockFocus": BlockFocus_8044bd553ea8fc36f5b82d54e1ee7bbe,
   "@/payload/admin/BlockHelp#BlockHelp": BlockHelp_67188de3ac65399b97c6103a7a4ea54b,
   "@payloadcms/plugin-seo/client#OverviewComponent": OverviewComponent_a8a977ebc872c5d5ea7ee689724c0860,

@@ -267,6 +267,16 @@ export const Sessions: CollectionConfig = {
     },
     { ...text('externalLocation', 'Külső helyszín'), admin: { condition: (_, s) => s?.locationType === 'external' } },
     {
+      ...relationship('show', 'Előadás-időpont', 'shows'),
+      index: true,
+      admin: {
+        readOnly: true,
+        position: 'sidebar',
+        condition: (_, s) => s?.kind === 'show',
+        description: 'Automatikus: a saját helyszínen tartott előadás-időponté.',
+      },
+    },
+    {
       ...relationship('booking', 'Teremfoglalás', 'roomBookings'),
       admin: { readOnly: true, position: 'sidebar', description: 'Automatikus: az alkalom ideje és termei szerint.' },
     },
