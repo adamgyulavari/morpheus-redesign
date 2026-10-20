@@ -1,6 +1,6 @@
 /**
- * The overview's "Közelgő alkalmak": the group's sessions, the practice bookings and the person's
- * Nyitott Műhely dates in one shape, in time order, with the date parts the list shows (Budapest time).
+ * The overview's "Közelgő alkalmak": the group's sessions, the practice bookings, the person's
+ * Nyitott Műhely dates and show bookings in one shape, in time order, with the date parts the list shows (Budapest time).
  */
 
 import type { MyApplications } from '@/lib/applications/overview';
@@ -17,6 +17,7 @@ export type UpcomingItem = {
   /** The session's title, or the group / production a practice is for. */
   title: string;
   start: string;
+  /** The same as `start` for a show (its end isn't known): only the start is shown. */
   end: string;
   /** Room names or the external place; missing while it's still being arranged. */
   place?: string;
@@ -76,6 +77,18 @@ export function upcomingItems(
         application: { id: w.applicationId, canCancel: w.canCancel, canMove: w.canMove, moveTargets: mine.moveTargets },
       }),
     ),
+    ...mine.shows.map(
+      (s): UpcomingItem => ({
+        key: `j${s.applicationId}`,
+        kind: 'show',
+        title: `${s.title} (${s.seats} jegy)`,
+        start: s.start,
+        end: s.start,
+        place: s.place,
+        cancelled: false,
+        application: { id: s.applicationId, canCancel: s.canCancel, canMove: false, moveTargets: [] },
+      }),
+    ),
   ].sort((a, b) => a.start.localeCompare(b.start));
 }
 
@@ -91,7 +104,8 @@ export function dateParts(iso: string) {
   };
 }
 
-export const timeRange = (i: UpcomingItem) => `${clockOf(new Date(i.start))}–${clockOf(new Date(i.end))}`;
+export const timeRange = (i: UpcomingItem) =>
+  i.end === i.start ? clockOf(new Date(i.start)) : `${clockOf(new Date(i.start))}–${clockOf(new Date(i.end))}`;
 
 /** Items grouped by Budapest day, in order. */
 export function byDay(items: UpcomingItem[]) {

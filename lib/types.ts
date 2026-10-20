@@ -81,6 +81,8 @@ export type Show = {
   registrationUrl?: string;
   /** Practical notes for the audience, verbatim lines. */
   info?: string[];
+  /** Booked on the site (Saját foglalás): its booking link's code, a ticket's price (0: free), what is left. */
+  booking?: { code: string; price: number; state: 'open' | 'full' | 'closed'; left: number; maxPerBooking: number };
 };
 
 /** A show joined with what it references — the shape pages work with. */

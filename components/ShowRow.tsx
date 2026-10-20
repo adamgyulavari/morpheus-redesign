@@ -2,32 +2,25 @@ import Image from 'next/image';
 import type { ReactNode } from 'react';
 
 import { dayOfMonth, monthShort, weekday } from '@/lib/dates';
-import type { ShowWithRelations } from '@/lib/types';
+import type { ShowWithRelations, UiStrings } from '@/lib/types';
 
-import { ArrowRight } from './icons';
+import ShowButton, { hasShowButton } from './ShowButton';
 
 /**
- * One show in a "Közelgő előadások" list (homepage and /kozelgo-eloadasok). The button is "Jegyek"
- * for ticketed shows and "Regisztráció" for free ones; `details` adds e.g. an "Az előadásról" popup.
+ * One show in a "Közelgő előadások" list (homepage, /kozelgo-eloadasok, a production's page). The
+ * button is ShowButton's; `details` adds e.g. an "Az előadásról" popup.
  */
 export default function ShowRow({
   show,
-  ticketLabel,
-  registrationLabel,
+  ui,
   last,
   details,
 }: {
   show: ShowWithRelations;
-  ticketLabel: string;
-  registrationLabel: string;
+  ui: Pick<UiStrings, 'shows' | 'sessions' | 'showBooking'>;
   last: boolean;
   details?: ReactNode;
 }) {
-  const action = show.ticketUrl
-    ? { label: ticketLabel, href: show.ticketUrl }
-    : show.registrationUrl
-      ? { label: registrationLabel, href: show.registrationUrl }
-      : undefined;
   const { production, venue } = show;
   return (
     <div
@@ -67,15 +60,12 @@ export default function ShowRow({
         {details}
       </div>
       <span className="col-start-2 text-sm text-ink2 xl:col-start-auto xl:text-base">{venue.name}</span>
-      {action ? (
-        <a
-          href={action.href}
-          aria-label={`${action.label} – ${production.title}`}
+      {hasShowButton(show) ? (
+        <ShowButton
+          show={show}
+          ui={ui}
           className="btn btn-md btn-outline col-start-2 mt-2 justify-self-start xl:col-start-auto xl:mt-0 xl:justify-self-end"
-        >
-          {action.label}
-          <ArrowRight />
-        </a>
+        />
       ) : (
         <span className="hidden xl:block" />
       )}

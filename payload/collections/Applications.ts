@@ -1,5 +1,5 @@
 import type { CollectionConfig, PayloadRequest, Where } from 'payload';
-import { placesLeftFor } from '@/lib/applications/capacity';
+import { fits } from '@/lib/applications/capacity';
 import {
   APPLICATION_KINDS,
   type ApplicationKind,
@@ -25,6 +25,8 @@ type ApplicationDoc = {
   session?: Rel;
   courseGroup?: Rel;
   course?: Rel;
+  show?: Rel;
+  seats?: number | null;
   holdUntil?: string | null;
   name?: string;
 };
@@ -32,6 +34,8 @@ type ApplicationDoc = {
 const fail = failer('applications');
 
 const sameTargetOf = (a: ApplicationDoc, b: ApplicationDoc) =>
+  relId(a.show) === relId(b.show) &&
+  (a.seats ?? 1) === (b.seats ?? 1) &&
   relId(a.session) === relId(b.session) &&
   relId(a.courseGroup) === relId(b.courseGroup) &&
   relId(a.course) === relId(b.course);
@@ -46,6 +50,11 @@ export const initialStatus = (kind: ApplicationKind): ApplicationStatus =>
 
 /** "Nyitott Műhely, okt. 18., szo 10:00–13:00" or the group's name. */
 async function targetOf(req: PayloadRequest, a: ApplicationDoc): Promise<string> {
+  const showId = relId(a.show);
+  if (a.kind === 'show' && showId) {
+    const s = await req.payload.findByID({ collection: 'shows', id: showId, depth: 0, req, disableErrors: true });
+    return s ? `${s.title} (${a.seats ?? 1} jegy)` : '';
+  }
   const sessionId = relId(a.session);
   if (a.kind === 'workshop' && sessionId) {
     const s = await req.payload.findByID({ collection: 'sessions', id: sessionId, depth: 0, req, disableErrors: true });
@@ -102,10 +111,18 @@ export const Applications: CollectionConfig = {
         if (!statusesOf(kind).includes(status))
           fail('status', 'Ez az állapot ennél a jelentkezésnél nem választható.', req);
         if (!relId(a.user)) fail('user', 'Add meg, ki jelentkezik.', req);
-        if (kind === 'workshop') {
+        if (kind === 'show') {
+          if (!relId(a.show)) fail('show', 'Válaszd ki az előadás-időpontot.', req);
+          if (!((a.seats ?? 0) >= 1)) fail('seats', 'Legalább egy jegy kell.', req);
+          data.session = null;
+          data.courseGroup = null;
+          data.course = null;
+        } else if (kind === 'workshop') {
           if (!relId(a.session)) fail('session', 'Válaszd ki az alkalmat.', req);
+          data.show = null;
           data.courseGroup = null;
         } else {
+          data.show = null;
           if (kind === 'beginner' && !relId(a.courseGroup) && !relId(a.course))
             fail('courseGroup', 'Válaszd ki a csoportot vagy a kurzust.', req);
           data.session = null;
@@ -126,17 +143,19 @@ export const Applications: CollectionConfig = {
         // one active application per person and date / course (the unique indexes are the guarantee)
         if (isActive(status) && (!isActive(before.status as ApplicationStatus) || !sameTargetOf(before, a))) {
           const target: Where =
-            a.kind === 'workshop'
-              ? { session: { equals: relId(a.session) } }
-              : relId(a.courseGroup)
-                ? { courseGroup: { equals: relId(a.courseGroup) } }
-                : {
-                    and: [
-                      { courseGroup: { exists: false } },
-                      { kind: { equals: a.kind } },
-                      { course: relId(a.course) ? { equals: relId(a.course) } : { exists: false } },
-                    ],
-                  };
+            a.kind === 'show'
+              ? { show: { equals: relId(a.show) } }
+              : a.kind === 'workshop'
+                ? { session: { equals: relId(a.session) } }
+                : relId(a.courseGroup)
+                  ? { courseGroup: { equals: relId(a.courseGroup) } }
+                  : {
+                      and: [
+                        { courseGroup: { exists: false } },
+                        { kind: { equals: a.kind } },
+                        { course: relId(a.course) ? { equals: relId(a.course) } : { exists: false } },
+                      ],
+                    };
           const { totalDocs } = await req.payload.count({
             collection: 'applications',
             where: {
@@ -151,8 +170,12 @@ export const Applications: CollectionConfig = {
           });
           if (totalDocs)
             fail(
-              a.kind === 'workshop' ? 'session' : 'courseGroup',
-              a.kind === 'workshop' ? 'Erre az alkalomra már jelentkeztél.' : 'Erre a kurzusra már jelentkeztél.',
+              a.kind === 'show' ? 'show' : a.kind === 'workshop' ? 'session' : 'courseGroup',
+              a.kind === 'show'
+                ? 'Erre az előadásra már foglaltál jegyet.'
+                : a.kind === 'workshop'
+                  ? 'Erre az alkalomra már jelentkeztél.'
+                  : 'Erre a kurzusra már jelentkeztél.',
               req,
             );
         }
@@ -165,10 +188,14 @@ export const Applications: CollectionConfig = {
             before.holdUntil ? new Date(before.holdUntil) : null,
             new Date(),
           );
-        if (takes && (!took || !sameTargetOf(before, a)) && (await placesLeftFor(req, a, before.id)) === 0)
+        if (takes && (!took || !sameTargetOf(before, a)) && !(await fits(req, a, before.id)))
           fail(
-            a.kind === 'workshop' ? 'session' : 'courseGroup',
-            a.kind === 'workshop' ? 'Ez az alkalom megtelt.' : 'Ez a kurzus megtelt.',
+            a.kind === 'show' ? 'seats' : a.kind === 'workshop' ? 'session' : 'courseGroup',
+            a.kind === 'show'
+              ? 'Erre az előadásra nincs ennyi szabad jegy.'
+              : a.kind === 'workshop'
+                ? 'Ez az alkalom megtelt.'
+                : 'Ez a kurzus megtelt.',
             req,
           );
 

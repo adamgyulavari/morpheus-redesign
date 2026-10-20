@@ -11,6 +11,8 @@ import { getCurrentUser, payloadClient } from '@/lib/auth';
 import { allow, clientIp } from '@/payload/magic-link';
 
 import { cancelOwn, moveOwn, type SignUpInput, signUp } from './server';
+import { bookFreeShow } from './show-bookings';
+import { showByCode } from './shows';
 
 export type SignUpState = { error?: string; done?: boolean; values?: Record<string, string> };
 
@@ -56,6 +58,37 @@ export async function signUpAction(_: SignUpState, form: FormData): Promise<Sign
   if (!r.ok) return { error: r.reason, values };
   // (the pages showing the places left re-render from the applications' hooks)
   return { done: true };
+}
+
+/** A free show (`eloadas`: its public code, `jegyek`: how many). Cancelled like the others (cancelApplicationAction). */
+export async function bookShowAction(_: SignUpState, form: FormData): Promise<SignUpState> {
+  const values = {
+    lastName: str(form, 'lastName'),
+    firstName: str(form, 'firstName'),
+    email: str(form, 'email').toLowerCase(),
+    phone: str(form, 'phone'),
+    jegyek: str(form, 'jegyek'),
+  };
+  if (str(form, 'website')) return { done: true };
+  if (form.get('privacy') !== 'on')
+    return { error: 'A foglaláshoz el kell fogadnod az adatkezelési tájékoztatót.', values };
+  const viewer = await getCurrentUser();
+  const ip = clientIp(await headers());
+  const email = viewer?.email ?? values.email;
+  if (!allow(`signup-ip:${ip}`, MAX_PER_IP) || (email && !allow(`signup-email:${email}`, MAX_PER_EMAIL)))
+    return { error: 'Túl sok foglalás érkezett innen rövid időn belül. Próbáld újra negyedóra múlva.', values };
+  const payload = await payloadClient();
+  const show = await showByCode(payload, str(form, 'eloadas'));
+  if (!show) return { error: 'Nincs ilyen előadás.', values };
+  const r = await bookFreeShow(payload, viewer, {
+    showId: show.id,
+    seats: Number(values.jegyek) || 0,
+    lastName: values.lastName,
+    firstName: values.firstName,
+    email: values.email,
+    phone: values.phone,
+  });
+  return r.ok ? { done: true } : { error: r.reason, values };
 }
 
 export async function cancelApplicationAction(id: number): Promise<{ ok: boolean; reason?: string }> {

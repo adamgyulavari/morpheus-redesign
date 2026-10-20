@@ -30,6 +30,8 @@ type Props = {
   hidden: Record<string, string>;
   /** A fixed price, or a choice of options. */
   price?: number;
+  /** Tickets: `price` is one ticket's, the person picks how many (sent as `jegyek`). */
+  perSeat?: { max: number; label: string };
   options?: PayOption[];
   defaultOption?: string;
   loginHref: string;
@@ -48,6 +50,7 @@ export default function CheckoutForm({
   action: submit,
   hidden,
   price = 0,
+  perSeat,
   options,
   defaultOption,
   loginHref,
@@ -59,7 +62,8 @@ export default function CheckoutForm({
   const [state, action] = useActionState<CheckoutState, FormData>(submit, {});
   const [optionId, setOptionId] = useState(state.values?.opcio ?? defaultOption ?? options?.[0]?.id ?? '');
   const chosen = options?.find((o) => o.id === optionId);
-  const due = options ? (chosen?.due ?? 0) : price;
+  const [seats, setSeats] = useState(Number(state.values?.jegyek) || 1);
+  const due = options ? (chosen?.due ?? 0) : price * (perSeat ? seats : 1);
   const v = (name: string) => state.values?.[name];
 
   return (
@@ -147,6 +151,23 @@ export default function CheckoutForm({
                 </label>
               ))}
             </fieldset>
+          )}
+          {perSeat && (
+            <label className="flex items-center justify-between gap-4 text-[15px] font-semibold">
+              {perSeat.label}
+              <select
+                className="field w-[96px]"
+                name="jegyek"
+                value={seats}
+                onChange={(e) => setSeats(Number(e.target.value))}
+              >
+                {Array.from({ length: Math.max(1, perSeat.max) }, (_, i) => (
+                  <option key={i + 1} value={i + 1}>
+                    {i + 1}
+                  </option>
+                ))}
+              </select>
+            </label>
           )}
           <div className="flex items-center justify-between gap-4 border-y border-line py-4">
             <span className="text-[16px] font-semibold leading-none">

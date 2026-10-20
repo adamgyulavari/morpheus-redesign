@@ -1,6 +1,6 @@
 /**
- * The `orderPaid` job (payload.config.ts), after a payment: a workshop gets its confirmation (with
- * .ics); a kezdő group admits the person (the welcome e-mail); without a group it waits for staff
+ * The `orderPaid` job (payload.config.ts), after a payment: a workshop or a show gets its
+ * confirmation (with .ics); a kezdő group admits the person (the welcome e-mail); without a group it waits for staff
  * to place it. Staff get a notice; then the invoice. Safe to run again (a job retry).
  */
 import type { Payload } from 'payload';
@@ -17,6 +17,7 @@ import {
   workshopInfo,
 } from '@/lib/applications/server';
 import { applicationSettings } from '@/lib/applications/settings';
+import { seatsTaken, showInfo, showStart } from '@/lib/applications/shows';
 import { formatHuf } from '@/lib/format';
 import { issueInvoice } from '@/lib/invoicing/service';
 import { icsFile } from '@/lib/rooms/ics';
@@ -45,6 +46,23 @@ export async function afterPaid(payload: Payload, orderId: number) {
     });
     const taken = (await takenBy(payload, 'session_id', [s.id])).get(s.id) ?? NOBODY;
     await sendStaffPaid(payload, settings, applicant, info, money, countText(taken, s));
+  } else if (order.kind === 'show') {
+    const s = await payload.findByID({ collection: 'shows', id: relId(application.show) ?? 0, depth: 1 });
+    const info = showInfo(s, application.seats ?? 1);
+    const start = showStart(s);
+    await sendOrderPaid(payload, applicant, info, money, {
+      loggedIn: false,
+      ics: icsFile({
+        uid: `application-${application.id}@morpheus-szinmuhely.hu`,
+        start,
+        // the length isn't known: an evening's show
+        end: new Date(start.getTime() + 2 * 3_600_000),
+        summary: `${info.title} — Morpheus Színműhely`,
+        location: info.place,
+      }),
+    });
+    const taken = (await seatsTaken(payload, [s.id])).get(s.id) ?? 0;
+    await sendStaffPaid(payload, settings, applicant, info, money, `${taken} / ${s.booking?.seats ?? 0} jegy`);
   } else if (order.kind === 'beginner') {
     const { info } = await targetOf(payload, application, new Date());
     const groupId = relId(application.courseGroup);

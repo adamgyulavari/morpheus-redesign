@@ -15,12 +15,14 @@ import 'server-only';
 import config from '@payload-config';
 import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical';
 import { draftMode } from 'next/headers';
-import { getPayload } from 'payload';
+import { getPayload, type Payload } from 'payload';
 import { cache } from 'react';
 import { uiTexts } from '@/payload/ui-texts';
+import type * as P from '@/payload-types';
 import type { CourseGroup } from '@/payload-types';
-import { courseSignupState } from './applications/rules';
+import { courseSignupState, showState } from './applications/rules';
 import { courseFacts, SIGNUP_ON, takenBy, upcomingWorkshops } from './applications/server';
+import { bookedHere, seatsTaken, showFacts, ticketPrice } from './applications/shows';
 
 import * as map from './cms-map';
 import { todayInBudapest } from './dates';
@@ -35,6 +37,7 @@ import type {
   Production,
   ProductionGroup,
   Review,
+  Show,
   ShowWithRelations,
   SiteSettings,
   TeamBuildingProgramme,
@@ -139,6 +142,35 @@ export async function getShowsForProduction(productionId: string): Promise<ShowW
   return (await getUpcomingShows()).filter((s) => s.productionId === productionId);
 }
 
+/** The site's own booking of the shows booked here: the seats left, open / full / closed. */
+async function bookingsOf(p: Payload, docs: P.Show[]): Promise<Map<number, NonNullable<Show['booking']>>> {
+  const here = docs.filter((d) => bookedHere(d) && d.code);
+  if (!here.length) return new Map();
+  const [taken, { showDefaults }] = await Promise.all([
+    seatsTaken(
+      p,
+      here.map((d) => d.id),
+    ),
+    billingSettings(p),
+  ]);
+  const now = new Date();
+  return new Map(
+    here.map((d) => {
+      const state = showState(showFacts(d, taken.get(d.id) ?? 0), now);
+      return [
+        d.id,
+        {
+          code: d.code as string,
+          price: ticketPrice(d),
+          state: state.state,
+          left: state.state === 'open' ? state.left : 0,
+          maxPerBooking: showDefaults.maxPerBooking,
+        },
+      ];
+    }),
+  );
+}
+
 const findUpcomingShows = cache(async (): Promise<ShowWithRelations[]> => {
   const p = await payload();
   const [{ docs }, productions] = await Promise.all([
@@ -154,8 +186,9 @@ const findUpcomingShows = cache(async (): Promise<ShowWithRelations[]> => {
   // Only shows of published productions (or, in preview, of any).
   const byId = new Map(productions.map((x) => [x.id, x]));
   const ids = new Set<string>();
+  const booking = await bookingsOf(p, docs);
   return docs.flatMap((doc) => {
-    const show = map.show(doc);
+    const show = { ...map.show(doc), booking: booking.get(doc.id) };
     const production = byId.get(show.productionId);
     const venue = typeof doc.venue === 'object' ? map.venue(doc.venue) : undefined;
     if (!production || !venue) return [];

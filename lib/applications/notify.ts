@@ -35,6 +35,8 @@ export type TargetInfo = {
   /** Workshop: minimum, decision time; for the sign-up e-mail. */
   minParticipants?: number;
   cutoff?: Date;
+  /** A show booking: how many tickets. */
+  seats?: number;
 };
 
 const MY_ACCOUNT = '/fiokom';
@@ -50,6 +52,7 @@ export const details = (c: Common, t: TargetInfo, extra: Row[] = []): Row[] => [
   ...(t.when ? [{ label: c.labelWhen, value: t.when }] : []),
   ...(t.place ? [{ label: c.labelWhere, value: t.place }] : []),
   ...(t.price ? [{ label: c.labelPrice, value: t.price }] : []),
+  ...(t.seats ? [{ label: c.labelSeats, value: String(t.seats) }] : []),
   ...extra,
 ];
 
@@ -308,4 +311,19 @@ export async function sendStaffCancellation(
       },
     ),
   );
+}
+
+/** A free show booking (paid tickets get "Sikeres fizetés"). */
+export async function sendShowRegistered(
+  payload: Payload,
+  a: Applicant,
+  t: TargetInfo,
+  account: { created: boolean; loggedIn: boolean },
+) {
+  const texts = await emailTexts(payload);
+  await toApplicant(payload, texts, 'showRegistered', a, t, {
+    vars: { jegyek: t.seats },
+    after: [account.created ? texts.common.accountCreated : texts.common.accountExisting],
+    login: !account.loggedIn,
+  });
 }

@@ -1,8 +1,8 @@
 'use client';
 
 /**
- * "Jelentkezem": a button that opens the sign-up form (Nyitott Műhely date, beginner course) or the
- * professional application form, in the site's dialog. Logged-in people see their name and sign
+ * "Jelentkezem": a button that opens the sign-up form (Nyitott Műhely date, beginner course), the
+ * professional application form or a free show's booking (how many seats), in the site's dialog. Logged-in people see their name and sign
  * up with one click; guests give name, e-mail and phone (an account is made for them).
  */
 import Link from 'next/link';
@@ -15,10 +15,11 @@ import Honeypot from '@/components/forms/Honeypot';
 import Notice from '@/components/forms/Notice';
 import Submit from '@/components/forms/Submit';
 import { ArrowRight } from '@/components/icons';
-import { type SignUpState, signUpAction, whoAmI } from '@/lib/applications/actions';
+import { useUi } from '@/components/UiStrings';
+import { bookShowAction, type SignUpState, signUpAction, whoAmI } from '@/lib/applications/actions';
 import { MIN_MOTIVATION } from '@/lib/applications/rules';
 
-type Kind = 'workshop' | 'beginner' | 'professional';
+type Kind = 'workshop' | 'beginner' | 'professional' | 'show';
 type Me = Awaited<ReturnType<typeof whoAmI>>;
 
 export type SignupTarget = {
@@ -37,9 +38,12 @@ export type SignupTarget = {
   courseId?: number;
   /** The course takes applications without a group: this option in the select ("none"). */
   noGroupLabel?: string;
+  /** A free show: its booking link's code, and the most seats one may book. */
+  showCode?: string;
+  maxSeats?: number;
 };
 
-const DONE: Record<Kind, string> = {
+const DONE: Record<Exclude<Kind, 'show'>, string> = {
   workshop:
     'Köszönjük, megkaptuk a jelentkezésed! Visszaigazolást küldtünk e-mailben. A fizetés részleteit hamarosan e-mailben küldjük.',
   beginner:
@@ -80,7 +84,10 @@ export default function SignupDialog({
 }
 
 function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string }) {
-  const [state, action] = useActionState<SignUpState, FormData>(signUpAction, {});
+  const show = target.kind === 'show';
+  const texts = useUi();
+  const ui = texts.showBooking;
+  const [state, action] = useActionState<SignUpState, FormData>(show ? bookShowAction : signUpAction, {});
   const [me, setMe] = useState<Me | undefined>(undefined);
   const [motivation, setMotivation] = useState(state.values?.message ?? '');
   useEffect(() => {
@@ -93,7 +100,7 @@ function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string
     <div className="flex max-h-[88vh] flex-col gap-5 overflow-y-auto px-6 pb-8 pt-6 lg:px-10 lg:pb-10 lg:pt-9">
       <div className="flex flex-col gap-1.5 pr-10">
         <span className="text-xs font-bold uppercase tracking-[0.16em] text-teal">
-          {professional ? 'Szakmai kurzus — jelentkezés' : 'Jelentkezés'}
+          {professional ? 'Szakmai kurzus — jelentkezés' : show ? texts.shows.registration : 'Jelentkezés'}
         </span>
         <h2 id={titleId} className="font-display text-[30px] leading-tight lg:text-[36px]">
           {target.title}
@@ -105,8 +112,14 @@ function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string
         ))}
         {target.price && (
           <p className="mt-2 self-start rounded-2xl bg-sand px-4 py-2.5">
-            <span className="mr-2 text-xs font-bold uppercase tracking-[0.14em] text-teal">Részvételi díj</span>
-            <span className="font-display text-[26px] leading-none text-ink">{target.price}</span>
+            {!show && (
+              <span className="mr-2 text-xs font-bold uppercase tracking-[0.14em] text-teal">Részvételi díj</span>
+            )}
+            <span
+              className={show ? 'text-[15px] font-semibold text-ink' : 'font-display text-[26px] leading-none text-ink'}
+            >
+              {target.price}
+            </span>
           </p>
         )}
       </div>
@@ -117,10 +130,10 @@ function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string
             role="status"
             className="rounded-xl bg-teal/10 px-4 py-3 text-[16px] font-semibold leading-relaxed text-teal"
           >
-            {DONE[target.kind]}
+            {target.kind === 'show' ? ui.done : DONE[target.kind]}
           </p>
           <p className="text-[15px] leading-relaxed text-ink2">
-            A jelentkezésed a fiókodban követheted:{' '}
+            {show ? `${ui.track} ` : 'A jelentkezésed a fiókodban követheted: '}
             <Link href="/fiokom" className="link font-semibold text-ink">
               Fiókom
             </Link>
@@ -138,6 +151,7 @@ function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string
               <input type="hidden" name="courseGroup" value={target.courseGroupId ?? target.groups?.[0]?.id} />
             )}
             {target.courseId && <input type="hidden" name="course" value={target.courseId} />}
+            {target.showCode && <input type="hidden" name="eloadas" value={target.showCode} />}
 
             {me === undefined ? (
               <p className="text-[15px] text-muted">Betöltés…</p>
@@ -182,6 +196,17 @@ function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string
                 </select>
               </Field>
             )}
+            {show && (
+              <Field label={ui.seats} required>
+                <select className="field max-w-[140px]" name="jegyek" required defaultValue={v('jegyek') ?? '1'}>
+                  {Array.from({ length: Math.max(1, target.maxSeats ?? 1) }, (_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      {i + 1}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
             {professional && (
               <Field
                 label="Motiváció és tapasztalat"
@@ -214,7 +239,9 @@ function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string
               </Link>
               .
             </Checkbox>
-            {me !== undefined && <Submit>{professional ? 'Jelentkezés elküldése' : 'Jelentkezem'}</Submit>}
+            {me !== undefined && (
+              <Submit>{professional ? 'Jelentkezés elküldése' : show ? ui.submit : 'Jelentkezem'}</Submit>
+            )}
             {!me && me !== undefined && (
               <p className="text-[14px] leading-relaxed text-muted">
                 Van már fiókod?{' '}

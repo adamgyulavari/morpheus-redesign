@@ -121,6 +121,21 @@ const SITE = {
       empty: 'Nincs időpont',
     },
   ],
+  showBooking: [
+    'Jegyfoglalás (saját foglalású előadások)',
+    {
+      seats: 'Jegyek száma (mező)',
+      free: 'Ingyenes előadás (ár helyett)',
+      perTicket: 'Jegyár — {price} = ár',
+      submit: 'Ingyenes foglalás gomb',
+      done: { long: 'Ingyenes foglalás után' },
+      track: { long: 'Ingyenes foglalás után: a fiókban' },
+      title: 'Jegyvásárlás oldal: böngésző címsor és felcím',
+      noRefund: { long: 'Jegyvásárlás: feltétel (nem mondható le)' },
+      closed: { long: 'Ha már nem lehet jegyet venni' },
+      back: 'Vissza az előadáshoz link',
+    },
+  ],
   teamBuilding: ['Csapatépítő', { duration: 'Időkeret', venue: 'Helyszín' }],
   quoteForm: [
     'Árajánlat űrlap',

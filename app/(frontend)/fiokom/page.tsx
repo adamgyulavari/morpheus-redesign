@@ -64,8 +64,13 @@ export default async function AccountPage() {
   const [bookingRules, { unpaid }] = await Promise.all([loadSettings(payload), myOrders(payload, user)]);
   const now = new Date();
   const agenda = upcomingItems(o, mine, (start) => checkCancel(new Date(start), bookingRules, now).ok);
-  // workshop-only visitors, applicants and those booking rooms without a course see theirs too
-  const hasAnything = o.active || mine.workshops.length > 0 || mine.pending.length > 0 || o.ownPractice.length > 0;
+  // workshop-only visitors, show bookers, applicants and those booking rooms without a course see theirs too
+  const hasAnything =
+    o.active ||
+    mine.workshops.length > 0 ||
+    mine.shows.length > 0 ||
+    mine.pending.length > 0 ||
+    o.ownPractice.length > 0;
 
   return (
     <AccountShell eyebrow="Fiókom" heading={`Szia, *${greetingName(user)}!*`} wide>

@@ -2,19 +2,21 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { showDateLine } from '@/lib/dates';
-import type { ShowWithRelations } from '@/lib/types';
+import type { ShowWithRelations, UiStrings } from '@/lib/types';
 
 import DetailsDialog from './DetailsDialog';
 import Lines from './Lines';
+import ShowButton from './ShowButton';
 
 /** "Az előadásról" link + popup: description, cast, credits, audience info and the ticket/registration button. */
 export default function ShowDetails({
   show,
-  labels,
+  ui,
 }: {
   show: ShowWithRelations;
-  labels: { ticket: string; registration: string; about: string; info: string };
+  ui: Pick<UiStrings, 'shows' | 'sessions' | 'showBooking'>;
 }) {
+  const labels = ui.shows;
   const p = show.production;
   const titleId = `show-${show.id}-title`;
   // productions with their own page link there; the others open the popup
@@ -85,11 +87,7 @@ export default function ShowDetails({
           </ul>
         </div>
       )}
-      {(show.ticketUrl || show.registrationUrl) && (
-        <a href={show.ticketUrl ?? show.registrationUrl} className="btn btn-lg btn-primary self-start">
-          {show.ticketUrl ? labels.ticket : labels.registration}
-        </a>
-      )}
+      <ShowButton show={show} ui={ui} className="btn btn-lg btn-primary self-start" />
     </DetailsDialog>
   );
 }

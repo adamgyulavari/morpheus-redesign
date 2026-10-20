@@ -140,6 +140,15 @@ export default function Applications() {
         ))}
       </section>
 
+      {data.shows.length > 0 && (
+        <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <h2 style={{ margin: 0 }}>Előadások (saját foglalás)</h2>
+          {data.shows.map((sh) => (
+            <ShowBookings key={sh.id} show={sh} />
+          ))}
+        </section>
+      )}
+
       <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <h2 style={{ margin: 0 }}>Nyitott Műhely</h2>
         {data.workshops.length === 0 && <p className={s.muted}>Nincs közelgő alkalom.</p>}
@@ -526,6 +535,54 @@ function Workshop({ w, busy, act, manage }: { w: Data['workshops'][number]; busy
             </button>
           </div>
         </form>
+      )}
+    </div>
+  );
+}
+
+const SHOW_STATE = { free: 'Ingyenes', paid: 'Fizetve', waiting: 'Fizetésre vár' } as const;
+
+/** One show booked on the site: its seats, then who booked how many (the door list). */
+function ShowBookings({ show }: { show: Data['shows'][number] }) {
+  return (
+    <div className={s.panel} style={{ gap: 10, alignSelf: 'stretch' }}>
+      <div className={s.row} style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <strong>
+          {show.title} — {show.when}
+        </strong>
+        <span className={s.muted}>
+          {show.taken} / {show.seats} jegy · {show.price ? `${show.price} Ft / jegy` : 'ingyenes'}
+          {show.hidden && ' · elrejtve'}
+        </span>
+      </div>
+      {show.bookings.length === 0 ? (
+        <p className={s.muted}>Még nincs foglalás.</p>
+      ) : (
+        <table className={s.table}>
+          <thead>
+            <tr>
+              <th>Név</th>
+              <th>Elérhetőség</th>
+              <th>Jegy</th>
+              <th>Állapot</th>
+            </tr>
+          </thead>
+          <tbody>
+            {show.bookings.map((b) => (
+              <tr key={b.id}>
+                <td>
+                  <a href={`/admin/collections/applications/${b.id}`}>{b.name}</a>
+                </td>
+                <td>
+                  {b.email}
+                  <div className={s.muted}>{b.phone}</div>
+                </td>
+                <td>{b.seats}</td>
+                <td>{SHOW_STATE[b.state]}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );

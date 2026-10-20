@@ -6,13 +6,13 @@
  */
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-
+import { showByCode } from '@/lib/applications/shows';
 import { getCurrentUser, payloadClient } from '@/lib/auth';
 import { allow, clientIp } from '@/payload/magic-link';
-
-import { checkout, checkoutCourse, retryPayment } from './checkout';
+import { checkout, checkoutCourse, checkoutShow, retryPayment } from './checkout';
 import { cancelOrder, orderStatus } from './order-page';
 import { resultUrl } from './orders';
+
 import { groupByCode, sessionByCode } from './target';
 
 export type CheckoutState = { error?: string; values?: Record<string, string> };
@@ -83,6 +83,18 @@ export async function courseCheckoutAction(_: CheckoutState, form: FormData): Pr
   const group = await groupByCode(c.payload, str(form, 'csoport'));
   if (!group) return { error: 'Nincs ilyen csoport.', values };
   const r = await checkoutCourse(c.payload, c.viewer, { ...c.input, groupId: group.id, optionId: str(form, 'opcio') });
+  if (!r.ok) return { error: r.reason, values };
+  redirect(r.checkoutUrl ?? resultUrl(r.token));
+}
+
+/** Tickets for a show (`eloadas`: its public code; `jegyek`: how many). */
+export async function showCheckoutAction(_: CheckoutState, form: FormData): Promise<CheckoutState> {
+  const c = await readCheckout(form);
+  const values = { ...c.values, jegyek: str(form, 'jegyek') };
+  if (!c.input) return { error: c.error, values };
+  const show = await showByCode(c.payload, str(form, 'eloadas'));
+  if (!show) return { error: 'Nincs ilyen előadás.', values };
+  const r = await checkoutShow(c.payload, c.viewer, { ...c.input, showId: show.id, seats: Number(values.jegyek) || 0 });
   if (!r.ok) return { error: r.reason, values };
   redirect(r.checkoutUrl ?? resultUrl(r.token));
 }

@@ -28,10 +28,9 @@ function Rows({ shows, ui }: { shows: ShowWithRelations[]; ui: UiStrings }) {
         <ShowRow
           key={show.id}
           show={show}
-          ticketLabel={ui.shows.ticket}
-          registrationLabel={ui.shows.registration}
+          ui={ui}
           last={i === shows.length - 1}
-          details={<ShowDetails show={show} labels={ui.shows} />}
+          details={<ShowDetails show={show} ui={ui} />}
         />
       ))}
     </div>
