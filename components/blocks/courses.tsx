@@ -51,8 +51,12 @@ export async function Offerings({ block, className }: BlockProps<'offerings'>) {
           <Eyebrow>{block.eyebrow}</Eyebrow>
           <h2 className="font-display text-[42px] leading-[1.02] lg:text-[76px] lg:leading-none">{block.heading}</h2>
         </div>
-        <SmartLink href={block.instructorsLink.href} className="flex items-center gap-4 text-teal lg:pb-1.5">
-          <span className="flex">
+        <SmartLink
+          href={block.instructorsLink.href}
+          className="flex flex-wrap items-center gap-x-4 gap-y-3 text-teal lg:flex-nowrap lg:pb-1.5"
+        >
+          {/* the faces keep their size; on a narrow screen the link goes under them */}
+          <span className="flex shrink-0">
             {avatars.length > 0
               ? avatars.map((a, i) => (
                   <Image

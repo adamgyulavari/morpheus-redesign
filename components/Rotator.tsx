@@ -109,9 +109,11 @@ export default function Rotator({
   // the cards in their shuffled order, then the first again
   const sequence = count > 1 ? [...order, order[0] as number] : order;
   const curve = 'cubic-bezier(0.22, 1, 0.36, 1)';
-  // the frame (`className`: the card's look) stays; the contents slide inside it, to its edges
+  // the frame (`className`: the card's look) stays; the contents slide inside it, to its edges.
+  // contain-inline-size: the strip of cards side by side mustn't widen the frame (a grid or flex
+  // parent would otherwise make room for all of them)
   return (
-    <div className={`overflow-hidden ${className}`} {...pause}>
+    <div className={`overflow-hidden contain-inline-size ${className}`} {...pause}>
       {top}
       <div
         className="overflow-hidden"
