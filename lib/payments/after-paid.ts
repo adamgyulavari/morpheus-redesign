@@ -18,6 +18,7 @@ import {
 } from '@/lib/applications/server';
 import { applicationSettings } from '@/lib/applications/settings';
 import { seatsTaken, showInfo, showStart } from '@/lib/applications/shows';
+import { ticketImages } from '@/lib/applications/tickets';
 import { formatHuf } from '@/lib/format';
 import { issueInvoice } from '@/lib/invoicing/service';
 import { icsFile } from '@/lib/rooms/ics';
@@ -52,6 +53,7 @@ export async function afterPaid(payload: Payload, orderId: number) {
     const start = showStart(s);
     await sendOrderPaid(payload, applicant, info, money, {
       loggedIn: false,
+      tickets: await ticketImages(application),
       ics: icsFile({
         uid: `application-${application.id}@morpheus-szinmuhely.hu`,
         start,

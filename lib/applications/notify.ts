@@ -70,12 +70,16 @@ export const varsOf = (a: Applicant, t: TargetInfo) => ({
 /** A show booking (its seats are set) gets the Jegyfoglalás tab's e-mail instead of the sign-up's. */
 const forTickets = <K extends string>(t: TargetInfo, signup: K, ticket: string): string => (t.seats ? ticket : signup);
 
-/** Sends (never throws: a failed e-mail is logged). `ics`: a calendar file attached. */
+/** A show's ticket image, attached inline (the e-mail shows it by its `cid`). */
+export type TicketImage = { cid: string; n: number; href: string; png: Buffer };
+
+/** Sends (never throws: a failed e-mail is logged). `ics`: a calendar file attached; `images`: inline ones. */
 export async function send(
   payload: Payload,
   to: string | string[],
   e: { subject: string; html: string },
   ics?: string,
+  images: TicketImage[] = [],
 ) {
   const list = (Array.isArray(to) ? to : [to]).filter(Boolean);
   if (!list.length) return;
@@ -84,13 +88,12 @@ export async function send(
       to: list,
       subject: e.subject,
       html: e.html,
-      ...(ics
-        ? {
-            attachments: [
-              { filename: 'alkalom.ics', content: ics, contentType: 'text/calendar; charset=utf-8; method=PUBLISH' },
-            ],
-          }
-        : {}),
+      attachments: [
+        ...(ics
+          ? [{ filename: 'alkalom.ics', content: ics, contentType: 'text/calendar; charset=utf-8; method=PUBLISH' }]
+          : []),
+        ...images.map((i) => ({ filename: `jegy-${i.n}.png`, content: i.png, contentType: 'image/png', cid: i.cid })),
+      ],
     });
   } catch (err) {
     payload.logger.error({ err, msg: `application e-mail failed: ${e.subject}` });
@@ -122,6 +125,7 @@ async function toApplicant(
     rows?: Row[];
     login?: boolean;
     href?: string;
+    tickets?: TicketImage[];
   } = {},
   ics?: string,
 ) {
@@ -139,9 +143,11 @@ async function toApplicant(
         details: o.rows ?? details(texts.common, t),
         href: o.href ?? (await myAccountLink(payload, a.userId, login)),
         footnote: login ? texts.common.loginLinkNote : undefined,
+        tickets: o.tickets,
       },
     ),
     ics,
+    o.tickets,
   );
 }
 
@@ -325,17 +331,19 @@ export async function sendStaffCancellation(
   );
 }
 
-/** A free show booking (paid tickets get "Jegyvásárlás: sikeres fizetés"). */
+/** A free show booking, with its tickets (paid tickets get "Jegyvásárlás: sikeres fizetés"). */
 export async function sendShowRegistered(
   payload: Payload,
   a: Applicant,
   t: TargetInfo,
   account: { created: boolean; loggedIn: boolean },
+  tickets: TicketImage[],
 ) {
   const texts = await emailTexts(payload);
   const tpl = texts.template('ticketBooked');
   await toApplicant(payload, texts, 'ticketBooked', a, t, {
     after: [(account.created ? tpl.accountCreated : tpl.accountExisting) ?? ''].filter(Boolean),
     login: !account.loggedIn,
+    tickets,
   });
 }

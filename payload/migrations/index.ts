@@ -35,6 +35,8 @@ import * as migration_20261019_225500_ui_texts from './20261019_225500_ui_texts'
 import * as migration_20261020_000234_show_booking from './20261020_000234_show_booking';
 import * as migration_20261020_003021_show_rooms from './20261020_003021_show_rooms';
 import * as migration_20261020_014055_guest_role from './20261020_014055_guest_role';
+import * as migration_20261020_014320_show_tickets from './20261020_014320_show_tickets';
+import * as migration_20261020_015052_public_ids from './20261020_015052_public_ids';
 import * as migration_20261020_120000_show_booking_texts from './20261020_120000_show_booking_texts';
 
 export const migrations = [
@@ -224,8 +226,18 @@ export const migrations = [
     name: '20261020_014055_guest_role',
   },
   {
+    up: migration_20261020_014320_show_tickets.up,
+    down: migration_20261020_014320_show_tickets.down,
+    name: '20261020_014320_show_tickets',
+  },
+  {
+    up: migration_20261020_015052_public_ids.up,
+    down: migration_20261020_015052_public_ids.down,
+    name: '20261020_015052_public_ids',
+  },
+  {
     up: migration_20261020_120000_show_booking_texts.up,
     down: migration_20261020_120000_show_booking_texts.down,
-    name: '20261020_120000_show_booking_texts',
+    name: '20261020_120000_show_booking_texts'
   },
 ];

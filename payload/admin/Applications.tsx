@@ -551,7 +551,8 @@ function ShowBookings({ show }: { show: Data['shows'][number] }) {
           {show.title} — {show.when}
         </strong>
         <span className={s.muted}>
-          {show.taken} / {show.seats} jegy · {show.price ? `${show.price} Ft / jegy` : 'ingyenes'}
+          {show.taken} / {show.seats} jegy{show.arrived ? ` · ${show.arrived} beengedve` : ''} ·{' '}
+          {show.price ? `${show.price} Ft / jegy` : 'ingyenes'}
           {show.hidden && ' · elrejtve'}
         </span>
       </div>
@@ -577,7 +578,10 @@ function ShowBookings({ show }: { show: Data['shows'][number] }) {
                   {b.email}
                   <div className={s.muted}>{b.phone}</div>
                 </td>
-                <td>{b.seats}</td>
+                <td>
+                  {b.seats}
+                  {b.used > 0 && <div className={s.muted}>{b.used} beengedve</div>}
+                </td>
                 <td>{SHOW_STATE[b.state]}</td>
               </tr>
             ))}

@@ -429,6 +429,7 @@ export interface Course {
 export interface Application {
   id: number;
   displayTitle?: string | null;
+  uid?: string | null;
   kind: 'workshop' | 'beginner' | 'professional' | 'show';
   /**
    * Nyitott Műhely és kezdő: Fizetésre vár / Jelentkezett (fizetett) / Lemondva / Áthelyezve. Szakmai: Új / Interjú / Felvéve / Elutasítva / Visszavonta.
@@ -441,6 +442,17 @@ export interface Application {
   courseGroup?: (number | null) | CourseGroup;
   show?: (number | null) | Show;
   seats?: number | null;
+  /**
+   * Automatikus. A bejáratnál a QR-kód a /jegy/… oldalra visz; ott a munkatárs felhasználja.
+   */
+  tickets?:
+    | {
+        code: string;
+        usedAt?: string | null;
+        usedBy?: (number | null) | User;
+        id?: string | null;
+      }[]
+    | null;
   course?: (number | null) | Course;
   target?: string | null;
   name: string;
@@ -4645,6 +4657,7 @@ export interface RoomBookingsSelect<T extends boolean = true> {
  */
 export interface ApplicationsSelect<T extends boolean = true> {
   displayTitle?: T;
+  uid?: T;
   kind?: T;
   status?: T;
   user?: T;
@@ -4652,6 +4665,14 @@ export interface ApplicationsSelect<T extends boolean = true> {
   courseGroup?: T;
   show?: T;
   seats?: T;
+  tickets?:
+    | T
+    | {
+        code?: T;
+        usedAt?: T;
+        usedBy?: T;
+        id?: T;
+      };
   course?: T;
   target?: T;
   name?: T;
@@ -5676,6 +5697,10 @@ export interface EmailText {
     labelWhere: string;
     labelPrice: string;
     labelSeats: string;
+    /**
+     * Pl. „{n}. jegy” — {n}: hányadik.
+     */
+    labelTicket: string;
     labelPaid: string;
     labelDue: string;
     labelRefunded: string;
@@ -6238,6 +6263,7 @@ export interface EmailTextsSelect<T extends boolean = true> {
         labelWhere?: T;
         labelPrice?: T;
         labelSeats?: T;
+        labelTicket?: T;
         labelPaid?: T;
         labelDue?: T;
         labelRefunded?: T;

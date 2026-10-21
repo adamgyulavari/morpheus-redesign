@@ -1,4 +1,6 @@
 /** Building blocks of the "Közelgő alkalmak" list: the next item's card, a day's date, a two-line entry. */
+import Link from 'next/link';
+
 import { PinIcon } from '@/components/icons';
 
 import ApplicationActions from './ApplicationActions';
@@ -110,7 +112,7 @@ function Actions({ item }: { item: UpcomingItem }) {
     );
   const a = item.application;
   if (!a) return null;
-  return (
+  const actions = (
     <ApplicationActions
       applicationId={a.id}
       title={title}
@@ -123,6 +125,16 @@ function Actions({ item }: { item: UpcomingItem }) {
           : undefined
       }
     />
+  );
+  // a show booking: its tickets (QR codes) first
+  if (!item.tickets) return actions;
+  return (
+    <span className="flex shrink-0 items-center gap-4">
+      <Link href={item.tickets} className="link text-[14px] font-semibold text-teal">
+        Jegyek
+      </Link>
+      {actions}
+    </span>
   );
 }
 
