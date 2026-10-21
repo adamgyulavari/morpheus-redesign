@@ -4,10 +4,10 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 import { safeReturnPath } from '@/lib/auth';
 import { googleConfigured, start } from '@/lib/google/oauth';
-import { COOKIE, COOKIE_PATH, encode, MAX_AGE, redirectUri } from '@/lib/google/round-trip';
+import { COOKIE, COOKIE_PATH, encode, MAX_AGE, redirectUri, siteAddress } from '@/lib/google/round-trip';
 
 export async function GET(req: NextRequest) {
-  if (!googleConfigured()) return NextResponse.redirect(new URL('/belepes', req.url));
+  if (!googleConfigured()) return NextResponse.redirect(siteAddress(req, '/belepes'));
   const { pending, url } = start(redirectUri(req), safeReturnPath(req.nextUrl.searchParams.get('vissza')));
   (await cookies()).set({
     name: COOKIE,

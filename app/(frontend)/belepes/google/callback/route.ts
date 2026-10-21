@@ -8,7 +8,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { payloadClient, setSessionCookies } from '@/lib/auth';
 import { accountForGoogle } from '@/lib/google/accounts';
 import { finish, googleConfigured } from '@/lib/google/oauth';
-import { COOKIE, COOKIE_PATH, decode, type GoogleError, redirectUri } from '@/lib/google/round-trip';
+import { COOKIE, COOKIE_PATH, decode, type GoogleError, redirectUri, siteAddress } from '@/lib/google/round-trip';
 import { allow, clientIp } from '@/payload/magic-link';
 import { issueSession } from '@/payload/session';
 
@@ -18,13 +18,13 @@ export async function GET(req: NextRequest) {
   jar.delete({ name: COOKIE, path: COOKIE_PATH });
   const params = req.nextUrl.searchParams;
   const back = (hiba: GoogleError) => {
-    const to = new URL('/belepes', req.url);
+    const to = siteAddress(req, '/belepes');
     to.searchParams.set('hiba', hiba);
     if (pending?.back && pending.back !== '/fiokom') to.searchParams.set('vissza', pending.back);
     return NextResponse.redirect(to);
   };
 
-  if (!googleConfigured()) return NextResponse.redirect(new URL('/belepes', req.url));
+  if (!googleConfigured()) return NextResponse.redirect(siteAddress(req, '/belepes'));
   // cancelled at Google (or refused the permissions)
   if (params.get('error')) return back('google-megszakitva');
   const code = params.get('code');
@@ -42,5 +42,5 @@ export async function GET(req: NextRequest) {
     payload.logger.error({ err, msg: 'Google login failed' });
     return back('google');
   }
-  return NextResponse.redirect(new URL(pending.back, req.url));
+  return NextResponse.redirect(siteAddress(req, pending.back));
 }
