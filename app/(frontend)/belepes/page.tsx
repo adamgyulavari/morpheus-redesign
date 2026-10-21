@@ -9,6 +9,7 @@ import { accountMetadata } from '@/components/account/meta';
 import Notice from '@/components/forms/Notice';
 import { getCurrentUser, safeReturnPath } from '@/lib/auth';
 import { getUi } from '@/lib/data';
+import { googleErrorText } from '@/lib/google/round-trip';
 
 type Props = { searchParams: Promise<{ vissza?: string; hiba?: string }> };
 
@@ -23,14 +24,7 @@ export default async function LoginPage({ searchParams }: Props) {
   if (await getCurrentUser()) redirect(returnTo);
   const { googleLogin } = await getUi();
   // back from Google (app/(frontend)/belepes/google/callback)
-  const googleError =
-    hiba === 'google-megszakitva'
-      ? googleLogin.cancelled
-      : hiba === 'google-email'
-        ? googleLogin.unverified
-        : hiba === 'google'
-          ? googleLogin.failed
-          : undefined;
+  const googleError = googleErrorText(hiba, googleLogin);
 
   return (
     <AccountShell

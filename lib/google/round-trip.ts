@@ -7,6 +7,18 @@ import { serverUrl } from '@/lib/env';
 
 import type { Pending } from './oauth';
 
+/** Why the login failed, as the callback sends it back (`/belepes?hiba=…`) → its text in Felületi szövegek → googleLogin. */
+export const GOOGLE_ERRORS = {
+  'google-megszakitva': 'cancelled',
+  'google-email': 'unverified',
+  google: 'failed',
+} as const;
+export type GoogleError = keyof typeof GOOGLE_ERRORS;
+
+/** The login page's notice for `hiba`, when it is one of these. */
+export const googleErrorText = (hiba: string | undefined, t: Record<(typeof GOOGLE_ERRORS)[GoogleError], string>) =>
+  hiba && hiba in GOOGLE_ERRORS ? t[GOOGLE_ERRORS[hiba as GoogleError]] : undefined;
+
 export const COOKIE = 'morpheus-google';
 export const COOKIE_PATH = '/belepes/google';
 /** Long enough to pick an account at Google. */

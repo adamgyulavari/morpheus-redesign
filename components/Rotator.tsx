@@ -78,7 +78,7 @@ export default function Rotator({
     const observer = new ResizeObserver(measure);
     observer.observe(el);
     return () => observer.disconnect();
-  }, [at, variant, order]);
+  }, [at, variant]);
 
   const pause = {
     onMouseEnter: () => setPaused(true),
