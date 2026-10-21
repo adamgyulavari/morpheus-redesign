@@ -93,6 +93,8 @@ export default function RoomCalendar(props: RoomCalendarProps) {
         right: props.month ? 'timeGridDay,timeGridWeek,dayGridMonth' : 'timeGridDay,timeGridWeek',
       },
       height: '78vh',
+      // the month: coloured one-line bars (time and title), clipped to their day
+      views: { dayGridMonth: { eventDisplay: 'block' } },
       slotEventOverlap: false,
       editable: Boolean(props.editable),
       selectable: Boolean(props.selectable),
@@ -128,6 +130,12 @@ export default function RoomCalendar(props: RoomCalendarProps) {
         // the preview of something being dragged in (an unplaced session) has no schedule data
         if (!e) return <div className={s.eventTitle}>{arg.event.title}</div>;
         const label = eventLabel(e, (latest.current.labels ?? ADMIN_LABELS).own);
+        if (arg.view.type === 'dayGridMonth')
+          return (
+            <div className={s.eventLine} title={label.title}>
+              <strong>{arg.timeText}</strong> {label.title}
+            </div>
+          );
         const where = e.roomIds
           .map((id) => roomNames.get(id))
           .filter(Boolean)
