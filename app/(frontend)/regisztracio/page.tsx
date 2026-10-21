@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import AccountShell from '@/components/account/AccountShell';
 import { Card } from '@/components/account/Card';
 import { RegisterForm } from '@/components/account/forms';
+import GoogleLogin from '@/components/account/GoogleLogin';
 import { accountMetadata } from '@/components/account/meta';
 import { getCurrentUser } from '@/lib/auth';
 
@@ -25,6 +26,7 @@ export default async function RegisterPage() {
       }
     >
       <Card>
+        <GoogleLogin />
         <RegisterForm />
       </Card>
     </AccountShell>

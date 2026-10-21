@@ -173,12 +173,18 @@ export type ApplicantInput = { lastName: string; firstName: string; email: strin
  * The logged-in user, or the account with this address — created (student, unverified) when there
  * is none. The answer is the same either way, so the form never tells whether an address had an account.
  */
+/** An account without a phone number keeps the first one given (Google accounts start without one). */
+async function keepPhone(payload: Payload, userId: number, phone: string) {
+  await payload.update({ collection: 'users', id: userId, data: { phone }, depth: 0 });
+}
+
 export async function applicantFor(
   payload: Payload,
   viewer: TypedUser | null,
   input: ApplicantInput,
 ): Promise<{ applicant: Applicant; created: boolean }> {
   if (viewer) {
+    if (!viewer.phone && input.phone.trim()) await keepPhone(payload, viewer.id, input.phone.trim());
     return {
       applicant: {
         userId: viewer.id,
@@ -218,6 +224,7 @@ export async function applicantFor(
       if (!user) throw err;
     }
   }
+  if (!created && !user.phone && input.phone.trim()) await keepPhone(payload, user.id, input.phone.trim());
   return {
     applicant: {
       userId: user.id,
