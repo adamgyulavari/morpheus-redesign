@@ -9,7 +9,7 @@ import { orderStatus } from '@/lib/payments/order-page';
 
 export const dynamic = 'force-dynamic';
 
-export const generateMetadata = () => accountMetadata('Fizetés');
+export const generateMetadata = async () => accountMetadata((await getUi()).order.title);
 
 /**
  * /fizetes/eredmeny?rendeles=…: the order page (by its token, not its id) — back from the payment
@@ -23,10 +23,11 @@ export default async function ResultPage({
   const { rendeles: token = '', vissza } = await searchParams;
   const order = await orderStatus(await payloadClient(), token);
   if (!order) notFound();
+  const ui = await getUi();
   return (
     <AccountShell
-      eyebrow="Fizetés"
-      heading={order.kind === 'show' ? (await getUi()).showBooking.orderHeading : '*Jelentkezés*'}
+      eyebrow={ui.order.title}
+      heading={order.kind === 'show' ? ui.showBooking.orderHeading : ui.order.heading}
     >
       <OrderResult token={token} initial={order} returned={vissza === '1'} />
     </AccountShell>

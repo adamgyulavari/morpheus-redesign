@@ -5,12 +5,15 @@ export function formatHuf(amount: number): string {
   return `${new Intl.NumberFormat('hu-HU', { maximumFractionDigits: 0 }).format(amount)} Ft`;
 }
 
-/** Price for a course card / fact: "140 000 Ft-tól" when there are options, "45 000 Ft / hó" for a single recurring fee. */
-export function priceSummary(prices: PriceOption[]): string {
+/**
+ * Price for a course card / fact: "140 000 Ft-tól" when there are options (`from`: Felületi
+ * szövegek → course.priceFrom), "45 000 Ft / hó" for a single recurring fee.
+ */
+export function priceSummary(prices: PriceOption[], from: string): string {
   if (prices.length === 0) return '';
   const lowest = prices.reduce((min, p) => (p.amount < min.amount ? p : min));
   if (prices.length === 1) return lowest.per ? `${formatHuf(lowest.amount)} / ${lowest.per}` : formatHuf(lowest.amount);
-  return `${formatHuf(lowest.amount)}-tól`;
+  return fill(from, { price: formatHuf(lowest.amount) });
 }
 
 /** "+36304639129" → "+36 30 463 9129" (Hungarian mobile numbers). */
@@ -20,8 +23,8 @@ export function formatPhone(e164: string): string {
 }
 
 /** Fills "{name}" placeholders in a content string. */
-export function fill(template: string, values: Record<string, string>): string {
-  return template.replace(/\{(\w+)\}/g, (_, key: string) => values[key] ?? '');
+export function fill(template: string, values: Record<string, string | number>): string {
+  return template.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ''));
 }
 
 /** The first sentence of a text (up to . ! ? or …), used as a meta description. */

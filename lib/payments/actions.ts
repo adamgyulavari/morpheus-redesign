@@ -8,8 +8,8 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { showByCode } from '@/lib/applications/shows';
 import { getCurrentUser, payloadClient } from '@/lib/auth';
-import { getUi } from '@/lib/data';
 import { allow, clientIp } from '@/payload/magic-link';
+import { uiTexts } from '@/payload/ui-texts';
 import { checkout, checkoutCourse, checkoutShow, retryPayment } from './checkout';
 import { cancelOrder, orderStatus } from './order-page';
 import { resultUrl } from './orders';
@@ -35,21 +35,21 @@ const FIELDS = [
   'taxNumber',
 ] as const;
 
-/** What both checkouts share: the fields, the honeypot, the terms, the rate limits. */
-async function readCheckout(
-  form: FormData,
-  termsError = 'A jelentkezéshez el kell fogadnod az ÁSZF-et és a lemondási feltételeket.',
-) {
+/** What the checkouts share: the fields, the honeypot, the terms (a show's own words), the rate limits. */
+async function readCheckout(form: FormData, show = false) {
   const values = Object.fromEntries(FIELDS.map((f) => [f, str(form, f)])) as Record<(typeof FIELDS)[number], string>;
   values.email = values.email.toLowerCase();
+  const payload = await payloadClient();
+  const ui = await uiTexts(payload);
+  const t = ui.checkoutErrors;
   // honeypot: people don't see it; bots fill it in and get nowhere
-  if (str(form, 'website')) return { values, error: 'Hibás kérés.' };
-  if (form.get('terms') !== 'on') return { values, error: termsError };
+  if (str(form, 'website')) return { values, error: t.invalid };
+  if (form.get('terms') !== 'on') return { values, error: show ? ui.showBooking.terms : t.terms };
   const viewer = await getCurrentUser();
   const ip = clientIp(await headers());
   const email = viewer?.email ?? values.email;
   if (!allow(`checkout-ip:${ip}`, MAX_PER_IP) || (email && !allow(`checkout-email:${email}`, MAX_PER_EMAIL)))
-    return { values, error: 'Túl sok próbálkozás rövid időn belül. Próbáld újra negyedóra múlva.' };
+    return { values, error: t.tooMany };
   const input = {
     lastName: values.lastName,
     firstName: values.firstName,
@@ -64,7 +64,7 @@ async function readCheckout(
       taxNumber: values.taxNumber,
     },
   };
-  return { values, viewer, input, payload: await payloadClient() };
+  return { values, viewer, input, payload, ui };
 }
 
 /** A Nyitott Műhely date (`alkalom`: its public code). */
@@ -72,7 +72,7 @@ export async function checkoutAction(_: CheckoutState, form: FormData): Promise<
   const c = await readCheckout(form);
   if (!c.input) return { error: c.error, values: c.values };
   const session = await sessionByCode(c.payload, str(form, 'alkalom'));
-  if (!session) return { error: 'Nincs ilyen alkalom.', values: c.values };
+  if (!session) return { error: c.ui.signupErrors.noSession, values: c.values };
   const r = await checkout(c.payload, c.viewer, { ...c.input, sessionId: session.id });
   if (!r.ok) return { error: r.reason, values: c.values };
   redirect(r.checkoutUrl ?? resultUrl(r.token));
@@ -84,7 +84,7 @@ export async function courseCheckoutAction(_: CheckoutState, form: FormData): Pr
   const values = { ...c.values, opcio: str(form, 'opcio') };
   if (!c.input) return { error: c.error, values };
   const group = await groupByCode(c.payload, str(form, 'csoport'));
-  if (!group) return { error: 'Nincs ilyen csoport.', values };
+  if (!group) return { error: c.ui.signupErrors.noGroup, values };
   const r = await checkoutCourse(c.payload, c.viewer, { ...c.input, groupId: group.id, optionId: str(form, 'opcio') });
   if (!r.ok) return { error: r.reason, values };
   redirect(r.checkoutUrl ?? resultUrl(r.token));
@@ -92,11 +92,11 @@ export async function courseCheckoutAction(_: CheckoutState, form: FormData): Pr
 
 /** Tickets for a show (`eloadas`: its public code; `jegyek`: how many). */
 export async function showCheckoutAction(_: CheckoutState, form: FormData): Promise<CheckoutState> {
-  const c = await readCheckout(form, (await getUi()).showBooking.terms);
+  const c = await readCheckout(form, true);
   const values = { ...c.values, jegyek: str(form, 'jegyek') };
   if (!c.input) return { error: c.error, values };
   const show = await showByCode(c.payload, str(form, 'eloadas'));
-  if (!show) return { error: 'Nincs ilyen előadás.', values };
+  if (!show) return { error: c.ui.signupErrors.noShow, values };
   const r = await checkoutShow(c.payload, c.viewer, { ...c.input, showId: show.id, seats: Number(values.jegyek) || 0 });
   if (!r.ok) return { error: r.reason, values };
   redirect(r.checkoutUrl ?? resultUrl(r.token));

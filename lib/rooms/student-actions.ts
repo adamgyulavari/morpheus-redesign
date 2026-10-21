@@ -6,7 +6,9 @@
  */
 import { getCurrentUser, payloadClient } from '@/lib/auth';
 
-import type { RuleResult } from './rules';
+import type { Result } from '@/lib/messages';
+import { uiTexts } from '@/payload/ui-texts';
+
 import { bookPractice, cancelPractice, getRoomSchedule, type PracticeInput, type ScheduleEvent } from './server';
 
 export async function loadSchedule(from: string, to: string): Promise<ScheduleEvent[] | null> {
@@ -14,14 +16,14 @@ export async function loadSchedule(from: string, to: string): Promise<ScheduleEv
   return getRoomSchedule(await payloadClient(), user, new Date(from), new Date(to));
 }
 
-export async function bookPracticeAction(input: PracticeInput): Promise<RuleResult & { bookingId?: number }> {
-  const user = await getCurrentUser();
-  if (!user) return { ok: false, reason: 'Jelentkezz be újra.' };
-  return bookPractice(await payloadClient(), user, input);
+export async function bookPracticeAction(input: PracticeInput): Promise<Result<{ bookingId?: number }>> {
+  const [user, payload] = await Promise.all([getCurrentUser(), payloadClient()]);
+  if (!user) return { ok: false, reason: (await uiTexts(payload)).accountErrors.loginAgain };
+  return bookPractice(payload, user, input);
 }
 
-export async function cancelPracticeAction(bookingId: number): Promise<RuleResult> {
-  const user = await getCurrentUser();
-  if (!user) return { ok: false, reason: 'Jelentkezz be újra.' };
-  return cancelPractice(await payloadClient(), user, bookingId);
+export async function cancelPracticeAction(bookingId: number): Promise<Result> {
+  const [user, payload] = await Promise.all([getCurrentUser(), payloadClient()]);
+  if (!user) return { ok: false, reason: (await uiTexts(payload)).accountErrors.loginAgain };
+  return cancelPractice(payload, user, bookingId);
 }

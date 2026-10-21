@@ -5,10 +5,18 @@
  *
  * Times are real moments (UTC): "48 hours before" is 48 real hours, also across a DST change.
  */
+import type { Refusal, Values } from '@/lib/messages';
+import type { UiStrings } from '@/payload/ui-catalogue';
+
 import type { ApplicationKind, ApplicationStatus, WorkshopStatus } from './labels';
 
-export type RuleResult = { ok: true } | { ok: false; reason: string };
-const refuse = (reason: string): RuleResult => ({ ok: false, reason });
+/** A no: a text of Felületi szövegek → Üzenetek → Jelentkezési szabályok (lib/messages.ts). */
+export type RuleResult = { ok: true } | Refusal<keyof UiStrings['signupRules']>;
+const refuse = (refusal: keyof UiStrings['signupRules'], values?: Values): RuleResult => ({
+  ok: false,
+  refusal,
+  values,
+});
 const OK: RuleResult = { ok: true };
 
 const HOUR = 3_600_000;
@@ -92,9 +100,9 @@ export function workshopState(w: WorkshopFacts, now: Date, r: ApplicationRules):
 /** Can someone sign up for this date now? */
 export function canSignUpWorkshop(w: WorkshopFacts, now: Date, r: ApplicationRules): RuleResult {
   const s = workshopState(w, now, r);
-  if (s.state === 'cancelled') return refuse('Ez az alkalom elmarad, erre már nem lehet jelentkezni.');
-  if (s.state === 'full') return refuse('Ez az alkalom megtelt.');
-  if (s.state === 'closed') return refuse('Erre az alkalomra már nem lehet jelentkezni.');
+  if (s.state === 'cancelled') return refuse('sessionCancelled');
+  if (s.state === 'full') return refuse('sessionFull');
+  if (s.state === 'closed') return refuse('sessionClosed');
   return OK;
 }
 
@@ -110,7 +118,7 @@ export const cutoffOutcome = (paid: number, minParticipants: number): 'confirmed
 /** May the participant cancel now? (Until `userCancelHours` before the start.) */
 export function canCancel(start: Date, now: Date, r: ApplicationRules): RuleResult {
   if (now.getTime() <= start.getTime() - r.userCancelHours * HOUR) return OK;
-  return refuse(`Lemondani legkésőbb ${r.userCancelHours} órával a kezdés előtt lehet.`);
+  return refuse('cancelDeadline', { hours: r.userCancelHours });
 }
 
 /**
@@ -124,15 +132,14 @@ export function canMove(
   now: Date,
   r: ApplicationRules,
 ): RuleResult {
-  if (from.sessionId === to.sessionId) return refuse('Ugyanarra az alkalomra nem lehet áthelyezni.');
+  if (from.sessionId === to.sessionId) return refuse('sameSession');
   const dateCancelled = from.workshop.cancelled || from.workshop.workshopStatus === 'cancelled';
   if (dateCancelled) {
-    if (from.status !== 'registered' && from.status !== 'cancelled')
-      return refuse('Ezt a jelentkezést már nem lehet áthelyezni.');
+    if (from.status !== 'registered' && from.status !== 'cancelled') return refuse('notMovable');
   } else {
-    if (from.status !== 'registered') return refuse('Ezt a jelentkezést már nem lehet áthelyezni.');
+    if (from.status !== 'registered') return refuse('notMovable');
     const cancel = canCancel(from.workshop.start, now, r);
-    if (!cancel.ok) return refuse(`Áthelyezni csak a lemondási határidőig lehet (${r.userCancelHours} órával előtte).`);
+    if (!cancel.ok) return refuse('moveDeadline', { hours: r.userCancelHours });
   }
   return canSignUpWorkshop(to.workshop, now, r);
 }
@@ -167,9 +174,9 @@ export function courseSignupState(c: CourseFacts, now: Date): CourseSignupState 
 
 export function canSignUpCourse(c: CourseFacts, now: Date): RuleResult {
   const s = courseSignupState(c, now);
-  if (s.state === 'full') return refuse('Ez a kurzus megtelt.');
-  if (s.state === 'notYet') return refuse('Erre a kurzusra még nem nyílt meg a jelentkezés.');
-  if (s.state === 'closed') return refuse('Erre a kurzusra most nem lehet jelentkezni.');
+  if (s.state === 'full') return refuse('courseFull');
+  if (s.state === 'notYet') return refuse('courseNotYet');
+  if (s.state === 'closed') return refuse('courseClosed');
   return OK;
 }
 
@@ -184,12 +191,12 @@ export const canApplyWithoutGroup = (
 
 /** A beginner sign-up may be cancelled until the course starts. */
 export function canCancelCourse(courseStart: Date, now: Date): RuleResult {
-  return now < courseStart ? OK : refuse('A kurzus már elkezdődött; a lemondáshoz írj nekünk.');
+  return now < courseStart ? OK : refuse('courseStarted');
 }
 
 /** A professional application may be withdrawn while it is being reviewed. */
 export function canWithdraw(status: ApplicationStatus): RuleResult {
-  return status === 'new' || status === 'interview' ? OK : refuse('Ezt a jelentkezést már nem lehet visszavonni.');
+  return status === 'new' || status === 'interview' ? OK : refuse('notWithdrawable');
 }
 
 /** A professional application's motivation: required, at least this long (after trimming). */
@@ -217,18 +224,14 @@ export function showState(s: ShowFacts, now: Date): ShowState {
 /** May someone book this many seats now (at most `maxPerBooking`, and what is left)? */
 export function canBookShow(s: ShowFacts, seats: number, maxPerBooking: number, now: Date): RuleResult {
   const state = showState(s, now);
-  if (state.state === 'closed') return refuse('Erre az előadásra már nem lehet jegyet foglalni.');
-  if (state.state === 'full') return refuse('Erre az előadásra elfogytak a jegyek.');
+  if (state.state === 'closed') return refuse('showClosed');
+  if (state.state === 'full') return refuse('showFull');
   if (!Number.isInteger(seats) || seats < 1 || seats > maxPerBooking)
-    return refuse(`Egyszerre 1–${maxPerBooking} jegyet foglalhatsz.`);
-  if (seats > state.left) return refuse(`Már csak ${state.left} jegy maradt.`);
+    return refuse('seatsRange', { max: maxPerBooking });
+  if (seats > state.left) return refuse('seatsLeft', { count: state.left });
   return OK;
 }
 
 /** A free booking may be cancelled until the show starts; a paid ticket only by staff (a refund). */
 export const canCancelShow = (start: Date, paid: boolean, now: Date): RuleResult =>
-  paid
-    ? refuse('A megvásárolt jegyet nem lehet lemondani; ha nem tudsz jönni, írj nekünk.')
-    : now < start
-      ? OK
-      : refuse('Az előadás már elkezdődött.');
+  paid ? refuse('ticketNoCancel') : now < start ? OK : refuse('showStarted');

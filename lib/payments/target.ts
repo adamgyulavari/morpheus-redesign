@@ -73,9 +73,7 @@ export async function courseTarget(
   if (!group)
     return {
       info: { title: course.title, withoutGroup: true },
-      verdict: canApplyWithoutGroup(course, 'beginner')
-        ? { ok: true }
-        : { ok: false, reason: 'Erre a kurzusra most nem lehet jelentkezni.' },
+      verdict: canApplyWithoutGroup(course, 'beginner') ? { ok: true } : { ok: false, refusal: 'courseClosed' },
       againPath: courseCheckoutPath(course.slug),
     };
   const taken = (await takenBy(payload, 'course_group_id', [group.id])).get(group.id)?.taken ?? 0;

@@ -8,8 +8,10 @@ import type { Payload, TypedUser, Where } from 'payload';
 import { cache } from 'react';
 import { applicationSettings } from '@/lib/applications/settings';
 import { todayInBudapest } from '@/lib/dates';
+import { type Result, say } from '@/lib/messages';
 import { userIsStaffOrAdmin } from '@/payload/access';
 import { relId, relIds } from '@/payload/rel';
+import { uiTexts } from '@/payload/ui-texts';
 import type { Session } from '@/payload-types';
 import {
   generatedKey,
@@ -27,7 +29,6 @@ import {
   checkCancel,
   checkPractice,
   type RoomInfo,
-  type RuleResult,
   type StudentContext,
   settingsFrom,
 } from './rules';
@@ -240,24 +241,24 @@ export async function bookPractice(
   payload: Payload,
   user: TypedUser,
   input: PracticeInput,
-): Promise<RuleResult & { bookingId?: number }> {
+): Promise<Result<{ bookingId?: number }>> {
+  const t = (await uiTexts(payload)).roomRules;
   const start = new Date(input.start);
   const end = new Date(input.end);
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()))
-    return { ok: false, reason: 'Érvénytelen időpont.' };
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return { ok: false, reason: t.invalidTime };
   const [settings, ctx, rooms] = await Promise.all([
     loadSettings(payload),
     studentContext(payload, user, start),
     roomsById(payload, input.roomIds),
   ]);
-  if (rooms.length !== new Set(input.roomIds).size) return { ok: false, reason: 'Ismeretlen terem.' };
+  if (rooms.length !== new Set(input.roomIds).size) return { ok: false, reason: t.unknownRoom };
   const verdict = checkPractice(
     { start, end, rooms, courseGroup: input.courseGroup, production: input.production },
     ctx,
     settings,
     new Date(),
   );
-  if (!verdict.ok) return verdict;
+  if (!verdict.ok) return { ok: false, reason: say(t, verdict) };
   try {
     const booking = await payload.create({
       collection: 'roomBookings',
@@ -280,7 +281,8 @@ export async function bookPractice(
   }
 }
 
-export async function cancelPractice(payload: Payload, user: TypedUser, bookingId: number): Promise<RuleResult> {
+export async function cancelPractice(payload: Payload, user: TypedUser, bookingId: number): Promise<Result> {
+  const t = (await uiTexts(payload)).roomRules;
   const booking = await payload.findByID({
     collection: 'roomBookings',
     id: bookingId,
@@ -288,11 +290,10 @@ export async function cancelPractice(payload: Payload, user: TypedUser, bookingI
     disableErrors: true,
     overrideAccess: true,
   });
-  if (booking?.kind !== 'practice' || relId(booking.user) !== user.id)
-    return { ok: false, reason: 'Nincs ilyen foglalásod.' };
+  if (booking?.kind !== 'practice' || relId(booking.user) !== user.id) return { ok: false, reason: t.noBooking };
   if (booking.status === 'cancelled') return { ok: true };
   const verdict = checkCancel(new Date(booking.start), await loadSettings(payload), new Date());
-  if (!verdict.ok) return verdict;
+  if (!verdict.ok) return { ok: false, reason: say(t, verdict) };
   await payload.update({
     collection: 'roomBookings',
     id: bookingId,

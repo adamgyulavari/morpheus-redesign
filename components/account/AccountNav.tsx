@@ -7,19 +7,21 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { CalendarIcon, HomeIcon, LogoutIcon, PersonIcon, ReceiptIcon, WrenchIcon } from '@/components/icons';
+import { useUi } from '@/components/UiStrings';
 import { logout } from '@/lib/account-actions';
 
 export default function AccountNav({ canBook, isStaff }: { canBook: boolean; isStaff: boolean }) {
   const pathname = usePathname();
+  const t = useUi().nav;
   const tabs = [
-    { href: '/fiokom', label: 'Áttekintés', Icon: HomeIcon },
-    ...(canBook ? [{ href: '/fiokom/terem', label: 'Teremfoglalás', Icon: CalendarIcon }] : []),
-    { href: '/fiokom/szamlaim', label: 'Számláim', Icon: ReceiptIcon },
-    { href: '/fiokom/adatok', label: 'Adataim', Icon: PersonIcon },
+    { href: '/fiokom', label: t.overview, Icon: HomeIcon },
+    ...(canBook ? [{ href: '/fiokom/terem', label: t.rooms, Icon: CalendarIcon }] : []),
+    { href: '/fiokom/szamlaim', label: t.invoices, Icon: ReceiptIcon },
+    { href: '/fiokom/adatok', label: t.profile, Icon: PersonIcon },
   ];
   return (
     <div className="no-scrollbar -mx-5 flex items-center gap-2 overflow-x-auto px-5 lg:mx-0 lg:px-0">
-      <nav aria-label="Fiók" className="flex gap-2">
+      <nav aria-label={t.label} className="flex gap-2">
         {tabs.map((t) => (
           <Link key={t.href} href={t.href} aria-current={pathname === t.href ? 'page' : undefined} className="chip">
             <t.Icon className="h-[18px] w-[18px]" />
@@ -31,13 +33,13 @@ export default function AccountNav({ canBook, isStaff }: { canBook: boolean; isS
         {isStaff && (
           <a href="/admin" className="chip">
             <WrenchIcon className="h-[18px] w-[18px]" />
-            Admin felület
+            {t.admin}
           </a>
         )}
         <form action={logout}>
           <button type="submit" className="chip">
             <LogoutIcon className="h-[18px] w-[18px]" />
-            Kilépés
+            {t.logout}
           </button>
         </form>
       </div>

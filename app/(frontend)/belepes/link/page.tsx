@@ -6,6 +6,7 @@ import { Card } from '@/components/account/Card';
 import { MagicLinkConfirm } from '@/components/account/forms';
 import { accountMetadata } from '@/components/account/meta';
 import { payloadClient } from '@/lib/auth';
+import { getUi } from '@/lib/data';
 import { peekMagicLink } from '@/payload/magic-link';
 
 type Props = { searchParams: Promise<{ token?: string; next?: string }> };
@@ -15,7 +16,7 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
   // the token is in this page's address: don't send it on to other sites
-  return { ...(await accountMetadata('Belépés')), referrer: 'no-referrer' };
+  return { ...(await accountMetadata((await getUi()).login.title)), referrer: 'no-referrer' };
 }
 
 /**
@@ -27,9 +28,10 @@ export default async function MagicLinkPage({ searchParams }: Props) {
   const { token = '', next } = await searchParams;
   const link = await peekMagicLink(await payloadClient(), token);
   if (!link) redirect('/belepes?hiba=link');
+  const { nav, login } = await getUi();
 
   return (
-    <AccountShell eyebrow="Fiók" heading="Belépés *egy kattintással*">
+    <AccountShell eyebrow={nav.eyebrow} heading={login.confirmHeading}>
       <Card>
         <MagicLinkConfirm token={token} email={link.email} next={next} />
       </Card>

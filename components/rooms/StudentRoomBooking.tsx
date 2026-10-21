@@ -12,6 +12,7 @@ import { type FormEvent, useCallback, useState } from 'react';
 import Dialog from '@/components/Dialog';
 import { Field, TextField } from '@/components/forms/Field';
 import Notice from '@/components/forms/Notice';
+import { useUi } from '@/components/UiStrings';
 import { whenText } from '@/lib/rooms/format';
 import type { ScheduleEvent } from '@/lib/rooms/server';
 import type { OverviewPractice } from '@/lib/rooms/student';
@@ -44,6 +45,7 @@ export default function StudentRoomBooking({ rooms, groups, productions, booking
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
   const bookable = rooms.filter((r) => r.studentBookable);
+  const { rooms: t, actions, common, forms } = useUi();
 
   const load = useCallback((from: string, to: string) => loadSchedule(from, to), []);
   const done = (text: string) => {
@@ -77,7 +79,7 @@ export default function StudentRoomBooking({ rooms, groups, productions, booking
     });
     setBusy(false);
     if (!r.ok) return setError(r.reason);
-    done('Lefoglaltad a termet.');
+    done(t.booked);
   };
 
   const cancel = async () => {
@@ -86,7 +88,7 @@ export default function StudentRoomBooking({ rooms, groups, productions, booking
     const r = await cancelPracticeAction(sheet.id);
     setBusy(false);
     if (!r.ok) return setError(r.reason);
-    done('Lemondtad a foglalást.');
+    done(t.cancelled);
   };
 
   const onEventClick = (e: ScheduleEvent) => {
@@ -114,15 +116,15 @@ export default function StudentRoomBooking({ rooms, groups, productions, booking
         version={version}
         selectable
         futureOnly
-        ownLabel="Saját foglalás"
+        labels={t}
         onSelect={({ start, end }) => open({ mode: 'book', start, end })}
         onEventClick={onEventClick}
       />
 
       <section className="flex flex-col gap-4">
-        <h2 className="font-display text-[32px] leading-none lg:text-[40px]">Közelgő foglalásaim</h2>
+        <h2 className="font-display text-[32px] leading-none lg:text-[40px]">{t.mine}</h2>
         {bookings.length === 0 ? (
-          <p className="text-[15px] text-muted">Nincs közelgő foglalásod. Húzz ki egy szabad időszakot a naptárban.</p>
+          <p className="text-[15px] text-muted">{t.none}</p>
         ) : (
           <ul className="flex flex-col gap-2">
             {bookings.map((b) => (
@@ -137,7 +139,7 @@ export default function StudentRoomBooking({ rooms, groups, productions, booking
                       open({ mode: 'cancel', id: b.id, when: whenText(b.start, b.end, 'long'), rooms: b.rooms })
                     }
                   >
-                    Lemondás
+                    {actions.cancel}
                   </button>
                 }
               />
@@ -150,21 +152,21 @@ export default function StudentRoomBooking({ rooms, groups, productions, booking
         {sheet?.mode === 'book' && (
           <form className="flex flex-col gap-4" onSubmit={book}>
             <h2 id="room-sheet-title" className="pr-12 font-display text-[32px] leading-none">
-              Teremfoglalás
+              {t.title}
             </h2>
-            <TextField label="Nap" type="date" name="day" value={dayOf(sheet.start)} />
+            <TextField label={t.day} type="date" name="day" value={dayOf(sheet.start)} />
             <div className="grid grid-cols-2 gap-4">
               <TextField
-                label="Kezdés"
+                label={t.start}
                 type="time"
                 name="startTime"
                 step={slotMinutes * 60}
                 value={clockOf(sheet.start)}
               />
-              <TextField label="Vége" type="time" name="endTime" step={slotMinutes * 60} value={clockOf(sheet.end)} />
+              <TextField label={t.end} type="time" name="endTime" step={slotMinutes * 60} value={clockOf(sheet.end)} />
             </div>
             <fieldset className="flex flex-col gap-2">
-              <legend className="mb-1.5 text-sm font-semibold">Terem</legend>
+              <legend className="mb-1.5 text-sm font-semibold">{t.room}</legend>
               {bookable.map((r, i) => (
                 <label key={r.id} className="flex items-center gap-3 text-[15px]">
                   <input
@@ -180,15 +182,11 @@ export default function StudentRoomBooking({ rooms, groups, productions, booking
                 </label>
               ))}
             </fieldset>
-            <Field
-              label="Mihez gyakorolsz?"
-              hint="(nem kötelező)"
-              note="Ha kiválasztod, a csoporttársaid látják a fiókjukban, hogy gyakorolsz."
-            >
+            <Field label={t.for} hint={forms.optional} note={t.forNote}>
               <select className="field" name="link" defaultValue="">
                 <option value="">—</option>
                 {groups.length > 0 && (
-                  <optgroup label="Kurzus">
+                  <optgroup label={t.course}>
                     {groups.map((g) => (
                       <option key={g.id} value={`g${g.id}`}>
                         {g.title}
@@ -197,7 +195,7 @@ export default function StudentRoomBooking({ rooms, groups, productions, booking
                   </optgroup>
                 )}
                 {productions.length > 0 && (
-                  <optgroup label="Előadás">
+                  <optgroup label={t.production}>
                     {productions.map((p) => (
                       <option key={p.id} value={`p${p.id}`}>
                         {p.title}
@@ -207,16 +205,16 @@ export default function StudentRoomBooking({ rooms, groups, productions, booking
                 )}
               </select>
             </Field>
-            <Field label="Megjegyzés" hint="(nem kötelező, csak te és a munkatársak látjátok)">
+            <Field label={t.note} hint={t.noteHint}>
               <textarea className="field min-h-[80px]" name="note" maxLength={500} />
             </Field>
             <Notice error={error} />
             <div className="flex flex-wrap gap-3">
               <button type="submit" className="btn btn-lg btn-primary" disabled={busy}>
-                {busy ? 'Egy pillanat…' : 'Foglalás'}
+                {busy ? common.wait : t.submit}
               </button>
               <button type="button" className="btn btn-lg btn-outline" onClick={() => setSheet(null)}>
-                Mégse
+                {common.cancel}
               </button>
             </div>
           </form>
@@ -224,7 +222,7 @@ export default function StudentRoomBooking({ rooms, groups, productions, booking
         {sheet?.mode === 'cancel' && (
           <div className="flex flex-col gap-4">
             <h2 id="room-sheet-title" className="pr-12 font-display text-[32px] leading-none">
-              Lemondod?
+              {actions.cancelHeading}
             </h2>
             <p className="text-[16px] text-ink2">
               {sheet.when} · {sheet.rooms}
@@ -232,10 +230,10 @@ export default function StudentRoomBooking({ rooms, groups, productions, booking
             <Notice error={error} />
             <div className="flex flex-wrap gap-3">
               <button type="button" className="btn btn-lg btn-primary" onClick={cancel} disabled={busy}>
-                Igen, lemondom
+                {actions.cancelSubmit}
               </button>
               <button type="button" className="btn btn-lg btn-outline" onClick={() => setSheet(null)}>
-                Megtartom
+                {actions.keep}
               </button>
             </div>
           </div>

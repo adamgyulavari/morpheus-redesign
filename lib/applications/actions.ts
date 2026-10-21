@@ -9,6 +9,7 @@ import { headers } from 'next/headers';
 
 import { getCurrentUser, payloadClient } from '@/lib/auth';
 import { allow, clientIp } from '@/payload/magic-link';
+import { uiTexts } from '@/payload/ui-texts';
 
 import { cancelOwn, moveOwn, type SignUpInput, signUp } from './server';
 import { bookFreeShow } from './show-bookings';
@@ -32,18 +33,18 @@ export async function signUpAction(_: SignUpState, form: FormData): Promise<Sign
   };
   // honeypot: people don't see it, bots fill it in — they get the success answer, nothing happens
   if (str(form, 'website')) return { done: true };
-  if (form.get('privacy') !== 'on')
-    return { error: 'A jelentkezéshez el kell fogadnod az adatkezelési tájékoztatót.', values };
+  const payload = await payloadClient();
+  const t = (await uiTexts(payload)).signupErrors;
+  if (form.get('privacy') !== 'on') return { error: t.privacy, values };
 
   const viewer = await getCurrentUser();
   const ip = clientIp(await headers());
   const email = viewer?.email ?? values.email;
   if (!allow(`signup-ip:${ip}`, MAX_PER_IP) || (email && !allow(`signup-email:${email}`, MAX_PER_EMAIL)))
-    return { error: 'Túl sok jelentkezés érkezett innen rövid időn belül. Próbáld újra negyedóra múlva.', values };
+    return { error: t.tooMany, values };
 
   const kind = str(form, 'kind') as SignUpInput['kind'];
-  if (!['workshop', 'beginner', 'professional'].includes(kind)) return { error: 'Hibás jelentkezés.', values };
-  const payload = await payloadClient();
+  if (!['workshop', 'beginner', 'professional'].includes(kind)) return { error: t.invalid, values };
   const r = await signUp(payload, viewer, {
     kind,
     sessionId: Number(form.get('session')) || undefined,
@@ -70,16 +71,16 @@ export async function bookShowAction(_: SignUpState, form: FormData): Promise<Si
     jegyek: str(form, 'jegyek'),
   };
   if (str(form, 'website')) return { done: true };
-  if (form.get('privacy') !== 'on')
-    return { error: 'A foglaláshoz el kell fogadnod az adatkezelési tájékoztatót.', values };
+  const payload = await payloadClient();
+  const t = (await uiTexts(payload)).signupErrors;
+  if (form.get('privacy') !== 'on') return { error: t.privacyShow, values };
   const viewer = await getCurrentUser();
   const ip = clientIp(await headers());
   const email = viewer?.email ?? values.email;
   if (!allow(`signup-ip:${ip}`, MAX_PER_IP) || (email && !allow(`signup-email:${email}`, MAX_PER_EMAIL)))
-    return { error: 'Túl sok foglalás érkezett innen rövid időn belül. Próbáld újra negyedóra múlva.', values };
-  const payload = await payloadClient();
+    return { error: t.tooManyShow, values };
   const show = await showByCode(payload, str(form, 'eloadas'));
-  if (!show) return { error: 'Nincs ilyen előadás.', values };
+  if (!show) return { error: t.noShow, values };
   const r = await bookFreeShow(payload, viewer, {
     showId: show.id,
     seats: Number(values.jegyek) || 0,
@@ -92,9 +93,9 @@ export async function bookShowAction(_: SignUpState, form: FormData): Promise<Si
 }
 
 export async function cancelApplicationAction(id: number): Promise<{ ok: boolean; reason?: string }> {
-  const user = await getCurrentUser();
-  if (!user) return { ok: false, reason: 'Jelentkezz be újra.' };
-  const r = await cancelOwn(await payloadClient(), user, id);
+  const [user, payload] = await Promise.all([getCurrentUser(), payloadClient()]);
+  if (!user) return { ok: false, reason: (await uiTexts(payload)).accountErrors.loginAgain };
+  const r = await cancelOwn(payload, user, id);
   return r.ok ? { ok: true } : r;
 }
 
@@ -102,9 +103,9 @@ export async function moveApplicationAction(
   id: number,
   toSessionId: number,
 ): Promise<{ ok: boolean; reason?: string }> {
-  const user = await getCurrentUser();
-  if (!user) return { ok: false, reason: 'Jelentkezz be újra.' };
-  const r = await moveOwn(await payloadClient(), user, id, toSessionId);
+  const [user, payload] = await Promise.all([getCurrentUser(), payloadClient()]);
+  if (!user) return { ok: false, reason: (await uiTexts(payload)).accountErrors.loginAgain };
+  const r = await moveOwn(payload, user, id, toSessionId);
   return r.ok ? { ok: true } : r;
 }
 

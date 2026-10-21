@@ -16,7 +16,7 @@ import { showCheckoutAction } from '@/lib/payments/actions';
 import { showCheckoutPath } from '@/lib/payments/links';
 import { checkoutMe } from '@/lib/payments/me';
 import { paymentProvider } from '@/lib/payments/providers';
-import { billingSettings, PAUSED } from '@/lib/payments/settings';
+import { billingSettings } from '@/lib/payments/settings';
 
 // per visitor and per moment (seats, holds), never cached
 export const dynamic = 'force-dynamic';
@@ -45,7 +45,7 @@ export default async function ShowCheckoutPage({ params }: Props) {
   return (
     <AccountShell eyebrow={ui.showBooking.title} heading={`*${production.title}*`} wide>
       {!billing.online ? (
-        <CheckoutNotice text={PAUSED} back={back} />
+        <CheckoutNotice text={ui.checkout.paused} back={back} />
       ) : state.state === 'full' ? (
         <CheckoutNotice text={ui.sessions.full} back={back} />
       ) : state.state === 'closed' || price === 0 ? (

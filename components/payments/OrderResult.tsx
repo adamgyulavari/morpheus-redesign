@@ -10,7 +10,7 @@ import { useEffect, useState, useTransition } from 'react';
 
 import { Card } from '@/components/account/Card';
 import { useUi } from '@/components/UiStrings';
-import { formatHuf } from '@/lib/format';
+import { fill, formatHuf } from '@/lib/format';
 import { cancelOrderAction, orderStatusAction, retryPaymentAction } from '@/lib/payments/actions';
 import type { OrderView } from '@/lib/payments/order-page';
 
@@ -31,7 +31,9 @@ export default function OrderResult({
   const [waitedOut, setWaitedOut] = useState(false);
   const [error, setError] = useState('');
   const [pending, start] = useTransition();
-  const tickets = useUi().showBooking;
+  const ui = useUi();
+  const tickets = ui.showBooking;
+  const t = ui.order;
   const show = order.kind === 'show';
   const waiting = returned && order.status === 'pending' && order.processing;
   const unpaid = order.status === 'pending' && !(waiting && !waitedOut);
@@ -78,63 +80,57 @@ export default function OrderResult({
       <div role="status" aria-live="polite" className="flex flex-col gap-3">
         {order.status === 'paid' && (
           <>
-            <h2 className="font-display text-[34px] leading-tight">Sikeres fizetés — várunk!</h2>
+            <h2 className="font-display text-[34px] leading-tight">{t.paid}</h2>
             <p className="text-[17px] leading-relaxed">
-              {order.amountDue > 0 ? `Megkaptuk a befizetésed (${formatHuf(order.amountDue)}). ` : ''}A visszaigazolást
-              e-mailben küldjük.
+              {order.amountDue > 0 ? `${fill(t.received, { amount: formatHuf(order.amountDue) })} ` : ''}
+              {t.confirmation}
             </p>
             <Link href="/fiokom" className="btn btn-md btn-primary self-start">
-              Fiókom
+              {ui.common.account}
             </Link>
           </>
         )}
         {waiting && !waitedOut && (
           <>
-            <h2 className="font-display text-[34px] leading-tight">A fizetés feldolgozása…</h2>
-            <p className="text-[17px] leading-relaxed">Egy pillanat, várjuk a fizetési szolgáltató visszajelzését.</p>
+            <h2 className="font-display text-[34px] leading-tight">{t.processing}</h2>
+            <p className="text-[17px] leading-relaxed">{t.processingText}</p>
           </>
         )}
         {unpaid && (
           <>
-            <h2 className="font-display text-[34px] leading-tight">
-              {order.lastFailed ? 'A fizetés nem sikerült' : 'Fizetésre vár'}
-            </h2>
+            <h2 className="font-display text-[34px] leading-tight">{order.lastFailed ? t.failed : t.waiting}</h2>
             <p className="text-[17px] leading-relaxed">
-              {order.lastFailed ? 'Pénzt nem vontunk le. ' : ''}
-              {order.lapsed
-                ? 'A foglalási idő lejárt; ha van még szabad hely, most is kifizetheted.'
-                : until
-                  ? `A helyedet ${until}-ig tartjuk.`
-                  : ''}
-              {waitedOut
-                ? ' Ha már fizettél, nem kell újra: amint a visszajelzés megérkezik, e-mailben értesítünk.'
-                : ''}
+              {[
+                order.lastFailed && t.noCharge,
+                order.lapsed ? t.lapsed : until && fill(t.holdUntil, { time: until }),
+                waitedOut && t.waitedOut,
+              ]
+                .filter(Boolean)
+                .join(' ')}
             </p>
             <div className="flex flex-wrap gap-3">
               <button type="button" className="btn btn-md btn-primary" disabled={pending} onClick={retry}>
-                {pending ? 'Egy pillanat…' : `Fizetés — ${formatHuf(order.amountDue)}`}
+                {pending ? ui.common.wait : fill(ui.checkout.pay, { amount: formatHuf(order.amountDue) })}
               </button>
               <button type="button" className="btn btn-md btn-outline" disabled={pending} onClick={cancel}>
-                Mégse
+                {ui.common.cancel}
               </button>
             </div>
           </>
         )}
         {order.status === 'canceled' && (
           <>
-            <h2 className="font-display text-[34px] leading-tight">
-              {show ? tickets.orderCancelled : 'Megszakítottad a jelentkezést'}
-            </h2>
-            <p className="text-[17px] leading-relaxed">Pénzt nem vontunk le.</p>
+            <h2 className="font-display text-[34px] leading-tight">{show ? tickets.orderCancelled : t.cancelled}</h2>
+            <p className="text-[17px] leading-relaxed">{t.noCharge}</p>
             <Link href={again} className="link self-start font-semibold">
-              {show ? tickets.orderAgain : 'Mégis jelentkezem'}
+              {show ? tickets.orderAgain : t.again}
             </Link>
           </>
         )}
         {(order.status === 'refunded' || order.status === 'partially_refunded') && (
           <>
-            <h2 className="font-display text-[34px] leading-tight">Visszautaltuk a befizetést</h2>
-            <p className="text-[17px] leading-relaxed">A részleteket e-mailben küldtük el.</p>
+            <h2 className="font-display text-[34px] leading-tight">{t.refunded}</h2>
+            <p className="text-[17px] leading-relaxed">{t.refundedText}</p>
           </>
         )}
       </div>

@@ -32,7 +32,7 @@ import type * as P from '@/payload-types';
 import type { CourseSignupState } from './applications/rules';
 import type { OpenWorkshop } from './applications/server';
 import { todayInBudapest } from './dates';
-import { formatHuf } from './format';
+import { fill, formatHuf } from './format';
 import { clockOf, dayOf, weekdayOf } from './rooms/time';
 
 type Size = keyof NonNullable<P.Media['sizes']>;
@@ -226,7 +226,13 @@ export const course = (c: P.Course, starts: CourseStart[]): Course => ({
 });
 
 /** A course group open for sign-up, with its state (lib/applications/rules courseSignupState). */
-export const courseStart = (g: P.CourseGroup, s: CourseSignupState, onlinePayments = false): CourseStart => {
+/** `priceFrom`: "{price}-tól" (Felületi szövegek → course.priceFrom), for a choice of payment options. */
+export const courseStart = (
+  g: P.CourseGroup,
+  s: CourseSignupState,
+  onlinePayments: boolean,
+  priceFrom: string,
+): CourseStart => {
   const first = dayOf(new Date(g.startDate));
   const schedule = g.defaultSchedule ?? [];
   const entry = schedule.find((e) => Number(e.weekday) === weekdayOf(first)) ?? schedule[0];
@@ -257,7 +263,9 @@ export const courseStart = (g: P.CourseGroup, s: CourseSignupState, onlinePaymen
       // kezdő: from the payment options; otherwise the group's own price (label)
       price:
         lowest != null
-          ? `${formatHuf(lowest)}${options.length > 1 ? '-tól' : ''}`
+          ? options.length > 1
+            ? fill(priceFrom, { price: formatHuf(lowest) })
+            : formatHuf(lowest)
           : g.signup?.priceLabel || (g.signup?.price != null ? formatHuf(g.signup.price) : undefined),
     },
     payOnline: onlinePayments && beginner && Boolean(g.signup?.payOnline) && options.length > 0,

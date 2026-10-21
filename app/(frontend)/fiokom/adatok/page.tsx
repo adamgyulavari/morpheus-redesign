@@ -12,14 +12,14 @@ import { userIsStaffOrAdmin } from '@/payload/access';
 // per visitor, never cached or prerendered (the build has no database)
 export const dynamic = 'force-dynamic';
 
-export const generateMetadata = () => accountMetadata('Adataim');
+export const generateMetadata = async () => accountMetadata((await getUi()).profile.title);
 
 /** Own name and phone; the billing details for invoices. */
 export default async function ProfilePage() {
   const user = await requireUser('/fiokom/adatok');
-  const { googleLogin } = await getUi();
+  const { googleLogin, nav, profile } = await getUi();
   return (
-    <AccountShell eyebrow="Fiókom" heading="*Adataim*" wide>
+    <AccountShell eyebrow={nav.myAccount} heading={`*${profile.title}*`} wide>
       <AccountNav canBook={mayBookRooms(user)} isStaff={userIsStaffOrAdmin(user)} />
       <div className="grid max-w-[640px] gap-5">
         <Card>

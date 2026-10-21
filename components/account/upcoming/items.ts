@@ -95,7 +95,7 @@ export function upcomingItems(
   ].sort((a, b) => a.start.localeCompare(b.start));
 }
 
-/** Day number, month, weekday of a moment, and "Ma" / "Holnap" when it is today or tomorrow. */
+/** Day number, month, weekday of a moment, and whether it is today or tomorrow. */
 export function dateParts(iso: string) {
   const day = dayOf(new Date(iso));
   const today = todayInBudapest();
@@ -103,7 +103,7 @@ export function dateParts(iso: string) {
     dayNumber: dayOfMonth(day),
     month: monthShort(day),
     weekday: weekday(day),
-    relative: day === today ? 'Ma' : day === addDays(today, 1) ? 'Holnap' : undefined,
+    relative: day === today ? ('today' as const) : day === addDays(today, 1) ? ('tomorrow' as const) : undefined,
   };
 }
 

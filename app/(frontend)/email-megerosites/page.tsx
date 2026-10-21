@@ -4,13 +4,14 @@ import { accountMetadata } from '@/components/account/meta';
 import Notice from '@/components/forms/Notice';
 import { ButtonLink } from '@/components/ui';
 import { payloadClient } from '@/lib/auth';
+import { getUi } from '@/lib/data';
 
 type Props = { searchParams: Promise<{ token?: string }> };
 
 // per visitor, never cached or prerendered (the build has no database)
 export const dynamic = 'force-dynamic';
 
-export const generateMetadata = () => accountMetadata('E-mail-cím megerősítése');
+export const generateMetadata = async () => accountMetadata((await getUi()).verify.title);
 
 /** The link from the verification e-mail: verifies the address, then offers the login. */
 export default async function VerifyEmailPage({ searchParams }: Props) {
@@ -23,16 +24,13 @@ export default async function VerifyEmailPage({ searchParams }: Props) {
       verified = false;
     }
   }
+  const { nav, verify: t } = await getUi();
   return (
-    <AccountShell eyebrow="Fiók" heading={verified ? 'Megerősítve, *köszönjük!*' : 'E-mail-cím *megerősítése*'}>
+    <AccountShell eyebrow={nav.eyebrow} heading={verified ? t.headingDone : t.heading}>
       <Card>
-        {verified ? (
-          <Notice message="Az e-mail-címed megerősítve. Most már be tudsz lépni." />
-        ) : (
-          <Notice error="Ez a megerősítő link érvénytelen vagy már felhasználták. Ha korábban már megerősítetted a címed, egyszerűen lépj be." />
-        )}
+        {verified ? <Notice message={t.done} /> : <Notice error={t.invalid} />}
         <ButtonLink
-          link={{ label: 'Belépés', href: '/belepes' }}
+          link={{ label: t.login, href: '/belepes' }}
           variant="primary"
           arrow
           className="self-stretch sm:self-start"

@@ -12,9 +12,12 @@ import { upcomingItems } from '@/components/account/upcoming/items';
 import UpcomingList from '@/components/account/upcoming/UpcomingList';
 import { ArrowRight } from '@/components/icons';
 import UnpaidNotice from '@/components/payments/UnpaidNotice';
+import { tagged } from '@/components/tagged';
 import { myApplications } from '@/lib/applications/overview';
 import { payloadClient, requireUser } from '@/lib/auth';
+import { getUi } from '@/lib/data';
 import { dateRange } from '@/lib/dates';
+import { fill } from '@/lib/format';
 import { myOrders } from '@/lib/payments/my-orders';
 import { checkCancel } from '@/lib/rooms/rules';
 import { loadSettings } from '@/lib/rooms/server';
@@ -24,7 +27,7 @@ import { userIsStaffOrAdmin } from '@/payload/access';
 // per visitor, never cached or prerendered (the build has no database)
 export const dynamic = 'force-dynamic';
 
-export const generateMetadata = () => accountMetadata('Fiókom');
+export const generateMetadata = async () => accountMetadata((await getUi()).overview.title);
 
 const day = (iso: string) => iso.slice(0, 10);
 
@@ -61,7 +64,13 @@ export default async function AccountPage() {
     user,
     o.groups.map((g) => g.id),
   );
-  const [bookingRules, { unpaid }] = await Promise.all([loadSettings(payload), myOrders(payload, user)]);
+  const [bookingRules, { unpaid }, ui] = await Promise.all([loadSettings(payload), myOrders(payload, user), getUi()]);
+  const t = ui.overview;
+  const tab = (href: string) => (chunk: string) => (
+    <Link href={href} className="link font-semibold text-ink">
+      {chunk}
+    </Link>
+  );
   const now = new Date();
   const agenda = upcomingItems(o, mine, (start) => checkCancel(new Date(start), bookingRules, now).ok);
   // workshop-only visitors, show bookers, applicants and those booking rooms without a course see theirs too
@@ -73,60 +82,44 @@ export default async function AccountPage() {
     o.ownPractice.length > 0;
 
   return (
-    <AccountShell eyebrow="Fiókom" heading={`Szia, *${greetingName(user)}!*`} wide>
+    <AccountShell eyebrow={ui.nav.myAccount} heading={fill(t.greeting, { name: greetingName(user) })} wide>
       <AccountNav canBook={o.mayBook} isStaff={userIsStaffOrAdmin(user)} />
       <UnpaidNotice unpaid={unpaid} />
 
       {!hasAnything ? (
         <Card>
           <p className="text-[16px] leading-relaxed text-ink2">
-            Most nem vagy egyik futó csoportunkban sem. Ha jelentkeztél egy kurzusra, a felvételed után itt találod az
-            időpontokat és a tudnivalókat.{' '}
-            {o.mayBook && (
-              <>
-                Termet a{' '}
-                <Link href="/fiokom/terem" className="link font-semibold text-ink">
-                  Teremfoglalás
-                </Link>{' '}
-                fülön foglalhatsz.{' '}
-              </>
-            )}
-            Az adataidat az{' '}
-            <Link href="/fiokom/adatok" className="link font-semibold text-ink">
-              Adataim
-            </Link>{' '}
-            fülön módosíthatod.
+            {t.empty} {o.mayBook && <>{tagged(t.emptyRooms, { link: tab('/fiokom/terem') })} </>}
+            {tagged(t.emptyProfile, { link: tab('/fiokom/adatok') })}
           </p>
         </Card>
       ) : (
         <div className="grid gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
-          <Section title="Közelgő alkalmak">
-            {agenda.length === 0 ? <Empty>Még nincs kiírt alkalom.</Empty> : <UpcomingList items={agenda} />}
+          <Section title={t.upcoming}>
+            {agenda.length === 0 ? <Empty>{t.noUpcoming}</Empty> : <UpcomingList items={agenda} />}
           </Section>
 
           <div className="flex flex-col gap-10">
             {(o.groups.length > 0 || mine.pending.length > 0) && (
-              <Section title="Kurzusaim">
+              <Section title={t.courses}>
                 {mine.pending.map((p) => (
                   <Card key={`a${p.applicationId}`} className="border-dashed">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <span className="rounded-full bg-sand px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-teal">
-                        {p.status}
+                        {t[p.status]}
                       </span>
                       <ApplicationActions
                         applicationId={p.applicationId}
                         title={p.title}
                         canCancel={p.canCancel}
                         canMove={false}
-                        cancelLabel={p.kind === 'professional' ? 'Visszavonás' : undefined}
+                        cancelLabel={p.kind === 'professional' ? t.withdraw : undefined}
                       />
                     </div>
                     <h3 className="font-display text-[26px] leading-tight lg:text-[30px]">{p.title}</h3>
                     {p.when && <p className="text-[15px] font-semibold text-teal">{p.when}</p>}
                     <p className="text-[15px] leading-relaxed text-ink2">
-                      {p.kind === 'professional'
-                        ? 'Megkaptuk a jelentkezésed; hamarosan jelentkezünk az interjú részleteivel.'
-                        : 'Megkaptuk a jelentkezésed. A fizetés részleteit hamarosan e-mailben küldjük; a felvételed után itt találod a csoport időpontjait.'}
+                      {p.kind === 'professional' ? t.pendingProfessional : t.pendingBeginner}
                     </p>
                   </Card>
                 ))}
@@ -150,7 +143,7 @@ export default async function AccountPage() {
             )}
 
             {o.links.length > 0 && (
-              <Section title="Linkek">
+              <Section title={t.links}>
                 <ul className="flex flex-col gap-2">
                   {o.links.map((l) => (
                     <li key={l.id}>

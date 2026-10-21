@@ -14,10 +14,10 @@ import type { BlockProps } from './types';
 
 /** Logo, name and tagline. */
 export async function BioIntro({ block, className }: BlockProps<'bioIntro'>) {
-  const settings = await getSiteSettings();
+  const [settings, ui] = await Promise.all([getSiteSettings(), getUi()]);
   return (
     <header id={block.anchor} className={`relative flex flex-col items-center gap-3 text-center ${className}`}>
-      <Logo className="h-24 w-24" />
+      <Logo title={ui.common.logo} className="h-24 w-24" />
       <h1 className="font-display text-[38px] leading-none">{settings.name}</h1>
       <p className="text-sm font-bold uppercase tracking-[0.18em] text-teal">{settings.tagline}</p>
     </header>

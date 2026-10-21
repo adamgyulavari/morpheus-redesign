@@ -56,7 +56,7 @@ export async function HomeHero({ block, className }: BlockProps<'homeHero'>) {
           <div className="pulse-ring" aria-hidden="true" />
           <div className="pulse-ring" aria-hidden="true" />
           <div className="pulse-ring" aria-hidden="true" />
-          <Logo animated className="absolute inset-[16%] h-[68%] w-[68%]" />
+          <Logo animated title={ui.common.logo} className="absolute inset-[16%] h-[68%] w-[68%]" />
           <Image
             src={block.imageLarge.src}
             alt={block.imageLarge.alt}

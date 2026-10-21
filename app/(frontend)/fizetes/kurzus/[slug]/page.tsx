@@ -8,14 +8,14 @@ import GroupCheckout from '@/components/payments/course/GroupCheckout';
 import GroupChooser from '@/components/payments/course/GroupChooser';
 import { canApplyWithoutGroup } from '@/lib/applications/rules';
 import { getCurrentUser } from '@/lib/auth';
-import { getCourses } from '@/lib/data';
+import { getCourses, getUi } from '@/lib/data';
 import { checkoutMe } from '@/lib/payments/me';
 import type { Course } from '@/lib/types';
 
 // per visitor and per moment (places), never cached
 export const dynamic = 'force-dynamic';
 
-export const generateMetadata = () => accountMetadata('Jelentkezés és fizetés');
+export const generateMetadata = async () => accountMetadata((await getUi()).checkout.title);
 
 /**
  * /fizetes/kurzus/<slug>?csoport=<code>: a kezdő group with online payment — your details on the
@@ -34,7 +34,7 @@ export default async function CourseCheckoutPage({
   const course = (await getCourses()).find((c) => c.slug === slug);
   if (course?.signupMode !== 'beginner') notFound();
   return (
-    <AccountShell eyebrow="Jelentkezés" heading={`*${course.title}*`} wide>
+    <AccountShell eyebrow={(await getUi()).checkout.eyebrow} heading={`*${course.title}*`} wide>
       <Body course={course} csoport={csoport} />
     </AccountShell>
   );
@@ -50,12 +50,10 @@ async function Body({ course, csoport }: { course: Course; csoport?: string }) {
     withoutGroup: canApplyWithoutGroup(course, 'beginner'),
   };
 
+  const t = (await getUi()).checkout;
   if (!paid.length)
     return (
-      <CheckoutNotice
-        text="Erre a kurzusra most nem online fizetéssel lehet jelentkezni."
-        back={{ href: course.url, label: 'Vissza a kurzushoz' }}
-      >
+      <CheckoutNotice text={t.notOnline} back={{ href: course.url, label: t.backToCourse }}>
         <FreeSignup {...free} />
       </CheckoutNotice>
     );

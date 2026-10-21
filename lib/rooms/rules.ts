@@ -7,6 +7,9 @@
  * may be "for".
  * Staff and admins are not bound by these; the clash guarantee (occupancy.ts) applies to everyone.
  */
+import type { Refusal, Values } from '@/lib/messages';
+import type { UiStrings } from '@/payload/ui-catalogue';
+
 import { addDays, clockMinutes, dayOf, minutesOf } from './time';
 
 export type BookingSettings = {
@@ -79,15 +82,16 @@ export type PracticeRequest = {
   production?: number | null;
 };
 
-export type RuleResult = { ok: true } | { ok: false; reason: string };
-const refuse = (reason: string): RuleResult => ({ ok: false, reason });
+/** A no: a text of Felületi szövegek → Üzenetek → Teremfoglalási szabályok (lib/messages.ts). */
+export type RuleResult = { ok: true } | Refusal<keyof UiStrings['roomRules']>;
+const refuse = (refusal: keyof UiStrings['roomRules'], values?: Values): RuleResult => ({ ok: false, refusal, values });
 const OK: RuleResult = { ok: true };
 
 /** 8 → "8", 1.5 → "1,5" */
 const num = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1).replace('.', ','));
 const huDay = (day: string) => day.replaceAll('-', '. ').concat('.');
 
-/** Can this student book this practice? The first rule broken, in Hungarian. */
+/** Can this student book this practice? The first rule broken. */
 export function checkPractice(
   req: PracticeRequest,
   student: StudentContext,
@@ -95,29 +99,29 @@ export function checkPractice(
   now: Date,
 ): RuleResult {
   if (!student.permitted) {
-    return refuse('Teremfoglalásra nincs engedélyed. Ha szükséged van rá, szólj nekünk.');
+    return refuse('notPermitted');
   }
-  if (!req.rooms.length) return refuse('Válassz termet.');
+  if (!req.rooms.length) return refuse('chooseRoom');
   for (const room of req.rooms) {
-    if (!room.active) return refuse(`${room.name} jelenleg nem foglalható.`);
-    if (!room.studentBookable) return refuse(`${room.name} diákoknak nem foglalható.`);
+    if (!room.active) return refuse('roomInactive', { room: room.name });
+    if (!room.studentBookable) return refuse('roomNotForStudents', { room: room.name });
   }
   const minutes = (req.end.getTime() - req.start.getTime()) / 60_000;
-  if (!(minutes > 0)) return refuse('A foglalás vége legyen a kezdése után.');
+  if (!(minutes > 0)) return refuse('endBeforeStart');
   if (minutesOf(req.start) % s.slotMinutes || minutesOf(req.end) % s.slotMinutes) {
-    return refuse(
-      `A foglalás ${s.slotMinutes} perces egységekben lehetséges (pl. 10:00, 10:${String(s.slotMinutes % 60).padStart(2, '0')}).`,
-    );
+    return refuse('slot', {
+      minutes: s.slotMinutes,
+      example: `10:00, 10:${String(s.slotMinutes % 60).padStart(2, '0')}`,
+    });
   }
-  if (minutes > s.maxHours * 60) return refuse(`Egyszerre legfeljebb ${num(s.maxHours)} óra foglalható.`);
+  if (minutes > s.maxHours * 60) return refuse('maxHours', { hours: num(s.maxHours) });
 
-  if (req.start < now) return refuse('Múltbeli időpontra nem lehet foglalni.');
+  if (req.start < now) return refuse('past');
   if (req.start.getTime() < now.getTime() + s.minNoticeHours * 3_600_000) {
-    return refuse(`Legalább ${num(s.minNoticeHours)} órával előre kell foglalni.`);
+    return refuse('notice', { hours: num(s.minNoticeHours) });
   }
   const lastDay = addDays(dayOf(now), s.horizonDays);
-  if (dayOf(req.start) > lastDay)
-    return refuse(`Legfeljebb ${s.horizonDays} nappal előre lehet foglalni (${huDay(lastDay).slice(0, -1)}-ig).`);
+  if (dayOf(req.start) > lastDay) return refuse('horizon', { days: s.horizonDays, day: huDay(lastDay).slice(0, -1) });
 
   if (s.hoursFrom && s.hoursTo) {
     const from = clockMinutes(s.hoursFrom);
@@ -125,30 +129,30 @@ export function checkPractice(
     const endDay = dayOf(new Date(req.end.getTime() - 1));
     const endMinutes = minutesOf(req.end) || 24 * 60;
     if (dayOf(req.start) !== endDay || minutesOf(req.start) < from || endMinutes > to) {
-      return refuse(`Diákok ${s.hoursFrom} és ${s.hoursTo} között foglalhatnak.`);
+      return refuse('hours', { from: s.hoursFrom, to: s.hoursTo });
     }
   }
 
   if (s.weeklyQuotaHours !== null && student.minutesBookedInWeek + minutes > s.weeklyQuotaHours * 60) {
     const left = Math.max(0, s.weeklyQuotaHours * 60 - student.minutesBookedInWeek) / 60;
-    return refuse(`A heti keret ${num(s.weeklyQuotaHours)} óra; erre a hétre még ${num(left)} óra maradt.`);
+    return refuse('quota', { quota: num(s.weeklyQuotaHours), left: num(left) });
   }
 
-  if (req.courseGroup && req.production) return refuse('Csoportot vagy előadást válassz — csak az egyiket.');
+  if (req.courseGroup && req.production) return refuse('oneLink');
   if (req.courseGroup && !student.groupIds.includes(req.courseGroup)) {
-    return refuse('Csak a saját kurzusodhoz gyakorolhatsz.');
+    return refuse('ownCourse');
   }
   if (req.production && !student.linkableProductionIds.includes(req.production)) {
-    return refuse('Csak a kurzusod előadásaihoz gyakorolhatsz.');
+    return refuse('ownProduction');
   }
   return OK;
 }
 
 /** Can a student cancel their own practice now? */
 export function checkCancel(start: Date, s: BookingSettings, now: Date): RuleResult {
-  if (start <= now) return refuse('A már elkezdődött foglalást nem lehet lemondani.');
+  if (start <= now) return refuse('started');
   if (start.getTime() - now.getTime() < s.cancelHoursBefore * 3_600_000) {
-    return refuse(`A foglalást legkésőbb ${num(s.cancelHoursBefore)} órával a kezdés előtt lehet lemondani.`);
+    return refuse('cancelDeadline', { hours: num(s.cancelHoursBefore) });
   }
   return OK;
 }

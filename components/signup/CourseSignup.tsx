@@ -6,9 +6,11 @@
  */
 import Link from 'next/link';
 
+import { groupLabel, placesLeft, startLine } from '@/components/payments/course/startText';
 import { ButtonLink } from '@/components/ui';
 import { canApplyWithoutGroup } from '@/lib/applications/rules';
-import { monthDayShort, weekday } from '@/lib/dates';
+import { getUi } from '@/lib/data';
+import { fill } from '@/lib/format';
 import { courseCheckoutPath } from '@/lib/payments/links';
 import { momentText } from '@/lib/rooms/format';
 import type { Course, CourseStart } from '@/lib/types';
@@ -26,14 +28,19 @@ type Props = {
   start?: CourseStart;
 };
 
-const groupLabel = (s: CourseStart) => `${s.title} — indul: ${monthDayShort(s.date)}, ${weekday(s.date)}`;
-const startDetails = (s: CourseStart) =>
-  [
-    `Indul: ${monthDayShort(s.date)}, ${weekday(s.date)}${s.startTime ? ` · ${s.startTime}–${s.endTime}` : ''}`,
-    s.signup.left != null ? `${s.signup.left} szabad hely` : undefined,
-  ].filter(Boolean) as string[];
-
-export default function CourseSignup({ course, label, variant, size = 'lg', arrow, className = '', start }: Props) {
+export default async function CourseSignup({
+  course,
+  label,
+  variant,
+  size = 'lg',
+  arrow,
+  className = '',
+  start,
+}: Props) {
+  const ui = await getUi();
+  const t = ui.signup;
+  const startDetails = (s: CourseStart) => [startLine(s, ui), placesLeft(s, ui)].filter(Boolean);
+  const groupOption = (s: CourseStart) => ({ id: s.groupId, label: groupLabel(s, ui) });
   const buttonClassName = `btn btn-${size} btn-${variant} ${className}`;
   if (course.signupMode === 'external')
     return (
@@ -61,8 +68,8 @@ export default function CourseSignup({ course, label, variant, size = 'lg', arro
           title: course.title,
           courseGroupId: start?.groupId,
           courseId,
-          groups: start ? undefined : open.map((s) => ({ id: s.groupId, label: groupLabel(s) })),
-          noGroupLabel: withoutGroup ? 'Még nem tudom / bármelyik csoport' : undefined,
+          groups: start ? undefined : open.map(groupOption),
+          noGroupLabel: withoutGroup ? t.noGroupProfessional : undefined,
         }}
       />
     );
@@ -71,10 +78,12 @@ export default function CourseSignup({ course, label, variant, size = 'lg', arro
   // beginner
   if (start) {
     if (start.signup.state === 'full')
-      return <span className={`${buttonClassName} pointer-events-none opacity-60`}>Megtelt</span>;
+      return <span className={`${buttonClassName} pointer-events-none opacity-60`}>{ui.sessions.full}</span>;
     if (start.signup.state === 'notYet' && start.signup.opensAt)
       return (
-        <span className="text-[15px] font-semibold text-ink2">Jelentkezés: {momentText(start.signup.opensAt)}-tól</span>
+        <span className="text-[15px] font-semibold text-ink2">
+          {fill(t.opensAt, { time: momentText(start.signup.opensAt) })}
+        </span>
       );
     if (start.signup.state !== 'open') return null;
     if (start.payOnline)
@@ -119,14 +128,10 @@ export default function CourseSignup({ course, label, variant, size = 'lg', arro
         title: only ? only.title : course.title,
         courseGroupId: only?.groupId,
         courseId,
-        details: only
-          ? startDetails(only)
-          : open.length
-            ? undefined
-            : ['Most nincs induló csoport — jelentkezz, és szólunk, amint indul a következő.'],
+        details: only ? startDetails(only) : open.length ? undefined : [t.noStart],
         price: only?.signup.price,
-        groups: only ? undefined : open.map((s) => ({ id: s.groupId, label: groupLabel(s) })),
-        noGroupLabel: withoutGroup ? 'Egyik időpont sem jó — a következő csoportba' : undefined,
+        groups: only ? undefined : open.map(groupOption),
+        noGroupLabel: withoutGroup ? t.noGroupBeginner : undefined,
       }}
     />
   );

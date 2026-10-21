@@ -26,10 +26,12 @@ import {
 } from '@/lib/applications/server';
 import { applicationSettings } from '@/lib/applications/settings';
 import { ownHeldSeats, seatsTaken, showFacts, showInfo, ticketPrice } from '@/lib/applications/shows';
+import { say } from '@/lib/messages';
 import { whenText } from '@/lib/rooms/format';
 import { errorMessage } from '@/lib/rooms/server';
 import { siteUrl } from '@/payload/email';
 import { relId } from '@/payload/rel';
+import { uiTexts } from '@/payload/ui-texts';
 import type { Application, Order } from '@/payload-types';
 
 import { type Billing, clean, validateBilling } from './billing';
@@ -37,7 +39,7 @@ import { sendPaymentLink } from './notify';
 import { cancelOrder } from './order-page';
 import { confirmOrder, lapsed, lockOrder, orderByToken, queueFollowUps, type Result, resultUrl } from './orders';
 import { paymentProvider } from './providers';
-import { billingSettings, PAUSED } from './settings';
+import { billingSettings } from './settings';
 import { courseTarget, targetOf } from './target';
 
 type Started = Result<{ token: string; checkoutUrl: string | null }>;
@@ -57,12 +59,13 @@ export async function checkout(
   const begun = await begin(payload, viewer, input, 'workshop');
   if (!begun.ok) return begun;
 
+  const ui = await uiTexts(payload);
   const settings = await applicationSettings(payload);
   const s = await payload.findByID({ collection: 'sessions', id: input.sessionId, depth: 0, disableErrors: true });
-  if (s?.kind !== 'workshop') return { ok: false, reason: 'Nincs ilyen alkalom.' };
+  if (s?.kind !== 'workshop') return { ok: false, reason: ui.signupErrors.noSession };
   const taken = (await takenBy(payload, 'session_id', [s.id])).get(s.id) ?? NOBODY;
   const verdict = canSignUpWorkshop(workshopFacts(s, taken), now, settings);
-  if (!verdict.ok) return verdict;
+  if (!verdict.ok) return { ok: false, reason: say(ui.signupRules, verdict) };
 
   return order(payload, viewer, input, begun, now, {
     again: { session: { equals: s.id } },
@@ -89,8 +92,6 @@ export function dueNow(option: { amount: number; installments?: number | null })
   return { parts, amount: Math.max(0, Math.round(option.amount / parts)) };
 }
 
-const NOT_THIS_WAY = 'Erre a csoportra így nem lehet jelentkezni.';
-
 /**
  * A kezdő sign-up with payment: a group with "Online fizetés jelentkezéskor", one of its payment
  * options. Paid means admitted (after-paid.ts). Without a group the sign-up stays free.
@@ -103,6 +104,8 @@ export async function checkoutCourse(
 ): Promise<Started> {
   const begun = await begin(payload, viewer, input, 'beginner');
   if (!begun.ok) return begun;
+  const ui = await uiTexts(payload);
+  const t = ui.checkoutErrors;
 
   const group = await payload.findByID({
     collection: 'courseGroups',
@@ -111,16 +114,16 @@ export async function checkoutCourse(
     disableErrors: true,
   });
   if (!group || signupKindOf(group) !== 'beginner' || !group.signup?.payOnline)
-    return { ok: false, reason: NOT_THIS_WAY };
+    return { ok: false, reason: t.notThisWay };
   const option = (group.signup.options ?? []).find((o) => o.id === input.optionId);
-  if (!option) return { ok: false, reason: 'Válaszd ki, hogyan fizetsz.' };
+  if (!option) return { ok: false, reason: t.chooseOption };
   const courseId = relId(group.course);
   const course = courseId
     ? await payload.findByID({ collection: 'courses', id: courseId, depth: 0, disableErrors: true })
     : null;
-  if (!course) return { ok: false, reason: NOT_THIS_WAY };
+  if (!course) return { ok: false, reason: t.notThisWay };
   const target = await courseTarget(payload, course, group, now);
-  if (!target.verdict.ok) return target.verdict;
+  if (!target.verdict.ok) return { ok: false, reason: say(ui.signupRules, target.verdict) };
 
   const { parts, amount } = dueNow(option);
   return order(payload, viewer, input, begun, now, {
@@ -150,15 +153,16 @@ export async function checkoutShow(
 ): Promise<Started> {
   const begun = await begin(payload, viewer, input, 'show');
   if (!begun.ok) return begun;
+  const ui = await uiTexts(payload);
   const s = await payload.findByID({ collection: 'shows', id: input.showId, depth: 1, disableErrors: true });
   if (s?.bookingMode !== 'internal' || ticketPrice(s) === 0)
-    return { ok: false, reason: 'Erre az előadásra így nem lehet jegyet venni.' };
+    return { ok: false, reason: ui.checkoutErrors.showNotThisWay };
   const { maxPerBooking } = (await billingSettings(payload)).showDefaults;
   // their own hold (another number of tickets) is replaced: its seats are theirs to take
   const own = await ownHeldSeats(payload, s.id, viewer?.email ?? input.email);
   const taken = ((await seatsTaken(payload, [s.id])).get(s.id) ?? 0) - own;
   const verdict = canBookShow(showFacts(s, taken), input.seats, maxPerBooking, now);
-  if (!verdict.ok) return verdict;
+  if (!verdict.ok) return { ok: false, reason: say(ui.signupRules, verdict) };
   const info = showInfo(s, input.seats);
   return order(payload, viewer, input, begun, now, {
     // back with the same number of tickets: the same order; another number replaces it
@@ -181,10 +185,12 @@ async function begin(
   input: ApplicantInput & { billing: Billing },
   kind: Application['kind'],
 ): Promise<Result<{ billing: Billing; holdMinutes: number }>> {
-  const invalid = validateInput({ ...input, kind }, viewer) ?? validateBilling(input.billing);
+  const ui = await uiTexts(payload);
+  const invalid =
+    validateInput({ ...input, kind }, viewer, ui.signupErrors) ?? validateBilling(input.billing, ui.billingErrors);
   if (invalid) return { ok: false, reason: invalid };
   const rules = await billingSettings(payload);
-  if (!rules.online) return { ok: false, reason: PAUSED };
+  if (!rules.online) return { ok: false, reason: ui.checkout.paused };
   return { ok: true, billing: clean(input.billing), holdMinutes: rules.holdMinutes };
 }
 
@@ -308,15 +314,17 @@ async function placeOrder(
  */
 async function payOrder(payload: Payload, order: Order, email: string, now: Date): Promise<Started> {
   if (!lapsed(order, now)) return startPayment(payload, order, email);
+  const ui = await uiTexts(payload);
+  const t = ui.checkoutErrors;
   const applicationId = relId(order.application);
   const a = applicationId
     ? await payload.findByID({ collection: 'applications', id: applicationId, depth: 0, disableErrors: true })
     : null;
-  if (a?.status !== 'held') return { ok: false, reason: 'Ez a foglalás már nem érvényes; jelentkezz újra.' };
+  if (a?.status !== 'held') return { ok: false, reason: t.holdGone };
   const rules = await billingSettings(payload);
-  if (!rules.online) return { ok: false, reason: PAUSED };
+  if (!rules.online) return { ok: false, reason: ui.checkout.paused };
   const { verdict } = await targetOf(payload, a, now);
-  if (!verdict.ok) return verdict;
+  if (!verdict.ok) return { ok: false, reason: say(ui.signupRules, verdict) };
   const holdUntil = new Date(now.getTime() + rules.holdMinutes * 60_000).toISOString();
   const renewed = await inTransaction(payload, async (req) => {
     const o = await lockOrder(req, order.id);
@@ -329,12 +337,7 @@ async function payOrder(payload: Payload, order: Order, email: string, now: Date
   if (!renewed)
     return {
       ok: false,
-      reason:
-        a.kind === 'show'
-          ? 'Erre az előadásra időközben elfogytak a jegyek.'
-          : a.kind === 'workshop'
-            ? 'Ez az alkalom időközben megtelt.'
-            : 'Ez a csoport időközben megtelt.',
+      reason: a.kind === 'show' ? t.showSoldOut : a.kind === 'workshop' ? t.sessionFull : t.groupFull,
     };
   return startPayment(payload, renewed, email);
 }
@@ -342,7 +345,7 @@ async function payOrder(payload: Payload, order: Order, email: string, now: Date
 /** "Fizetés" on the order page (also from the e-mailed link): a new payment for the same order. */
 export async function retryPayment(payload: Payload, token: string, now = new Date()): Promise<Started> {
   const o = await orderByToken(payload, token);
-  if (o?.status !== 'pending') return { ok: false, reason: 'Ez a rendelés már le van zárva.' };
+  if (o?.status !== 'pending') return { ok: false, reason: (await uiTexts(payload)).checkoutErrors.orderClosed };
   const user = await payload.findByID({ collection: 'users', id: relId(o.user) ?? 0, depth: 0 });
   return payOrder(payload, o, user.email, now);
 }
@@ -374,7 +377,7 @@ async function startPayment(payload: Payload, order: Order, email: string): Prom
     return { ok: true, token: order.token, checkoutUrl: p.checkoutUrl };
   } catch (err) {
     payload.logger.error({ err, msg: `payment start failed for order ${order.id}` });
-    return { ok: false, reason: 'A fizetés indítása nem sikerült. Próbáld újra pár perc múlva.' };
+    return { ok: false, reason: (await uiTexts(payload)).checkoutErrors.startFailed };
   }
 }
 
