@@ -17,3 +17,6 @@ dev.dump
 
 # schema snapshots of the migrations: generated locally (scripts/migration-snapshot.ts)
 /payload/migrations/*.json
+
+# the group import file (personal data)
+groups.json
