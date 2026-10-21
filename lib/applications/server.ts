@@ -238,7 +238,8 @@ export async function applicantFor(
 // ── signing up ──────────────────────────────────────────────────────────────
 
 export type SignUpInput = ApplicantInput & {
-  kind: ApplicationKind;
+  /** The sign-up forms' kinds (a show is booked through its own flow). */
+  kind: Exclude<ApplicationKind, 'show'>;
   sessionId?: number;
   /** Empty: without a group — only where the course takes those (`openWithoutGroup`). */
   courseGroupId?: number | null;
@@ -253,7 +254,10 @@ const EMAIL =
   /^(?!.*\.\.)[\w!#$%&'*+/=?^`{|}~-](?:[\w!#$%&'*+/=?^`{|}~.-]*[\w!#$%&'*+/=?^`{|}~-])?@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,}$/i;
 
 /** Checks the form's fields (the rest is checked against the date or course). */
-export function validateInput(input: SignUpInput, viewer: TypedUser | null): string | null {
+export function validateInput(
+  input: Omit<SignUpInput, 'kind'> & { kind: ApplicationKind },
+  viewer: TypedUser | null,
+): string | null {
   if (!viewer && (!input.lastName.trim() || !input.firstName.trim())) return 'Add meg a neved.';
   if (!viewer && !EMAIL.test(input.email.trim())) return 'Adj meg egy érvényes e-mail-címet.';
   if (!input.phone.trim() && !viewer?.phone) return 'Add meg a telefonszámod.';

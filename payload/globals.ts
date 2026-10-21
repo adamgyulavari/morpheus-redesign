@@ -271,7 +271,7 @@ export const RoomBookingSettings: GlobalConfig = {
 
 export const ApplicationSettings: GlobalConfig = {
   slug: 'applicationSettings',
-  label: 'Jelentkezési beállítások',
+  label: 'Nyitott Műhely jelentkezési beállítások',
   access: { read: isStaffOrAdmin, update: isStaffOrAdmin },
   admin: {
     description: 'Kik kapnak értesítést az új jelentkezésekről, a Nyitott Műhely határidői és az e-mailek bevezetői.',
@@ -414,6 +414,29 @@ export const BillingSettings: GlobalConfig = {
           min: 5,
           defaultValue: 30,
           admin: { description: 'Ennyi ideig tartjuk a helyet, amíg a jelentkező fizet; utána felszabadul.' },
+        },
+      ],
+    },
+    {
+      name: 'showDefaults',
+      label: 'Előadások saját jegyfoglalással',
+      type: 'group',
+      admin: { description: 'Ha egy előadás-időpontnál nincs külön megadva.' },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            { name: 'price', label: 'Jegyár (Ft)', type: 'number', required: true, min: 0, defaultValue: 3500 },
+            { name: 'seats', label: 'Férőhely', type: 'number', required: true, min: 1, defaultValue: 30 },
+            {
+              name: 'maxPerBooking',
+              label: 'Jegy foglalásonként legfeljebb',
+              type: 'number',
+              required: true,
+              min: 1,
+              defaultValue: 10,
+            },
+          ],
         },
       ],
     },

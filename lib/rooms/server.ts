@@ -322,7 +322,7 @@ export type FillPreviewItem = {
   clashes: string[];
 };
 
-/** Nyitott Műhely in the fill: day, time and rooms from the dialog; price and size from Jelentkezési beállítások. */
+/** Nyitott Műhely in the fill: day, time and rooms from the dialog; price and size from Nyitott Műhely jelentkezési beállítások. */
 export type WorkshopFill = WorkshopPlan;
 
 const WORKSHOP_TITLE = SESSION_KINDS.workshop;

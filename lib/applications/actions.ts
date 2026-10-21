@@ -10,8 +10,7 @@ import { headers } from 'next/headers';
 import { getCurrentUser, payloadClient } from '@/lib/auth';
 import { allow, clientIp } from '@/payload/magic-link';
 
-import type { ApplicationKind } from './labels';
-import { cancelOwn, moveOwn, signUp } from './server';
+import { cancelOwn, moveOwn, type SignUpInput, signUp } from './server';
 
 export type SignUpState = { error?: string; done?: boolean; values?: Record<string, string> };
 
@@ -40,7 +39,7 @@ export async function signUpAction(_: SignUpState, form: FormData): Promise<Sign
   if (!allow(`signup-ip:${ip}`, MAX_PER_IP) || (email && !allow(`signup-email:${email}`, MAX_PER_EMAIL)))
     return { error: 'Túl sok jelentkezés érkezett innen rövid időn belül. Próbáld újra negyedóra múlva.', values };
 
-  const kind = str(form, 'kind') as ApplicationKind;
+  const kind = str(form, 'kind') as SignUpInput['kind'];
   if (!['workshop', 'beginner', 'professional'].includes(kind)) return { error: 'Hibás jelentkezés.', values };
   const payload = await payloadClient();
   const r = await signUp(payload, viewer, {

@@ -760,8 +760,8 @@ function MonthDialog({
                     ))}
                   </div>
                   <p className={s.muted}>
-                    Ha nem jelölsz termet, helyszín nélkül jön létre. Ár és létszám: Jelentkezési beállítások → Nyitott
-                    Műhely alapértékek.
+                    Ha nem jelölsz termet, helyszín nélkül jön létre. Ár és létszám: Nyitott Műhely jelentkezési
+                    beállítások → Nyitott Műhely alapértékek.
                   </p>
                 </fieldset>
               )}

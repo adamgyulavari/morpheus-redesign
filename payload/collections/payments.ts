@@ -78,6 +78,7 @@ export const Orders: CollectionConfig = {
           options: [
             { label: 'Nyitott Műhely', value: 'workshop' },
             { label: 'Kezdő kurzus', value: 'beginner' },
+            { label: 'Előadás', value: 'show' },
             { label: 'Havidíj', value: 'monthlyFee' },
           ],
         },

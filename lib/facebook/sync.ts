@@ -86,7 +86,10 @@ export async function syncFromFacebook(payload: Payload, events?: FbEvent[]): Pr
         (s) => !s.facebookEventId && relId(s.production) === production.id && String(s.date).slice(0, 10) === date,
       );
     if (!target) {
-      const doc = await payload.create({ collection: 'shows', data: { ...w, facebookEventId: e.id, hidden: false } });
+      const doc = await payload.create({
+        collection: 'shows',
+        data: { ...w, bookingMode: 'external', facebookEventId: e.id, hidden: false },
+      });
       result.created.push({ ...line, showId: doc.id });
       if (doc.roomNote) result.rooms.push({ ...line, showId: doc.id, note: doc.roomNote });
     } else if (!own || differs(target, w)) {

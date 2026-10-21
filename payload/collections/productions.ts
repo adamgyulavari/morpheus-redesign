@@ -1,6 +1,9 @@
 /** Productions (the repertoire), their shows, and the legal pages. */
-import { type CollectionConfig, slugField } from 'payload';
+import { randomBytes } from 'node:crypto';
 
+import { type CollectionConfig, type PayloadRequest, slugField, ValidationError } from 'payload';
+
+import { billingSettings } from '@/lib/payments/settings';
 import { placeShow, releaseShow } from '@/lib/rooms/show-rooms';
 import { slugify } from '@/lib/slugify';
 
@@ -229,6 +232,16 @@ export const Productions: CollectionConfig = {
   ],
 };
 
+/** A booking field's starting value: the default from Fizetési beállítások. */
+const showDefault = (key: 'price' | 'seats') =>
+  // Payload awaits it, though its type says otherwise
+  (async ({ req }: { req: PayloadRequest }) =>
+    (await billingSettings(req.payload)).showDefaults[key]) as unknown as (args: { req: PayloadRequest }) => number;
+
+/** With Saját foglalás, the price and the seats are required (the defaults are filled in). */
+const requiredWhenInternal = (value: unknown, { data }: { data: unknown }) =>
+  (data as { bookingMode?: string })?.bookingMode !== 'internal' || typeof value === 'number' || 'Kötelező.';
+
 export const Shows: CollectionConfig = {
   slug: 'shows',
   labels: { singular: 'Előadás-időpont', plural: 'Előadás-időpontok' },
@@ -243,6 +256,40 @@ export const Shows: CollectionConfig = {
   defaultSort: '-date',
   hooks: {
     ...collectionRevalidation('shows'),
+    beforeValidate: [
+      // saved without the admin form (the form fills them when Saját foglalás is chosen): the defaults
+      async ({ data, originalDoc, req }) => {
+        if (!data || (data.bookingMode ?? originalDoc?.bookingMode) !== 'internal') return data;
+        const defaults = (await billingSettings(req.payload)).showDefaults;
+        const booking = { ...originalDoc?.booking, ...data.booking };
+        data.booking = { ...booking, price: booking.price ?? defaults.price, seats: booking.seats ?? defaults.seats };
+        return data;
+      },
+    ],
+    beforeChange: [
+      async ({ data, originalDoc, req }) => {
+        if (data.bookingMode !== 'internal') return data;
+        data.code = originalDoc?.code || data.code || randomBytes(6).toString('base64url');
+        const id = data.production ?? originalDoc?.production;
+        const production = id
+          ? await req.payload
+              .findByID({ collection: 'productions', id, depth: 0, draft: true, req, select: { detailPage: true } })
+              .catch(() => null)
+          : null;
+        if (!production?.detailPage)
+          throw new ValidationError({
+            errors: [
+              {
+                path: 'bookingMode',
+                message:
+                  'Saját foglaláshoz az előadásnak saját aloldala kell legyen (az előadás „Saját aloldala van”).',
+              },
+            ],
+            req,
+          });
+        return data;
+      },
+    ],
     afterChange: [
       // at our own venue: its session takes every room (lib/rooms/show-rooms.ts)
       async ({ doc, previousDoc, operation, req }) => {
@@ -283,7 +330,23 @@ export const Shows: CollectionConfig = {
     relationship('venue', 'Helyszín', 'venues', { required: true }),
     text('label', 'Címke', { description: 'Nem kötelező, pl. „Nyilvános főpróba”.' }),
     {
+      name: 'bookingMode',
+      label: 'Jegyfoglalás',
+      type: 'select',
+      required: true,
+      defaultValue: 'external',
+      options: [
+        { label: 'Külső link (pl. Tixa)', value: 'external' },
+        { label: 'Saját foglalás a weboldalon', value: 'internal' },
+      ],
+      admin: {
+        description:
+          'Saját foglalásnál a nézők a weboldalon foglalnak (ingyenes regisztráció vagy jegyvásárlás); ehhez az előadásnak saját aloldala kell legyen.',
+      },
+    },
+    {
       type: 'row',
+      admin: { condition: (_, s) => s?.bookingMode !== 'internal' },
       fields: [
         text('ticketUrl', 'Jegyvásárlás (link)', { description: 'Pl. a Tixa-oldal.' }),
         text('registrationUrl', 'Regisztráció (link)', {
@@ -291,6 +354,51 @@ export const Shows: CollectionConfig = {
         }),
       ],
     },
+    {
+      name: 'booking',
+      label: 'Saját foglalás',
+      type: 'group',
+      admin: { condition: (_, s) => s?.bookingMode === 'internal' },
+      fields: [
+        {
+          name: 'defaults',
+          type: 'ui',
+          admin: { components: { Field: '@/payload/admin/BookingDefaults#BookingDefaults' } },
+        },
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'price',
+              label: 'Jegyár (Ft)',
+              type: 'number',
+              min: 0,
+              defaultValue: showDefault('price'),
+              validate: requiredWhenInternal,
+              admin: { description: 'Az alapár a Fizetési beállításokból. 0: ingyenes, regisztrációval.' },
+            },
+            {
+              name: 'seats',
+              label: 'Férőhely',
+              type: 'number',
+              min: 1,
+              defaultValue: showDefault('seats'),
+              validate: requiredWhenInternal,
+              admin: { description: 'Az alapérték a Fizetési beállításokból.' },
+            },
+          ],
+        },
+        {
+          name: 'open',
+          label: 'Foglalható',
+          type: 'checkbox',
+          defaultValue: true,
+          admin: { description: 'Kikapcsolva a foglalás szünetel (az időpont látszik, a gomb nem).' },
+        },
+      ],
+    },
+    // the date's public code: its booking link (/fizetes?eloadas=…), not the sequential id
+    { name: 'code', type: 'text', unique: true, index: true, admin: { hidden: true } },
     {
       name: 'info',
       label: 'Tudnivalók',

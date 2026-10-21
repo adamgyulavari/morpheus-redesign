@@ -43,7 +43,12 @@ export function invoicingMode(): InvoicingMode {
 /** The amount on the invoice: what was paid. */
 export const invoiceAmountFor = (order: Pick<Order, 'amountDue'>) => Math.max(0, order.amountDue);
 
-const UNIT: Record<Order['kind'], string> = { workshop: 'alkalom', beginner: 'kurzus', monthlyFee: 'hónap' };
+const UNIT: Record<Order['kind'], string> = {
+  workshop: 'alkalom',
+  beginner: 'kurzus',
+  show: 'jegy',
+  monthlyFee: 'hónap',
+};
 
 /** The invoice for a paid order (once; again only after a definite failure). */
 export async function issueInvoice(payload: Payload, orderId: number, now = new Date()): Promise<Invoice | null> {

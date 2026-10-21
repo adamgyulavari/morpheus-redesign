@@ -218,14 +218,27 @@ export const Applications: CollectionConfig = {
         description: 'Üresen: csoport nélküli jelentkezés — felvételkor kell kiválasztani.',
       }),
       index: true,
-      admin: { condition: (_, s) => s?.kind && s.kind !== 'workshop' },
+      admin: { condition: (_, s) => s?.kind === 'beginner' || s?.kind === 'professional' },
+    },
+    {
+      ...relationship('show', 'Előadás-időpont', 'shows'),
+      index: true,
+      admin: { condition: (_, s) => s?.kind === 'show' },
+    },
+    {
+      name: 'seats',
+      label: 'Jegyek',
+      type: 'number',
+      min: 1,
+      defaultValue: 1,
+      admin: { condition: (_, s) => s?.kind === 'show' },
     },
     {
       ...relationship('course', 'Kurzus', 'courses', {
         description: 'Automatikus a csoportból; csoport nélküli jelentkezésnél ez mondja meg, melyik kurzusra.',
       }),
       index: true,
-      admin: { condition: (_, s) => s?.kind && s.kind !== 'workshop' },
+      admin: { condition: (_, s) => s?.kind === 'beginner' || s?.kind === 'professional' },
     },
     { name: 'target', label: 'Mire', type: 'text', admin: { readOnly: true } },
     {
