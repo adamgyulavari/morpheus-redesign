@@ -10,12 +10,16 @@ import { createLocalReq, type Payload, type PayloadRequest, type TypedUser, type
 import { cache } from 'react';
 
 import { dateRange } from '@/lib/dates';
+import { fill } from '@/lib/format';
+import { type Result, say } from '@/lib/messages';
 import { billingSettings } from '@/lib/payments/settings';
 import { momentText, whenText } from '@/lib/rooms/format';
 import { placeOf } from '@/lib/rooms/occupancy';
 import { errorMessage } from '@/lib/rooms/server';
 import { dbOf } from '@/payload/db';
 import { relId, relIds } from '@/payload/rel';
+import type { UiStrings } from '@/payload/ui-catalogue';
+import { uiTexts } from '@/payload/ui-texts';
 import type { CourseGroup, Session } from '@/payload-types';
 
 import { APPLICATION_KINDS, type ApplicationKind, type ApplicationStatus, SIGNUP_KIND_OF_TYPE } from './labels';
@@ -59,7 +63,8 @@ import { seatsTaken, showInfo, showStart } from './shows';
 import { IS_PAID, inList, TAKES_PLACE } from './sql';
 
 const all = { limit: 0, pagination: false } as const;
-export type Result<T = object> = ({ ok: true } & T) | { ok: false; reason: string };
+
+export type { Result };
 
 // ── transactions ────────────────────────────────────────────────────────────
 
@@ -260,12 +265,13 @@ const EMAIL =
 export function validateInput(
   input: Omit<SignUpInput, 'kind'> & { kind: ApplicationKind },
   viewer: TypedUser | null,
+  t: UiStrings['signupErrors'],
 ): string | null {
-  if (!viewer && (!input.lastName.trim() || !input.firstName.trim())) return 'Add meg a neved.';
-  if (!viewer && !EMAIL.test(input.email.trim())) return 'Adj meg egy érvényes e-mail-címet.';
-  if (!input.phone.trim() && !viewer?.phone) return 'Add meg a telefonszámod.';
+  if (!viewer && (!input.lastName.trim() || !input.firstName.trim())) return t.name;
+  if (!viewer && !EMAIL.test(input.email.trim())) return t.email;
+  if (!input.phone.trim() && !viewer?.phone) return t.phone;
   if (input.kind === 'professional' && (input.message ?? '').trim().length < MIN_MOTIVATION)
-    return `Írj magadról legalább ${MIN_MOTIVATION} karaktert (motiváció, tapasztalat).`;
+    return fill(t.motivation, { min: MIN_MOTIVATION });
   return null;
 }
 
@@ -279,22 +285,23 @@ export async function signUp(
   input: SignUpInput,
   now = new Date(),
 ): Promise<Result<{ applicationId: number }>> {
-  const invalid = validateInput(input, viewer);
+  const ui = await uiTexts(payload);
+  const t = ui.signupErrors;
+  const invalid = validateInput(input, viewer, t);
   if (invalid) return { ok: false, reason: invalid };
   const settings = await applicationSettings(payload);
 
   let target: TargetInfo;
   if (input.kind === 'workshop') {
     // with online payment on, workshop sign-ups go through the checkout (lib/payments)
-    if ((await billingSettings(payload)).online)
-      return { ok: false, reason: 'Erre az alkalomra a fizetéssel lehet jelentkezni.' };
+    if ((await billingSettings(payload)).online) return { ok: false, reason: t.payWorkshop };
     const s = input.sessionId
       ? await payload.findByID({ collection: 'sessions', id: input.sessionId, depth: 0, disableErrors: true })
       : null;
-    if (s?.kind !== 'workshop') return { ok: false, reason: 'Nincs ilyen alkalom.' };
+    if (s?.kind !== 'workshop') return { ok: false, reason: t.noSession };
     const taken = (await takenBy(payload, 'session_id', [s.id])).get(s.id) ?? NOBODY;
     const verdict = canSignUpWorkshop(workshopFacts(s, taken), now, settings);
-    if (!verdict.ok) return verdict;
+    if (!verdict.ok) return { ok: false, reason: say(ui.signupRules, verdict) };
     target = await workshopInfo(payload, s, settings);
   } else if (input.courseGroupId) {
     const g = await payload.findByID({
@@ -303,13 +310,12 @@ export async function signUp(
       depth: 0,
       disableErrors: true,
     });
-    if (!g) return { ok: false, reason: 'Nincs ilyen kurzus.' };
-    if (signupKindOf(g) !== input.kind) return { ok: false, reason: 'Erre a kurzusra így nem lehet jelentkezni.' };
+    if (!g) return { ok: false, reason: t.noCourse };
+    if (signupKindOf(g) !== input.kind) return { ok: false, reason: t.wrongKind };
     const taken = (await takenBy(payload, 'course_group_id', [g.id])).get(g.id)?.taken ?? 0;
     const verdict = canSignUpCourse(courseFacts(g, taken), now);
-    if (!verdict.ok) return verdict;
-    if (input.kind === 'beginner' && (await groupPaysOnline(payload, g)))
-      return { ok: false, reason: 'Erre a csoportra a fizetéssel lehet jelentkezni.' };
+    if (!verdict.ok) return { ok: false, reason: say(ui.signupRules, verdict) };
+    if (input.kind === 'beginner' && (await groupPaysOnline(payload, g))) return { ok: false, reason: t.payGroup };
     target = courseInfo(g);
     input.courseId = null; // the group's own (the collection's hook)
   } else {
@@ -317,8 +323,7 @@ export async function signUp(
     const c = input.courseId
       ? await payload.findByID({ collection: 'courses', id: input.courseId, depth: 0, disableErrors: true })
       : null;
-    if (!c || !canApplyWithoutGroup(c, input.kind))
-      return { ok: false, reason: 'Erre a kurzusra most nem lehet jelentkezni.' };
+    if (!c || !canApplyWithoutGroup(c, input.kind)) return { ok: false, reason: t.courseClosed };
     target = { title: c.title, withoutGroup: true };
     input.courseGroupId = null;
   }
@@ -381,7 +386,7 @@ export async function allowedActions(
   rules: ApplicationRules,
   now = new Date(),
 ): Promise<{ cancel: RuleResult; move: boolean }> {
-  const no = { ok: false as const, reason: '' };
+  const no: RuleResult = { ok: false, refusal: 'notCancellable' };
   if (!a.status) return { cancel: no, move: false };
   if (a.kind === 'professional') return { cancel: canWithdraw(a.status), move: false };
   if (a.kind === 'show') {
@@ -419,11 +424,12 @@ export async function allowedActions(
 
 /** The participant cancels (workshop, beginner) or withdraws (professional). */
 export async function cancelOwn(payload: Payload, user: TypedUser, id: number, now = new Date()): Promise<Result> {
+  const ui = await uiTexts(payload);
   const a = await ownApplication(payload, user, id);
-  if (!a) return { ok: false, reason: 'Nincs ilyen jelentkezésed.' };
+  if (!a) return { ok: false, reason: ui.signupErrors.noApplication };
   const settings = await applicationSettings(payload);
   const { cancel } = await allowedActions(payload, a, settings, now);
-  if (!cancel.ok) return { ok: false, reason: cancel.reason || 'Ezt a jelentkezést már nem lehet lemondani.' };
+  if (!cancel.ok) return { ok: false, reason: say(ui.signupRules, cancel) };
   try {
     await payload.update({
       collection: 'applications',
@@ -473,15 +479,16 @@ export async function moveOwn(
   toSessionId: number,
   now = new Date(),
 ): Promise<Result<{ applicationId: number }>> {
+  const ui = await uiTexts(payload);
   const a = await ownApplication(payload, user, id);
-  if (a?.kind !== 'workshop' || !a.status) return { ok: false, reason: 'Nincs ilyen jelentkezésed.' };
+  if (a?.kind !== 'workshop' || !a.status) return { ok: false, reason: ui.signupErrors.noApplication };
   const status = a.status;
   const settings = await applicationSettings(payload);
   const [from, to] = await Promise.all([
     payload.findByID({ collection: 'sessions', id: relId(a.session) ?? 0, depth: 0, disableErrors: true }),
     payload.findByID({ collection: 'sessions', id: toSessionId, depth: 0, disableErrors: true }),
   ]);
-  if (!from || to?.kind !== 'workshop') return { ok: false, reason: 'Nincs ilyen alkalom.' };
+  if (!from || to?.kind !== 'workshop') return { ok: false, reason: ui.signupErrors.noSession };
   const taken = await takenBy(payload, 'session_id', [from.id, to.id]);
   const verdict = canMove(
     { status, sessionId: from.id, workshop: workshopFacts(from, taken.get(from.id) ?? NOBODY) },
@@ -489,7 +496,7 @@ export async function moveOwn(
     now,
     settings,
   );
-  if (!verdict.ok) return verdict;
+  if (!verdict.ok) return { ok: false, reason: say(ui.signupRules, verdict) };
   let applicationId: number;
   try {
     applicationId = await inTransaction(payload, async (req) => {
@@ -754,7 +761,7 @@ export async function addParticipant(
   sessionId: number,
   input: ApplicantInput,
 ): Promise<Result<{ applicationId: number }>> {
-  const invalid = validateInput({ ...input, kind: 'workshop' }, null);
+  const invalid = validateInput({ ...input, kind: 'workshop' }, null, (await uiTexts(payload)).signupErrors);
   if (invalid) return { ok: false, reason: invalid };
   const s = await payload.findByID({ collection: 'sessions', id: sessionId, depth: 0, disableErrors: true });
   if (s?.kind !== 'workshop') return { ok: false, reason: 'Nincs ilyen alkalom.' };

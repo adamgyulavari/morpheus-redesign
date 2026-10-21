@@ -9,28 +9,29 @@ import { workshopState } from '@/lib/applications/rules';
 import { NOBODY, takenBy, workshopFacts, workshopInfo } from '@/lib/applications/server';
 import { applicationSettings } from '@/lib/applications/settings';
 import { getCurrentUser, payloadClient } from '@/lib/auth';
+import { getUi } from '@/lib/data';
+import { fill } from '@/lib/format';
 import { checkoutAction } from '@/lib/payments/actions';
 import { checkoutPath } from '@/lib/payments/links';
 import { checkoutMe } from '@/lib/payments/me';
 import { paymentProvider } from '@/lib/payments/providers';
-import { billingSettings, PAUSED } from '@/lib/payments/settings';
+import { billingSettings } from '@/lib/payments/settings';
 import { sessionByCode } from '@/lib/payments/target';
 import type { Session } from '@/payload-types';
 
 // per visitor and per moment (places, holds), never cached
 export const dynamic = 'force-dynamic';
 
-export const generateMetadata = () => accountMetadata('Jelentkezés és fizetés');
-
-const OTHER_DATES = { href: '/nyitott-alkalmak/', label: 'A többi időpont' };
+export const generateMetadata = async () => accountMetadata((await getUi()).checkout.title);
 
 /** /fizetes?alkalom=<code>: a Nyitott Műhely date — your details on the left, the order and payment on the right. */
 export default async function CheckoutPage({ searchParams }: { searchParams: Promise<{ alkalom?: string }> }) {
   const payload = await payloadClient();
   const s = await sessionByCode(payload, (await searchParams).alkalom ?? '');
   if (!s?.code) notFound();
+  const { checkout: t } = await getUi();
   return (
-    <AccountShell eyebrow="Jelentkezés" heading="*Nyitott Műhely*" wide>
+    <AccountShell eyebrow={t.eyebrow} heading={t.workshop} wide>
       <Body session={s} code={s.code} />
     </AccountShell>
   );
@@ -38,28 +39,25 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
 
 async function Body({ session: s, code }: { session: Session; code: string }) {
   const payload = await payloadClient();
-  const [viewer, settings, billing, taken] = await Promise.all([
+  const [viewer, settings, billing, taken, ui] = await Promise.all([
     getCurrentUser(),
     applicationSettings(payload),
     billingSettings(payload),
     takenBy(payload, 'session_id', [s.id]),
+    getUi(),
   ]);
-  if (!billing.online)
-    return (
-      <CheckoutNotice
-        text={`${PAUSED} Az időpontokra a Nyitott Műhely oldalán jelentkezhetsz; a díjat a helyszínen fizeted.`}
-        back={OTHER_DATES}
-      />
-    );
+  const t = ui.checkout;
+  const otherDates = { href: '/nyitott-alkalmak/', label: t.otherDates };
+  if (!billing.online) return <CheckoutNotice text={t.pausedWorkshop} back={otherDates} />;
 
   const facts = workshopFacts(s, taken.get(s.id) ?? NOBODY);
   const state = workshopState(facts, new Date(), settings);
-  if (state.state === 'full') return <CheckoutNotice text="Ez az alkalom megtelt." back={OTHER_DATES} />;
+  if (state.state === 'full') return <CheckoutNotice text={t.full} back={otherDates} />;
   if (state.state !== 'open' && state.state !== 'confirmed')
-    return <CheckoutNotice text="Erre az alkalomra már nem lehet jelentkezni." back={OTHER_DATES} />;
+    return <CheckoutNotice text={t.closed} back={otherDates} />;
 
   const info = await workshopInfo(payload, s, settings);
-  const needs = state.state === 'open' ? `Még ${state.needed} jelentkező kell az induláshoz` : 'Biztosan indul';
+  const needs = state.state === 'open' ? fill(ui.sessions.needed, { count: state.needed }) : ui.sessions.confirmed;
   return (
     <CheckoutForm
       action={checkoutAction}
@@ -71,12 +69,14 @@ async function Body({ session: s, code }: { session: Session; code: string }) {
         <CheckoutSummary
           title={info.when ?? info.title}
           lines={info.place ? [info.place] : []}
-          meta={[needs, state.left != null ? `${state.left} szabad hely` : ''].filter(Boolean).join(' · ')}
+          meta={[needs, state.left != null ? fill(ui.sessions.left, { count: state.left }) : '']
+            .filter(Boolean)
+            .join(' · ')}
         />
       }
       policy={[
-        `Legkésőbb ${settings.userCancelHours} órával a kezdés előtt a fiókodban áthelyezheted a jelentkezésed egy másik időpontra, vagy lemondhatod. Lemondás esetén a díjat nem térítjük vissza.`,
-        `Ha ${settings.workshopCutoffHours} órával a kezdés előtt nincs legalább ${facts.minParticipants} fizetett jelentkező, az alkalom elmarad; a jelentkezésed a fiókodban áthelyezheted egy másik időpontra.`,
+        fill(t.policyCancel, { hours: settings.userCancelHours }),
+        fill(t.policyCutoff, { hours: settings.workshopCutoffHours, min: facts.minParticipants }),
       ]}
       me={checkoutMe(viewer)}
     />

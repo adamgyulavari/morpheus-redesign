@@ -25,7 +25,7 @@ const courseCard = (course: Course, ui: UiStrings): OfferingCardData => ({
   facts: [
     { label: ui.course.rhythm, value: course.rhythm },
     { label: ui.course.length, value: course.length },
-    { label: ui.course.price, value: priceSummary(course.prices) },
+    { label: ui.course.price, value: priceSummary(course.prices, ui.course.priceFrom) },
   ],
   cta: { label: course.card.ctaLabel, href: course.url },
 });
@@ -252,7 +252,7 @@ export async function CourseCompare({ block, className }: BlockProps<'courseComp
     [ui.course.rhythm, course.rhythm],
     [ui.course.length, course.length],
     [ui.course.admission, course.admission],
-    [ui.course.price, priceSummary(course.prices)],
+    [ui.course.price, priceSummary(course.prices, ui.course.priceFrom)],
     [ui.course.start, start(course)],
   ];
   return (

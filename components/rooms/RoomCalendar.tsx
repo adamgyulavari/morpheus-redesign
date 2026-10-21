@@ -42,13 +42,20 @@ export type RoomCalendarProps = {
   onEventClick?: (e: ScheduleEvent) => void;
   onEventChange?: (e: ScheduleEvent, change: { start: Date; end: Date }, revert: () => void) => void;
   onDrop?: (d: { sessionId: number; start: Date }) => void;
-  ownLabel?: string;
+  /** The site's own words (Felületi szövegek); the admin's are these defaults. */
+  labels?: { own: string; unavailable: string; failed: string };
   /**
    * Keep the dragged range highlighted while a form next to the calendar is open: clicks inside
    * elements matching this selector don't clear it. Change `clearSelection` to clear it.
    */
   keepSelectionIn?: string;
   clearSelection?: number;
+};
+
+const ADMIN_LABELS = {
+  own: 'Saját foglalás',
+  unavailable: 'A teremnaptár nem érhető el.',
+  failed: 'Nem sikerült betölteni a naptárat.',
 };
 
 export default function RoomCalendar(props: RoomCalendarProps) {
@@ -103,7 +110,7 @@ export default function RoomCalendar(props: RoomCalendarProps) {
           .load(info.start.toISOString(), info.end.toISOString())
           .then((data) => {
             if (data === null) {
-              setError('A teremnaptár nem érhető el.');
+              setError((latest.current.labels ?? ADMIN_LABELS).unavailable);
               return success([]);
             }
             setError('');
@@ -112,7 +119,7 @@ export default function RoomCalendar(props: RoomCalendarProps) {
             );
           })
           .catch((err: Error) => {
-            setError('Nem sikerült betölteni a naptárat.');
+            setError((latest.current.labels ?? ADMIN_LABELS).failed);
             failure(err);
           });
       },
@@ -120,7 +127,7 @@ export default function RoomCalendar(props: RoomCalendarProps) {
         const e = arg.event.extendedProps.event as ScheduleEvent | undefined;
         // the preview of something being dragged in (an unplaced session) has no schedule data
         if (!e) return <div className={s.eventTitle}>{arg.event.title}</div>;
-        const label = eventLabel(e, latest.current.ownLabel);
+        const label = eventLabel(e, (latest.current.labels ?? ADMIN_LABELS).own);
         const where = e.roomIds
           .map((id) => roomNames.get(id))
           .filter(Boolean)

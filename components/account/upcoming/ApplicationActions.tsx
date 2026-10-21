@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useId, useState, useTransition } from 'react';
 
 import Dialog from '@/components/Dialog';
+import { useUi } from '@/components/UiStrings';
 import { cancelApplicationAction, moveApplicationAction } from '@/lib/applications/actions';
 import { cancelPracticeAction } from '@/lib/rooms/student-actions';
 
@@ -44,6 +45,7 @@ export default function ApplicationActions({
   const [pending, start] = useTransition();
   const router = useRouter();
   const titleId = useId();
+  const { actions: t, common } = useUi();
   if (!canCancel && !(canMove && moveTargets.length)) return null;
 
   const run = () =>
@@ -56,8 +58,8 @@ export default function ApplicationActions({
             : await cancelApplicationAction(applicationId)
           : target
             ? await moveApplicationAction(applicationId, target)
-            : { ok: false, reason: 'Válassz időpontot.' };
-      if (!r.ok) return setError(r.reason ?? 'Hiba történt.');
+            : { ok: false, reason: t.chooseDate };
+      if (!r.ok) return setError(r.reason ?? t.failed);
       setMode(null);
       router.refresh();
     });
@@ -66,12 +68,12 @@ export default function ApplicationActions({
     <span className="flex shrink-0 gap-4">
       {canMove && moveTargets.length > 0 && (
         <button type="button" className={`${linkButton} text-teal`} onClick={() => setMode('move')}>
-          Áthelyezés
+          {t.move}
         </button>
       )}
       {canCancel && (
         <button type="button" className={`${linkButton} text-rust-dark`} onClick={() => setMode('cancel')}>
-          {cancelLabel ?? 'Lemondás'}
+          {cancelLabel ?? t.cancel}
         </button>
       )}
       <Dialog
@@ -84,14 +86,14 @@ export default function ApplicationActions({
         <div className="flex flex-col gap-5 px-6 pb-8 pt-6 lg:px-9 lg:pb-9 lg:pt-8">
           <div className="flex flex-col gap-1.5 pr-10">
             <h2 id={titleId} className="font-display text-[28px] leading-tight">
-              {mode === 'move' ? 'Másik időpont' : cancelLabel ? 'Visszavonod?' : 'Lemondod?'}
+              {mode === 'move' ? t.moveHeading : cancelLabel ? t.withdrawHeading : t.cancelHeading}
             </h2>
             <p className="text-[15px] text-ink2">{title}</p>
           </div>
           {mode === 'cancel' && cancelNote && <p className="text-[15px] leading-relaxed">{cancelNote}</p>}
           {mode === 'move' && (
             <fieldset className="flex flex-col gap-2">
-              <legend className="sr-only">Új időpont</legend>
+              <legend className="sr-only">{t.newDate}</legend>
               {moveTargets.map((t) => (
                 <label
                   key={t.id}
@@ -121,16 +123,10 @@ export default function ApplicationActions({
               disabled={pending || (mode === 'move' && !target)}
               onClick={run}
             >
-              {pending
-                ? 'Egy pillanat…'
-                : mode === 'move'
-                  ? 'Áthelyezem'
-                  : cancelLabel
-                    ? 'Igen, visszavonom'
-                    : 'Igen, lemondom'}
+              {pending ? common.wait : mode === 'move' ? t.moveSubmit : cancelLabel ? t.withdrawSubmit : t.cancelSubmit}
             </button>
             <button type="button" className="btn btn-md btn-outline" onClick={() => setMode(null)}>
-              Mégse
+              {common.cancel}
             </button>
           </div>
         </div>

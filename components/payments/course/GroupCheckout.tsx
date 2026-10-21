@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import CheckoutForm from '@/components/payments/CheckoutForm';
 import CheckoutSummary from '@/components/payments/CheckoutSummary';
+import { getUi } from '@/lib/data';
 import { courseCheckoutAction } from '@/lib/payments/actions';
 import { dueNow } from '@/lib/payments/checkout';
 import { courseCheckoutPath } from '@/lib/payments/links';
@@ -12,7 +13,7 @@ import type { Course, CourseStart } from '@/lib/types';
 import { placesLeft, startLine } from './startText';
 
 /** One group's checkout: its payment options, paid now in full or the first instalment. */
-export default function GroupCheckout({
+export default async function GroupCheckout({
   course,
   start,
   canSwitch,
@@ -24,8 +25,9 @@ export default function GroupCheckout({
   canSwitch: boolean;
   me: CheckoutMe;
 }) {
+  const ui = await getUi();
   const path = courseCheckoutPath(course.slug, start.code);
-  const left = placesLeft(start);
+  const left = placesLeft(start, ui);
   return (
     <CheckoutForm
       action={courseCheckoutAction}
@@ -44,7 +46,7 @@ export default function GroupCheckout({
       summary={
         <CheckoutSummary
           title={start.title}
-          lines={[startLine(start)]}
+          lines={[startLine(start, ui)]}
           meta={
             <>
               {left}
@@ -52,7 +54,7 @@ export default function GroupCheckout({
                 <>
                   {left && ' · '}
                   <Link href={courseCheckoutPath(course.slug)} className="link">
-                    Másik csoport
+                    {ui.checkout.otherGroup}
                   </Link>
                 </>
               )}
@@ -61,10 +63,8 @@ export default function GroupCheckout({
         />
       }
       policy={[
-        'A fizetéssel felveszünk a csoportba: e-mailben küldjük a részleteket, és a fiókodban is látod.',
-        ...(start.options.some((o) => o.installments > 1)
-          ? ['Részletfizetésnél most az első részletet fizeted, a többit a kurzus során.']
-          : []),
+        ui.checkout.policyAdmit,
+        ...(start.options.some((o) => o.installments > 1) ? [ui.checkout.policyInstallments] : []),
       ]}
       me={me}
     />

@@ -6,6 +6,7 @@ import type { Payload } from 'payload';
 
 import { inTransaction } from '@/lib/applications/server';
 import { relId } from '@/payload/rel';
+import { uiTexts } from '@/payload/ui-texts';
 import type { Order } from '@/payload-types';
 
 import { lapsed, lockOrder, orderByToken, type Result, releaseHold } from './orders';
@@ -74,8 +75,9 @@ export async function orderStatus(payload: Payload, token: string, now = new Dat
 
 /** "Mégse" on the order page: the person lets the place go. */
 export async function cancelOrder(payload: Payload, token: string): Promise<Result> {
+  const t = (await uiTexts(payload)).checkoutErrors;
   const order = await orderByToken(payload, token);
-  if (!order) return { ok: false, reason: 'Nincs ilyen rendelés.' };
+  if (!order) return { ok: false, reason: t.noOrder };
   const done = await inTransaction(payload, async (req) => {
     const o = await lockOrder(req, order.id);
     if (o.status !== 'pending') return false;
@@ -83,5 +85,5 @@ export async function cancelOrder(payload: Payload, token: string): Promise<Resu
     await payload.update({ collection: 'orders', id: o.id, data: { status: 'canceled' }, req });
     return true;
   });
-  return done ? { ok: true } : { ok: false, reason: 'Ez a rendelés már le van zárva.' };
+  return done ? { ok: true } : { ok: false, reason: t.orderClosed };
 }

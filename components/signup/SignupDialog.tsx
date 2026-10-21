@@ -9,16 +9,17 @@ import Link from 'next/link';
 import { useActionState, useEffect, useId, useState } from 'react';
 
 import Dialog from '@/components/Dialog';
-import Checkbox from '@/components/forms/Checkbox';
 import CountOptions from '@/components/forms/CountOptions';
-import { Field, RequiredMarks, TextField } from '@/components/forms/Field';
+import { Field, RequiredMarks } from '@/components/forms/Field';
 import Honeypot from '@/components/forms/Honeypot';
 import Notice from '@/components/forms/Notice';
+import { HaveAccount, PersonFields, PrivacyCheckbox } from '@/components/forms/PersonFields';
 import Submit from '@/components/forms/Submit';
 import { ArrowRight } from '@/components/icons';
 import { useUi } from '@/components/UiStrings';
 import { bookShowAction, type SignUpState, signUpAction, whoAmI } from '@/lib/applications/actions';
 import { MIN_MOTIVATION } from '@/lib/applications/rules';
+import { fill } from '@/lib/format';
 
 type Kind = 'workshop' | 'beginner' | 'professional' | 'show';
 type Me = Awaited<ReturnType<typeof whoAmI>>;
@@ -42,15 +43,6 @@ export type SignupTarget = {
   /** A free show: its booking link's code, and the most seats one may book. */
   showCode?: string;
   maxSeats?: number;
-};
-
-const DONE: Record<Exclude<Kind, 'show'>, string> = {
-  workshop:
-    'Köszönjük, megkaptuk a jelentkezésed! Visszaigazolást küldtünk e-mailben. A fizetés részleteit hamarosan e-mailben küldjük.',
-  beginner:
-    'Köszönjük, megkaptuk a jelentkezésed! Visszaigazolást küldtünk e-mailben. A fizetés részleteit hamarosan e-mailben küldjük.',
-  professional:
-    'Köszönjük a jelentkezésed! Visszaigazolást küldtünk e-mailben, és hamarosan jelentkezünk az interjú részleteivel.',
 };
 
 export default function SignupDialog({
@@ -88,6 +80,7 @@ function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string
   const show = target.kind === 'show';
   const texts = useUi();
   const ui = texts.showBooking;
+  const t = texts.signup;
   const [state, action] = useActionState<SignUpState, FormData>(show ? bookShowAction : signUpAction, {});
   const [me, setMe] = useState<Me | undefined>(undefined);
   const [motivation, setMotivation] = useState(state.values?.message ?? '');
@@ -101,7 +94,7 @@ function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string
     <div className="flex max-h-[88vh] flex-col gap-5 overflow-y-auto px-6 pb-8 pt-6 lg:px-10 lg:pb-10 lg:pt-9">
       <div className="flex flex-col gap-1.5 pr-10">
         <span className="text-xs font-bold uppercase tracking-[0.16em] text-teal">
-          {professional ? 'Szakmai kurzus — jelentkezés' : show ? texts.shows.registration : 'Jelentkezés'}
+          {professional ? t.eyebrowProfessional : show ? texts.shows.registration : t.eyebrow}
         </span>
         <h2 id={titleId} className="font-display text-[30px] leading-tight lg:text-[36px]">
           {target.title}
@@ -113,9 +106,7 @@ function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string
         ))}
         {target.price && (
           <p className="mt-2 self-start rounded-2xl bg-sand px-4 py-2.5">
-            {!show && (
-              <span className="mr-2 text-xs font-bold uppercase tracking-[0.14em] text-teal">Részvételi díj</span>
-            )}
+            {!show && <span className="mr-2 text-xs font-bold uppercase tracking-[0.14em] text-teal">{t.fee}</span>}
             <span
               className={show ? 'text-[15px] font-semibold text-ink' : 'font-display text-[26px] leading-none text-ink'}
             >
@@ -131,14 +122,14 @@ function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string
             role="status"
             className="rounded-xl bg-teal/10 px-4 py-3 text-[16px] font-semibold leading-relaxed text-teal"
           >
-            {target.kind === 'show' ? ui.done : DONE[target.kind]}
+            {show ? ui.done : professional ? t.doneProfessional : t.done}
           </p>
           <p className="text-[15px] leading-relaxed text-ink2">
-            {show ? `${ui.track} ` : 'A jelentkezésed a fiókodban követheted: '}
+            {show ? ui.track : t.track}{' '}
             <Link href="/fiokom" className="link font-semibold text-ink">
-              Fiókom
+              {texts.common.account}
             </Link>
-            {me ? '' : ' (a belépéshez szükséges linket az e-mailben küldtük)'}.
+            {me ? '' : ` ${t.trackGuest}`}.
           </p>
         </div>
       ) : (
@@ -155,38 +146,16 @@ function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string
             {target.showCode && <input type="hidden" name="eloadas" value={target.showCode} />}
 
             {me === undefined ? (
-              <p className="text-[15px] text-muted">Betöltés…</p>
-            ) : me ? (
-              <>
-                <p className="rounded-2xl bg-sand px-4 py-3 text-[15px] leading-relaxed text-ink2">
-                  Bejelentkezve: <strong className="font-semibold text-ink">{me.name}</strong> ({me.email})
-                </p>
-                <TextField
-                  label="Telefonszám"
-                  type="tel"
-                  name="phone"
-                  autoComplete="tel"
-                  value={v('phone') ?? me.phone}
-                />
-              </>
+              <p className="text-[15px] text-muted">{texts.forms.loading}</p>
             ) : (
-              <>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <TextField label="Vezetéknév" name="lastName" autoComplete="family-name" value={v('lastName')} />
-                  <TextField label="Keresztnév" name="firstName" autoComplete="given-name" value={v('firstName')} />
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <TextField label="E-mail-cím" type="email" name="email" autoComplete="email" value={v('email')} />
-                  <TextField label="Telefonszám" type="tel" name="phone" autoComplete="tel" value={v('phone')} />
-                </div>
-              </>
+              <PersonFields me={me} value={v} />
             )}
 
             {!target.courseGroupId && target.groups && target.groups.length > (target.noGroupLabel ? 0 : 1) && (
-              <Field label="Melyik csoportba jelentkezel?" required>
+              <Field label={t.group} required>
                 <select className="field" name="courseGroup" required defaultValue={v('courseGroup') ?? ''}>
                   <option value="" disabled>
-                    Válassz…
+                    {t.choose}
                   </option>
                   {target.groups.map((g) => (
                     <option key={g.id} value={g.id}>
@@ -206,17 +175,15 @@ function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string
             )}
             {professional && (
               <Field
-                label="Motiváció és tapasztalat"
+                label={t.motivation}
                 required
                 note={
                   <span className={motivation.trim().length >= MIN_MOTIVATION ? 'text-teal' : undefined}>
-                    {motivation.trim().length} / legalább {MIN_MOTIVATION} karakter
+                    {fill(t.motivationCount, { count: motivation.trim().length, min: MIN_MOTIVATION })}
                   </span>
                 }
               >
-                <span className="font-normal text-muted">
-                  Miért szeretnél szakmai kurzusra jönni, és mi a színházi (vagy más színpadi) tapasztalatod?
-                </span>
+                <span className="font-normal text-muted">{t.motivationHint}</span>
                 <textarea
                   className="field min-h-[160px]"
                   name="message"
@@ -229,24 +196,16 @@ function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string
             )}
 
             <Honeypot />
-            <Checkbox name="privacy">
-              Elolvastam és elfogadom az{' '}
-              <Link href="/adatkezelesi-tajekoztato/" className="link font-semibold text-ink" target="_blank">
-                adatkezelési tájékoztatót
-              </Link>
-              .
-            </Checkbox>
+            <PrivacyCheckbox />
             {me !== undefined && (
-              <Submit>{professional ? 'Jelentkezés elküldése' : show ? ui.submit : 'Jelentkezem'}</Submit>
+              <Submit>{professional ? t.submitProfessional : show ? ui.submit : texts.common.signup}</Submit>
             )}
             {!me && me !== undefined && (
-              <p className="text-[14px] leading-relaxed text-muted">
-                Van már fiókod?{' '}
-                <Link href="/belepes" className="link font-semibold text-ink">
-                  Lépj be
-                </Link>
-                {show ? ui.loginAfter : ', és egy kattintással jelentkezhetsz. Ha nincs, a jelentkezéssel létrehozzuk.'}
-              </p>
+              <HaveAccount
+                href="/belepes"
+                after={show ? ui.loginAfter : t.loginAfter}
+                className="text-[14px] leading-relaxed text-muted"
+              />
             )}
           </form>
         </RequiredMarks>

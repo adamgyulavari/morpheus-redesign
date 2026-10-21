@@ -2,10 +2,16 @@ import type { ReactNode } from 'react';
 
 import Emph from '@/components/Emph';
 import SiteLayout from '@/components/layouts/SiteLayout';
+import { UiProvider } from '@/components/UiStrings';
 import { Eyebrow } from '@/components/ui';
+import { getUi } from '@/lib/data';
+import { uiTab } from '@/payload/ui-catalogue';
 
-/** The frame of the account pages: site header and footer, a heading and a narrow column. */
-export default function AccountShell({
+/**
+ * The frame of the account and checkout pages: site header and footer, a heading and a narrow
+ * column; their texts (Fiók és fizetés) for the forms in it.
+ */
+export default async function AccountShell({
   eyebrow,
   heading,
   intro,
@@ -32,7 +38,7 @@ export default function AccountShell({
           </h1>
           {intro && <div className="max-w-[560px] text-[17px] leading-relaxed text-ink2">{intro}</div>}
         </div>
-        {children}
+        <UiProvider ui={uiTab(await getUi(), 'account')}>{children}</UiProvider>
       </section>
     </SiteLayout>
   );

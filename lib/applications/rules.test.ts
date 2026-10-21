@@ -21,6 +21,7 @@ import {
   isCounted,
   isCutoffDue,
   placesLeft,
+  type RuleResult,
   type ShowFacts,
   showState,
   takesPlace,
@@ -42,7 +43,8 @@ const workshop = (extra: Partial<WorkshopFacts> = {}): WorkshopFacts => ({
   ...extra,
 });
 const hoursBefore = (h: number, from = start) => new Date(from.getTime() - h * 3_600_000);
-const reason = (r: { ok: boolean; reason?: string }) => (r.ok ? 'ok' : r.reason);
+/** The refusal's text key and values (their wording: Felületi szövegek → Üzenetek). */
+const reason = (r: RuleResult) => (r.ok ? 'ok' : [r.refusal, r.values ?? {}]);
 
 describe('counting', () => {
   it('only paid (registered) sign-ups count toward the minimum', () => {
@@ -94,9 +96,7 @@ describe('workshop state (the public page)', () => {
 describe('signing up for a workshop', () => {
   it('is open until the cutoff', () => {
     expect(canSignUpWorkshop(workshop(), hoursBefore(48.1), rules).ok).toBe(true);
-    expect(reason(canSignUpWorkshop(workshop(), hoursBefore(47.9), rules))).toBe(
-      'Erre az alkalomra már nem lehet jelentkezni.',
-    );
+    expect(reason(canSignUpWorkshop(workshop(), hoursBefore(47.9), rules))).toEqual(['sessionClosed', {}]);
   });
 
   it('after the cutoff only on a confirmed date with places left', () => {
@@ -105,10 +105,11 @@ describe('signing up for a workshop', () => {
     );
     expect(
       reason(canSignUpWorkshop(workshop({ workshopStatus: 'confirmed', taken: 12 }), hoursBefore(10), rules)),
-    ).toBe('Ez az alkalom megtelt.');
-    expect(reason(canSignUpWorkshop(workshop({ workshopStatus: 'cancelled' }), hoursBefore(10), rules))).toBe(
-      'Ez az alkalom elmarad, erre már nem lehet jelentkezni.',
-    );
+    ).toEqual(['sessionFull', {}]);
+    expect(reason(canSignUpWorkshop(workshop({ workshopStatus: 'cancelled' }), hoursBefore(10), rules))).toEqual([
+      'sessionCancelled',
+      {},
+    ]);
   });
 
   it('not once it has started', () => {
@@ -153,9 +154,7 @@ describe('cancelling', () => {
   it('works at 25 hours, not at 23', () => {
     expect(canCancel(start, hoursBefore(25), rules).ok).toBe(true);
     expect(canCancel(start, hoursBefore(24), rules).ok).toBe(true);
-    expect(reason(canCancel(start, hoursBefore(23), rules))).toBe(
-      'Lemondani legkésőbb 24 órával a kezdés előtt lehet.',
-    );
+    expect(reason(canCancel(start, hoursBefore(23), rules))).toEqual(['cancelDeadline', { hours: 24 }]);
   });
 });
 
@@ -171,17 +170,16 @@ describe('moving', () => {
   it('from a running date only until the cancellation deadline', () => {
     const from = { sessionId: 1, status: 'registered' as const, workshop: workshop() };
     expect(canMove(from, later, now, rules).ok).toBe(true);
-    expect(reason(canMove(from, later, hoursBefore(23), rules))).toContain('Áthelyezni csak a lemondási határidőig');
+    expect(reason(canMove(from, later, hoursBefore(23), rules))).toEqual(['moveDeadline', { hours: 24 }]);
   });
 
   it('not to the same date, a full one, or an already moved application', () => {
     const from = { sessionId: 1, status: 'registered' as const, workshop: workshop() };
-    expect(reason(canMove(from, { ...later, sessionId: 1 }, now, rules))).toBe(
-      'Ugyanarra az alkalomra nem lehet áthelyezni.',
-    );
-    expect(reason(canMove(from, { ...later, workshop: { ...later.workshop, taken: 12 } }, now, rules))).toBe(
-      'Ez az alkalom megtelt.',
-    );
+    expect(reason(canMove(from, { ...later, sessionId: 1 }, now, rules))).toEqual(['sameSession', {}]);
+    expect(reason(canMove(from, { ...later, workshop: { ...later.workshop, taken: 12 } }, now, rules))).toEqual([
+      'sessionFull',
+      {},
+    ]);
     expect(canMove({ ...from, status: 'moved' }, later, now, rules).ok).toBe(false);
   });
 });
@@ -206,13 +204,11 @@ describe('course sign-up', () => {
   it('not yet open, closed, disabled', () => {
     expect(courseSignupState(course(), at('2026-10-31', '23:00')).state).toBe('notYet');
     expect(courseSignupState(course(), at('2026-12-01', '00:00')).state).toBe('closed');
-    expect(reason(canSignUpCourse(course({ enabled: false }), now))).toBe(
-      'Erre a kurzusra most nem lehet jelentkezni.',
-    );
+    expect(reason(canSignUpCourse(course({ enabled: false }), now))).toEqual(['courseClosed', {}]);
   });
 
   it('capacity only for beginner courses', () => {
-    expect(reason(canSignUpCourse(course({ taken: 14 }), now))).toBe('Ez a kurzus megtelt.');
+    expect(reason(canSignUpCourse(course({ taken: 14 }), now))).toEqual(['courseFull', {}]);
     expect(canSignUpCourse(course({ kind: 'professional', taken: 99 }), now).ok).toBe(true);
   });
 });
@@ -256,10 +252,10 @@ describe('shows', () => {
 
   it('books 1 to the cap, never more than left', () => {
     expect(canBookShow(facts(), 10, 10, before).ok).toBe(true);
-    expect(reason(canBookShow(facts(), 11, 10, before))).toBe('Egyszerre 1–10 jegyet foglalhatsz.');
-    expect(reason(canBookShow(facts(), 0, 10, before))).toBe('Egyszerre 1–10 jegyet foglalhatsz.');
-    expect(reason(canBookShow(facts({ taken: 27 }), 4, 10, before))).toBe('Már csak 3 jegy maradt.');
-    expect(reason(canBookShow(facts({ taken: 30 }), 1, 10, before))).toBe('Erre az előadásra elfogytak a jegyek.');
+    expect(reason(canBookShow(facts(), 11, 10, before))).toEqual(['seatsRange', { max: 10 }]);
+    expect(reason(canBookShow(facts(), 0, 10, before))).toEqual(['seatsRange', { max: 10 }]);
+    expect(reason(canBookShow(facts({ taken: 27 }), 4, 10, before))).toEqual(['seatsLeft', { count: 3 }]);
+    expect(reason(canBookShow(facts({ taken: 30 }), 1, 10, before))).toEqual(['showFull', {}]);
   });
 
   it('cancels a free booking until the start, never a paid ticket', () => {

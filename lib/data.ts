@@ -278,13 +278,14 @@ const findCourses = cache(async (): Promise<Course[]> => {
     groups.map((g) => g.id),
   );
   const now = new Date();
-  const online = (await billingSettings(p)).online;
+  const [online, { course }] = await Promise.all([billingSettings(p).then((b) => b.online), getUi()]);
   const starts = groups.map((g) => ({
     courseId: g.course == null ? null : String(typeof g.course === 'object' ? g.course.id : g.course),
     start: map.courseStart(
       g as CourseGroup,
       courseSignupState(courseFacts(g as CourseGroup, taken.get(g.id)?.taken ?? 0), now),
       online,
+      course.priceFrom,
     ),
   }));
   return courses.map((c) =>

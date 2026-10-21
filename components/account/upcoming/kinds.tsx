@@ -1,12 +1,15 @@
 /**
- * How each kind of upcoming item looks: its label, an icon and its colours (lib/rooms/labels.ts
- * KIND_PALETTE, shared with the room calendars).
+ * How each kind of upcoming item looks: an icon and its colours (lib/rooms/labels.ts KIND_PALETTE,
+ * shared with the room calendars); its name is a UI text (Fiókom: közelgő alkalmak → Fajták).
  */
 import type { ReactNode } from 'react';
 
-import { BOOKING_KINDS, KIND_PALETTE, SESSION_KINDS } from '@/lib/rooms/labels';
+import { KIND_PALETTE } from '@/lib/rooms/labels';
+import type { UiStrings } from '@/lib/types';
 
 import type { UpcomingKind } from './items';
+
+export type UpcomingTexts = UiStrings['upcoming'];
 
 type IconProps = { className?: string };
 
@@ -69,23 +72,20 @@ const WorkshopIcon = svg(
 );
 const OtherIcon = svg(<circle cx="12" cy="12" r="3.5" />);
 
-export const KIND_STYLE: Record<
-  UpcomingKind,
-  { label: string; Icon: (p: IconProps) => ReactNode; ink: string; tint: string }
-> = {
-  course: { label: SESSION_KINDS.course, Icon: ClassIcon, ...KIND_PALETTE.course },
-  rehearsal: { label: SESSION_KINDS.rehearsal, Icon: RehearsalIcon, ...KIND_PALETTE.rehearsal },
-  show: { label: SESSION_KINDS.show, Icon: ShowIcon, ...KIND_PALETTE.show },
-  exam: { label: SESSION_KINDS.exam, Icon: ExamIcon, ...KIND_PALETTE.exam },
-  workshop: { label: SESSION_KINDS.workshop, Icon: WorkshopIcon, ...KIND_PALETTE.workshop },
-  practice: { label: BOOKING_KINDS.practice, Icon: PracticeIcon, ...KIND_PALETTE.practice },
-  other: { label: SESSION_KINDS.other, Icon: OtherIcon, ...KIND_PALETTE.other },
+export const KIND_STYLE: Record<UpcomingKind, { Icon: (p: IconProps) => ReactNode; ink: string; tint: string }> = {
+  course: { Icon: ClassIcon, ...KIND_PALETTE.course },
+  rehearsal: { Icon: RehearsalIcon, ...KIND_PALETTE.rehearsal },
+  show: { Icon: ShowIcon, ...KIND_PALETTE.show },
+  exam: { Icon: ExamIcon, ...KIND_PALETTE.exam },
+  workshop: { Icon: WorkshopIcon, ...KIND_PALETTE.workshop },
+  practice: { Icon: PracticeIcon, ...KIND_PALETTE.practice },
+  other: { Icon: OtherIcon, ...KIND_PALETTE.other },
 };
 
-export const CANCELLED = { label: 'Elmarad', ink: KIND_PALETTE.exam.ink, tint: 'var(--color-sand)' };
+export const CANCELLED = { ink: KIND_PALETTE.exam.ink, tint: 'var(--color-sand)' };
 
 /** The kind as a small coloured label with its icon ("Elmarad" when cancelled). */
-export function KindLabel({ kind, cancelled }: { kind: UpcomingKind; cancelled?: boolean }) {
+export function KindLabel({ kind, cancelled, t }: { kind: UpcomingKind; cancelled?: boolean; t: UpcomingTexts }) {
   const k = KIND_STYLE[kind];
   return (
     <span
@@ -93,23 +93,23 @@ export function KindLabel({ kind, cancelled }: { kind: UpcomingKind; cancelled?:
       style={{ color: cancelled ? CANCELLED.ink : k.ink }}
     >
       <k.Icon className="h-4 w-4" />
-      {cancelled ? CANCELLED.label : k.label}
+      {cancelled ? t.cancelled : t.kinds[kind]}
     </span>
   );
 }
 
 /** The kind's icon in a tinted circle. */
-export function KindBadge({ kind, cancelled }: { kind: UpcomingKind; cancelled?: boolean }) {
+export function KindBadge({ kind, cancelled, t }: { kind: UpcomingKind; cancelled?: boolean; t: UpcomingTexts }) {
   const k = KIND_STYLE[kind];
   return (
     <span
       className="grid h-9 w-9 shrink-0 place-items-center rounded-full"
       style={{ background: cancelled ? CANCELLED.tint : k.tint, color: cancelled ? 'var(--color-muted)' : k.ink }}
-      title={k.label}
+      title={t.kinds[kind]}
     >
       <k.Icon className="h-[18px] w-[18px]" />
     </span>
   );
 }
 
-export const NoPlace = () => <span className="text-muted">helyszín egyeztetés alatt</span>;
+export const NoPlace = ({ t }: { t: UpcomingTexts }) => <span className="text-muted">{t.noPlace}</span>;

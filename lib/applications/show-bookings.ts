@@ -7,9 +7,11 @@
 import type { Payload, TypedUser } from 'payload';
 
 import { todayInBudapest } from '@/lib/dates';
+import { say } from '@/lib/messages';
 import { billingSettings } from '@/lib/payments/settings';
 import { errorMessage } from '@/lib/rooms/server';
 import { relId } from '@/payload/rel';
+import { uiTexts } from '@/payload/ui-texts';
 import type { Application } from '@/payload-types';
 
 import { APPLICATION_KINDS } from './labels';
@@ -28,15 +30,16 @@ export async function bookFreeShow(
   input: ShowBookingInput,
   now = new Date(),
 ): Promise<Result<{ applicationId: number }>> {
-  const invalid = validateInput({ ...input, kind: 'show' }, viewer);
+  const ui = await uiTexts(payload);
+  const invalid = validateInput({ ...input, kind: 'show' }, viewer, ui.signupErrors);
   if (invalid) return { ok: false, reason: invalid };
   const s = await payload.findByID({ collection: 'shows', id: input.showId, depth: 1, disableErrors: true });
-  if (s?.bookingMode !== 'internal') return { ok: false, reason: 'Nincs ilyen előadás.' };
-  if (ticketPrice(s) > 0) return { ok: false, reason: 'Erre az előadásra jegyet a fizetéssel lehet venni.' };
+  if (s?.bookingMode !== 'internal') return { ok: false, reason: ui.signupErrors.noShow };
+  if (ticketPrice(s) > 0) return { ok: false, reason: ui.signupErrors.payShow };
   const { maxPerBooking } = (await billingSettings(payload)).showDefaults;
   const taken = (await seatsTaken(payload, [s.id])).get(s.id) ?? 0;
   const verdict = canBookShow(showFacts(s, taken), input.seats, maxPerBooking, now);
-  if (!verdict.ok) return verdict;
+  if (!verdict.ok) return { ok: false, reason: say(ui.signupRules, verdict) };
 
   const { applicant, created } = await applicantFor(payload, viewer, input);
   let booking: Application;

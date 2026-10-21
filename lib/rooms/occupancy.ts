@@ -11,8 +11,10 @@ import { sql } from '@payloadcms/db-postgres';
 import { APIError, type Payload, type PayloadRequest } from 'payload';
 
 import { monthDayShort } from '@/lib/dates';
+import { fill } from '@/lib/format';
 import { dbOf } from '@/payload/db';
 import { relIds } from '@/payload/rel';
+import { uiTexts } from '@/payload/ui-texts';
 
 import { type Placed, placeText, whenText } from './format';
 import { clockOf, dayOf } from './time';
@@ -133,13 +135,9 @@ export async function syncOccupancy(
   } catch (err) {
     // 23P01 = exclusion_violation: someone booked the same room in the meantime
     if ((err as { cause?: { code?: string } }).cause?.code === '23P01' || (err as { code?: string }).code === '23P01') {
+      const taken = (await uiTexts(payload)).roomRules.taken;
       const when = whenText(booking.start, booking.end);
-      throw new APIError(
-        `Ez az időpont időközben foglalt lett (${await roomNames()}, ${when}). Válassz másikat.`,
-        409,
-        null,
-        true,
-      );
+      throw new APIError(fill(taken, { rooms: await roomNames(), when }), 409, null, true);
     }
     throw err;
   }

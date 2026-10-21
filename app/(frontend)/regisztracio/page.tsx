@@ -6,25 +6,18 @@ import { RegisterForm } from '@/components/account/forms';
 import GoogleLogin from '@/components/account/GoogleLogin';
 import { accountMetadata } from '@/components/account/meta';
 import { getCurrentUser } from '@/lib/auth';
+import { getUi } from '@/lib/data';
 
 // per visitor, never cached or prerendered (the build has no database)
 export const dynamic = 'force-dynamic';
 
-export const generateMetadata = () => accountMetadata('Regisztráció');
+export const generateMetadata = async () => accountMetadata((await getUi()).register.title);
 
 export default async function RegisterPage() {
   if (await getCurrentUser()) redirect('/fiokom');
+  const { nav, register: t } = await getUi();
   return (
-    <AccountShell
-      eyebrow="Fiók"
-      heading="*Regisztráció*"
-      intro={
-        <p>
-          Hozd létre a Morpheus-fiókodat. A regisztráció után küldünk egy levelet: a benne lévő linkkel erősítsd meg az
-          e-mail-címed.
-        </p>
-      }
-    >
+    <AccountShell eyebrow={nav.eyebrow} heading={t.heading} intro={<p>{t.intro}</p>}>
       <Card>
         <GoogleLogin />
         <RegisterForm />

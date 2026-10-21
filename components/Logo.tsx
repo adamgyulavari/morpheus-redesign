@@ -8,12 +8,12 @@ import { useId } from 'react';
  */
 export default function Logo({
   className,
-  title = 'Morpheus Színműhely logó',
+  title,
   animated = false,
 }: {
   className?: string;
-  /** Accessible name; pass null when the logo is decorative next to the visible name. */
-  title?: string | null;
+  /** Accessible name (Felületi szövegek: common.logo); null when the logo is decorative next to the visible name. */
+  title: string | null;
   animated?: boolean;
 }) {
   const id = `logo${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;

@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 
 import { PersonIcon } from './icons';
 import NavLink from './NavLink';
+import { useUi } from './UiStrings';
 
 const SIGNED_IN_COOKIE = 'morpheus-signed-in';
 const AUTH_PAGES = ['/regisztracio', '/elfelejtett-jelszo', '/jelszo-visszaallitas', '/email-megerosites'];
@@ -26,6 +27,7 @@ export default function AccountLink({
 }) {
   const pathname = usePathname();
   const [signedIn, setSignedIn] = useState(false);
+  const { common } = useUi();
   // biome-ignore lint/correctness/useExhaustiveDependencies: pathname is the trigger — re-run after each navigation
   useEffect(() => {
     setSignedIn(document.cookie.split('; ').some((c) => c.startsWith(`${SIGNED_IN_COOKIE}=`)));
@@ -39,7 +41,7 @@ export default function AccountLink({
       onNavigate={onNavigate}
     >
       <PersonIcon className="h-[18px] w-[18px]" />
-      <span className={`link-nav ${labelClassName}`}>{signedIn ? 'Fiókom' : 'Belépés'}</span>
+      <span className={`link-nav ${labelClassName}`}>{signedIn ? common.account : common.login}</span>
     </NavLink>
   );
 }

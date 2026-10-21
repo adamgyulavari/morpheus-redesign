@@ -1,17 +1,20 @@
-import { getSiteSettings } from '@/lib/data';
+import { getSiteSettings, getUi } from '@/lib/data';
 
 import Logo from './Logo';
 import SmartLink from './SmartLink';
 import SocialLinks from './SocialLinks';
 
 export default async function SiteFooter() {
-  const { name, tagline, copyright, footerColumns, privacy, social } = await getSiteSettings();
+  const [{ name, tagline, copyright, footerColumns, privacy, social }, ui] = await Promise.all([
+    getSiteSettings(),
+    getUi(),
+  ]);
   return (
     <footer className="on-dark bg-night text-mist">
       <div className="mx-auto flex max-w-[1440px] flex-col gap-10 px-5 pb-8 pt-12 lg:gap-14 lg:px-20 lg:pb-12 lg:pt-[72px]">
         <div className="grid gap-10 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr]">
           <div className="flex items-start gap-3.5">
-            <Logo className="h-14 w-14 shrink-0 lg:h-16 lg:w-16" />
+            <Logo title={ui.common.logo} className="h-14 w-14 shrink-0 lg:h-16 lg:w-16" />
             <div className="flex flex-col gap-2 pt-1.5">
               <span className="font-display text-[26px] leading-none text-cream lg:text-[30px]">{name}</span>
               <span className="text-[15px]">{tagline}</span>

@@ -12,7 +12,7 @@ import { clockOf, dayOf } from '@/lib/rooms/time';
 import { relId } from '@/payload/rel';
 import type { Course, CourseGroup } from '@/payload-types';
 
-import { REVIEW_STATUSES } from './labels';
+import { APPLICATION_KINDS } from './labels';
 import { allowedActions, upcomingWorkshops } from './server';
 import { applicationSettings } from './settings';
 import { showStart } from './shows';
@@ -48,8 +48,8 @@ export type MyPending = {
   kind: 'beginner' | 'professional';
   title: string;
   when?: string;
-  /** "Jelentkezés elküldve", "Interjú"… */
-  status: string;
+  /** Sent (in a group), waiting to be placed (none), or invited to the interview (professional). */
+  status: 'sent' | 'waiting' | 'interview';
   canCancel: boolean;
 };
 
@@ -115,7 +115,7 @@ export async function myApplications(payload: Payload, user: TypedUser, activeGr
       workshops.push({
         applicationId: a.id,
         sessionId: s.id,
-        title: s.title || 'Nyitott Műhely',
+        title: s.title || APPLICATION_KINDS.workshop,
         start: s.start,
         end: s.end,
         place: placeText(s, roomName),
@@ -150,14 +150,9 @@ export async function myApplications(payload: Payload, user: TypedUser, activeGr
     pending.push({
       applicationId: a.id,
       kind: a.kind,
-      title: g?.title ?? course?.title ?? 'Szakmai kurzus',
+      title: g?.title ?? course?.title ?? APPLICATION_KINDS.professional,
       when: g ? dateRange(dayOf(new Date(g.startDate)), dayOf(new Date(g.endDate))) : undefined,
-      status:
-        a.kind === 'professional' && a.status === 'interview'
-          ? REVIEW_STATUSES.interview
-          : g
-            ? 'Jelentkezés elküldve'
-            : 'Csoportbeosztásra vár',
+      status: a.kind === 'professional' && a.status === 'interview' ? 'interview' : g ? 'sent' : 'waiting',
       canCancel: actions.cancel.ok,
     });
   }

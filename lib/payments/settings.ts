@@ -21,5 +21,3 @@ export const billingSettings = cache(async (payload: Payload) => {
     },
   };
 });
-
-export const PAUSED = 'Az online fizetés jelenleg szünetel.';
