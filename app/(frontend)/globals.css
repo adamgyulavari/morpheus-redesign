@@ -87,9 +87,10 @@
 }
 
 @layer components {
-  /* Buttons: .btn + one size (.btn-md 48px / .btn-lg 56px) + one fill */
+  /* Buttons: .btn + one size (.btn-md 48px / .btn-lg 56px, at least) + one fill. On a phone a label
+     too long for the screen wraps to a second line instead of being cut off; from sm on, one line. */
   .btn {
-    @apply relative isolate inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-full px-6 font-bold whitespace-nowrap transition-colors duration-200;
+    @apply relative isolate inline-flex max-w-full items-center justify-center gap-2.5 overflow-hidden rounded-full px-5 py-2.5 text-center leading-tight font-bold transition-colors duration-200 sm:max-w-none sm:px-6 sm:whitespace-nowrap;
   }
   .btn > svg {
     @apply h-[18px] w-[18px] shrink-0 transition-transform duration-200;
@@ -98,10 +99,10 @@
     @apply translate-x-1;
   }
   .btn-md {
-    @apply h-12 text-[15px];
+    @apply min-h-12 text-[15px];
   }
   .btn-lg {
-    @apply h-14 text-base lg:px-7 lg:text-[17px];
+    @apply min-h-14 text-base lg:px-7 lg:text-[17px];
   }
   /* Every fill: a rust-dark "curtain" sweeps across on hover (below), text turns cream */
   .btn-primary {
