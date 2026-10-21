@@ -38,6 +38,7 @@ import * as migration_20261020_014055_guest_role from './20261020_014055_guest_r
 import * as migration_20261020_014320_show_tickets from './20261020_014320_show_tickets';
 import * as migration_20261020_015052_public_ids from './20261020_015052_public_ids';
 import * as migration_20261020_120000_show_booking_texts from './20261020_120000_show_booking_texts';
+import * as migration_20261021_184054_google_login from './20261021_184054_google_login';
 
 export const migrations = [
   {
@@ -238,6 +239,11 @@ export const migrations = [
   {
     up: migration_20261020_120000_show_booking_texts.up,
     down: migration_20261020_120000_show_booking_texts.down,
-    name: '20261020_120000_show_booking_texts'
+    name: '20261020_120000_show_booking_texts',
+  },
+  {
+    up: migration_20261021_184054_google_login.up,
+    down: migration_20261021_184054_google_login.down,
+    name: '20261021_184054_google_login'
   },
 ];

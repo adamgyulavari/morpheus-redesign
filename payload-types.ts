@@ -493,6 +493,10 @@ export interface User {
   lastName: string;
   firstName: string;
   phone?: string | null;
+  /**
+   * A Google-belépés tölti ki. Ha kiüríted, a Google-fiók leválik (legközelebb újra csatolódik).
+   */
+  googleSub?: string | null;
   billing?: {
     /**
      * Üresen: a saját neve.
@@ -4352,6 +4356,7 @@ export interface UsersSelect<T extends boolean = true> {
   lastName?: T;
   firstName?: T;
   phone?: T;
+  googleSub?: T;
   billing?:
     | T
     | {
