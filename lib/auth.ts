@@ -16,10 +16,20 @@ import { SIGNED_IN_COOKIE, signedInValue } from '@/payload/session';
 
 export const payloadClient = () => getPayload({ config });
 
-/** The current user, or null. Once per request. */
+/**
+ * The current user, or null. Once per request.
+ *
+ * Payload trusts the session cookie only from our own site: an `Origin` on its allowlist, else a
+ * `Sec-Fetch-Site` of same-origin / same-site / none. A link or redirect from elsewhere (back from
+ * Google, a link in a webmail) is `cross-site` without an `Origin`, so the visitor would look logged
+ * out. Those are page loads, which only read; anything that changes data is a Server Action, which
+ * sends an `Origin` (checked by Next.js, and by Payload as before).
+ */
 export const getCurrentUser = cache(async () => {
   const payload = await payloadClient();
-  const { user } = await payload.auth({ headers: await headers() });
+  const h = new Headers(await headers());
+  if (!h.has('origin') && h.get('sec-fetch-site') === 'cross-site') h.set('sec-fetch-site', 'same-site');
+  const { user } = await payload.auth({ headers: h });
   return user;
 });
 
