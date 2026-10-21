@@ -244,8 +244,11 @@ export function ResetPasswordForm({ token }: { token: string }) {
 
 export function ProfileForm({
   user,
+  google,
 }: {
   user: { email: string; firstName: string; lastName: string; phone?: string | null };
+  /** "Google-fiók csatolva", when it is. */
+  google?: string;
 }) {
   const [state, action] = useActionState(updateProfile, initial);
   const value = (key: 'firstName' | 'lastName' | 'phone') => v(state, key) ?? user[key] ?? '';
@@ -261,6 +264,7 @@ export function ProfileForm({
         <Field label="E-mail-cím" note="Ha módosítanád, írj nekünk.">
           <input className="field cursor-not-allowed opacity-70" type="email" value={user.email} readOnly />
         </Field>
+        {google && <p className="-mt-2 text-sm text-muted">{google}</p>}
         <TextField
           label="Telefonszám"
           type="tel"

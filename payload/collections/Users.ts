@@ -98,7 +98,12 @@ export const Users: CollectionConfig = {
       type: 'text',
       unique: true,
       index: true,
-      access: { read: isStaffOrAdminField, create: () => false, update: isAdminField },
+      // its owner sees it too ("Google-fiók csatolva" in Fiókom → Adataim)
+      access: {
+        read: ({ req: { user }, doc }) => userIsStaffOrAdmin(user) || (Boolean(user) && doc?.id === user?.id),
+        create: () => false,
+        update: isAdminField,
+      },
       admin: {
         position: 'sidebar',
         description: 'A Google-belépés tölti ki. Ha kiüríted, a Google-fiók leválik (legközelebb újra csatolódik).',

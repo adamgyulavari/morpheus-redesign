@@ -4,6 +4,7 @@ import { Card } from '@/components/account/Card';
 import { BillingForm, ProfileForm } from '@/components/account/forms';
 import { accountMetadata } from '@/components/account/meta';
 import { requireUser } from '@/lib/auth';
+import { getUi } from '@/lib/data';
 import { billingOf } from '@/lib/payments/me';
 import { mayBookRooms } from '@/lib/rooms/server';
 import { userIsStaffOrAdmin } from '@/payload/access';
@@ -16,6 +17,7 @@ export const generateMetadata = () => accountMetadata('Adataim');
 /** Own name and phone; the billing details for invoices. */
 export default async function ProfilePage() {
   const user = await requireUser('/fiokom/adatok');
+  const { googleLogin } = await getUi();
   return (
     <AccountShell eyebrow="Fiókom" heading="*Adataim*" wide>
       <AccountNav canBook={mayBookRooms(user)} isStaff={userIsStaffOrAdmin(user)} />
@@ -23,6 +25,7 @@ export default async function ProfilePage() {
         <Card>
           <ProfileForm
             user={{ email: user.email, firstName: user.firstName, lastName: user.lastName, phone: user.phone }}
+            google={user.googleSub ? googleLogin.linked : undefined}
           />
         </Card>
         <Card>

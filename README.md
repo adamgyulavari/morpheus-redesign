@@ -198,13 +198,15 @@ Server Action that stores/e-mails the request is a later step.
 
 One auth layer: Payload's `users` collection. A user has one or more **roles**: `admin` and `staff`
 work in `/admin`; `student`s log in on the public site only (`/admin` refuses them). Registration
-(public) always makes a student; the first account ever created is an admin.
+(public) and Google make a `guest` (Vendég), who becomes a `student` on joining a course group; the
+first account ever created is an admin.
 
 | route | |
 |---|---|
 | `/belepes` | password login, or "Belépési link küldése" (`payload/magic-link.ts`): the e-mail has a link and a 6-digit code; after sending, this page asks for the code (for reading the e-mail on another device) |
 | `/belepes/link` | the link's confirm page: opening it doesn't log in, its "Belépés" button (a POST) does — so mail scanners that open links can't use it up. Link and code: 15 minutes, once, only hashes stored, 5 wrong codes invalidate both; a success starts a normal Payload session (`payload/session.ts`) |
 | `/regisztracio` | sign-up (honeypot, privacy checkbox) → verification e-mail |
+| `/belepes/google`, `…/callback` | "Folytatás Google-fiókkal" (on `/belepes` and `/regisztracio`, see below) |
 | `/email-megerosites`, `/elfelejtett-jelszo`, `/jelszo-visszaallitas` | verification and password reset (links in the e-mails point here, not to /admin) |
 | `/fiokom` | own data, own course groups ("Kurzusaim"), logout; staff also get a link to /admin |
 
@@ -214,11 +216,32 @@ work in `/admin`; `student`s log in on the public site only (`/admin` refuses th
   public pages stay the same for everyone: the header's "Belépés" / "Fiókom" is decided in the
   browser from a hint cookie (`morpheus-signed-in`, no secret in it) set at login.
 - Verification is required; 5 failed logins lock the account for 10 minutes.
+- The phone number is optional on the account; applications and ticket purchases ask for it
+  (`validateInput`), and an account without one keeps the first one given.
 - `payload/students.ts` → `isActiveStudent(payload, user)`: in a course group whose end date hasn't
   passed (for the later student area / room booking).
 - E-mail: SMTP (`SMTP_*`, `EMAIL_FROM*`, see `.env.example`) with one Hungarian layout
   (`payload/email.ts`). Without `SMTP_HOST` e-mails are printed to the console; locally, Mailpit
   from `docker-compose.dev.yml` catches them at http://localhost:8025.
+
+### Google login
+
+"Folytatás Google-fiókkal" (`lib/google/`): Google's sign-in with PKCE, no library. The account is
+the one linked to that Google account (`users.googleSub`), else the one with its address (Google
+must have verified it; it gets linked), else a new Vendég account without a phone. A Google login
+verifies the address and lifts a password lock. Clearing `googleSub` in the admin unlinks it. The
+button only shows with `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` set (env only).
+
+Setting it up (Google Cloud console, once):
+
+1. A project → *Google Auth Platform* (OAuth consent screen): External; app name, support e-mail,
+   the site's domain as an authorized domain, the privacy notice's address. Scopes: `openid`,
+   `email`, `profile` (none of them needs Google's review). Publish it (from "Testing" to "In
+   production"), or only the listed test users can log in.
+2. *Clients* → Create client → Web application; authorized redirect URIs:
+   `http://localhost:3000/belepes/google/callback` and `https://<the site>/belepes/google/callback`
+   (`NEXT_PUBLIC_SERVER_URL` + that path, exactly).
+3. Its client id and secret → `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
 
 ## Room calendar and student area
 
