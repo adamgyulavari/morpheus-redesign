@@ -157,6 +157,18 @@ const SITE = {
       myTicketsIntro: { long: 'Fiók: jegyeim (bevezető)' },
     },
   ],
+  googleLogin: [
+    'Google-belépés',
+    {
+      button: 'Gomb (belépés és regisztráció)',
+      or: 'Elválasztó a gomb és az űrlap között',
+      consent: 'A gomb alatt — <link>…</link> = az adatkezelési tájékoztató linkje',
+      cancelled: 'Hiba: a Google-nál megszakította',
+      failed: 'Hiba: nem sikerült (lejárt, újrapróbálható)',
+      unverified: 'Hiba: nincs megerősített e-mail-cím a Google-fiókban',
+      linked: 'Fiók adatai: csatolt Google-fiók',
+    },
+  ],
   teamBuilding: ['Csapatépítő', { duration: 'Időkeret', venue: 'Helyszín' }],
   quoteForm: [
     'Árajánlat űrlap',

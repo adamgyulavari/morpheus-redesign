@@ -92,6 +92,19 @@ export const Users: CollectionConfig = {
     },
     text('phone', 'Telefonszám'),
     {
+      // "Folytatás Google-fiókkal" (lib/google): the Google account's id, set when it first logs in
+      name: 'googleSub',
+      label: 'Google-fiók',
+      type: 'text',
+      unique: true,
+      index: true,
+      access: { read: isStaffOrAdminField, create: () => false, update: isAdminField },
+      admin: {
+        position: 'sidebar',
+        description: 'A Google-belépés tölti ki. Ha kiüríted, a Google-fiók leválik (legközelebb újra csatolódik).',
+      },
+    },
+    {
       // the buyer on invoices; prefilled at checkout (/fizetes), editable in /fiokom/adatok
       name: 'billing',
       label: 'Számlázási adatok',
