@@ -14,7 +14,8 @@
       "!payload/migrations",
       "!archive",
       "!public",
-      "!logo-source"
+      "!logo-source",
+      "!.agents"
     ]
   },
   "formatter": {
