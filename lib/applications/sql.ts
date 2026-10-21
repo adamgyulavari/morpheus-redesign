@@ -11,3 +11,10 @@ export const IS_PAID = sql`status IN (${sql.join(
   COUNTED_STATUSES.map((s) => sql`${s}`),
   sql`, `,
 )})`;
+
+/** `a, b, c` for an IN (…) list. */
+export const inList = (list: readonly (string | number)[]) =>
+  sql.join(
+    list.map((s) => sql`${s}`),
+    sql`, `,
+  );

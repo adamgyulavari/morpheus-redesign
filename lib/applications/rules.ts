@@ -194,3 +194,41 @@ export function canWithdraw(status: ApplicationStatus): RuleResult {
 
 /** A professional application's motivation: required, at least this long (after trimming). */
 export const MIN_MOTIVATION = 100;
+
+// ── shows booked on the site ────────────────────────────────────────────────
+
+export type ShowFacts = {
+  start: Date;
+  /** "Foglalható" on, the show not hidden. */
+  open: boolean;
+  seats: number;
+  /** Seats taken (PLACE_STATUSES: booked, or awaiting payment within the hold). */
+  taken: number;
+};
+
+export type ShowState = { state: 'open'; left: number } | { state: 'full' } | { state: 'closed' };
+
+export function showState(s: ShowFacts, now: Date): ShowState {
+  if (!s.open || s.start <= now) return { state: 'closed' };
+  const left = placesLeft(s.seats, s.taken) ?? 0;
+  return left === 0 ? { state: 'full' } : { state: 'open', left };
+}
+
+/** May someone book this many seats now (at most `maxPerBooking`, and what is left)? */
+export function canBookShow(s: ShowFacts, seats: number, maxPerBooking: number, now: Date): RuleResult {
+  const state = showState(s, now);
+  if (state.state === 'closed') return refuse('Erre az előadásra már nem lehet jegyet foglalni.');
+  if (state.state === 'full') return refuse('Erre az előadásra elfogytak a jegyek.');
+  if (!Number.isInteger(seats) || seats < 1 || seats > maxPerBooking)
+    return refuse(`Egyszerre 1–${maxPerBooking} jegyet foglalhatsz.`);
+  if (seats > state.left) return refuse(`Már csak ${state.left} jegy maradt.`);
+  return OK;
+}
+
+/** A free booking may be cancelled until the show starts; a paid ticket only by staff (a refund). */
+export const canCancelShow = (start: Date, paid: boolean, now: Date): RuleResult =>
+  paid
+    ? refuse('A megvásárolt jegyet nem lehet lemondani; ha nem tudsz jönni, írj nekünk.')
+    : now < start
+      ? OK
+      : refuse('Az előadás már elkezdődött.');

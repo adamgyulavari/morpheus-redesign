@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useEffect, useState, useTransition } from 'react';
 
 import { Card } from '@/components/account/Card';
+import { useUi } from '@/components/UiStrings';
 import { formatHuf } from '@/lib/format';
 import { cancelOrderAction, orderStatusAction, retryPaymentAction } from '@/lib/payments/actions';
 import type { OrderView } from '@/lib/payments/order-page';
@@ -30,6 +31,8 @@ export default function OrderResult({
   const [waitedOut, setWaitedOut] = useState(false);
   const [error, setError] = useState('');
   const [pending, start] = useTransition();
+  const tickets = useUi().showBooking;
+  const show = order.kind === 'show';
   const waiting = returned && order.status === 'pending' && order.processing;
   const unpaid = order.status === 'pending' && !(waiting && !waitedOut);
 
@@ -119,10 +122,12 @@ export default function OrderResult({
         )}
         {order.status === 'canceled' && (
           <>
-            <h2 className="font-display text-[34px] leading-tight">Megszakítottad a jelentkezést</h2>
+            <h2 className="font-display text-[34px] leading-tight">
+              {show ? tickets.orderCancelled : 'Megszakítottad a jelentkezést'}
+            </h2>
             <p className="text-[17px] leading-relaxed">Pénzt nem vontunk le.</p>
             <Link href={again} className="link self-start font-semibold">
-              Mégis jelentkezem
+              {show ? tickets.orderAgain : 'Mégis jelentkezem'}
             </Link>
           </>
         )}

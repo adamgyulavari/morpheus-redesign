@@ -6,8 +6,10 @@ import {
   type ApplicationRules,
   type CourseFacts,
   canApplyWithoutGroup,
+  canBookShow,
   canCancel,
   canCancelCourse,
+  canCancelShow,
   canMove,
   canSignUpCourse,
   canSignUpWorkshop,
@@ -19,6 +21,8 @@ import {
   isCounted,
   isCutoffDue,
   placesLeft,
+  type ShowFacts,
+  showState,
   takesPlace,
   type WorkshopFacts,
   workshopState,
@@ -234,5 +238,33 @@ describe('canApplyWithoutGroup', () => {
     expect(canApplyWithoutGroup({ openWithoutGroup: false, signupMode: 'beginner' }, 'beginner')).toBe(false);
     expect(canApplyWithoutGroup({ openWithoutGroup: true, signupMode: 'beginner' }, 'professional')).toBe(false);
     expect(canApplyWithoutGroup({ openWithoutGroup: true, signupMode: 'external' }, 'beginner')).toBe(false);
+  });
+});
+
+describe('shows', () => {
+  const start = new Date('2030-03-01T18:00:00Z');
+  const before = new Date('2030-02-20T12:00:00Z');
+  const facts = (o: Partial<ShowFacts> = {}): ShowFacts => ({ start, open: true, seats: 30, taken: 0, ...o });
+
+  it('is open with the seats left, full at 0, closed when switched off or started', () => {
+    expect(showState(facts({ taken: 28 }), before)).toEqual({ state: 'open', left: 2 });
+    expect(showState(facts({ taken: 30 }), before)).toEqual({ state: 'full' });
+    expect(showState(facts({ taken: 31 }), before)).toEqual({ state: 'full' });
+    expect(showState(facts({ open: false }), before)).toEqual({ state: 'closed' });
+    expect(showState(facts(), start)).toEqual({ state: 'closed' });
+  });
+
+  it('books 1 to the cap, never more than left', () => {
+    expect(canBookShow(facts(), 10, 10, before).ok).toBe(true);
+    expect(reason(canBookShow(facts(), 11, 10, before))).toBe('Egyszerre 1–10 jegyet foglalhatsz.');
+    expect(reason(canBookShow(facts(), 0, 10, before))).toBe('Egyszerre 1–10 jegyet foglalhatsz.');
+    expect(reason(canBookShow(facts({ taken: 27 }), 4, 10, before))).toBe('Már csak 3 jegy maradt.');
+    expect(reason(canBookShow(facts({ taken: 30 }), 1, 10, before))).toBe('Erre az előadásra elfogytak a jegyek.');
+  });
+
+  it('cancels a free booking until the start, never a paid ticket', () => {
+    expect(canCancelShow(start, false, before).ok).toBe(true);
+    expect(canCancelShow(start, false, start).ok).toBe(false);
+    expect(canCancelShow(start, true, before).ok).toBe(false);
   });
 });

@@ -144,7 +144,7 @@ export async function register(_: FormState, form: FormData): Promise<FormState>
     await payload.create({
       collection: 'users',
       overrideAccess: false,
-      data: { ...values, phone: values.phone || undefined, password, roles: ['student'] },
+      data: { ...values, phone: values.phone || undefined, password, roles: ['guest'] },
     });
   } catch (err) {
     const fields = (err as { data?: { errors?: { path?: string }[] } }).data?.errors ?? [];

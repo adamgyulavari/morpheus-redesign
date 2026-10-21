@@ -18,6 +18,7 @@ import {
   messageParticipants,
   participants,
 } from './server';
+import { showDashboard } from './show-bookings';
 
 type Result = { ok: true; message?: string } | { ok: false; reason: string };
 const denied = { ok: false as const, reason: 'Ehhez munkatársi jogosultság kell.' };
@@ -49,7 +50,9 @@ export async function messageParticipantsAction(sessionId: number, subject: stri
 
 export async function dashboardData() {
   if (!(await staff())) return null;
-  return dashboard(await payloadClient());
+  const payload = await payloadClient();
+  const [d, shows] = await Promise.all([dashboard(payload), showDashboard(payload)]);
+  return { ...d, shows };
 }
 
 /** The dashboard dialog's one button: payment fields, then the decision (lib/applications/server decide). */

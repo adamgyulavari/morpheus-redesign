@@ -169,8 +169,9 @@ export const show = (s: P.Show): Show => ({
   time: s.time,
   venueId: idOf(s.venue),
   label: opt(s.label),
-  ticketUrl: opt(s.ticketUrl),
-  registrationUrl: opt(s.registrationUrl),
+  // booked on the site: never the stored external links (they come back with Külső link)
+  ticketUrl: s.bookingMode === 'internal' ? undefined : opt(s.ticketUrl),
+  registrationUrl: s.bookingMode === 'internal' ? undefined : opt(s.registrationUrl),
   info: optArray(texts(s.info)),
 });
 

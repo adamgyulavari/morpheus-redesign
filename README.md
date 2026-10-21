@@ -253,6 +253,26 @@ course group or a production and has one place: a booking it owns, an external p
 - Times are stored in UTC; rules and display use Budapest time (`lib/rooms/time.ts`, DST-safe).
   `npm test` runs the rule, generator and .ics tests (Vitest).
 
+## Show bookings
+
+A performance date is booked either by its external link (*Jegyfoglalás → Külső link*, e.g. Tixa —
+as before) or on the site (*Saját foglalás*, which needs the production's own page): a ticket price
+(0: free registration) and seats, starting from the defaults in *Fizetési beállítások*.
+
+- **Free:** the date's "Regisztráció" opens the sign-up dialog with how many seats (at most
+  *Jegy foglalásonként legfeljebb*, 10); the booking is taken at once and can be cancelled in the
+  account until the show starts (`lib/applications/show-bookings.ts`).
+- **Paid:** "Jegyek" leads to `/fizetes/eloadas/<code>` — the checkout with a ticket count; the
+  seats are held while paying (like Nyitott Műhely). A paid ticket can't be cancelled online; a full
+  refund in the admin cancels the booking and frees its seats. The invoice has N × "jegy".
+- A booking is an application of kind "Előadás" with its seats; one per person per show; the seats
+  are counted under the same row lock as the other places (`lib/applications/capacity.ts`). Rules in
+  `lib/applications/rules.ts` (showState, canBookShow, canCancelShow).
+- The site's buttons come from one place (`components/ShowButton.tsx`): booked here, never the
+  stored external link; "Megtelt" when the seats are gone. Bookings re-render the show lists.
+- Staff see each date's bookings (the door list) in *Jelentkezések → Előadások*. The Facebook sync
+  leaves a date booked here alone (its ticket link included).
+
 ## Edit buttons for staff
 
 Logged-in staff get a **Szerkesztés** button (bottom left) on the live site: this page (or

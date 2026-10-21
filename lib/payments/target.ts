@@ -5,13 +5,21 @@
 import type { Payload, Where } from 'payload';
 
 import type { TargetInfo } from '@/lib/applications/notify';
-import { canApplyWithoutGroup, canSignUpCourse, canSignUpWorkshop, type RuleResult } from '@/lib/applications/rules';
+import {
+  canApplyWithoutGroup,
+  canBookShow,
+  canSignUpCourse,
+  canSignUpWorkshop,
+  type RuleResult,
+} from '@/lib/applications/rules';
 import { courseFacts, courseInfo, NOBODY, takenBy, workshopFacts, workshopInfo } from '@/lib/applications/server';
 import { applicationSettings } from '@/lib/applications/settings';
+import { seatsTaken, showFacts, showInfo } from '@/lib/applications/shows';
 import { relId } from '@/payload/rel';
 import type { Application, Course, CourseGroup } from '@/payload-types';
 
-import { checkoutPath, courseCheckoutPath } from './links';
+import { checkoutPath, courseCheckoutPath, showCheckoutPath } from './links';
+import { billingSettings } from './settings';
 
 export type Target = {
   info: TargetInfo;
@@ -47,12 +55,14 @@ export async function groupByCode(payload: Payload, code: string) {
 }
 
 /** Applications for the same thing (one person can't hold it twice). */
-export const sameTarget = (a: Pick<Application, 'kind' | 'session' | 'courseGroup' | 'course'>): Where =>
-  a.kind === 'workshop'
-    ? { session: { equals: relId(a.session) } }
-    : relId(a.courseGroup)
-      ? { courseGroup: { equals: relId(a.courseGroup) } }
-      : { and: [{ course: { equals: relId(a.course) } }, { courseGroup: { exists: false } }] };
+export const sameTarget = (a: Pick<Application, 'kind' | 'session' | 'courseGroup' | 'course' | 'show'>): Where =>
+  a.kind === 'show'
+    ? { show: { equals: relId(a.show) } }
+    : a.kind === 'workshop'
+      ? { session: { equals: relId(a.session) } }
+      : relId(a.courseGroup)
+        ? { courseGroup: { equals: relId(a.courseGroup) } }
+        : { and: [{ course: { equals: relId(a.course) } }, { courseGroup: { exists: false } }] };
 
 export async function courseTarget(
   payload: Payload,
@@ -78,6 +88,17 @@ export async function courseTarget(
 
 /** The target of an existing application. */
 export async function targetOf(payload: Payload, a: Application, now: Date): Promise<Target> {
+  if (a.kind === 'show') {
+    const s = await payload.findByID({ collection: 'shows', id: relId(a.show) ?? 0, depth: 1 });
+    const taken = (await seatsTaken(payload, [s.id])).get(s.id) ?? 0;
+    const { maxPerBooking } = (await billingSettings(payload)).showDefaults;
+    const production = typeof s.production === 'object' ? s.production : null;
+    return {
+      info: showInfo(s, a.seats ?? 1),
+      verdict: canBookShow(showFacts(s, taken), a.seats ?? 1, maxPerBooking, now),
+      againPath: s.code ? showCheckoutPath(s.code) : `/repertoar/${production?.slug ?? ''}`,
+    };
+  }
   if (a.kind === 'workshop') {
     const settings = await applicationSettings(payload);
     const s = await payload.findByID({ collection: 'sessions', id: relId(a.session) ?? 0, depth: 0 });

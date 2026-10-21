@@ -92,6 +92,9 @@ async function afterCollectionChange(slug: string, req: PayloadRequest, doc: Doc
     for (const from of new Set(froms.filter(Boolean) as string[])) revalidate(payload, from.replace(/\/+$/, '') || '/');
     return;
   }
+  // a show booking changes the seats left: wherever shows are listed, and the production pages
+  if (slug === 'applications' && (doc as { kind?: string }).kind === 'show')
+    return revalidatePagesWith(payload, SHOWN_BY.shows ?? [], true);
   if (slug === 'pages') {
     for (const path of new Set([doc.path, previousDoc?.path].filter(Boolean) as string[])) revalidate(payload, path);
     // other pages show page titles in the course switcher

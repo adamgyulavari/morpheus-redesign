@@ -9,9 +9,9 @@ import { randomBytes } from 'node:crypto';
 
 import type { Payload, TypedUser, Where } from 'payload';
 
-import { placesLeftFor } from '@/lib/applications/capacity';
+import { fits } from '@/lib/applications/capacity';
 import type { Applicant, TargetInfo } from '@/lib/applications/notify';
-import { canSignUpWorkshop } from '@/lib/applications/rules';
+import { canBookShow, canSignUpWorkshop } from '@/lib/applications/rules';
 import {
   type ApplicantInput,
   applicantFor,
@@ -25,6 +25,7 @@ import {
   workshopInfo,
 } from '@/lib/applications/server';
 import { applicationSettings } from '@/lib/applications/settings';
+import { ownHeldSeats, seatsTaken, showFacts, showInfo, ticketPrice } from '@/lib/applications/shows';
 import { whenText } from '@/lib/rooms/format';
 import { errorMessage } from '@/lib/rooms/server';
 import { siteUrl } from '@/payload/email';
@@ -33,6 +34,7 @@ import type { Application, Order } from '@/payload-types';
 
 import { type Billing, clean, validateBilling } from './billing';
 import { sendPaymentLink } from './notify';
+import { cancelOrder } from './order-page';
 import { confirmOrder, lapsed, lockOrder, orderByToken, queueFollowUps, type Result, resultUrl } from './orders';
 import { paymentProvider } from './providers';
 import { billingSettings, PAUSED } from './settings';
@@ -137,6 +139,41 @@ export async function checkoutCourse(
   });
 }
 
+export type ShowCheckoutInput = ApplicantInput & { showId: number; seats: number; billing: Billing };
+
+/** Tickets for a show booked on the site (a free one is booked without the checkout). */
+export async function checkoutShow(
+  payload: Payload,
+  viewer: TypedUser | null,
+  input: ShowCheckoutInput,
+  now = new Date(),
+): Promise<Started> {
+  const begun = await begin(payload, viewer, input, 'show');
+  if (!begun.ok) return begun;
+  const s = await payload.findByID({ collection: 'shows', id: input.showId, depth: 1, disableErrors: true });
+  if (s?.bookingMode !== 'internal' || ticketPrice(s) === 0)
+    return { ok: false, reason: 'Erre az előadásra így nem lehet jegyet venni.' };
+  const { maxPerBooking } = (await billingSettings(payload)).showDefaults;
+  // their own hold (another number of tickets) is replaced: its seats are theirs to take
+  const own = await ownHeldSeats(payload, s.id, viewer?.email ?? input.email);
+  const taken = ((await seatsTaken(payload, [s.id])).get(s.id) ?? 0) - own;
+  const verdict = canBookShow(showFacts(s, taken), input.seats, maxPerBooking, now);
+  if (!verdict.ok) return verdict;
+  const info = showInfo(s, input.seats);
+  return order(payload, viewer, input, begun, now, {
+    // back with the same number of tickets: the same order; another number replaces it
+    again: { and: [{ show: { equals: s.id } }, { seats: { equals: input.seats } }] },
+    replaces: { show: { equals: s.id } },
+    info,
+    application: { kind: 'show', show: s.id, seats: input.seats },
+    order: {
+      kind: 'show',
+      label: `${info.title} — ${info.when} (${input.seats} jegy)`,
+      amount: ticketPrice(s) * input.seats,
+    },
+  });
+}
+
 /** Both checkouts begin alike: the person's details and billing are valid, online payment is on. */
 async function begin(
   payload: Payload,
@@ -154,8 +191,11 @@ async function begin(
 type NewOrder = {
   /** The person's applications for the same thing. */
   again: Where;
+  /** Their other unpaid orders this one replaces (a show with another number of tickets). */
+  replaces?: Where;
   info: TargetInfo;
-  application: Pick<Application, 'kind'> & Partial<Pick<Application, 'session' | 'courseGroup' | 'course'>>;
+  application: Pick<Application, 'kind'> &
+    Partial<Pick<Application, 'session' | 'courseGroup' | 'course' | 'show' | 'seats'>>;
   order: { kind: Order['kind']; label: string; amount: number; plan?: Order['plan'] };
 };
 
@@ -179,6 +219,8 @@ async function order(
   // back again with an unpaid order (held or lapsed): the same order, a new payment
   const again = await heldOrderOf(payload, applicant.userId, d.again);
   if (again) return payOrder(payload, again, applicant.email, now);
+  const replaced = d.replaces && (await heldOrderOf(payload, applicant.userId, d.replaces));
+  if (replaced) await cancelOrder(payload, replaced.token);
   return placeOrder(payload, applicant, billing, holdMinutes, now, d);
 }
 
@@ -280,14 +322,19 @@ async function payOrder(payload: Payload, order: Order, email: string, now: Date
     const o = await lockOrder(req, order.id);
     if (o.status !== 'pending') return null;
     // pre-checked: a refusal inside the hook would roll the whole transaction back
-    if ((await placesLeftFor(req, a, a.id)) === 0) return null;
+    if (!(await fits(req, a, a.id))) return null;
     await payload.update({ collection: 'applications', id: a.id, data: { holdUntil }, req });
     return payload.update({ collection: 'orders', id: o.id, data: { expiresAt: holdUntil }, req });
   });
   if (!renewed)
     return {
       ok: false,
-      reason: a.kind === 'workshop' ? 'Ez az alkalom időközben megtelt.' : 'Ez a csoport időközben megtelt.',
+      reason:
+        a.kind === 'show'
+          ? 'Erre az előadásra időközben elfogytak a jegyek.'
+          : a.kind === 'workshop'
+            ? 'Ez az alkalom időközben megtelt.'
+            : 'Ez a csoport időközben megtelt.',
     };
   return startPayment(payload, renewed, email);
 }

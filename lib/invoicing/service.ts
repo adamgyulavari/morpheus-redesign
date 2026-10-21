@@ -50,6 +50,14 @@ const UNIT: Record<Order['kind'], string> = {
   monthlyFee: 'hónap',
 };
 
+/** The invoice's line: a show's tickets one by one (N × the ticket's price), anything else once. */
+function lineOf(order: Order, gross: number) {
+  const seats = order.kind === 'show' && typeof order.application === 'object' ? (order.application?.seats ?? 1) : 1;
+  return seats > 1 && gross % seats === 0
+    ? { name: order.label, quantity: seats, unit: UNIT[order.kind], gross: gross / seats }
+    : { name: order.label, quantity: 1, unit: UNIT[order.kind], gross };
+}
+
 /** The invoice for a paid order (once; again only after a definite failure). */
 export async function issueInvoice(payload: Payload, orderId: number, now = new Date()): Promise<Invoice | null> {
   const order = await payload.findByID({ collection: 'orders', id: orderId, depth: 1 });
@@ -72,7 +80,7 @@ export async function issueInvoice(payload: Payload, orderId: number, now = new 
     prefix: rules.invoicePrefix || undefined,
     note: `Online fizetve bankkártyával (rendelés #${order.id}).`,
     buyer: buyerOf(user, order.billing),
-    items: [{ name: order.label, quantity: 1, unit: UNIT[order.kind], gross }],
+    items: [lineOf(order, gross)],
     vat,
   };
   return record(payload, existing, {

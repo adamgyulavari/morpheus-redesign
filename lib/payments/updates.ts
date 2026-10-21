@@ -5,7 +5,7 @@
  */
 import type { Payload, PayloadRequest } from 'payload';
 
-import { placesLeftFor } from '@/lib/applications/capacity';
+import { fits } from '@/lib/applications/capacity';
 import { inTransaction } from '@/lib/applications/server';
 import { applicationSettings } from '@/lib/applications/settings';
 import { relId } from '@/payload/rel';
@@ -156,8 +156,7 @@ async function mayKeepPlace(req: PayloadRequest, order: Order, now: Date): Promi
     req,
   });
   if (again.totalDocs) return false;
-  const left = await placesLeftFor(req, a, a.id);
-  return left === null || left > 0;
+  return fits(req, a, a.id);
 }
 
 async function runEffect(payload: Payload, e: Effect) {

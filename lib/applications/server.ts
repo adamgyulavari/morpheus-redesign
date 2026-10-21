@@ -40,6 +40,7 @@ import {
   canApplyWithoutGroup,
   canCancel,
   canCancelCourse,
+  canCancelShow,
   canMove,
   canSignUpCourse,
   canSignUpWorkshop,
@@ -54,10 +55,11 @@ import {
   workshopState,
 } from './rules';
 import { type ApplicationSettings, applicationSettings } from './settings';
-import { IS_PAID, TAKES_PLACE } from './sql';
+import { seatsTaken, showInfo, showStart } from './shows';
+import { IS_PAID, inList, TAKES_PLACE } from './sql';
 
 const all = { limit: 0, pagination: false } as const;
-type Result<T = object> = ({ ok: true } & T) | { ok: false; reason: string };
+export type Result<T = object> = ({ ok: true } & T) | { ok: false; reason: string };
 
 // ── transactions ────────────────────────────────────────────────────────────
 
@@ -77,12 +79,6 @@ export async function inTransaction<T>(payload: Payload, fn: (req: PayloadReques
 }
 
 // ── facts ───────────────────────────────────────────────────────────────────
-
-const inList = (list: readonly (string | number)[]) =>
-  sql.join(
-    list.map((s) => sql`${s}`),
-    sql`, `,
-  );
 
 /** Per date or course: places taken (paid + held within the hold) and paid sign-ups. */
 export type Taken = { taken: number; paid: number };
@@ -210,7 +206,7 @@ export async function applicantFor(
           lastName: input.lastName,
           firstName: input.firstName,
           phone: input.phone || undefined,
-          roles: ['student'],
+          roles: ['guest'],
           _verified: false,
         },
         disableVerificationEmail: true,
@@ -367,13 +363,28 @@ export const applicantOf = (
 /** What may the participant do with an application now? (For the buttons; the actions re-check.) */
 export async function allowedActions(
   payload: Payload,
-  a: { kind: ApplicationKind; status?: ApplicationStatus | null; session?: unknown; courseGroup?: unknown },
+  a: {
+    kind: ApplicationKind;
+    status?: ApplicationStatus | null;
+    session?: unknown;
+    courseGroup?: unknown;
+    show?: unknown;
+    order?: unknown;
+  },
   rules: ApplicationRules,
   now = new Date(),
 ): Promise<{ cancel: RuleResult; move: boolean }> {
   const no = { ok: false as const, reason: '' };
   if (!a.status) return { cancel: no, move: false };
   if (a.kind === 'professional') return { cancel: canWithdraw(a.status), move: false };
+  if (a.kind === 'show') {
+    const s = relId(a.show)
+      ? await payload.findByID({ collection: 'shows', id: relId(a.show) ?? 0, depth: 0, disableErrors: true })
+      : null;
+    if (!s || a.status !== 'registered') return { cancel: no, move: false };
+    // a free booking has no order; a ticket was paid for
+    return { cancel: canCancelShow(showStart(s), Boolean(relId(a.order)), now), move: false };
+  }
   if (a.kind === 'beginner') {
     const g = relId(a.courseGroup)
       ? await payload.findByID({
@@ -427,9 +438,14 @@ export async function cancelOwn(payload: Payload, user: TypedUser, id: number, n
 
 async function targetAndCount(
   payload: Payload,
-  a: { kind: ApplicationKind; session?: unknown; courseGroup?: unknown },
+  a: { kind: ApplicationKind; session?: unknown; courseGroup?: unknown; show?: unknown; seats?: number | null },
   settings: ApplicationSettings,
 ): Promise<{ info: TargetInfo; count: string }> {
+  if (a.kind === 'show') {
+    const s = await payload.findByID({ collection: 'shows', id: relId(a.show) ?? 0, depth: 1 });
+    const taken = (await seatsTaken(payload, [s.id])).get(s.id) ?? 0;
+    return { info: showInfo(s, a.seats ?? 1), count: `${taken} / ${s.booking?.seats ?? 0} jegy` };
+  }
   if (a.kind === 'workshop') {
     const s = await payload.findByID({ collection: 'sessions', id: relId(a.session) ?? 0, depth: 0 });
     const taken = (await takenBy(payload, 'session_id', [s.id])).get(s.id) ?? NOBODY;
@@ -658,7 +674,7 @@ export async function runWorkshopCutoffs(payload: Payload, now = new Date()) {
  */
 export async function admit(payload: Payload, staff: TypedUser, id: number, groupId?: number | null): Promise<Result> {
   const a = await payload.findByID({ collection: 'applications', id, depth: 1, disableErrors: true });
-  if (!a || a.kind === 'workshop') return { ok: false, reason: 'Ez nem kurzusjelentkezés.' };
+  if (a?.kind !== 'beginner' && a?.kind !== 'professional') return { ok: false, reason: 'Ez nem kurzusjelentkezés.' };
   const targetId = relId(a.courseGroup) ?? groupId ?? null;
   if (!targetId) return { ok: false, reason: 'Válaszd ki, melyik csoportba veszed fel.' };
   const userId = relId(a.user);

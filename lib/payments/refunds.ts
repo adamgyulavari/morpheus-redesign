@@ -99,10 +99,12 @@ export async function markOrderRefunded(payload: Payload, orderId: number, full:
  */
 export async function afterOrderRefund(
   payload: Payload,
-  order: Pick<Order, 'id' | 'label'>,
+  order: Pick<Order, 'id' | 'label' | 'kind' | 'application'>,
   r: { full: boolean; amount: number; where: 'dashboard' | 'admin'; note?: string },
 ) {
   const settings = await applicationSettings(payload);
+  // a show's tickets refunded in full: the seats are free again
+  const freed = r.full && order.kind === 'show' && (await freeSeats(payload, relId(order.application)));
   if (r.full) {
     const { docs } = await payload.find({
       collection: 'invoices',
@@ -116,8 +118,23 @@ export async function afterOrderRefund(
       ? `A rendelés #${order.id} (${order.label}) fizetéséből ${formatHuf(r.amount)}-ot visszautaltatok a fizetési szolgáltató felületén.`
       : `A rendelés #${order.id} (${order.label}) fizetéséből ${formatHuf(r.amount)}-ot visszatérítettetek az adminban${r.note ? ` (${r.note})` : ''}.`,
     r.full ? 'A számlát sztornóztuk (Pénzügyek → Számlák).' : 'A számlát kézzel kell helyesbíteni a Számlázz.hu-ban.',
-    'A jelentkezés nem változott: ha kell, mondd le a Jelentkezések oldalon.',
+    freed
+      ? 'A jegyfoglalást lemondtuk, a helyek felszabadultak.'
+      : 'A jelentkezés nem változott: ha kell, mondd le a Jelentkezések oldalon.',
   ]);
+}
+
+/** A refunded show booking: cancelled (no e-mail — the refund is what they hear about). */
+async function freeSeats(payload: Payload, applicationId: number | null): Promise<boolean> {
+  if (!applicationId) return false;
+  const a = await payload.findByID({ collection: 'applications', id: applicationId, depth: 0, disableErrors: true });
+  if (a?.kind !== 'show' || a.status !== 'registered') return false;
+  await payload.update({
+    collection: 'applications',
+    id: a.id,
+    data: { status: 'cancelled', cancelReason: 'Visszatérítve.' },
+  });
+  return true;
 }
 
 /** A late or duplicate payment goes back in full; the person (late) and staff are told. */

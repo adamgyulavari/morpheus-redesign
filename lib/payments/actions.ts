@@ -6,13 +6,14 @@
  */
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-
+import { showByCode } from '@/lib/applications/shows';
 import { getCurrentUser, payloadClient } from '@/lib/auth';
+import { getUi } from '@/lib/data';
 import { allow, clientIp } from '@/payload/magic-link';
-
-import { checkout, checkoutCourse, retryPayment } from './checkout';
+import { checkout, checkoutCourse, checkoutShow, retryPayment } from './checkout';
 import { cancelOrder, orderStatus } from './order-page';
 import { resultUrl } from './orders';
+
 import { groupByCode, sessionByCode } from './target';
 
 export type CheckoutState = { error?: string; values?: Record<string, string> };
@@ -35,13 +36,15 @@ const FIELDS = [
 ] as const;
 
 /** What both checkouts share: the fields, the honeypot, the terms, the rate limits. */
-async function readCheckout(form: FormData) {
+async function readCheckout(
+  form: FormData,
+  termsError = 'A jelentkezéshez el kell fogadnod az ÁSZF-et és a lemondási feltételeket.',
+) {
   const values = Object.fromEntries(FIELDS.map((f) => [f, str(form, f)])) as Record<(typeof FIELDS)[number], string>;
   values.email = values.email.toLowerCase();
   // honeypot: people don't see it; bots fill it in and get nowhere
   if (str(form, 'website')) return { values, error: 'Hibás kérés.' };
-  if (form.get('terms') !== 'on')
-    return { values, error: 'A jelentkezéshez el kell fogadnod az ÁSZF-et és a lemondási feltételeket.' };
+  if (form.get('terms') !== 'on') return { values, error: termsError };
   const viewer = await getCurrentUser();
   const ip = clientIp(await headers());
   const email = viewer?.email ?? values.email;
@@ -83,6 +86,18 @@ export async function courseCheckoutAction(_: CheckoutState, form: FormData): Pr
   const group = await groupByCode(c.payload, str(form, 'csoport'));
   if (!group) return { error: 'Nincs ilyen csoport.', values };
   const r = await checkoutCourse(c.payload, c.viewer, { ...c.input, groupId: group.id, optionId: str(form, 'opcio') });
+  if (!r.ok) return { error: r.reason, values };
+  redirect(r.checkoutUrl ?? resultUrl(r.token));
+}
+
+/** Tickets for a show (`eloadas`: its public code; `jegyek`: how many). */
+export async function showCheckoutAction(_: CheckoutState, form: FormData): Promise<CheckoutState> {
+  const c = await readCheckout(form, (await getUi()).showBooking.terms);
+  const values = { ...c.values, jegyek: str(form, 'jegyek') };
+  if (!c.input) return { error: c.error, values };
+  const show = await showByCode(c.payload, str(form, 'eloadas'));
+  if (!show) return { error: 'Nincs ilyen előadás.', values };
+  const r = await checkoutShow(c.payload, c.viewer, { ...c.input, showId: show.id, seats: Number(values.jegyek) || 0 });
   if (!r.ok) return { error: r.reason, values };
   redirect(r.checkoutUrl ?? resultUrl(r.token));
 }

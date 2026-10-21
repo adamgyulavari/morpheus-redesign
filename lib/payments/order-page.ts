@@ -14,6 +14,8 @@ import { applyPaymentUpdate } from './updates';
 
 export type OrderView = {
   status: Order['status'];
+  /** A show's tickets read differently ("jegyvásárlás", not "jelentkezés"). */
+  kind: Order['kind'];
   label: string;
   amountDue: number;
   expiresAt: string | null;
@@ -59,6 +61,7 @@ export async function orderStatus(payload: Payload, token: string, now = new Dat
     : null;
   return {
     status: order.status,
+    kind: order.kind,
     label: order.label,
     amountDue: order.amountDue,
     expiresAt: order.expiresAt ?? null,

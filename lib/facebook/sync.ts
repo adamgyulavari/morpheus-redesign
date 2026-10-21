@@ -35,13 +35,20 @@ const wanted = (e: FbEvent, production: number, venue: number) => {
   return { production, venue, date, time, label: labelOf(e.name) ?? null, ticketUrl: e.ticketUrl ?? null };
 };
 
-const differs = (s: Show, w: ReturnType<typeof wanted>) =>
+/** A date booked on the site keeps its own booking: its ticket link isn't Facebook's to set. */
+const forShow = (s: Show | undefined, w: ReturnType<typeof wanted>) => {
+  if (s?.bookingMode !== 'internal') return w;
+  const { ticketUrl: _, ...rest } = w;
+  return rest;
+};
+
+const differs = (s: Show, w: ReturnType<typeof forShow>) =>
   relId(s.production) !== w.production ||
   relId(s.venue) !== w.venue ||
   String(s.date).slice(0, 10) !== w.date ||
   s.time !== w.time ||
   (s.label ?? null) !== w.label ||
-  (s.ticketUrl ?? null) !== w.ticketUrl ||
+  ('ticketUrl' in w && (s.ticketUrl ?? null) !== w.ticketUrl) ||
   Boolean(s.hidden);
 
 export async function syncFromFacebook(payload: Payload, events?: FbEvent[]): Promise<SyncResult> {
@@ -92,11 +99,11 @@ export async function syncFromFacebook(payload: Payload, events?: FbEvent[]): Pr
       });
       result.created.push({ ...line, showId: doc.id });
       if (doc.roomNote) result.rooms.push({ ...line, showId: doc.id, note: doc.roomNote });
-    } else if (!own || differs(target, w)) {
+    } else if (!own || differs(target, forShow(target, w))) {
       const doc = await payload.update({
         collection: 'shows',
         id: target.id,
-        data: { ...w, facebookEventId: e.id, hidden: false },
+        data: { ...forShow(target, w), facebookEventId: e.id, hidden: false },
       });
       if (doc.roomNote && doc.roomNote !== target.roomNote)
         result.rooms.push({ ...line, showId: target.id, note: doc.roomNote });

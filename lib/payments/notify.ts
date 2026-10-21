@@ -26,12 +26,13 @@ export async function sendOrderPaid(
   opts: { loggedIn: boolean; ics?: string; waitingForGroup?: boolean },
 ) {
   const texts = await emailTexts(payload);
-  const tpl = texts.template('orderPaid');
+  const key = t.seats ? 'ticketPaid' : 'orderPaid';
+  const tpl = texts.template(key);
   const vars = { ...varsOf(a, t), osszeg: formatHuf(p.amountDue) };
   await send(
     payload,
     a.email,
-    fromTemplate(texts, 'orderPaid', vars, {
+    fromTemplate(texts, key, vars, {
       greet: { firstName: a.firstName },
       after: [opts.waitingForGroup ? tpl.waitingForGroup : undefined, opts.ics ? tpl.calendarNote : undefined].filter(
         (x): x is string => Boolean(x),
@@ -64,7 +65,7 @@ export async function sendPaymentLink(
     a.email,
     fromTemplate(
       texts,
-      'paymentLink',
+      t.seats ? 'ticketPaymentLink' : 'paymentLink',
       { ...varsOf(a, t), osszeg: formatHuf(p.amount), hatarido },
       {
         greet: { firstName: a.firstName },
@@ -112,7 +113,7 @@ export async function sendStaffPaid(
     s.notifyEmails,
     fromTemplate(
       texts,
-      'staffPaid',
+      t.seats ? 'staffTicketPaid' : 'staffPaid',
       { ...varsOf(a, t), osszeg: formatHuf(p.amountDue) },
       {
         greet: false,

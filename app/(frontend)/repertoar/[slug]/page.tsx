@@ -7,6 +7,7 @@ import Gallery from '@/components/Gallery';
 import { ArrowLeft, ArrowRight } from '@/components/icons';
 import Lines from '@/components/Lines';
 import SiteLayout from '@/components/layouts/SiteLayout';
+import ShowButton from '@/components/ShowButton';
 import ShowRow from '@/components/ShowRow';
 import { CtaBand, Eyebrow, SectionHeading } from '@/components/ui';
 import VideoEmbed from '@/components/VideoEmbed';
@@ -67,13 +68,6 @@ export default async function ProductionPage({ params }: Props) {
   const cta = await getCtaBand(settings.productionPage.ctaBand);
   const labels = ui.production;
   const next = shows[0];
-  const action = (s: (typeof shows)[number]) =>
-    s.ticketUrl
-      ? { label: ui.shows.ticket, href: s.ticketUrl }
-      : s.registrationUrl
-        ? { label: ui.shows.registration, href: s.registrationUrl }
-        : undefined;
-  const nextAction = next && action(next);
   const video = p.videoUrl && youtubeId(p.videoUrl);
   const named = p.cast.some((c) => c.role);
   const bg = p.heroImage ?? p.gallery?.[0] ?? p.poster;
@@ -154,12 +148,7 @@ export default async function ProductionPage({ params }: Props) {
                 </span>
               </div>
               <span className="text-[15px] text-ink2">{next.venue.name}</span>
-              {nextAction && (
-                <a href={nextAction.href} className="btn btn-lg btn-primary">
-                  {nextAction.label}
-                  <ArrowRight />
-                </a>
-              )}
+              {next && <ShowButton show={next} ui={ui} className="btn btn-lg btn-primary" />}
               {shows.length > 1 && (
                 <a href="#idopontok" className="link self-center text-[15px] font-semibold text-teal">
                   {labels.ctaDates}
@@ -364,13 +353,7 @@ export default async function ProductionPage({ params }: Props) {
         ) : (
           <div className="flex flex-col">
             {shows.map((show, i) => (
-              <ShowRow
-                key={show.id}
-                show={show}
-                ticketLabel={ui.shows.ticket}
-                registrationLabel={ui.shows.registration}
-                last={i === shows.length - 1}
-              />
+              <ShowRow key={show.id} show={show} ui={ui} last={i === shows.length - 1} />
             ))}
           </div>
         )}

@@ -35,6 +35,8 @@ export type TargetInfo = {
   /** Workshop: minimum, decision time; for the sign-up e-mail. */
   minParticipants?: number;
   cutoff?: Date;
+  /** A show booking: how many tickets. */
+  seats?: number;
 };
 
 const MY_ACCOUNT = '/fiokom';
@@ -50,6 +52,7 @@ export const details = (c: Common, t: TargetInfo, extra: Row[] = []): Row[] => [
   ...(t.when ? [{ label: c.labelWhen, value: t.when }] : []),
   ...(t.place ? [{ label: c.labelWhere, value: t.place }] : []),
   ...(t.price ? [{ label: c.labelPrice, value: t.price }] : []),
+  ...(t.seats ? [{ label: c.labelSeats, value: String(t.seats) }] : []),
   ...extra,
 ];
 
@@ -61,7 +64,11 @@ export const varsOf = (a: Applicant, t: TargetInfo) => ({
   cim: t.title,
   mikor: t.when,
   hol: t.place,
+  jegyek: t.seats,
 });
+
+/** A show booking (its seats are set) gets the Jegyfoglalás tab's e-mail instead of the sign-up's. */
+const forTickets = <K extends string>(t: TargetInfo, signup: K, ticket: string): string => (t.seats ? ticket : signup);
 
 /** Sends (never throws: a failed e-mail is logged). `ics`: a calendar file attached. */
 export async function send(
@@ -190,7 +197,15 @@ export async function sendCancellation(
   t: TargetInfo,
   by: 'self' | 'staff',
 ) {
-  await toApplicant(payload, await emailTexts(payload), by === 'self' ? 'cancelledBySelf' : 'cancelledByStaff', a, t);
+  await toApplicant(
+    payload,
+    await emailTexts(payload),
+    by === 'self'
+      ? forTickets(t, 'cancelledBySelf', 'ticketCancelledBySelf')
+      : forTickets(t, 'cancelledByStaff', 'ticketCancelledByStaff'),
+    a,
+    t,
+  );
 }
 
 /** The workshop runs (at the cutoff). */
@@ -263,7 +278,7 @@ export async function sendStaffNew(
     s.notifyEmails,
     fromTemplate(
       texts,
-      'staffNew',
+      forTickets(t, 'staffNew', 'staffTicketBooked'),
       { ...varsOf(a, t), fajta: kind },
       {
         greet: false,
@@ -295,7 +310,7 @@ export async function sendStaffCancellation(
     s.notifyEmails,
     fromTemplate(
       texts,
-      movedTo ? 'staffMoved' : 'staffCancelled',
+      movedTo ? 'staffMoved' : forTickets(t, 'staffCancelled', 'staffTicketCancelled'),
       { ...varsOf(a, t), regi: t.when, ...(movedTo ? { mikor: movedTo } : {}) },
       {
         greet: false,
@@ -308,4 +323,19 @@ export async function sendStaffCancellation(
       },
     ),
   );
+}
+
+/** A free show booking (paid tickets get "Jegyvásárlás: sikeres fizetés"). */
+export async function sendShowRegistered(
+  payload: Payload,
+  a: Applicant,
+  t: TargetInfo,
+  account: { created: boolean; loggedIn: boolean },
+) {
+  const texts = await emailTexts(payload);
+  const tpl = texts.template('ticketBooked');
+  await toApplicant(payload, texts, 'ticketBooked', a, t, {
+    after: [(account.created ? tpl.accountCreated : tpl.accountExisting) ?? ''].filter(Boolean),
+    login: !account.loggedIn,
+  });
 }

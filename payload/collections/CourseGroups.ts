@@ -9,7 +9,7 @@ import type { CourseGroup } from '@/payload-types';
 import { isStaffOrAdmin, isStaffOrAdminField, userIsStaffOrAdmin } from '../access';
 
 import { date, dateTime, fullRichText, relationship, text, time } from '../fields';
-import { relId } from '../rel';
+import { relId, relIds } from '../rel';
 import { collectionRevalidation } from '../revalidate';
 
 /**
@@ -54,6 +54,35 @@ export const CourseGroups: CollectionConfig = {
   hooks: {
     // groups open for sign-up are on the course pages
     ...collectionRevalidation('courseGroups'),
+    afterChange: [
+      // whoever joins a group (admitted, paid, or added here) is a student from then on
+      async ({ doc, previousDoc, req }) => {
+        const before = new Set(relIds(previousDoc?.students));
+        const joined = relIds(doc.students).filter((id) => !before.has(id));
+        if (joined.length) {
+          const { docs } = await req.payload.find({
+            collection: 'users',
+            where: { id: { in: joined } },
+            depth: 0,
+            limit: 0,
+            pagination: false,
+            req,
+            overrideAccess: true,
+          });
+          for (const u of docs)
+            if (!u.roles?.includes('student'))
+              await req.payload.update({
+                collection: 'users',
+                id: u.id,
+                data: { roles: [...(u.roles ?? []).filter((r) => r !== 'guest'), 'student'] },
+                req,
+                overrideAccess: true,
+              });
+        }
+        return doc;
+      },
+      ...(collectionRevalidation('courseGroups').afterChange ?? []),
+    ],
     beforeChange: [
       // the sign-up kind follows the group's type unless set (kezdő → beginner, szakmai → professional)
       async ({ data, originalDoc, operation, req }) => {

@@ -1,6 +1,7 @@
-import { ArrowRight, MailIcon, PhoneIcon } from '@/components/icons';
+import { MailIcon, PhoneIcon } from '@/components/icons';
 import Logo from '@/components/Logo';
 import Rotator from '@/components/Rotator';
+import ShowButton from '@/components/ShowButton';
 import SmartLink from '@/components/SmartLink';
 import SocialLinks from '@/components/SocialLinks';
 import { getContactPerson, getFeaturedShows, getSiteSettings, getUi } from '@/lib/data';
@@ -27,12 +28,6 @@ export async function BioIntro({ block, className }: BlockProps<'bioIntro'>) {
 export async function BioNextShow({ block, className }: BlockProps<'bioNextShow'>) {
   const [ui, shows] = await Promise.all([getUi(), getFeaturedShows()]);
   if (!shows.length) return null;
-  const action = (show: (typeof shows)[number]) =>
-    show.ticketUrl
-      ? { label: ui.shows.ticket, href: show.ticketUrl }
-      : show.registrationUrl
-        ? { label: ui.shows.registration, href: show.registrationUrl }
-        : undefined;
   return (
     <section
       id={block.anchor}
@@ -41,24 +36,16 @@ export async function BioNextShow({ block, className }: BlockProps<'bioNextShow'
     >
       <span className="text-xs font-bold uppercase tracking-[0.16em] text-gold">{ui.shows.nextShow}</span>
       <Rotator>
-        {shows.map((show) => {
-          const a = action(show);
-          return (
-            <div key={show.id} className="flex flex-col gap-3">
-              <div className="flex flex-col gap-0.5">
-                <span className="font-display text-[30px] leading-tight">{show.production.title}</span>
-                <span className="font-semibold">{showDateLine(show.date, show.time)}</span>
-                <span className="text-sm text-mist">{show.venue.name}</span>
-              </div>
-              {a && (
-                <a href={a.href} className="btn btn-md btn-gold self-start">
-                  {a.label}
-                  <ArrowRight />
-                </a>
-              )}
+        {shows.map((show) => (
+          <div key={show.id} className="flex flex-col gap-3">
+            <div className="flex flex-col gap-0.5">
+              <span className="font-display text-[30px] leading-tight">{show.production.title}</span>
+              <span className="font-semibold">{showDateLine(show.date, show.time)}</span>
+              <span className="text-sm text-mist">{show.venue.name}</span>
             </div>
-          );
-        })}
+            <ShowButton show={show} ui={ui} className="btn btn-md btn-gold self-start" />
+          </div>
+        ))}
       </Rotator>
     </section>
   );
