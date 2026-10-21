@@ -10,6 +10,7 @@ import { useActionState, useEffect, useId, useState } from 'react';
 
 import Dialog from '@/components/Dialog';
 import Checkbox from '@/components/forms/Checkbox';
+import CountOptions from '@/components/forms/CountOptions';
 import { Field, RequiredMarks, TextField } from '@/components/forms/Field';
 import Honeypot from '@/components/forms/Honeypot';
 import Notice from '@/components/forms/Notice';
@@ -199,11 +200,7 @@ function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string
             {show && (
               <Field label={ui.seats} required>
                 <select className="field max-w-[140px]" name="jegyek" required defaultValue={v('jegyek') ?? '1'}>
-                  {Array.from({ length: Math.max(1, target.maxSeats ?? 1) }, (_, i) => (
-                    <option key={i + 1} value={i + 1}>
-                      {i + 1}
-                    </option>
-                  ))}
+                  <CountOptions max={target.maxSeats ?? 1} />
                 </select>
               </Field>
             )}

@@ -8,7 +8,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { payloadClient, setSessionCookies } from '@/lib/auth';
 import { accountForGoogle } from '@/lib/google/accounts';
 import { finish, googleConfigured } from '@/lib/google/oauth';
-import { COOKIE, COOKIE_PATH, decode, redirectUri } from '@/lib/google/round-trip';
+import { COOKIE, COOKIE_PATH, decode, type GoogleError, redirectUri } from '@/lib/google/round-trip';
 import { allow, clientIp } from '@/payload/magic-link';
 import { issueSession } from '@/payload/session';
 
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   const pending = decode(jar.get(COOKIE)?.value);
   jar.delete({ name: COOKIE, path: COOKIE_PATH });
   const params = req.nextUrl.searchParams;
-  const back = (hiba: string) => {
+  const back = (hiba: GoogleError) => {
     const to = new URL('/belepes', req.url);
     to.searchParams.set('hiba', hiba);
     if (pending?.back && pending.back !== '/fiokom') to.searchParams.set('vissza', pending.back);

@@ -12,6 +12,7 @@ import { type ReactNode, useActionState, useState } from 'react';
 import { Card } from '@/components/account/Card';
 import BillingFields from '@/components/forms/BillingFields';
 import Checkbox from '@/components/forms/Checkbox';
+import CountOptions from '@/components/forms/CountOptions';
 import { RequiredMarks, TextField } from '@/components/forms/Field';
 import Honeypot from '@/components/forms/Honeypot';
 import Notice from '@/components/forms/Notice';
@@ -161,11 +162,7 @@ export default function CheckoutForm({
                 value={seats}
                 onChange={(e) => setSeats(Number(e.target.value))}
               >
-                {Array.from({ length: Math.max(1, perSeat.max) }, (_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {i + 1}
-                  </option>
-                ))}
+                <CountOptions max={perSeat.max} />
               </select>
             </label>
           )}
