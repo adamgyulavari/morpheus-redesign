@@ -40,6 +40,7 @@ import * as migration_20261020_015052_public_ids from './20261020_015052_public_
 import * as migration_20261020_120000_show_booking_texts from './20261020_120000_show_booking_texts';
 import * as migration_20261021_184054_google_login from './20261021_184054_google_login';
 import * as migration_20261021_230000_ui_texts_account from './20261021_230000_ui_texts_account';
+import * as migration_20261020_130117_tarsulat from './20261020_130117_tarsulat';
 
 export const migrations = [
   {
@@ -251,5 +252,10 @@ export const migrations = [
     up: migration_20261021_230000_ui_texts_account.up,
     down: migration_20261021_230000_ui_texts_account.down,
     name: '20261021_230000_ui_texts_account',
+  },
+  {
+    up: migration_20261020_130117_tarsulat.up,
+    down: migration_20261020_130117_tarsulat.down,
+    name: '20261020_130117_tarsulat',
   },
 ];

@@ -243,6 +243,18 @@ Setting it up (Google Cloud console, once):
    (`NEXT_PUBLIC_SERVER_URL` + that path, exactly).
 3. Its client id and secret → `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
 
+### Importing course groups
+
+Csoportok → **Importálás fájlból** creates or updates course groups and their members from a JSON
+file `{ groups: [{ name, weekday, startTime, members: [{ name, email }] }] }`
+(`lib/applications/group-import.ts`): the type from the name (kezdő / szakmai / társulat), a weekly
+slot of 2 hours (kezdő) or 3 (the others) in the rooms picked, this year's dates — a group without a
+start time ended at the end of last month; a társulat has no dates and no slot. Members are matched
+by e-mail; new ones get an unverified account and hear nothing unless the e-mail box is ticked (the
+"Felvétel a kurzusba" e-mail with a login link; not for an ended group). "Előnézet" first, then
+"Importálás". Safe to run again: groups by name, members only added. The file has personal data:
+don't commit it.
+
 ## Room calendar and student area
 
 Replaces the room-planning sheet. **Sessions** (`sessions`: course meetings, rehearsals, exams,

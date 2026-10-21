@@ -233,7 +233,8 @@ export const courseStart = (
   onlinePayments: boolean,
   priceFrom: string,
 ): CourseStart => {
-  const first = dayOf(new Date(g.startDate));
+  // (open for sign-up: a kezdő or szakmai group, which has its dates)
+  const first = dayOf(new Date(g.startDate ?? ''));
   const schedule = g.defaultSchedule ?? [];
   const entry = schedule.find((e) => Number(e.weekday) === weekdayOf(first)) ?? schedule[0];
   const beginner = (g.signup?.kind ?? (g.type === 'szakmai' ? 'professional' : 'beginner')) === 'beginner';

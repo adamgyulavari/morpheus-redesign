@@ -342,24 +342,28 @@ async function scheduleGroups(payload: Payload, ids: number[] | null): Promise<S
   if (ids && !ids.length) return [];
   const { docs } = await payload.find({
     collection: 'courseGroups',
-    where: ids ? { id: { in: ids } } : undefined,
+    // a társulat has no regular sessions: its bookings are made by hand
+    where: { and: [{ type: { not_equals: 'tarsulat' } }, ...(ids ? [{ id: { in: ids } }] : [])] },
     depth: 0,
     // no `select` here: with it, Payload 3.90 returns the schedule rows without their rooms
     // (relationships nested in an array field)
     ...all,
   });
-  return docs.map((g) => ({
-    id: g.id,
-    title: g.title,
-    startDate: dayOf(new Date(g.startDate)),
-    endDate: dayOf(new Date(g.endDate)),
-    schedule: (g.defaultSchedule ?? []).map((e) => ({
-      weekday: Number(e.weekday),
-      startTime: e.startTime,
-      endTime: e.endTime,
-      rooms: relIds(e.rooms),
-    })),
-  }));
+  return docs.flatMap((g) => {
+    if (!g.startDate || !g.endDate) return [];
+    return {
+      id: g.id,
+      title: g.title,
+      startDate: dayOf(new Date(g.startDate)),
+      endDate: dayOf(new Date(g.endDate)),
+      schedule: (g.defaultSchedule ?? []).map((e) => ({
+        weekday: Number(e.weekday),
+        startTime: e.startTime,
+        endTime: e.endTime,
+        rooms: relIds(e.rooms),
+      })),
+    };
+  });
 }
 
 /** The groups running in the month, the Nyitott Műhely defaults and the rooms (for the month dialog's first step). */

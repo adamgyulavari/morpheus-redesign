@@ -7,8 +7,11 @@
 import type { TypedUser } from 'payload';
 
 import { getCurrentUser, payloadClient } from '@/lib/auth';
+import { todayInBudapest } from '@/lib/dates';
+import { errorMessage } from '@/lib/rooms/server';
 import { userIsStaffOrAdmin } from '@/payload/access';
 
+import { type ImportResult, importGroups, parseImportFile, planGroups } from './group-import';
 import {
   type ApplicantInput,
   addParticipant,
@@ -64,4 +67,20 @@ export async function decideAction(
   if (!user) return denied;
   const r = await decide(await payloadClient(), user, id, input);
   return r.ok ? { ok: true, message: r.message } : r;
+}
+
+/** Csoportok → Importálás fájlból: `dryRun` only says what would happen. */
+export async function importGroupsAction(
+  text: string,
+  o: { roomIds: number[]; email: boolean; dryRun: boolean },
+): Promise<{ ok: true; result: ImportResult } | { ok: false; reason: string }> {
+  if (!(await staff())) return denied;
+  const file = parseImportFile(text);
+  if (typeof file === 'string') return { ok: false, reason: file };
+  if (!o.roomIds.length) return { ok: false, reason: 'Válassz termet az órarendhez.' };
+  try {
+    return { ok: true, result: await importGroups(await payloadClient(), planGroups(file, todayInBudapest()), o) };
+  } catch (err) {
+    return { ok: false, reason: errorMessage(err) };
+  }
 }
