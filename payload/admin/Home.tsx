@@ -10,21 +10,20 @@ const QUICK = [
   { label: 'Új oldal', href: '/admin/collections/pages/create' },
 ];
 
-/** Above the admin's card grid: quick actions, then what needs doing and the coming week. Staff only. */
+/** Above the admin's card grid: quick actions and what needs doing, the coming week. Staff only. */
 export async function Home({ payload, user }: ServerProps) {
   if (!userIsStaffOrAdmin(user)) return null;
   const { todos, fill, week } = await homeData(payload);
   return (
     <div className={s.home}>
-      <nav className={s.quick} aria-label="Gyors műveletek">
-        {QUICK.map((q) => (
-          <a key={q.href} href={q.href} className={s.btn}>
-            {q.label}
-          </a>
-        ))}
-      </nav>
-
       <section className={s.panel} aria-labelledby="home-todo">
+        <nav className={s.quick} aria-label="Gyors műveletek">
+          {QUICK.map((q) => (
+            <a key={q.href} href={q.href} className={s.btn}>
+              {q.label}
+            </a>
+          ))}
+        </nav>
         <h2 id="home-todo">Teendők</h2>
         {todos.length === 0 && !fill ? (
           <p className={s.muted}>Nincs teendő. ✓</p>

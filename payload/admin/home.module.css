@@ -79,12 +79,12 @@
   color: #0b3a3f;
 }
 
-/* the quick actions: a row above both panels */
+/* the quick actions: a row at the top of the Teendők card */
 .quick {
-  grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-bottom: 20px;
 }
 .btn {
   padding: 8px 14px;
