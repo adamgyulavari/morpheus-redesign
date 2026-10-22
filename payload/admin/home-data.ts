@@ -29,14 +29,27 @@ export async function homeData(payload: Payload, now = new Date()) {
     applicationSettings(payload),
     roomNameMap(payload),
   ]);
+  const [fill, week] = await Promise.all([nextMonthFill(payload, settings, now), comingWeek(payload, roomName, now)]);
+  return { todos: todosOf(apps, waiting, unplaced, now), fill, week };
+}
 
-  // ── teendők
-  const todos: Todo[] = [];
-  if (waiting) todos.push({ text: `Döntésre vár: ${waiting} jelentkezés`, href: '/admin/jelentkezesek', tone: 'warn' });
-  const unpaid = apps.workshops
+export type HomeData = Awaited<ReturnType<typeof homeData>>;
+
+type Dashboard = Awaited<ReturnType<typeof dashboard>>;
+type Settings = Awaited<ReturnType<typeof applicationSettings>>;
+
+/** Registered on a Nyitott Műhely date that runs, paid neither on site (marked) nor at the checkout. */
+const unpaidParticipants = (apps: Dashboard) =>
+  apps.workshops
     .filter((w) => w.status !== 'cancelled')
     .flatMap((w) => w.participants)
-    .filter((p) => p.status === 'registered' && !p.paidOffline).length;
+    .filter((p) => p.status === 'registered' && !p.paidOffline && !p.paidOnline).length;
+
+/** Teendők: decisions, payments, sessions without a place, the next two dates short of their minimum. */
+function todosOf(apps: Dashboard, waiting: number, unplaced: number, now: Date): Todo[] {
+  const todos: Todo[] = [];
+  if (waiting) todos.push({ text: `Döntésre vár: ${waiting} jelentkezés`, href: '/admin/jelentkezesek', tone: 'warn' });
+  const unpaid = unpaidParticipants(apps);
   if (unpaid)
     todos.push({
       text: `Fizetésre vár: ${unpaid} Nyitott Műhely résztvevő`,
@@ -44,7 +57,6 @@ export async function homeData(payload: Payload, now = new Date()) {
       tone: 'info',
     });
   if (unplaced) todos.push({ text: `Helyszín nélkül: ${unplaced} alkalom`, href: unplacedListHref(now), tone: 'warn' });
-  // the next two Nyitott Műhely dates still short of their minimum
   for (const w of apps.workshops.filter((x) => x.status === 'open' && x.taken < x.min).slice(0, 2)) {
     todos.push({
       text: `Nyitott Műhely ${w.when}: ${w.taken}/${w.min} jelentkező — döntés ${w.cutoff}`,
@@ -52,8 +64,11 @@ export async function homeData(payload: Payload, now = new Date()) {
       tone: 'info',
     });
   }
+  return todos;
+}
 
-  // ── next month: what "Hónap feltöltése" would still create
+/** Next month: how many sessions "Hónap feltöltése" would still create (null: none). */
+async function nextMonthFill(payload: Payload, settings: Settings, now: Date) {
   const nextMonthDay = addDays(`${todayInBudapest(now).slice(0, 7)}-01`, 40);
   const [y, m] = nextMonthDay.split('-').map(Number) as [number, number];
   const d = settings.workshopDefaults;
@@ -65,9 +80,11 @@ export async function homeData(payload: Payload, now = new Date()) {
     rooms: d.rooms,
   });
   const missing = plan.planned.length + plan.workshops.length;
-  const fill = missing ? { month: monthLong(nextMonthDay), count: missing } : null;
+  return missing ? { month: monthLong(nextMonthDay), count: missing } : null;
+}
 
-  // ── the coming 7 days
+/** The coming 7 days' sessions, by day ("Ma", "Holnap", then the weekday). */
+async function comingWeek(payload: Payload, roomName: Map<number, string>, now: Date) {
   const today = todayInBudapest(now);
   const end = at(addDays(today, 7), '00:00');
   const { docs } = await payload.find({
@@ -106,14 +123,10 @@ export async function homeData(payload: Payload, now = new Date()) {
     });
     days.set(day, list);
   }
-  const week = [...days].map(([day, items]) => ({
+  return [...days].map(([day, items]) => ({
     day,
     label: day === today ? 'Ma' : day === addDays(today, 1) ? 'Holnap' : weekday(day),
     date: `${Number(day.slice(5, 7))}. ${Number(day.slice(8))}.`,
     items,
   }));
-
-  return { todos, fill, week };
 }
-
-export type HomeData = Awaited<ReturnType<typeof homeData>>;

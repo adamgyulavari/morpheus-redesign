@@ -1,4 +1,4 @@
-/** The "Nyitott Műhely jelentkezési beállítások" global, read once per request. */
+/** The "Jelentkezési beállítások" global, read once per request. */
 import type { Payload, PayloadRequest } from 'payload';
 
 import { relIds } from '@/payload/rel';
