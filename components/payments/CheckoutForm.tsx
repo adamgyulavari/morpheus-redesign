@@ -21,6 +21,8 @@ import Submit from '@/components/forms/Submit';
 import { LockIcon } from '@/components/icons';
 import { tagged } from '@/components/tagged';
 import { useUi } from '@/components/UiStrings';
+import type { ApplicationKind } from '@/lib/applications/labels';
+import { needsPhone } from '@/lib/applications/rules';
 import { fill, formatHuf } from '@/lib/format';
 import type { CheckoutState } from '@/lib/payments/actions';
 import type { CheckoutMe } from '@/lib/payments/me';
@@ -29,6 +31,8 @@ import type { CheckoutMe } from '@/lib/payments/me';
 export type PayOption = { id: string; label: string; due: number; total: number; parts: number; note?: string };
 
 type Props = {
+  /** What is bought: a Nyitott Műhely date, a kezdő course or show tickets (whether a phone is needed). */
+  kind: ApplicationKind;
   action: (state: CheckoutState, form: FormData) => Promise<CheckoutState>;
   /** What is being bought (the date's or group's public code…): sent back as is. */
   hidden: Record<string, string>;
@@ -51,6 +55,7 @@ type Props = {
 const heading = 'font-display text-[28px] leading-tight';
 
 export default function CheckoutForm({
+  kind,
   action: submit,
   hidden,
   price = 0,
@@ -90,6 +95,7 @@ export default function CheckoutForm({
             <PersonFields
               me={me}
               value={v}
+              phoneRequired={needsPhone(kind)}
               guestNote={
                 <HaveAccount
                   href={loginHref}

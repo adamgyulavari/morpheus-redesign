@@ -30,6 +30,7 @@ export default async function GroupCheckout({
   const left = placesLeft(start, ui);
   return (
     <CheckoutForm
+      kind="beginner"
       action={courseCheckoutAction}
       hidden={{ csoport: start.code }}
       options={start.options.map((o) => ({

@@ -60,6 +60,7 @@ async function Body({ session: s, code }: { session: Session; code: string }) {
   const needs = state.state === 'open' ? fill(ui.sessions.needed, { count: state.needed }) : ui.sessions.confirmed;
   return (
     <CheckoutForm
+      kind="workshop"
       action={checkoutAction}
       hidden={{ alkalom: code }}
       price={Math.max(0, s.workshop?.price ?? 0)}
