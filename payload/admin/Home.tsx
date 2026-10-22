@@ -6,6 +6,7 @@ import { homeData } from './home-data';
 
 const QUICK = [
   { label: 'Hónap feltöltése', href: '/admin/teremnaptar?feltoltes=honap' },
+  { label: 'Havi számlázás', href: '/admin/szamlazas' },
   { label: 'Új előadás-időpont', href: '/admin/collections/shows/create' },
   { label: 'Új oldal', href: '/admin/collections/pages/create' },
 ];
