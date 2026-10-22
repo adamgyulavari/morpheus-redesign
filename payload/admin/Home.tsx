@@ -17,7 +17,8 @@ export async function Home({ payload, user }: ServerProps) {
   return (
     <div className={s.home}>
       <section className={s.panel} aria-labelledby="home-todo">
-        <nav className={s.quick} aria-label="Gyors műveletek">
+        <h2 id="home-quick">Gyors műveletek</h2>
+        <nav className={s.quick} aria-labelledby="home-quick">
           {QUICK.map((q) => (
             <a key={q.href} href={q.href} className={s.btn}>
               {q.label}
