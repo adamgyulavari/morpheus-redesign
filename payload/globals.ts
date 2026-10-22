@@ -271,81 +271,101 @@ export const RoomBookingSettings: GlobalConfig = {
 
 export const ApplicationSettings: GlobalConfig = {
   slug: 'applicationSettings',
-  label: 'Nyitott Műhely jelentkezési beállítások',
+  label: 'Jelentkezési beállítások',
   access: { read: isStaffOrAdmin, update: isStaffOrAdmin },
   admin: {
-    description: 'Kik kapnak értesítést az új jelentkezésekről, a Nyitott Műhely határidői és az e-mailek bevezetői.',
+    description:
+      'Kik kapnak értesítést a jelentkezésekről és a fizetésekről, és a Nyitott Műhely határidői, alapértékei.',
   },
   fields: [
+    // unnamed tabs: only the form's layout — the database columns stay as they are
     {
-      name: 'notifyEmails',
-      label: 'Értesítendő címek',
-      labels: { singular: 'Cím', plural: 'Címek' },
-      type: 'array',
-      defaultValue: [{ email: 'info@morpheus-szinmuhely.hu' }],
-      admin: { description: 'Ide megy minden új jelentkezés és lemondás.' },
-      fields: [{ name: 'email', label: 'E-mail-cím', type: 'email', required: true }],
-    },
-    {
-      type: 'row',
-      fields: [
+      type: 'tabs',
+      tabs: [
         {
-          name: 'workshopCutoffHours',
-          label: 'Döntés az indulásról (óra)',
-          type: 'number',
-          required: true,
-          min: 1,
-          defaultValue: 48,
-          admin: {
-            description:
-              'A Nyitott Műhely ennyi órával a kezdés előtt dől el: elég jelentkező esetén indul, különben elmarad.',
-          },
-        },
-        {
-          name: 'userCancelHours',
-          label: 'Lemondási határidő (óra)',
-          type: 'number',
-          required: true,
-          min: 0,
-          defaultValue: 24,
-          admin: { description: 'A résztvevő eddig mondhatja le a jelentkezését a fiókjában.' },
-        },
-      ],
-    },
-    {
-      name: 'workshopDefaults',
-      label: 'Nyitott Műhely alapértékek',
-      type: 'group',
-      admin: {
-        description:
-          'A Teremnaptár „Hónap feltöltése” ezekkel hozza létre a Nyitott Műhely időpontjait (a nap, az idő és a terem ott még átírható).',
-      },
-      fields: [
-        {
-          type: 'row',
+          label: 'Értesítések',
           fields: [
             {
-              name: 'weekday',
-              label: 'Nap',
-              type: 'select',
-              defaultValue: '6',
-              options: WEEKDAYS.map((label, i) => ({ label, value: String(i + 1) })),
-              admin: { width: '34%' },
+              name: 'notifyEmails',
+              label: 'Értesítendő címek',
+              labels: { singular: 'Cím', plural: 'Címek' },
+              type: 'array',
+              defaultValue: [{ email: 'info@morpheus-szinmuhely.hu' }],
+              admin: {
+                description:
+                  'Ide megy minden munkatársi értesítés: új jelentkezés és lemondás (Nyitott Műhely, kezdő, szakmai), jegyfoglalás, fizetés, visszatérítés, számlázási hiba.',
+              },
+              fields: [{ name: 'email', label: 'E-mail-cím', type: 'email', required: true }],
             },
-            { ...time('startTime', 'Kezdés'), defaultValue: '14:00', admin: { width: '33%' } },
-            { ...time('endTime', 'Vége'), defaultValue: '16:00', admin: { width: '33%' } },
           ],
         },
-        relationship('rooms', 'Termek', 'rooms', {
-          hasMany: true,
-          description: 'Üresen helyszín nélkül jön létre; a Teremnaptárban később elhelyezheted.',
-        }),
         {
-          type: 'row',
+          label: 'Nyitott Műhely',
           fields: [
-            { name: 'price', label: 'Ár (Ft)', type: 'number', min: 0, defaultValue: 5000 },
-            { name: 'minParticipants', label: 'Minimum létszám', type: 'number', min: 1, defaultValue: 5 },
-            { name: 'maxParticipants', label: 'Maximum létszám', type: 'number', min: 1, defaultValue: 16 },
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'workshopCutoffHours',
+                  label: 'Döntés az indulásról (óra)',
+                  type: 'number',
+                  required: true,
+                  min: 1,
+                  defaultValue: 48,
+                  admin: {
+                    description:
+                      'A Nyitott Műhely ennyi órával a kezdés előtt dől el: elég jelentkező esetén indul, különben elmarad.',
+                  },
+                },
+                {
+                  name: 'userCancelHours',
+                  label: 'Lemondási határidő (óra)',
+                  type: 'number',
+                  required: true,
+                  min: 0,
+                  defaultValue: 24,
+                  admin: { description: 'A résztvevő eddig mondhatja le a jelentkezését a fiókjában.' },
+                },
+              ],
+            },
+            {
+              name: 'workshopDefaults',
+              label: 'Nyitott Műhely alapértékek',
+              type: 'group',
+              admin: {
+                description:
+                  'A Teremnaptár „Hónap feltöltése” ezekkel hozza létre a Nyitott Műhely időpontjait (a nap, az idő és a terem ott még átírható).',
+              },
+              fields: [
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'weekday',
+                      label: 'Nap',
+                      type: 'select',
+                      defaultValue: '6',
+                      options: WEEKDAYS.map((label, i) => ({ label, value: String(i + 1) })),
+                      admin: { width: '34%' },
+                    },
+                    { ...time('startTime', 'Kezdés'), defaultValue: '14:00', admin: { width: '33%' } },
+                    { ...time('endTime', 'Vége'), defaultValue: '16:00', admin: { width: '33%' } },
+                  ],
+                },
+                relationship('rooms', 'Termek', 'rooms', {
+                  hasMany: true,
+                  description: 'Üresen helyszín nélkül jön létre; a Teremnaptárban később elhelyezheted.',
+                }),
+                {
+                  type: 'row',
+                  fields: [
+                    { name: 'price', label: 'Ár (Ft)', type: 'number', min: 0, defaultValue: 5000 },
+                    { name: 'minParticipants', label: 'Minimum létszám', type: 'number', min: 1, defaultValue: 5 },
+                    { name: 'maxParticipants', label: 'Maximum létszám', type: 'number', min: 1, defaultValue: 16 },
+                  ],
+                },
+              ],
+            },
           ],
         },
       ],

@@ -620,7 +620,7 @@ export interface Session {
      */
     description?: string | null;
     /**
-     * A kezdés előtt ennyivel (Nyitott Műhely jelentkezési beállítások) dől el, hogy indul-e.
+     * A kezdés előtt ennyivel (Jelentkezési beállítások → Nyitott Műhely) dől el, hogy indul-e.
      */
     cutoffAt?: string | null;
   };
@@ -4976,7 +4976,7 @@ export interface RoomBookingSetting {
   createdAt?: string | null;
 }
 /**
- * Kik kapnak értesítést az új jelentkezésekről, a Nyitott Műhely határidői és az e-mailek bevezetői.
+ * Kik kapnak értesítést a jelentkezésekről és a fizetésekről, és a Nyitott Műhely határidői, alapértékei.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "applicationSettings".
@@ -4984,7 +4984,7 @@ export interface RoomBookingSetting {
 export interface ApplicationSetting {
   id: number;
   /**
-   * Ide megy minden új jelentkezés és lemondás.
+   * Ide megy minden munkatársi értesítés: új jelentkezés és lemondás (Nyitott Műhely, kezdő, szakmai), jegyfoglalás, fizetés, visszatérítés, számlázási hiba.
    */
   notifyEmails?:
     | {
