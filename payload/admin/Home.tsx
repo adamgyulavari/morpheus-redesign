@@ -12,13 +12,21 @@ const QUICK = [
   { label: 'Új oldal', href: '/admin/collections/pages/create' },
 ];
 
-/** Above the admin's card grid: what needs doing, the coming week, quick actions. Staff only. */
+/** Above the admin's card grid: quick actions and what needs doing, the coming week. Staff only. */
 export async function Home({ payload, user }: ServerProps) {
   if (!userIsStaffOrAdmin(user)) return null;
   const { todos, fill, week } = await homeData(payload);
   return (
     <div className={s.home}>
       <section className={s.panel} aria-labelledby="home-todo">
+        <h2 id="home-quick">Gyors műveletek</h2>
+        <nav className={s.quick} aria-labelledby="home-quick">
+          {QUICK.map((q) => (
+            <a key={q.href} href={q.href} className={s.btn}>
+              {q.label}
+            </a>
+          ))}
+        </nav>
         <h2 id="home-todo">Teendők</h2>
         {todos.length === 0 && !fill ? (
           <p className={s.muted}>Nincs teendő. ✓</p>
@@ -47,14 +55,6 @@ export async function Home({ payload, user }: ServerProps) {
             )}
           </ul>
         )}
-        <h2 className={s.quickTitle}>Gyors műveletek</h2>
-        <div className={s.quick}>
-          {QUICK.map((q) => (
-            <a key={q.href} href={q.href} className={s.btn}>
-              {q.label}
-            </a>
-          ))}
-        </div>
       </section>
 
       <section className={s.panel} aria-labelledby="home-week">
@@ -72,10 +72,11 @@ export async function Home({ payload, user }: ServerProps) {
                 <li key={`${i.time}${i.title}`} className={i.cancelled ? s.cancelled : undefined}>
                   <span className={s.dot} style={{ background: KIND_PALETTE[i.kind].fill }} aria-hidden />
                   <span className={s.time}>{i.time}</span>
-                  <span className={s.what}>
+                  {/* one line: the place after the title, cut short when there's no room */}
+                  <span className={s.what} title={[i.title, i.place].filter(Boolean).join(' · ')}>
                     {i.title}
                     {i.cancelled ? ' (elmarad)' : ''}
-                    <span className={s.place}>{i.place}</span>
+                    {i.place && <span className={s.place}> · {i.place}</span>}
                   </span>
                 </li>
               ))}

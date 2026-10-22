@@ -202,6 +202,13 @@ export function canWithdraw(status: ApplicationStatus): RuleResult {
 /** A professional application's motivation: required, at least this long (after trimming). */
 export const MIN_MOTIVATION = 100;
 
+/**
+ * Whether the form asks for a phone number: for applications (Nyitott Műhely, kezdő, szakmai) yes;
+ * show tickets, free or paid, go without one (as registration and Google sign-up do). The forms
+ * mark the field by this and the server checks it.
+ */
+export const needsPhone = (kind: ApplicationKind) => kind !== 'show';
+
 // ── shows booked on the site ────────────────────────────────────────────────
 
 export type ShowFacts = {

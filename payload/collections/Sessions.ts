@@ -132,8 +132,6 @@ export const Sessions: CollectionConfig = {
           if (w.maxParticipants != null && w.minParticipants != null && w.maxParticipants < w.minParticipants)
             fail('workshop.maxParticipants', 'A maximum ne legyen kisebb a minimumnál.', req);
         }
-        if (s.locationType === 'external' && !s.externalLocation?.trim())
-          fail('externalLocation', 'Add meg a külső helyszínt.', req);
 
         // the box applies to the booking this session creates or moves, too
         if (mayOverridePractice(req, s)) req.context.overridePractice = true;
@@ -265,7 +263,13 @@ export const Sessions: CollectionConfig = {
         description: 'Ahol lesz. „Helyszín nélkül” állapotban ezeket a termeket próbálja meg újra, amikor elhelyezed.',
       },
     },
-    { ...text('externalLocation', 'Külső helyszín'), admin: { condition: (_, s) => s?.locationType === 'external' } },
+    {
+      ...text('externalLocation', 'Külső helyszín'),
+      admin: {
+        condition: (_, s) => s?.locationType === 'external',
+        description: 'Nem kötelező: üresen a diákok „Külső helyszín”-t látnak, a pontos helyet ti mondjátok meg nekik.',
+      },
+    },
     {
       ...relationship('show', 'Előadás-időpont', 'shows'),
       index: true,

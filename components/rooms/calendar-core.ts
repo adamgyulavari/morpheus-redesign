@@ -10,7 +10,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import luxonPlugin from '@fullcalendar/luxon3';
 import timeGridPlugin from '@fullcalendar/timegrid';
 
-import { BOOKING_KINDS, KIND_PALETTE, SESSION_KINDS } from '@/lib/rooms/labels';
+import { BOOKING_KINDS, KIND_PALETTE, LOCATION_TYPES, SESSION_KINDS } from '@/lib/rooms/labels';
 import type { ScheduleEvent } from '@/lib/rooms/server';
 import { TZ } from '@/lib/rooms/time';
 
@@ -41,6 +41,7 @@ export function eventLabel(e: ScheduleEvent, ownLabel: string): { title: string;
     const meta = [e.owner?.title, e.note && `„${e.note}”`].filter(Boolean).join(' · ');
     return { title: e.own ? ownLabel : `${BOOKING_KINDS.practice} — ${e.booker ?? ''}`, meta: meta || undefined };
   }
+  if (e.external) return { title: e.title, meta: e.external.place ?? LOCATION_TYPES.external };
   if (e.kind === 'session') {
     return {
       title: e.title,
@@ -70,7 +71,8 @@ export function toCalendarEvent(
     borderColor: color,
     textColor: e.kind === 'practice' && !roomColor ? '#10292c' : '#fffaf2',
     editable: opts.editable ?? false,
-    classNames: e.own ? ['is-own'] : [],
+    // an external session takes no room: drawn apart (calendar.module.css)
+    classNames: [...(e.own ? ['is-own'] : []), ...(e.external ? ['is-external'] : [])],
     extendedProps: { event: e },
   };
 }

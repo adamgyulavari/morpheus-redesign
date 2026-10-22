@@ -10,7 +10,10 @@ import Applications from './Applications';
 import BillingRun from './BillingRun';
 import RoomCalendar from './RoomCalendar';
 
-/** A custom admin page (staff only): the admin's frame, a heading, the tool. */
+/**
+ * A custom admin page (staff only): the admin's frame, a heading, the tool. The header's actions
+ * (← Weboldal) are passed on: Payload's own pages get them from the config, a custom template not.
+ */
 function staffPage(title: string, tool: (props: AdminViewServerProps) => ReactNode) {
   return function StaffPage(props: AdminViewServerProps) {
     const { req, permissions, locale, visibleEntities } = props.initPageResult;
@@ -24,6 +27,7 @@ function staffPage(title: string, tool: (props: AdminViewServerProps) => ReactNo
         permissions={permissions}
         searchParams={props.searchParams}
         user={req.user ?? undefined}
+        viewActions={req.payload.config.admin.components?.actions}
         visibleEntities={visibleEntities}
       >
         <Gutter>

@@ -20,6 +20,7 @@ import {
   DEFAULT_RULES,
   isCounted,
   isCutoffDue,
+  needsPhone,
   placesLeft,
   type RuleResult,
   type ShowFacts,
@@ -262,5 +263,12 @@ describe('shows', () => {
     expect(canCancelShow(start, false, before).ok).toBe(true);
     expect(canCancelShow(start, false, start).ok).toBe(false);
     expect(canCancelShow(start, true, before).ok).toBe(false);
+  });
+});
+
+describe('needsPhone', () => {
+  it('applications ask for a phone, show tickets don’t', () => {
+    expect(['workshop', 'beginner', 'professional'].every((k) => needsPhone(k as 'workshop'))).toBe(true);
+    expect(needsPhone('show')).toBe(false);
   });
 });

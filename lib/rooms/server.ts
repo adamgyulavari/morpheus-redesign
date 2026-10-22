@@ -133,8 +133,11 @@ export async function roomsById(payload: Payload, ids?: number[]): Promise<(Room
 
 export type ScheduleEvent = {
   id: string;
-  bookingId: number;
+  /** None for an external session (it takes no room). */
+  bookingId?: number;
   sessionId?: number;
+  /** A session at an external place, with its name if given (the admin's calendar only). */
+  external?: { place?: string };
   kind: BookingKind;
   sessionKind?: SessionKind;
   /** What is happening: the session's title, the rental's, or "Gyakorlás — Név". */
@@ -634,6 +637,55 @@ export async function deleteGenerated(
 
 /** Sessions that will happen but have no place yet. */
 const UNPLACED: Where[] = [{ locationType: { equals: 'unplaced' } }, { status: { equals: 'scheduled' } }];
+
+/** The admin's calendar: sessions at an external place — shown, though they take no room. */
+export async function externalSessions(payload: Payload, from: Date, to: Date): Promise<ScheduleEvent[]> {
+  const { docs } = await payload.find({
+    collection: 'sessions',
+    where: {
+      and: [
+        { locationType: { equals: 'external' } },
+        { status: { equals: 'scheduled' } },
+        { start: { less_than: to.toISOString() } },
+        { end: { greater_than: from.toISOString() } },
+      ],
+    },
+    depth: 1,
+    select: {
+      displayTitle: true,
+      kind: true,
+      start: true,
+      end: true,
+      externalLocation: true,
+      courseGroup: true,
+      production: true,
+    },
+    populate: { courseGroups: { title: true }, productions: { title: true } },
+    sort: 'start',
+    ...all,
+  });
+  return docs.map((s) => {
+    const group = typeof s.courseGroup === 'object' ? s.courseGroup : null;
+    const production = typeof s.production === 'object' ? s.production : null;
+    return {
+      id: `s${s.id}`,
+      sessionId: s.id,
+      kind: 'session',
+      sessionKind: s.kind as SessionKind,
+      title: s.displayTitle ?? SESSION_KINDS[s.kind as SessionKind],
+      start: s.start,
+      end: s.end,
+      roomIds: [],
+      external: { place: s.externalLocation?.trim() || undefined },
+      owner: group
+        ? { type: 'courseGroup', id: group.id, title: group.title }
+        : production
+          ? { type: 'production', id: production.id, title: production.title }
+          : undefined,
+      own: false,
+    };
+  });
+}
 
 export async function unplacedSessions(payload: Payload, from: Date, to: Date) {
   const { docs } = await payload.find({

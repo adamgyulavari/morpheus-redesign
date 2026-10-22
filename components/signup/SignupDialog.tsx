@@ -18,7 +18,7 @@ import Submit from '@/components/forms/Submit';
 import { ArrowRight } from '@/components/icons';
 import { useUi } from '@/components/UiStrings';
 import { bookShowAction, type SignUpState, signUpAction, whoAmI } from '@/lib/applications/actions';
-import { MIN_MOTIVATION } from '@/lib/applications/rules';
+import { MIN_MOTIVATION, needsPhone } from '@/lib/applications/rules';
 import { fill } from '@/lib/format';
 
 type Kind = 'workshop' | 'beginner' | 'professional' | 'show';
@@ -148,7 +148,7 @@ function SignupForm({ target, titleId }: { target: SignupTarget; titleId: string
             {me === undefined ? (
               <p className="text-[15px] text-muted">{texts.forms.loading}</p>
             ) : (
-              <PersonFields me={me} value={v} />
+              <PersonFields me={me} value={v} phoneRequired={needsPhone(target.kind)} />
             )}
 
             {!target.courseGroupId && target.groups && target.groups.length > (target.noGroupLabel ? 0 : 1) && (
