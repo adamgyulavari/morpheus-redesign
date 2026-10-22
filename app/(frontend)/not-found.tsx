@@ -1,5 +1,5 @@
+import AnimatedLogo from '@/components/AnimatedLogo';
 import Emph from '@/components/Emph';
-import Logo from '@/components/Logo';
 import SiteLayout from '@/components/layouts/SiteLayout';
 import { ButtonLink, Eyebrow } from '@/components/ui';
 import { getUi } from '@/lib/data';
@@ -31,7 +31,7 @@ export default async function NotFound() {
             <div className="pulse-ring" />
             <div className="pulse-ring" />
             <div className="pulse-ring" />
-            <Logo animated title={null} className="absolute inset-[16%] h-[68%] w-[68%]" />
+            <AnimatedLogo title={null} className="absolute inset-[16%] h-[68%] w-[68%]" />
             <span className="absolute -bottom-2 right-0 rotate-[-6deg] rounded-full bg-deep px-5 py-2 font-display text-[40px] leading-none text-gold shadow-[0_18px_40px_-18px_rgba(11,58,63,0.6)] lg:px-7 lg:text-[64px]">
               404
             </span>

@@ -1,8 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
-
+import AnimatedLogo from '@/components/AnimatedLogo';
 import Emph from '@/components/Emph';
-import Logo from '@/components/Logo';
 import { FilterChips } from '@/components/RepertoireFilter';
 import Rotator from '@/components/Rotator';
 import SmartLink from '@/components/SmartLink';
@@ -56,7 +55,7 @@ export async function HomeHero({ block, className }: BlockProps<'homeHero'>) {
           <div className="pulse-ring" aria-hidden="true" />
           <div className="pulse-ring" aria-hidden="true" />
           <div className="pulse-ring" aria-hidden="true" />
-          <Logo animated title={ui.common.logo} className="absolute inset-[16%] h-[68%] w-[68%]" />
+          <AnimatedLogo title={ui.common.logo} className="absolute inset-[16%] h-[68%] w-[68%]" />
           <Image
             src={block.imageLarge.src}
             alt={block.imageLarge.alt}
