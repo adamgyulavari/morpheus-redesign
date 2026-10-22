@@ -2,11 +2,13 @@
 
 /**
  * Above the Előadás-időpontok list: "Szinkronizálás a Facebookról" — the page's upcoming events
- * become dates (lib/facebook/sync). Says what changed, and what needs a person.
+ * become dates (lib/facebook/sync). Says what changed, and what needs a person. Opened with
+ * `#szinkron` (the admin home's quick action) it starts at once — a fragment, not a query
+ * parameter: the list view rewrites its query and would keep it, so a reload would sync again.
  */
 import { Button } from '@payloadcms/ui';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 
 import { syncFacebookAction } from '@/lib/facebook/actions';
 import type { SyncLine, SyncResult } from '@/lib/facebook/sync';
@@ -56,6 +58,15 @@ export function FacebookSync() {
       setResult(r.result);
       router.refresh();
     });
+  // from the quick action: once, and the address loses the fragment (a reload doesn't sync again)
+  const started = useRef(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: on arrival only
+  useEffect(() => {
+    if (window.location.hash !== '#szinkron' || started.current) return;
+    started.current = true;
+    window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search);
+    run();
+  }, []);
   const nothing =
     result &&
     !result.created.length &&

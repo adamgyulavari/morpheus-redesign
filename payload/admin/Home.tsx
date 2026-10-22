@@ -7,6 +7,8 @@ import { homeData } from './home-data';
 const QUICK = [
   { label: 'Hónap feltöltése', href: '/admin/teremnaptar?feltoltes=honap' },
   { label: 'Havi számlázás', href: '/admin/szamlazas' },
+  // the show list, syncing at once (FacebookSync)
+  { label: 'Facebook szinkronizálás', href: '/admin/collections/shows#szinkron' },
   { label: 'Új előadás-időpont', href: '/admin/collections/shows/create' },
   { label: 'Új oldal', href: '/admin/collections/pages/create' },
 ];
