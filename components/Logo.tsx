@@ -1,9 +1,8 @@
-import emblem from '@/logo-source/original-emblem.svg';
-
 /**
- * The Morpheus logo: the original logo's round emblem (logo-source/original-emblem.svg, cut from
- * original-logo.svg without its lettering). An image, not inline: the file is large, and the browser
- * caches it once for the header and the footer. (The new logo animates in the hero: AnimatedLogo.)
+ * The Morpheus logo: the original logo's round emblem (public/logo.svg, cut from
+ * logo-source/original-logo.svg without its lettering). An image, not inline: the file is large, and
+ * the browser caches it once for the header and the footer. (The new logo animates in the hero:
+ * AnimatedLogo.) Not imported from logo-source: that folder stays out of the Docker build.
  */
 export default function Logo({
   className,
@@ -16,7 +15,7 @@ export default function Logo({
   return (
     // biome-ignore lint/performance/noImgElement: a static SVG; next/image adds nothing to it
     <img
-      src={emblem.src}
+      src="/logo.svg"
       width={575}
       height={575}
       alt={title ?? ''}
