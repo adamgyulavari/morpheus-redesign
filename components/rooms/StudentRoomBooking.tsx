@@ -92,7 +92,7 @@ export default function StudentRoomBooking({ rooms, groups, productions, booking
   };
 
   const onEventClick = (e: ScheduleEvent) => {
-    if (e.kind !== 'practice' || !e.own) return;
+    if (e.kind !== 'practice' || !e.own || !e.bookingId) return;
     open({
       mode: 'cancel',
       id: e.bookingId,
