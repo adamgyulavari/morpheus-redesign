@@ -26,20 +26,29 @@ export function NameFields({ value }: { value: Value }) {
 
 /**
  * Logged in: whose name it goes under, and their phone. Otherwise: name, e-mail and phone, under
- * `guestNote` ("Van már fiókod? Lépj be…").
+ * `guestNote` ("Van már fiókod? Lépj be…"). The phone is required for what `needsPhone` says.
  */
 export function PersonFields({
   me,
   value,
   guestNote,
+  phoneRequired,
 }: {
   me: { name: string; email: string; phone?: string | null } | null;
   value: Value;
   guestNote?: ReactNode;
+  phoneRequired: boolean;
 }) {
   const { forms } = useUi();
   const phone = (start?: string | null) => (
-    <TextField label={forms.phone} type="tel" name="phone" autoComplete="tel" value={value('phone') ?? start} />
+    <TextField
+      label={forms.phone}
+      type="tel"
+      name="phone"
+      autoComplete="tel"
+      required={phoneRequired}
+      value={value('phone') ?? start}
+    />
   );
   if (me)
     return (

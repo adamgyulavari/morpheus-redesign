@@ -53,6 +53,7 @@ export default async function ShowCheckoutPage({ params }: Props) {
         <CheckoutNotice text={ui.showBooking.closed} back={back} />
       ) : (
         <CheckoutForm
+          kind="show"
           action={showCheckoutAction}
           hidden={{ eloadas: s.code ?? '' }}
           price={price}

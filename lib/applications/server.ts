@@ -53,6 +53,7 @@ import {
   cutoffOutcome,
   isCutoffDue,
   MIN_MOTIVATION,
+  needsPhone,
   placesLeft,
   type RuleResult,
   type WorkshopFacts,
@@ -269,7 +270,7 @@ export function validateInput(
 ): string | null {
   if (!viewer && (!input.lastName.trim() || !input.firstName.trim())) return t.name;
   if (!viewer && !EMAIL.test(input.email.trim())) return t.email;
-  if (!input.phone.trim() && !viewer?.phone) return t.phone;
+  if (needsPhone(input.kind) && !input.phone.trim() && !viewer?.phone) return t.phone;
   if (input.kind === 'professional' && (input.message ?? '').trim().length < MIN_MOTIVATION)
     return fill(t.motivation, { min: MIN_MOTIVATION });
   return null;
