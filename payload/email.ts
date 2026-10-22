@@ -149,10 +149,15 @@ export function emailLayout({
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.cream}"><tr><td align="center" style="padding:32px 16px">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
     <tr><td style="padding:0 0 24px">
+      <!-- the logo beside the name, as in the site's header: table cells centre it in every client -->
       <a href="${escapeHtml(siteUrl('/'))}" style="text-decoration:none;color:${C.ink}">
-        <img src="${escapeHtml(siteUrl('/email/logo.png'))}" width="48" height="48" alt="" style="vertical-align:middle;border:0">
-        <span style="vertical-align:middle;margin-left:10px;font:28px/1 Georgia, 'Times New Roman', serif;color:${C.ink}">Morpheus</span>
-        <span style="vertical-align:middle;margin-left:6px;font:700 10px/1 ${FONT};letter-spacing:3px;text-transform:uppercase;color:${C.teal}">Színműhely</span>
+        <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+          <td style="vertical-align:middle;padding:0 12px 0 0"><img src="${escapeHtml(siteUrl('/email/logo.png'))}" width="48" height="48" alt="" style="display:block;border:0"></td>
+          <td style="vertical-align:middle">
+            <div style="font:28px/1 Georgia, 'Times New Roman', serif;color:${C.ink}">Morpheus</div>
+            <div style="padding-top:4px;font:700 10px/1 ${FONT};letter-spacing:3px;text-transform:uppercase;color:${C.teal}">Színműhely</div>
+          </td>
+        </tr></table>
       </a>
     </td></tr>
     <tr><td style="background:${C.paper};border:1px solid ${C.line};border-radius:24px;padding:32px 28px">
