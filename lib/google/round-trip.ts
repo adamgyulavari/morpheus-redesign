@@ -25,7 +25,13 @@ export const COOKIE_PATH = '/belepes/google';
 export const MAX_AGE = 10 * 60;
 
 /** Where Google sends the visitor back (must be registered in the Google Cloud console). */
-export const redirectUri = (req: NextRequest) => `${serverUrl() || req.nextUrl.origin}/belepes/google/callback`;
+/**
+ * An address on this site, for a redirect: from NEXT_PUBLIC_SERVER_URL — behind the proxy the request
+ * itself says where the server listens (http://0.0.0.0:3000), not the site's address.
+ */
+export const siteAddress = (req: NextRequest, path: string) => new URL(path, serverUrl() || req.nextUrl.origin);
+
+export const redirectUri = (req: NextRequest) => siteAddress(req, '/belepes/google/callback').href;
 
 export const encode = (p: Pending) => Buffer.from(JSON.stringify(p)).toString('base64url');
 
