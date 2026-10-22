@@ -21,6 +21,20 @@ export type WeekItem = { time: string; title: string; kind: SessionKind; place: 
 export const unplacedListHref = (now = new Date()) =>
   `/admin/collections/sessions?where[and][0][locationType][equals]=unplaced&where[and][1][status][equals]=scheduled&where[and][2][start][greater_than]=${encodeURIComponent(now.toISOString())}&sort=start`;
 
+export async function homeData(payload: Payload, now = new Date()) {
+  const [apps, waiting, unplaced, settings, roomName] = await Promise.all([
+    dashboard(payload, now),
+    countWaiting(payload),
+    countUnplaced(payload),
+    applicationSettings(payload),
+    roomNameMap(payload),
+  ]);
+  const [fill, week] = await Promise.all([nextMonthFill(payload, settings, now), comingWeek(payload, roomName, now)]);
+  return { todos: todosOf(apps, waiting, unplaced, now), fill, week };
+}
+
+export type HomeData = Awaited<ReturnType<typeof homeData>>;
+
 type Dashboard = Awaited<ReturnType<typeof dashboard>>;
 type Settings = Awaited<ReturnType<typeof applicationSettings>>;
 
@@ -116,17 +130,3 @@ async function comingWeek(payload: Payload, roomName: Map<number, string>, now: 
     items,
   }));
 }
-
-export async function homeData(payload: Payload, now = new Date()) {
-  const [apps, waiting, unplaced, settings, roomName] = await Promise.all([
-    dashboard(payload, now),
-    countWaiting(payload),
-    countUnplaced(payload),
-    applicationSettings(payload),
-    roomNameMap(payload),
-  ]);
-  const [fill, week] = await Promise.all([nextMonthFill(payload, settings, now), comingWeek(payload, roomName, now)]);
-  return { todos: todosOf(apps, waiting, unplaced, now), fill, week };
-}
-
-export type HomeData = Awaited<ReturnType<typeof homeData>>;
