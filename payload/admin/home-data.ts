@@ -36,7 +36,8 @@ export async function homeData(payload: Payload, now = new Date()) {
   const unpaid = apps.workshops
     .filter((w) => w.status !== 'cancelled')
     .flatMap((w) => w.participants)
-    .filter((p) => p.status === 'registered' && !p.paidOffline).length;
+    // paid on site (marked by staff) or at the checkout: not waiting
+    .filter((p) => p.status === 'registered' && !p.paidOffline && !p.paidOnline).length;
   if (unpaid)
     todos.push({
       text: `Fizetésre vár: ${unpaid} Nyitott Műhely résztvevő`,
