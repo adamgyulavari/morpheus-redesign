@@ -106,7 +106,14 @@ export default function RoomCalendar({ isAdmin }: { isAdmin: boolean }) {
   if (!opts) return <p className={s.muted}>Betöltés…</p>;
 
   const onEventChange = async (e: ScheduleEvent, change: { start: Date; end: Date }, revert: () => void) => {
-    const r = await updateBooking(e.bookingId, { start: change.start.toISOString(), end: change.end.toISOString() });
+    const times = { start: change.start.toISOString(), end: change.end.toISOString() };
+    // an external session has no booking: the session itself moves
+    const r = e.bookingId
+      ? await updateBooking(e.bookingId, times)
+      : e.sessionId
+        ? await updateSession(e.sessionId, times)
+        : null;
+    if (!r) return revert();
     if (!r.ok) {
       revert();
       return say(withOverrideHint(r.reason), true);
@@ -198,20 +205,33 @@ export default function RoomCalendar({ isAdmin }: { isAdmin: boolean }) {
             {unplaced.length > 0 && (
               <>
                 <p className={s.panelTitle}>Helyszín nélküli alkalmak ({unplaced.length})</p>
-                <p className={s.muted}>A látott időszakban. Húzd a naptárba az elhelyezéshez.</p>
+                <p className={s.muted}>
+                  A látott időszakban. Kattints rá a helyszínhez (terem vagy külső helyszín), vagy húzd a naptárba másik
+                  időpontra.
+                </p>
                 {unplaced.map((u) => (
-                  <div
+                  <button
+                    type="button"
                     key={u.id}
                     className={s.chip}
                     data-session-id={u.id}
                     data-title={u.title}
                     data-duration={duration(u.start, u.end)}
+                    onClick={() => {
+                      setToast(null);
+                      setDraft({
+                        start: new Date(u.start),
+                        end: new Date(u.end),
+                        roomIds: u.roomIds,
+                        placing: { sessionId: u.id, title: u.title },
+                      });
+                    }}
                   >
                     <strong>{u.title}</strong>
                     <div className={s.muted}>
                       {whenText(u.start, u.end)} · {SESSION_KINDS[u.kind]}
                     </div>
-                  </div>
+                  </button>
                 ))}
               </>
             )}
@@ -246,7 +266,7 @@ function EntryForm({
 }) {
   const [what, setWhat] = useState<'session' | 'booking'>('session');
   const [kind, setKind] = useState<SessionKind>('course');
-  const [location, setLocation] = useState<LocationType>('room');
+  const [location, setLocation] = useState<LocationType>(draft.existing?.external ? 'external' : 'room');
   const [confirm, setConfirm] = useState<'cancel' | 'delete' | null>(null);
   const [override, setOverride] = useState(false);
   const [error, setError] = useState('');
@@ -255,6 +275,9 @@ function EntryForm({
   const { existing, placing } = draft;
   const isSession = Boolean(existing?.sessionId || placing);
   const isNew = !existing && !placing;
+  // a session's place: rooms, an external place, or none yet
+  const withLocation = isSession || (isNew && what === 'session');
+  const withRooms = !withLocation || location === 'room';
   const heading = placing ? `Elhelyezés: ${placing.title}` : existing ? existing.title : 'Új bejegyzés';
 
   const save = async (e: FormEvent<HTMLFormElement>) => {
@@ -264,20 +287,16 @@ function EntryForm({
     const start = at(day, String(f.get('startTime')));
     const end = at(day, String(f.get('endTime')));
     if (!(end > start)) return setError('A vége legyen a kezdés után.');
-    const roomIds = f.getAll('rooms').map(Number);
+    const roomIds = withRooms ? f.getAll('rooms').map(Number) : [];
+    if (withLocation && location === 'room' && !roomIds.length) return setError('Jelölj ki legalább egy termet.');
     const times = { start: start.toISOString(), end: end.toISOString() };
+    const place = { locationType: location, roomIds, externalLocation: String(f.get('externalLocation') ?? '') };
     setBusy(true);
     let r: { ok: boolean; reason?: string; locationType?: string };
-    if (placing) {
-      r = await updateSession(placing.sessionId, {
-        ...times,
-        roomIds,
-        locationType: 'room',
-        overridePractice: override,
-      });
-    } else if (existing?.sessionId) {
-      r = await updateSession(existing.sessionId, { ...times, roomIds, overridePractice: override });
-    } else if (existing) {
+    const sessionId = placing?.sessionId ?? existing?.sessionId;
+    if (sessionId) {
+      r = await updateSession(sessionId, { ...times, ...place, overridePractice: override });
+    } else if (existing?.bookingId) {
       r = await updateBooking(existing.bookingId, { ...times, roomIds, overridePractice: override });
     } else if (what === 'session') {
       r = await createSession({
@@ -286,9 +305,7 @@ function EntryForm({
         courseGroup: Number(f.get('courseGroup')) || null,
         production: Number(f.get('production')) || null,
         ...times,
-        locationType: location,
-        roomIds,
-        externalLocation: String(f.get('externalLocation') ?? ''),
+        ...place,
         overridePractice: override,
       });
     } else {
@@ -302,7 +319,8 @@ function EntryForm({
     }
     setBusy(false);
     if (!r.ok) return setError(r.reason ?? 'Hiba történt.');
-    if (r.locationType === 'unplaced') return onDone('Mentve, de ütközés miatt az alkalom helyszín nélkül maradt.');
+    if (location === 'room' && r.locationType === 'unplaced')
+      return onDone('Mentve, de ütközés miatt az alkalom helyszín nélkül maradt.');
     onDone(isNew ? (what === 'session' ? 'Alkalom létrehozva.' : 'Foglalás létrehozva.') : 'Mentve.');
   };
 
@@ -314,7 +332,9 @@ function EntryForm({
         ? await deleteEntry({ sessionId: existing.sessionId, bookingId: existing.bookingId })
         : existing.sessionId
           ? await updateSession(existing.sessionId, { status: 'cancelled' })
-          : await updateBooking(existing.bookingId, { status: 'cancelled', cancelReason: 'A munkatársak lemondták.' });
+          : existing.bookingId
+            ? await updateBooking(existing.bookingId, { status: 'cancelled', cancelReason: 'A munkatársak lemondták.' })
+            : { ok: false as const, reason: 'Ismeretlen bejegyzés.' };
     setBusy(false);
     if (!r.ok) return setError(r.reason);
     onDone(confirm === 'delete' ? 'Törölve.' : isSession ? 'Az alkalom elmarad.' : 'A foglalás lemondva.');
@@ -401,6 +421,10 @@ function EntryForm({
             Cím (nem kötelező)
             <input name="title" placeholder="Üresen a csoport / előadás neve" />
           </label>
+        </>
+      )}
+      {withLocation && (
+        <>
           <label className={s.field}>
             Helyszín
             <select value={location} onChange={(e) => setLocation(e.target.value as LocationType)}>
@@ -413,8 +437,12 @@ function EntryForm({
           </label>
           {location === 'external' && (
             <label className={s.field}>
-              Külső helyszín *
-              <input name="externalLocation" required />
+              Külső helyszín (nem kötelező)
+              <input
+                name="externalLocation"
+                defaultValue={existing?.external?.place ?? ''}
+                placeholder="Üresen: „Külső helyszín” — a pontos helyet ti mondjátok meg"
+              />
             </label>
           )}
         </>
@@ -435,7 +463,7 @@ function EntryForm({
         </>
       )}
 
-      {(!isNew || what === 'booking' || location !== 'external') && (
+      {withRooms && (
         <fieldset className={`${s.field} ${s.fieldset}`}>
           <legend>Termek</legend>
           <div className={s.row}>
@@ -592,7 +620,7 @@ function MonthDialog({
           end: i.end,
           warn: i.clashes.length > 0,
           detail: i.clashes.length
-            ? `${i.rooms.join(', ')} — helyszín nélkül lesz, ütközik: ${i.clashes.join('; ')}`
+            ? `${i.rooms.join(', ')} — ütközik: ${i.clashes.join('; ')}. Helyszín nélkül jön létre; utána a Teremnaptárban adj neki helyszínt (másik terem vagy külső helyszín).`
             : i.rooms.join(', ') || 'helyszín nélkül',
         })),
       );
@@ -622,7 +650,7 @@ function MonthDialog({
         setResult(
           `${r.created} alkalom létrehozva, ${r.placed} teremmel.` +
             (r.unplaced.length
-              ? ` ${r.unplaced.length} helyszín nélkül maradt — a Teremnaptár oldalsávjában helyezheted el.`
+              ? ` ${r.unplaced.length} helyszín nélkül maradt: a Teremnaptár oldalsávjában kattints rájuk, és adj nekik termet vagy külső helyszínt.`
               : ''),
         );
       }

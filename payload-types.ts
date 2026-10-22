@@ -584,6 +584,9 @@ export interface Session {
    * Ahol lesz. „Helyszín nélkül” állapotban ezeket a termeket próbálja meg újra, amikor elhelyezed.
    */
   rooms?: (number | Room)[] | null;
+  /**
+   * Nem kötelező: üresen a diákok „Külső helyszín”-t látnak, a pontos helyet ti mondjátok meg nekik.
+   */
   externalLocation?: string | null;
   /**
    * Automatikus: a saját helyszínen tartott előadás-időponté.

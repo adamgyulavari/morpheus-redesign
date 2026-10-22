@@ -1,5 +1,7 @@
 import { relIds } from '@/payload/rel';
 
+import { LOCATION_TYPES } from './labels';
+
 import { clockOf, TZ } from './time';
 
 /** "nov. 3., k. 18:00–21:00" (Budapest time) */
@@ -25,8 +27,9 @@ export function momentText(moment: string | Date): string {
 export type Placed = { locationType?: string | null; rooms?: unknown; externalLocation?: string | null };
 
 /**
- * Where a session is: its rooms ("Nagyterem, Próbaterem"), the external venue, or undefined while
- * it has no place (each caller words that its own way).
+ * Where a session is: its rooms ("Nagyterem, Próbaterem"), the external venue ("Külső helyszín"
+ * when it isn't named — it is told to those concerned), or undefined while it has no place (each
+ * caller words that its own way).
  */
 export function placeText(s: Placed, roomName: ReadonlyMap<number, string>): string | undefined {
   if (s.locationType === 'room')
@@ -36,6 +39,6 @@ export function placeText(s: Placed, roomName: ReadonlyMap<number, string>): str
         .filter(Boolean)
         .join(', ') || undefined
     );
-  if (s.locationType === 'external') return s.externalLocation || undefined;
+  if (s.locationType === 'external') return s.externalLocation?.trim() || LOCATION_TYPES.external;
   return undefined;
 }

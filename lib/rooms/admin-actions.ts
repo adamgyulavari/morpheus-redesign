@@ -15,6 +15,7 @@ import {
   deletableGenerated,
   deleteGenerated,
   errorMessage,
+  externalSessions,
   getRoomSchedule,
   monthGroups,
   previewFill,
@@ -70,11 +71,12 @@ export async function adminSchedule(
   const user = await staff();
   if (!user) return null;
   const payload = await payloadClient();
-  const [events, unplaced] = await Promise.all([
+  const [events, external, unplaced] = await Promise.all([
     getRoomSchedule(payload, user, new Date(from), new Date(to)),
+    externalSessions(payload, new Date(from), new Date(to)),
     unplacedSessions(payload, new Date(from), new Date(to)),
   ]);
-  return { events: events ?? [], unplaced };
+  return { events: [...(events ?? []), ...external].sort((a, b) => a.start.localeCompare(b.start)), unplaced };
 }
 
 export type SessionInput = {
