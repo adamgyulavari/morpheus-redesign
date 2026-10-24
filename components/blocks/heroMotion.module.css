@@ -1,0 +1,18 @@
+/* the home hero's prints swaying on their strings; still for those who prefer reduced motion */
+.sway {
+  transform-origin: 50% 0;
+  animation: sway var(--dur, 6s) ease-in-out var(--delay, 0s) infinite alternate;
+}
+@keyframes sway {
+  from {
+    rotate: calc(var(--tilt, 2deg) * -1);
+  }
+  to {
+    rotate: var(--tilt, 2deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sway {
+    animation: none;
+  }
+}
