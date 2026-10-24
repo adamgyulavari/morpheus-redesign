@@ -346,7 +346,7 @@ export const siteSettings = (s: P.SiteSetting): SiteSettings => ({
 // ── pages & blocks ──────────────────────────────────────────────────────────
 
 /** Which generated size each block image uses (default: gallery). */
-const BLOCK_IMAGE_SIZE: Partial<Record<string, Size>> = { imageLarge: 'card', imageSmall: 'card' };
+const BLOCK_IMAGE_SIZE: Partial<Record<string, Size>> = { photo: 'card' };
 const FULL_WIDTH_BLOCKS = new Set(['fullImage']);
 
 const isMedia = (v: object): v is P.Media => 'mimeType' in v && 'filename' in v && 'alt' in v;

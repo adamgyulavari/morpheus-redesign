@@ -325,8 +325,8 @@ export type Block = BlockBase &
         lead: string;
         primaryCta: Link;
         secondaryCta: Link;
-        imageLarge: ImageRef;
-        imageSmall: ImageRef;
+        /** Prints hanging on strings: the first two at the left, the third at the right (over the next show). */
+        photos?: { photo: ImageRef; caption?: string }[];
         /** Card with the next show (if there is one). */
         nextShow?: boolean;
       }

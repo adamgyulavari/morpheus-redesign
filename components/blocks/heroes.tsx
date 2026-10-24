@@ -19,6 +19,7 @@ export async function HomeHero({ block, className }: BlockProps<'homeHero'>) {
     getSiteSettings(),
     block.nextShow ? getFeaturedShows() : [],
   ]);
+  const [large, small] = (block.photos ?? []).map((p) => p.photo);
   return (
     <section
       id={block.anchor}
@@ -56,24 +57,28 @@ export async function HomeHero({ block, className }: BlockProps<'homeHero'>) {
           <div className="pulse-ring" aria-hidden="true" />
           <div className="pulse-ring" aria-hidden="true" />
           <AnimatedLogo title={ui.common.logo} className="absolute inset-[16%] h-[68%] w-[68%]" />
-          <Image
-            src={block.imageLarge.src}
-            alt={block.imageLarge.alt}
-            width={block.imageLarge.width}
-            height={block.imageLarge.height}
-            priority
-            sizes="(min-width: 1024px) 215px, 130px"
-            className="absolute -right-[2%] -top-[6%] h-[38%] w-[38%] rounded-full border-[6px] border-paper object-cover shadow-[0_22px_44px_-20px_rgba(11,58,63,0.5)] lg:border-8"
-          />
-          <Image
-            src={block.imageSmall.src}
-            alt={block.imageSmall.alt}
-            width={block.imageSmall.width}
-            height={block.imageSmall.height}
-            priority
-            sizes="(min-width: 1024px) 165px, 100px"
-            className="absolute bottom-[6%] right-[4%] h-[29%] w-[29%] rounded-full border-[5px] border-paper object-cover shadow-[0_22px_44px_-20px_rgba(11,58,63,0.5)] lg:border-[7px]"
-          />
+          {large && (
+            <Image
+              src={large.src}
+              alt={large.alt}
+              width={large.width}
+              height={large.height}
+              priority
+              sizes="(min-width: 1024px) 215px, 130px"
+              className="absolute -right-[2%] -top-[6%] h-[38%] w-[38%] rounded-full border-[6px] border-paper object-cover shadow-[0_22px_44px_-20px_rgba(11,58,63,0.5)] lg:border-8"
+            />
+          )}
+          {small && (
+            <Image
+              src={small.src}
+              alt={small.alt}
+              width={small.width}
+              height={small.height}
+              priority
+              sizes="(min-width: 1024px) 165px, 100px"
+              className="absolute bottom-[6%] right-[4%] h-[29%] w-[29%] rounded-full border-[5px] border-paper object-cover shadow-[0_22px_44px_-20px_rgba(11,58,63,0.5)] lg:border-[7px]"
+            />
+          )}
         </div>
         {shows.length > 0 && (
           <Rotator

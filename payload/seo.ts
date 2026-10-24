@@ -22,7 +22,7 @@ type Doc = {
   heroImage?: unknown;
   gallery?: unknown[];
   longDescription?: unknown;
-  blocks?: { blockType: string; lead?: string; image?: unknown; imageLarge?: unknown }[];
+  blocks?: { blockType: string; lead?: string; image?: unknown; photos?: { photo?: unknown }[] }[];
 };
 
 const idOf = (v: unknown) =>
@@ -48,7 +48,9 @@ export const generateDescription: GenerateDescription<Doc> = ({ doc, collectionS
 export const generateImage: GenerateImage<Doc> = ({ doc, collectionSlug }) => {
   const h = hero(doc);
   const image =
-    collectionSlug === 'productions' ? (doc.heroImage ?? doc.gallery?.[0] ?? doc.poster) : (h?.image ?? h?.imageLarge);
+    collectionSlug === 'productions'
+      ? (doc.heroImage ?? doc.gallery?.[0] ?? doc.poster)
+      : (h?.image ?? h?.photos?.[0]?.photo);
   return (idOf(image) ?? '') as number;
 };
 
