@@ -46,8 +46,8 @@ The approved static design lives in `archive/static-site/` (open the HTML files 
 load from `public/images/`). It is the visual source of truth; `archive/logos/` holds earlier logo
 versions. The site's logo is the original one's round emblem, `public/logo.svg` (cut from
 `logo-source/original-logo.svg`, without its lettering; also the e-mails' `public/email/logo.png`). The
-new logo, `logo-source/logo-almost-final.svg`, isn't approved yet: only its animation is used, in
-the home hero and the 404 page (`components/AnimatedLogo.tsx`), and the favicon.
+new logo, `logo-source/logo-almost-final.svg`, isn't approved yet: only its animation is used, on
+the 404 page (`components/AnimatedLogo.tsx`), and the favicon.
 
 ## Structure
 
