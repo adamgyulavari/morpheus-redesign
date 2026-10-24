@@ -1216,8 +1216,19 @@ export interface Page {
                */
               href: string;
             };
-            imageLarge: number | Media;
-            imageSmall: number | Media;
+            /**
+             * Zsinóron lógnak a cím két oldalán: az első kettő balra, a harmadik jobbra, a következő előadás fölött.
+             */
+            photos?:
+              | {
+                  photo: number | Media;
+                  /**
+                   * A kép alatt, kézírásszerűen (pl. „Próba”).
+                   */
+                  caption?: string | null;
+                  id?: string | null;
+                }[]
+              | null;
             nextShow?: boolean | null;
             /**
              * A szakasz azonosítója linkekhez, pl. „idopontok” → /oldal#idopontok. Ékezet és szóköz nélkül.
@@ -3183,8 +3194,13 @@ export interface PagesSelect<T extends boolean = true> {
                     label?: T;
                     href?: T;
                   };
-              imageLarge?: T;
-              imageSmall?: T;
+              photos?:
+                | T
+                | {
+                    photo?: T;
+                    caption?: T;
+                    id?: T;
+                  };
               nextShow?: T;
               anchor?: T;
               spacing?:

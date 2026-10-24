@@ -115,7 +115,8 @@ export const blocks: Block[] = [
     slug: 'homeHero',
     lists: ['shows', 'productions', 'venues'],
     label: 'Nyitóoldali fejléc',
-    description: 'A nyitóoldal teteje: kulcsszavak, cím, két gomb, a logó a fotókkal és a következő előadás kártyája.',
+    description:
+      'A nyitóoldal teteje: kulcsszavak, cím, két gomb, zsinóron lógó fotók és a következő előadás kártyája.',
     fields: [
       stringList('keywords', 'Kulcsszavak', { required: true, singular: 'Kulcsszó' }),
       emphasised('heading', 'Cím', { required: true }),
@@ -128,10 +129,18 @@ export const blocks: Block[] = [
         ],
       },
       {
-        type: 'row',
+        name: 'photos',
+        label: 'Fotók',
+        labels: { singular: 'Fotó', plural: 'Fotók' },
+        type: 'array',
+        maxRows: 3,
+        admin: {
+          description:
+            'Zsinóron lógnak a cím két oldalán: az első kettő balra, a harmadik jobbra, a következő előadás fölött.',
+        },
         fields: [
-          image('imageLarge', 'Nagy kör alakú fotó', { required: true }),
-          image('imageSmall', 'Kis kör alakú fotó', { required: true }),
+          image('photo', 'Fotó', { required: true }),
+          text('caption', 'Felirat', { description: 'A kép alatt, kézírásszerűen (pl. „Próba”).' }),
         ],
       },
       { name: 'nextShow', label: 'A következő előadás kártyája', type: 'checkbox', defaultValue: true },

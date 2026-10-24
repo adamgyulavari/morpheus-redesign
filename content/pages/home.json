@@ -20,18 +20,35 @@
         "label": "Kipróbálom a Nyitott Műhelyt",
         "href": "/nyitott-alkalmak"
       },
-      "imageLarge": {
-        "src": "/images/laughing-faces.webp",
-        "alt": "Nevető hallgatók egy próbán",
-        "width": 1000,
-        "height": 563
-      },
-      "imageSmall": {
-        "src": "/images/on-stage.webp",
-        "alt": "Jelenet egy Morpheus-előadásból",
-        "width": 274,
-        "height": 274
-      },
+      "photos": [
+        {
+          "photo": {
+            "src": "/images/hero/tarsulat.jpg",
+            "alt": "A társulat tagjai jelmezben",
+            "width": 1024,
+            "height": 1536
+          },
+          "caption": "A társulat"
+        },
+        {
+          "photo": {
+            "src": "/images/hero/proba.jpg",
+            "alt": "Próba: a jelenetet beszélik meg",
+            "width": 2000,
+            "height": 1500
+          },
+          "caption": "Próba"
+        },
+        {
+          "photo": {
+            "src": "/images/hero/tapsrend.jpg",
+            "alt": "Tapsrend a Vízkereszt előadás után",
+            "width": 1800,
+            "height": 1076
+          },
+          "caption": "Tapsrend"
+        }
+      ],
       "nextShow": true
     },
     {
