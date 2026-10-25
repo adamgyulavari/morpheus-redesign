@@ -1,7 +1,10 @@
 'use client';
 
-/** The door's one button (staff): uses the ticket, then says how it went. */
-import { useRouter } from 'next/navigation';
+/**
+ * The door's one button (staff): uses the ticket, then says how it went. Nothing re-renders the page
+ * (no refresh, no revalidatePath): it would come back with the ticket used, without this component,
+ * and the answer would go with it.
+ */
 import { useState, useTransition } from 'react';
 
 import { redeemTicketAction } from '@/lib/applications/ticket-actions';
@@ -15,12 +18,10 @@ export default function TicketRedeem({
 }) {
   const [answer, setAnswer] = useState<string | null>(null);
   const [pending, start] = useTransition();
-  const router = useRouter();
   const redeem = () =>
     start(async () => {
       const r = await redeemTicketAction(code);
       setAnswer(r === 'used' ? labels.done : r === 'already' ? labels.already : labels.invalid);
-      router.refresh();
     });
   if (answer)
     return (
