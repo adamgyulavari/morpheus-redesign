@@ -5,6 +5,7 @@ webhook route, the jobs, the pages) only knows `../types.ts`.
 
 - `index.ts` — picks the provider from `PAYMENT_PROVIDER` (the only place that does).
 - `barion.ts` — Barion (`BARION_API_KEY`, `BARION_PAYEE`; `BARION_ENV` = `test` / `live`).
+- `barion-pixel.tsx` — the Barion Pixel (`BARION_PIXEL_ID`), on every page from the frontend layout.
 - `mollie.ts` — Mollie (`MOLLIE_API_KEY`; `test_…` / `live_…`).
 - `mock.ts` — fake checkout at `/fizetes/mock/…` for development and tests; refused on a deployed site.
 
