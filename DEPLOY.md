@@ -111,8 +111,9 @@ media bucket.
   Locally it isn't sent (Barion can't reach it); the result page asks Barion instead.
 - Test mode: a separate shop on `test.barion.com` with its own POSKey, `BARION_ENV=test`; pay
   with Barion's test cards. The live shop must be approved by Barion before `BARION_ENV=live`.
-- Barion's contract asks for its logo near the payment button: put the official
-  "Barion Smart Gateway" logo at `public/payments/barion.svg` and set it in `providers/barion.ts`.
+- Barion approves a shop only with its Smart Payment Banner on the main and the payment page: with
+  `PAYMENT_PROVIDER=barion` the footer (every page) and the checkout show it, from
+  `public/payments/barion-smart-banner-*.svg`, unmodified (download.barion.com, the EU banner).
 - Switching from Mollie: payments still open at Mollie are no longer followed (each provider only
   reads its own), so switch when no Mollie payment is waiting.
 

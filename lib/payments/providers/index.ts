@@ -29,3 +29,12 @@ export function paymentProvider(): PaymentProvider {
   }
   throw new Error(`PAYMENT_PROVIDER: unknown provider "${name}"`);
 }
+
+/** The provider's brand for pages that only show it (the footer): none when no provider is set up. */
+export function paymentBrand(): PaymentProvider['brand'] | null {
+  try {
+    return paymentProvider().brand;
+  } catch {
+    return null;
+  }
+}

@@ -108,7 +108,15 @@ const isLocal = (url: string) => ['localhost', '127.0.0.1', '[::1]'].includes(ne
 
 export const barionProvider: PaymentProvider = {
   name: 'barion',
-  brand: { name: 'Barion' },
+  // Barion's Smart Payment Banner, unmodified (its guidelines: on the main and the payment page)
+  brand: {
+    name: 'Barion',
+    banner: {
+      light: '/payments/barion-smart-banner-light.svg',
+      dark: '/payments/barion-smart-banner-dark.svg',
+      alt: 'Barion, Mastercard, Visa, Apple Pay, Google Pay',
+    },
+  },
   async createPayment(i) {
     // a new id for every attempt: paying an order again starts a new Barion payment
     const requestId = `${i.orderId}-${randomUUID().slice(0, 8)}`;

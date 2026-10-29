@@ -1,4 +1,5 @@
 import { getSiteSettings, getUi } from '@/lib/data';
+import { paymentBrand } from '@/lib/payments/providers';
 
 import Logo from './Logo';
 import SmartLink from './SmartLink';
@@ -9,6 +10,7 @@ export default async function SiteFooter() {
     getSiteSettings(),
     getUi(),
   ]);
+  const banner = paymentBrand()?.banner;
   return (
     <footer className="on-dark bg-night text-mist">
       <div className="mx-auto flex max-w-[1440px] flex-col gap-10 px-5 pb-8 pt-12 lg:gap-14 lg:px-20 lg:pb-12 lg:pt-[72px]">
@@ -32,8 +34,12 @@ export default async function SiteFooter() {
             </nav>
           ))}
         </div>
-        <div className="flex flex-col gap-2.5 border-t border-[#1d3d40] pt-7 text-sm sm:flex-row sm:justify-between">
+        <div className="flex flex-col gap-2.5 border-t border-[#1d3d40] pt-7 text-sm sm:flex-row sm:items-center sm:justify-between">
           <span>{copyright}</span>
+          {banner && (
+            // biome-ignore lint/performance/noImgElement: the payment provider's own SVG, shown as given
+            <img src={banner.dark} alt={banner.alt} className="my-2 block h-auto w-full max-w-[220px] sm:my-0" />
+          )}
           <SmartLink href={privacy.href} className="link self-start">
             {privacy.label}
           </SmartLink>

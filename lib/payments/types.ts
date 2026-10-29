@@ -31,8 +31,11 @@ export type ProviderPayment = {
 export interface PaymentProvider {
   /** Stored on each payment (e.g. "mock"). */
   name: string;
-  /** Shown at checkout ("Fizetés: <logo>"): the provider's name, and its logo under /public. */
-  brand: { name: string; logo?: string };
+  /**
+   * Shown at checkout ("Fizetés: <logo>"): the provider's name, and its logo under /public. A
+   * `banner` (its official logo strip, for light and dark backgrounds) is also shown in the footer.
+   */
+  brand: { name: string; logo?: string; banner?: { light: string; dark: string; alt: string } };
   createPayment(i: {
     orderId: string;
     /** HUF */
