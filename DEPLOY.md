@@ -77,7 +77,8 @@ media bucket.
    | `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | from step 1 |
    | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Scaleway Transactional Email: `smtp.tem.scaleway.com`, port `587` (or `2587`), user = the project ID, password = an API secret key |
    | `EMAIL_FROM`, `EMAIL_FROM_NAME` | sender, e.g. `noreply@morpheus-szinmuhely.hu` / `Morpheus Színműhely` (the domain must be verified in Scaleway TEM) |
-   | `PAYMENT_PROVIDER` | `mollie` (required on a deployed site; the `mock` provider is refused there) |
+   | `PAYMENT_PROVIDER` | `barion` or `mollie` (required on a deployed site; the `mock` provider is refused there) |
+   | `BARION_API_KEY`, `BARION_PAYEE`, `BARION_ENV` | Barion: the shop's secret POSKey (Üzletek → the shop → Titkos kulcs), the e-mail of the Barion wallet receiving the money, and `test` (a shop on test.barion.com, staging) or `live`. The key is secret |
    | `MOLLIE_API_KEY` | Mollie dashboard → Developers → API keys: `test_…` on staging, `live_…` on the live site. Secret |
    | `INVOICING_MODE` | `live` on the live site only (refused anywhere else); `test` on staging with a Számlázz.hu test account; `off` (default): invoices are only prepared, never sent |
    | `SZAMLAZZ_AGENT_KEY` | Számlázz.hu → Számla Agent kulcsok. The real account's key only on the live site; staging gets a test account's key. Secret |
@@ -102,7 +103,18 @@ media bucket.
   there, or a tunnel).
 - Test mode: a `test_…` key; Mollie's test checkout lets you pick paid / failed / expired.
 - Payments are in HUF; Mollie offers the methods available for HUF (cards, PayPal…).
-- Switching provider (e.g. Barion): see `lib/payments/providers/README.md`.
+- Switching provider: see `lib/payments/providers/README.md`.
+
+### Online payment (Barion)
+
+- Same callback: Barion calls `https://<site>/api/payments/webhook?paymentId=…`, set per payment.
+  Locally it isn't sent (Barion can't reach it); the result page asks Barion instead.
+- Test mode: a separate shop on `test.barion.com` with its own POSKey, `BARION_ENV=test`; pay
+  with Barion's test cards. The live shop must be approved by Barion before `BARION_ENV=live`.
+- Barion's contract asks for its logo near the payment button: put the official
+  "Barion Smart Gateway" logo at `public/payments/barion.svg` and set it in `providers/barion.ts`.
+- Switching from Mollie: payments still open at Mollie are no longer followed (each provider only
+  reads its own), so switch when no Mollie payment is waiting.
 
 ### Invoicing (Számlázz.hu)
 
