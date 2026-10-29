@@ -20,3 +20,6 @@ dev.dump
 
 # the group import file (personal data)
 groups.json
+
+tokens.txt
+public/new-photos/
