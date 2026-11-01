@@ -1,7 +1,7 @@
 /** Building blocks of the "Közelgő alkalmak" list: the next item's card, a day's date, a two-line entry. */
 import Link from 'next/link';
 
-import { PinIcon } from '@/components/icons';
+import { CalendarDownloadIcon, CalendarPlusIcon, PinIcon } from '@/components/icons';
 import { fill } from '@/lib/format';
 import { googleCalendarUrl } from '@/lib/rooms/ics';
 
@@ -11,13 +11,14 @@ import type { UpcomingItem } from './items';
 import { dateParts, timeRange } from './items';
 import { CANCELLED, KIND_STYLE, KindBadge, KindLabel, NoPlace, type UpcomingTexts } from './kinds';
 
-type Props = { item: UpcomingItem; t: UpcomingTexts };
+/** `always`: the calendar links without hovering (guests, who have no subscription). */
+type Props = { item: UpcomingItem; t: UpcomingTexts; always?: boolean };
 
 /** "Ma" / "Holnap", when it is. */
 const relativeDay = (d: ReturnType<typeof dateParts>, t: UpcomingTexts) => (d.relative ? t[d.relative] : undefined);
 
 /** The next item: a card tinted by its kind, with a big time. */
-export function NextCard({ item, t }: Props) {
+export function NextCard({ item, t, always }: Props) {
   const d = dateParts(item.start);
   const relative = relativeDay(d, t);
   const k = KIND_STYLE[item.kind];
@@ -43,7 +44,7 @@ export function NextCard({ item, t }: Props) {
         </span>
         {item.booker && <span className="text-muted">{fill(t.bookedBy, { name: item.booker })}</span>}
         {item.note && <span className="italic text-muted">„{item.note}”</span>}
-        {item.handle && <CalendarLinks item={item} t={t} />}
+        {item.handle && <CalendarLinks item={item} t={t} always={always} />}
         {(item.application || item.practice) && (
           <span className="ml-auto">
             <Actions item={item} t={t} />
@@ -98,29 +99,36 @@ function EntryText({ item, t }: Props) {
 }
 
 /** An entry with its kind's icon in a tinted circle, centred on the two lines. */
-export function Entry({ item, t }: Props) {
+export function Entry({ item, t, always }: Props) {
   return (
     <div className="group flex min-h-12 items-center gap-3.5">
       <KindBadge kind={item.kind} cancelled={item.cancelled} t={t} />
       <EntryText item={item} t={t} />
-      {item.handle && !item.cancelled && <CalendarLinks item={item} t={t} />}
+      {item.handle && !item.cancelled && <CalendarLinks item={item} t={t} always={always} />}
       {(item.application || item.practice) && <Actions item={item} t={t} />}
     </div>
   );
 }
 
 /**
- * "Google Naptár" and ".ics" for one item, shown while the row (or card) is hovered or focused —
- * for those who want it; the "Naptár" box's subscription is the way for everyone else.
+ * "Google Naptár" and ".ics letöltése" for one item: shown while the row (or card) is hovered or
+ * focused, for those who want it (the "Naptár" box's subscription is the way for students);
+ * always for guests, who have no subscription.
  */
-function CalendarLinks({ item, t }: Props) {
-  const link = 'link whitespace-nowrap text-[14px] font-semibold text-teal';
+function CalendarLinks({ item, t, always }: Props) {
+  const button =
+    'inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-paper px-3 py-1.5 text-[13px] font-semibold text-teal transition-colors hover:border-teal';
+  const shown = always
+    ? 'flex'
+    : 'sr-only group-focus-within:not-sr-only group-focus-within:flex group-hover:not-sr-only group-hover:flex';
   return (
-    <span className="sr-only shrink-0 items-center gap-4 group-focus-within:not-sr-only group-focus-within:flex group-hover:not-sr-only group-hover:flex">
-      <a href={googleCalendarUrl(calendarEvent(item, t.kinds))} target="_blank" rel="noopener" className={link}>
+    <span className={`${shown} shrink-0 flex-wrap items-center gap-2`}>
+      <a href={googleCalendarUrl(calendarEvent(item, t.kinds))} target="_blank" rel="noopener" className={button}>
+        <CalendarPlusIcon />
         {t.googleCalendar}
       </a>
-      <a href={`/fiokom/naptar/${item.handle}`} download className={link}>
+      <a href={`/fiokom/naptar/${item.handle}`} download className={button}>
+        <CalendarDownloadIcon />
         {t.downloadIcs}
       </a>
     </span>

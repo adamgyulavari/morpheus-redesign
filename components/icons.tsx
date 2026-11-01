@@ -91,6 +91,24 @@ export function CalendarIcon({ className = 'h-[18px] w-[18px]' }: IconProps) {
   );
 }
 
+export function CalendarPlusIcon({ className = 'h-4 w-4 shrink-0' }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" strokeWidth={1.8} {...stroke} aria-hidden="true">
+      <rect x="4" y="5.5" width="16" height="14.5" rx="2" />
+      <path d="M4 10h16M8.5 3.5v4M15.5 3.5v4M12 12.5v5M9.5 15h5" />
+    </svg>
+  );
+}
+
+export function CalendarDownloadIcon({ className = 'h-4 w-4 shrink-0' }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" strokeWidth={1.8} {...stroke} aria-hidden="true">
+      <rect x="4" y="5.5" width="16" height="14.5" rx="2" />
+      <path d="M4 10h16M8.5 3.5v4M15.5 3.5v4M12 12.5v5M9.8 15.3l2.2 2.2 2.2-2.2" />
+    </svg>
+  );
+}
+
 export function ReceiptIcon({ className = 'h-[18px] w-[18px]' }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" strokeWidth={1.8} {...stroke} aria-hidden="true">

@@ -130,6 +130,8 @@ export default async function AccountPage() {
     </Link>
   );
   const courses = o.groups.filter((g) => g.course);
+  // a guest (a ticket or a workshop date, no course): adds single items, no subscription
+  const guest = !user.roles?.some((r) => r !== 'guest');
   const now = new Date();
   const agenda = upcomingItems(o, mine, (start) => checkCancel(new Date(start), bookingRules, now).ok);
   // workshop-only visitors, show bookers, applicants and those booking rooms without a course see theirs too
@@ -157,9 +159,15 @@ export default async function AccountPage() {
         <div className="grid gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
           <div className="flex flex-col gap-10">
             <Section title={t.upcoming}>
-              {agenda.length === 0 ? <Empty>{t.noUpcoming}</Empty> : <UpcomingList items={agenda} />}
+              {agenda.length === 0 ? (
+                <Empty>{t.noUpcoming}</Empty>
+              ) : (
+                <UpcomingList items={agenda} calendarAlways={guest} />
+              )}
             </Section>
-            <CalendarSubscribe feed={siteUrl(`/naptar/${await calendarToken(payload, user.id)}.ics`)} t={t} />
+            {!guest && (
+              <CalendarSubscribe feed={siteUrl(`/naptar/${await calendarToken(payload, user.id)}.ics`)} t={t} />
+            )}
           </div>
 
           <div className="flex flex-col gap-10">
