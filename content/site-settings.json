@@ -101,6 +101,10 @@
     "label": "Adatvédelmi tájékoztató",
     "href": "/adatkezelesi-tajekoztato"
   },
+  "terms": {
+    "label": "Általános Szerződési Feltételek",
+    "href": "/aszf"
+  },
   "contact": {
     "email": "morpheus.szinmuhely@gmail.com",
     "address": "1027 Budapest, Frankel Leó út 6.",

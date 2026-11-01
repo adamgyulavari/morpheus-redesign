@@ -67,6 +67,7 @@ export const SiteSettings: GlobalConfig = {
               ],
             },
             link('privacy', 'Adatvédelmi link', { required: true }),
+            link('terms', 'ÁSZF link', { required: true }),
           ],
         },
         {
