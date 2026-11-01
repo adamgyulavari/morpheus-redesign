@@ -8,6 +8,7 @@ import { UiProvider } from '@/components/UiStrings';
 import { getSiteSettings, getUi } from '@/lib/data';
 import { serverUrl } from '@/lib/env';
 import { figtree, instrumentSerif } from '@/lib/fonts';
+import BarionPixel from '@/lib/payments/providers/barion-pixel';
 import { robots } from '@/lib/seo';
 import { uiTab } from '@/payload/ui-catalogue';
 
@@ -25,6 +26,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang="hu" className={`${figtree.variable} ${instrumentSerif.variable}`}>
       <body className="bg-cream font-sans text-ink antialiased">
+        {/* Barion's fraud-prevention pixel (with BARION_PIXEL_ID): Next moves it into the <head> */}
+        <BarionPixel />
         {/* an editor's preview from the admin: show drafts, refresh on every save */}
         {draft.isEnabled && <LivePreviewListener />}
         <UiProvider ui={uiTab(ui, 'site')}>{children}</UiProvider>

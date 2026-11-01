@@ -1,8 +1,9 @@
 /**
- * The ONLY place that picks the payment provider: env `PAYMENT_PROVIDER` = `mollie` | `mock`.
- * To switch to Barion: add providers/barion.ts and one line below (see README.md).
+ * The ONLY place that picks the payment provider: env `PAYMENT_PROVIDER` = `barion` | `mollie` | `mock`.
+ * Another provider: add providers/<name>.ts and one line below (see README.md).
  */
 import type { PaymentProvider } from '../types';
+import { barionProvider } from './barion';
 import { mockProvider } from './mock';
 import { mollieProvider } from './mollie';
 
@@ -20,10 +21,20 @@ export const mockActive = () => providerName() === 'mock' && mockAllowed();
 
 export function paymentProvider(): PaymentProvider {
   const name = providerName();
+  if (name === 'barion') return barionProvider;
   if (name === 'mollie') return mollieProvider;
   if (name === 'mock') {
     if (!mockAllowed()) throw new Error('The mock payment provider is not available in production.');
     return mockProvider;
   }
   throw new Error(`PAYMENT_PROVIDER: unknown provider "${name}"`);
+}
+
+/** The provider's brand for pages that only show it (the footer): none when no provider is set up. */
+export function paymentBrand(): PaymentProvider['brand'] | null {
+  try {
+    return paymentProvider().brand;
+  } catch {
+    return null;
+  }
 }

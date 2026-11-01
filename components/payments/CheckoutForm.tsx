@@ -26,6 +26,7 @@ import { needsPhone } from '@/lib/applications/rules';
 import { fill, formatHuf } from '@/lib/format';
 import type { CheckoutState } from '@/lib/payments/actions';
 import type { CheckoutMe } from '@/lib/payments/me';
+import type { PaymentProvider } from '@/lib/payments/types';
 
 /** A way to pay (a kezdő course's price option): what is due now, of the total. */
 export type PayOption = { id: string; label: string; due: number; total: number; parts: number; note?: string };
@@ -48,7 +49,7 @@ type Props = {
   /** The cancellation rules in plain words (from the settings). */
   policy: string[];
   /** The payment provider as shown ("Biztonságos fizetés: <logo>"). */
-  provider: { name: string; logo?: string };
+  provider: PaymentProvider['brand'];
   me: CheckoutMe;
 };
 
@@ -115,6 +116,15 @@ export default function CheckoutForm({
 
         {/* stays in view while the (longer, logged-out) form on the left scrolls; clear of the sticky header */}
         <Card className="lg:sticky lg:top-28">
+          {/* the provider's banner (its terms: visible without scrolling): above the order on a wide
+              screen, under the pay button on a phone (where the order comes after the form) */}
+          {provider.banner && (
+            <ProviderBanner
+              banner={provider.banner}
+              label={t.secure}
+              className="-mt-1 hidden justify-between border-b border-line pb-4 lg:flex"
+            />
+          )}
           {summary}
           {options && (
             <fieldset className="flex flex-col gap-2">
@@ -176,18 +186,44 @@ export default function CheckoutForm({
           </Checkbox>
           <Notice error={state.error} />
           <Submit block>{due > 0 ? fill(t.pay, { amount: formatHuf(due) }) : common.signup}</Submit>
-          <p className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-1 text-[13px] leading-none text-muted">
-            <LockIcon className="relative top-[2px] block h-3.5 w-3.5 shrink-0" />
-            <span>{t.secure}</span>
-            {provider.logo ? (
-              // biome-ignore lint/performance/noImgElement: a tiny SVG wordmark; next/image adds nothing
-              <img src={provider.logo} alt={provider.name} className="block h-[13px] w-auto" />
-            ) : (
-              <span className="font-semibold text-ink2">{provider.name}</span>
-            )}
-          </p>
+          {provider.banner && (
+            <ProviderBanner banner={provider.banner} label={t.secure} className="flex justify-center lg:hidden" />
+          )}
+          {!provider.banner && (
+            <p className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-1 text-[13px] leading-none text-muted">
+              <LockIcon className="relative top-[2px] block h-3.5 w-3.5 shrink-0" />
+              <span>{t.secure}</span>
+              {provider.logo ? (
+                // biome-ignore lint/performance/noImgElement: a tiny SVG wordmark; next/image adds nothing
+                <img src={provider.logo} alt={provider.name} className="block h-[13px] w-auto" />
+              ) : (
+                <span className="font-semibold text-ink2">{provider.name}</span>
+              )}
+            </p>
+          )}
         </Card>
       </form>
     </RequiredMarks>
+  );
+}
+
+function ProviderBanner({
+  banner,
+  label,
+  className,
+}: {
+  banner: NonNullable<PaymentProvider['brand']['banner']>;
+  label: string;
+  className: string;
+}) {
+  return (
+    <div className={`flex-wrap items-center gap-x-4 gap-y-2.5 ${className}`}>
+      <p className="flex items-center gap-2 text-[13px] leading-none text-muted">
+        <LockIcon className="block h-3.5 w-3.5 shrink-0" />
+        <span>{label}</span>
+      </p>
+      {/* biome-ignore lint/performance/noImgElement: the provider's own SVG, shown as given */}
+      <img src={banner.light} alt={banner.alt} className="block h-auto w-[190px]" />
+    </div>
   );
 }
