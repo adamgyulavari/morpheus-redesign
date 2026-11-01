@@ -41,11 +41,11 @@ export default async function SiteFooter() {
             <img src={banner.dark} alt={banner.alt} className="my-2 block h-auto w-full max-w-[220px] sm:my-0" />
           )}
           <div className="flex flex-col gap-2.5 sm:flex-row sm:gap-6">
-            <SmartLink href={terms.href} className="link self-start">
-              {terms.label}
-            </SmartLink>
             <SmartLink href={privacy.href} className="link self-start">
               {privacy.label}
+            </SmartLink>
+            <SmartLink href={terms.href} className="link self-start">
+              {terms.label}
             </SmartLink>
           </div>
         </div>
