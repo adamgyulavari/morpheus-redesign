@@ -504,6 +504,7 @@ export interface User {
    * A Google-belépés tölti ki. Ha kiüríted, a Google-fiók leválik (legközelebb újra csatolódik).
    */
   googleSub?: string | null;
+  calendarToken?: string | null;
   billing?: {
     /**
      * Üresen: a saját neve.
@@ -4418,6 +4419,7 @@ export interface UsersSelect<T extends boolean = true> {
   phone?: T;
   sendVerification?: T;
   googleSub?: T;
+  calendarToken?: T;
   billing?:
     | T
     | {
