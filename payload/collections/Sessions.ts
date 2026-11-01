@@ -4,7 +4,6 @@ import { WORKSHOP_STATUSES } from '@/lib/applications/labels';
 import { cutoffAt } from '@/lib/applications/rules';
 import { applicationSettings } from '@/lib/applications/settings';
 import { LOCATION_TYPES, options, SESSION_KINDS } from '@/lib/rooms/labels';
-import { notifySessionChange } from '@/lib/rooms/notify';
 import { clashMessage } from '@/lib/rooms/occupancy';
 import { isStaffOrAdminField } from '@/payload/access';
 
@@ -158,7 +157,7 @@ export const Sessions: CollectionConfig = {
       },
     ],
     afterChange: [
-      async ({ doc, previousDoc, operation, req }) => {
+      async ({ doc, req }) => {
         const s = doc as SessionDoc & { id: number };
         const bookingId = relId(s.booking);
         if (s.locationType === 'room' && s.status === 'scheduled') {
@@ -193,8 +192,6 @@ export const Sessions: CollectionConfig = {
           await releaseBooking(req, s.id, bookingId);
           s.booking = null;
         }
-        // its students hear about a cancellation, a new time or a new place
-        await notifySessionChange(req, s, operation === 'update' ? previousDoc : undefined, operation);
         return s;
       },
       // the Nyitott Műhely dates are on the public site
