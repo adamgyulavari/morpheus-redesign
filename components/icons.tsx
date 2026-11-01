@@ -91,22 +91,24 @@ export function CalendarIcon({ className = 'h-[18px] w-[18px]' }: IconProps) {
   );
 }
 
-export function CalendarPlusIcon({ className = 'h-4 w-4 shrink-0' }: IconProps) {
+/** A calendar with a filled badge at its bottom right (the plus or arrow drawn in the page colour). */
+function CalendarBadgeIcon({ className, badge }: IconProps & { badge: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" strokeWidth={1.8} {...stroke} aria-hidden="true">
-      <rect x="4" y="5.5" width="16" height="14.5" rx="2" />
-      <path d="M4 10h16M8.5 3.5v4M15.5 3.5v4M12 12.5v5M9.5 15h5" />
+      <rect x="2" y="4" width="14" height="13" rx="2" />
+      <path d="M2 8.5h14M6 2.5v3M12 2.5v3" />
+      <circle cx="17" cy="17" r="6.5" fill="currentColor" stroke="var(--color-paper)" strokeWidth={1.5} />
+      <path d={badge} stroke="var(--color-paper)" strokeWidth={1.8} />
     </svg>
   );
 }
 
-export function CalendarDownloadIcon({ className = 'h-4 w-4 shrink-0' }: IconProps) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" strokeWidth={1.8} {...stroke} aria-hidden="true">
-      <rect x="4" y="5.5" width="16" height="14.5" rx="2" />
-      <path d="M4 10h16M8.5 3.5v4M15.5 3.5v4M12 12.5v5M9.8 15.3l2.2 2.2 2.2-2.2" />
-    </svg>
-  );
+export function CalendarPlusIcon({ className = 'h-[22px] w-[22px] shrink-0' }: IconProps) {
+  return <CalendarBadgeIcon className={className} badge="M17 13.8v6.4M13.8 17h6.4" />;
+}
+
+export function CalendarDownloadIcon({ className = 'h-[22px] w-[22px] shrink-0' }: IconProps) {
+  return <CalendarBadgeIcon className={className} badge="M17 13.6v6.4M14.3 17.6l2.7 2.7 2.7-2.7" />;
 }
 
 export function ReceiptIcon({ className = 'h-[18px] w-[18px]' }: IconProps) {
