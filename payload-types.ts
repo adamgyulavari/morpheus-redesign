@@ -654,7 +654,7 @@ export interface Session {
 export interface Production {
   id: number;
   title: string;
-  group: 'company' | 'students';
+  group: 'company' | 'classics' | 'students';
   /**
    * Pl. „Dráma”
    */
@@ -1991,7 +1991,7 @@ export interface Page {
           }
         | {
             groups: {
-              group: 'company' | 'students';
+              group: 'company' | 'classics' | 'students';
               /**
                * Kis, nagybetűs sor a cím fölött.
                */

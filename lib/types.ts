@@ -25,7 +25,7 @@ export type Fact = { label: string; value?: string; href?: string; coursePrice?:
 
 // ── Productions & shows ─────────────────────────────────────────────────────
 
-export type ProductionGroup = 'company' | 'students';
+export type ProductionGroup = 'company' | 'classics' | 'students';
 
 /** One line of the cast. `names` has more than one entry for alternating (double) casts. */
 export type CastEntry = { role?: string; roleNote?: string; names: string[] };

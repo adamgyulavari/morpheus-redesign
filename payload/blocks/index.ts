@@ -493,7 +493,7 @@ export const blocks: Block[] = [
     slug: 'repertoire',
     lists: ['shows', 'productions', 'venues'],
     label: 'Repertoár',
-    description: 'A darabok csoportonként (társulati / hallgatói).',
+    description: 'A darabok csoportonként (nagyszínpadi / hallgatói / hallgatóink saját előadásai).',
     fields: [
       cards('groups', 'Csoportok', 'Csoport', [
         {
@@ -502,8 +502,9 @@ export const blocks: Block[] = [
           type: 'select',
           required: true,
           options: [
-            { label: 'Társulati előadások', value: 'company' },
-            { label: 'Hallgatói előadások', value: 'students' },
+            { label: 'Nagyszínpadi produkciók', value: 'company' },
+            { label: 'Hallgatói előadások (klasszikusok)', value: 'classics' },
+            { label: 'Hallgatóink saját előadásai', value: 'students' },
           ],
         },
         ...section(),

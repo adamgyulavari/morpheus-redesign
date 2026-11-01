@@ -43,6 +43,7 @@ import * as migration_20261021_184054_google_login from './20261021_184054_googl
 import * as migration_20261021_230000_ui_texts_account from './20261021_230000_ui_texts_account';
 import * as migration_20261024_144626_home_hero_photos from './20261024_144626_home_hero_photos';
 import * as migration_20261101_125147_footer_terms_link from './20261101_125147_footer_terms_link';
+import * as migration_20261101_160000_repertoire_classics from './20261101_160000_repertoire_classics';
 
 export const migrations = [
   {
@@ -269,5 +270,10 @@ export const migrations = [
     up: migration_20261101_125147_footer_terms_link.up,
     down: migration_20261101_125147_footer_terms_link.down,
     name: '20261101_125147_footer_terms_link',
+  },
+  {
+    up: migration_20261101_160000_repertoire_classics.up,
+    down: migration_20261101_160000_repertoire_classics.down,
+    name: '20261101_160000_repertoire_classics',
   },
 ];

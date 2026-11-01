@@ -694,7 +694,7 @@
   {
     "id": "bernarda-alba-haza",
     "slug": "bernarda-alba-haza",
-    "group": "students",
+    "group": "classics",
     "title": "Bernarda Alba háza",
     "genre": "Dráma két felvonásban",
     "byline": "Federico García Lorca",
@@ -758,7 +758,7 @@
   {
     "id": "vizkereszt",
     "slug": "vizkereszt",
-    "group": "students",
+    "group": "classics",
     "title": "Vízkereszt, vagy amit akartok",
     "genre": "Vígjáték két felvonásban",
     "byline": "William Shakespeare",
