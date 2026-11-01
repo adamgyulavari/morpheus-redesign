@@ -58,6 +58,14 @@ export const Users: CollectionConfig = {
   },
   endpoints: [magicLinkEndpoint],
   hooks: {
+    // an account made in the admin gets the verification e-mail only with its box ticked (the
+    // site's own sign-up and server code don't send the field and keep their own choice)
+    beforeOperation: [
+      ({ args, operation }) => {
+        if (operation === 'create' && args.data?.sendVerification === false) args.disableVerificationEmail = true;
+        return args;
+      },
+    ],
     beforeChange: [
       async ({ data, operation, originalDoc, req }) => {
         if (operation === 'create') {
@@ -91,6 +99,19 @@ export const Users: CollectionConfig = {
       fields: [text('lastName', 'Vezetéknév', { required: true }), text('firstName', 'Keresztnév', { required: true })],
     },
     text('phone', 'Telefonszám'),
+    {
+      name: 'sendVerification',
+      label: 'Megerősítő e-mail küldése',
+      type: 'checkbox',
+      virtual: true,
+      defaultValue: false,
+      admin: {
+        // only when creating
+        condition: (data) => !data?.id,
+        description:
+          'Bepipálva e-mail megy ki a megadott címre egy megerősítő linkkel. Enélkül nem megy e-mail: a fiók belépőlinkkel vagy Google-lel használható, és az első belépéskor megerősítődik.',
+      },
+    },
     {
       // "Folytatás Google-fiókkal" (lib/google): the Google account's id, set when it first logs in
       name: 'googleSub',

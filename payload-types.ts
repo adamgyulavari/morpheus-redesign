@@ -497,6 +497,10 @@ export interface User {
   firstName: string;
   phone?: string | null;
   /**
+   * Bepipálva e-mail megy ki a megadott címre egy megerősítő linkkel. Enélkül nem megy e-mail: a fiók belépőlinkkel vagy Google-lel használható, és az első belépéskor megerősítődik.
+   */
+  sendVerification?: boolean | null;
+  /**
    * A Google-belépés tölti ki. Ha kiüríted, a Google-fiók leválik (legközelebb újra csatolódik).
    */
   googleSub?: string | null;
@@ -4399,6 +4403,7 @@ export interface UsersSelect<T extends boolean = true> {
   lastName?: T;
   firstName?: T;
   phone?: T;
+  sendVerification?: T;
   googleSub?: T;
   billing?:
     | T
