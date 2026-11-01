@@ -1,5 +1,6 @@
 import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical';
 import { RichText } from '@payloadcms/richtext-lexical/react';
+import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
@@ -21,7 +22,7 @@ import { fill } from '@/lib/format';
 import { myOrders } from '@/lib/payments/my-orders';
 import { checkCancel } from '@/lib/rooms/rules';
 import { loadSettings } from '@/lib/rooms/server';
-import { studentOverview } from '@/lib/rooms/student';
+import { type OverviewProduction, studentOverview } from '@/lib/rooms/student';
 import { userIsStaffOrAdmin } from '@/payload/access';
 
 // per visitor, never cached or prerendered (the build has no database)
@@ -49,10 +50,64 @@ function Section({ title, children, action }: { title: string; children: ReactNo
 
 const Empty = ({ children }: { children: ReactNode }) => <p className="text-[15px] text-muted">{children}</p>;
 
+type Group = Awaited<ReturnType<typeof studentOverview>>['groups'][number];
+
+/** My current course: its dates, instructors and the staff's info. */
+function CourseCard({ group: g }: { group: Group }) {
+  return (
+    <Card>
+      <h3 className="font-display text-[26px] leading-tight lg:text-[30px]">{g.title}</h3>
+      <p className="text-[15px] font-semibold text-teal">
+        {g.startDate && g.endDate && dateRange(day(g.startDate), day(g.endDate))}
+        {g.instructors.length > 0 && <span className="font-normal text-ink2"> · {g.instructors.join(', ')}</span>}
+      </p>
+      {g.info && (
+        <div className="text-[16px] leading-[1.7] text-ink2 [&_a]:underline [&_h2]:mb-3 [&_h2]:mt-6 [&_h2]:font-display [&_h2]:text-[24px] [&_h2]:text-ink [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:font-bold [&_h3]:text-ink [&_li]:mb-1 [&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:mb-3 [&_strong]:font-bold [&_strong]:text-ink [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-6">
+          <RichText data={g.info as SerializedEditorState} disableContainer />
+        </div>
+      )}
+    </Card>
+  );
+}
+
+/** A show I play in: its poster and title, to its page when it is published. */
+function ProductionTile({ production: p }: { production: OverviewProduction }) {
+  const body = (
+    <>
+      {p.poster ? (
+        <Image
+          src={p.poster.src}
+          alt=""
+          width={p.poster.width}
+          height={p.poster.height}
+          sizes="56px"
+          className="h-20 w-14 shrink-0 rounded-lg bg-deep object-cover"
+        />
+      ) : (
+        <span className="h-20 w-14 shrink-0 rounded-lg bg-deep" />
+      )}
+      <span className="flex min-w-0 flex-col gap-1">
+        <span className="font-display text-[22px] leading-tight text-ink">{p.title}</span>
+        {p.byline && <span className="text-xs font-bold uppercase tracking-[0.12em] text-teal">{p.byline}</span>}
+      </span>
+    </>
+  );
+  const box = 'flex items-center gap-4 rounded-2xl border border-line bg-paper p-3 pr-5';
+  return p.href ? (
+    <Link href={p.href} className={`group ${box} transition-colors hover:border-teal`}>
+      {body}
+      <ArrowRight className="ml-auto h-[18px] w-[18px] shrink-0 text-teal transition-transform group-hover:translate-x-1" />
+    </Link>
+  ) : (
+    <div className={box}>{body}</div>
+  );
+}
+
 /**
  * The student area's overview. Left: what's coming — the sessions of my groups and their productions,
  * the practice bookings (my groupmates' and mine, with my note and "Lemondás") and my Nyitott Műhely
- * dates. Right: my courses (with pending applications), links. Fresh on every request.
+ * dates. Right: my current course (with pending applications), the shows I play in, my past courses,
+ * links. Fresh on every request.
  * An unfinished payment is on top ("Fizetés folytatása"); invoices are on /fiokom/szamlaim.
  */
 export default async function AccountPage() {
@@ -71,11 +126,13 @@ export default async function AccountPage() {
       {chunk}
     </Link>
   );
+  const courses = o.groups.filter((g) => g.course);
   const now = new Date();
   const agenda = upcomingItems(o, mine, (start) => checkCancel(new Date(start), bookingRules, now).ok);
   // workshop-only visitors, show bookers, applicants and those booking rooms without a course see theirs too
   const hasAnything =
     o.active ||
+    o.pastCourses.length > 0 ||
     mine.workshops.length > 0 ||
     mine.shows.length > 0 ||
     mine.pending.length > 0 ||
@@ -100,7 +157,7 @@ export default async function AccountPage() {
           </Section>
 
           <div className="flex flex-col gap-10">
-            {(o.groups.length > 0 || mine.pending.length > 0) && (
+            {(courses.length > 0 || mine.pending.length > 0) && (
               <Section title={t.courses}>
                 {mine.pending.map((p) => (
                   <Card key={`a${p.applicationId}`} className="border-dashed">
@@ -123,22 +180,34 @@ export default async function AccountPage() {
                     </p>
                   </Card>
                 ))}
-                {o.groups.map((g) => (
-                  <Card key={g.id}>
-                    <h3 className="font-display text-[26px] leading-tight lg:text-[30px]">{g.title}</h3>
-                    <p className="text-[15px] font-semibold text-teal">
-                      {g.startDate && g.endDate && dateRange(day(g.startDate), day(g.endDate))}
-                      {g.instructors.length > 0 && (
-                        <span className="font-normal text-ink2"> · {g.instructors.join(', ')}</span>
-                      )}
-                    </p>
-                    {g.info && (
-                      <div className="text-[16px] leading-[1.7] text-ink2 [&_a]:underline [&_h2]:mb-3 [&_h2]:mt-6 [&_h2]:font-display [&_h2]:text-[24px] [&_h2]:text-ink [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:font-bold [&_h3]:text-ink [&_li]:mb-1 [&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:mb-3 [&_strong]:font-bold [&_strong]:text-ink [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-6">
-                        <RichText data={g.info as SerializedEditorState} disableContainer />
-                      </div>
-                    )}
-                  </Card>
+                {courses.map((g) => (
+                  <CourseCard key={g.id} group={g} />
                 ))}
+              </Section>
+            )}
+
+            {o.productions.length > 0 && (
+              <Section title={t.productions}>
+                <div className="flex flex-col gap-3">
+                  {o.productions.map((p) => (
+                    <ProductionTile key={p.id} production={p} />
+                  ))}
+                </div>
+              </Section>
+            )}
+
+            {o.pastCourses.length > 0 && (
+              <Section title={t.pastCourses}>
+                <ul className="flex flex-col gap-2">
+                  {o.pastCourses.map((g) => (
+                    <li key={g.id} className="rounded-2xl border border-line px-5 py-3">
+                      <p className="text-[16px] font-semibold text-ink2">{g.title}</p>
+                      {g.startDate && g.endDate && (
+                        <p className="text-[14px] text-muted">{dateRange(day(g.startDate), day(g.endDate))}</p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
               </Section>
             )}
 

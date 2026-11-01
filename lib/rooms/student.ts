@@ -1,11 +1,14 @@
 /**
- * What a student sees in /fiokom: their active groups, the upcoming sessions of those groups and of
- * the productions linked to them, their groupmates' practice, their links and their own bookings.
+ * What a student sees in /fiokom: their groups (ongoing and past), the upcoming sessions of the
+ * ongoing ones and of the productions linked to any of them, their groupmates' practice, their links
+ * and their own bookings.
  * Read on the server for this user only (room data isn't readable through the API by students);
  * staff notes are never included.
  */
 import type { Payload, TypedUser } from 'payload';
 
+import { img } from '@/lib/cms-map';
+import type { ImageRef } from '@/lib/types';
 import { relId, relIds } from '@/payload/rel';
 
 import { placeText } from './format';
@@ -25,6 +28,9 @@ export type OverviewSession = {
   place?: string;
 };
 
+/** A show one of my groups plays: published or still in the making (then without a link). */
+export type OverviewProduction = { id: number; title: string; byline?: string; poster?: ImageRef; href?: string };
+
 export type OverviewPractice = {
   id: number;
   start: string;
@@ -36,12 +42,12 @@ export type OverviewPractice = {
 };
 
 export async function studentOverview(payload: Payload, user: TypedUser) {
-  const { groups, productions } = await studentGroups(payload, user.id);
+  const { groups, past, productions } = await studentGroups(payload, user.id);
   const groupIds = groups.map((g) => g.id);
   const productionIds = productions.map((p) => p.id);
   const now = new Date().toISOString();
 
-  const [rooms, instructors, sessions, practice, links] = await Promise.all([
+  const [rooms, instructors, sessions, practice, links, shows] = await Promise.all([
     payload.find({ collection: 'rooms', depth: 0, select: { name: true }, ...all }),
     payload.find({
       collection: 'users',
@@ -50,7 +56,7 @@ export async function studentOverview(payload: Payload, user: TypedUser) {
       select: { name: true },
       ...all,
     }),
-    groupIds.length
+    groupIds.length || productionIds.length
       ? payload.find({
           collection: 'sessions',
           where: {
@@ -58,7 +64,7 @@ export async function studentOverview(payload: Payload, user: TypedUser) {
               { end: { greater_than: now } },
               {
                 or: [
-                  { courseGroup: { in: groupIds } },
+                  ...(groupIds.length ? [{ courseGroup: { in: groupIds } }] : []),
                   ...(productionIds.length ? [{ production: { in: productionIds } }] : []),
                 ],
               },
@@ -122,6 +128,7 @@ export async function studentOverview(payload: Payload, user: TypedUser) {
           ...all,
         })
       : null,
+    myProductions(payload, productionIds),
   ]);
 
   const roomName = new Map(rooms.docs.map((r) => [r.id, r.name]));
@@ -142,14 +149,18 @@ export async function studentOverview(payload: Payload, user: TypedUser) {
     note: relId(b.user) === user.id && b.note ? b.note : undefined,
   });
   const allPractice = practice?.docs ?? [];
+  // a course, not the company or a group made to play a show (an Egyéb one linked to a production)
+  const isCourse = (g: { id: number; type: string }) =>
+    g.type !== 'tarsulat' && !(g.type === 'egyeb' && productions.some((p) => relIds(p.courseGroups).includes(g.id)));
 
   return {
-    active: groups.length > 0,
+    active: groups.length > 0 || productions.length > 0,
     /** May book rooms (staff's permission). */
     mayBook: mayBookRooms(user),
     groups: groups.map((g) => ({
       id: g.id,
       title: g.title,
+      course: isCourse(g),
       startDate: g.startDate,
       endDate: g.endDate,
       info: g.info,
@@ -157,7 +168,12 @@ export async function studentOverview(payload: Payload, user: TypedUser) {
         .map((id) => instructorName.get(id))
         .filter(Boolean) as string[],
     })),
-    productions: productions.map((p) => ({ id: p.id, title: p.title })),
+    /** Ended courses, latest first. */
+    pastCourses: past
+      .filter(isCourse)
+      .map((g) => ({ id: g.id, title: g.title, startDate: g.startDate, endDate: g.endDate })),
+    /** The shows any of my groups plays (an ended one too), in the repertoire's order. */
+    productions: shows,
     sessions: (sessions?.docs ?? []).map(
       (s): OverviewSession => ({
         id: s.id,
@@ -181,3 +197,32 @@ export async function studentOverview(payload: Payload, user: TypedUser) {
 }
 
 export type StudentOverview = Awaited<ReturnType<typeof studentOverview>>;
+
+/**
+ * The shows by their published version, linked to their page (or the repertoire); those not yet
+ * published by their draft, without a link.
+ */
+async function myProductions(payload: Payload, ids: number[]): Promise<OverviewProduction[]> {
+  if (!ids.length) return [];
+  const find = (draft: boolean) =>
+    payload.find({
+      collection: 'productions',
+      where: { id: { in: ids }, ...(draft ? {} : { _status: { equals: 'published' } }) },
+      draft,
+      depth: 1,
+      select: { title: true, byline: true, poster: true, slug: true, detailPage: true, order: true },
+      sort: 'order',
+      ...all,
+    });
+  const [published, drafts] = await Promise.all([find(false), find(true)]);
+  const live = new Set(published.docs.map((p) => p.id));
+  return [...published.docs, ...drafts.docs.filter((p) => !live.has(p.id))]
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .map((p) => ({
+      id: p.id,
+      title: p.title,
+      byline: p.byline ?? undefined,
+      poster: img(p.poster, 'card'),
+      href: live.has(p.id) ? (p.detailPage ? `/repertoar/${p.slug}` : '/repertoar') : undefined,
+    }));
+}

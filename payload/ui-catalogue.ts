@@ -355,6 +355,8 @@ const ACCOUNT = {
       upcoming: 'Közelgő alkalmak cím',
       noUpcoming: 'Nincs közelgő alkalom',
       courses: 'Kurzusaim cím',
+      productions: 'Darabjaim cím (amiket a csoportjaim játszanak)',
+      pastCourses: 'Korábbi kurzusaim cím',
       links: 'Linkek cím',
       sent: 'Szakmai jelentkezés állapota',
       waiting: 'Kezdő jelentkezés állapota',
