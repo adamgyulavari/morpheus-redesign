@@ -1,11 +1,9 @@
 /**
- * E-mails of the room calendar, sent from the save hooks (payload/collections/RoomBookings.ts,
- * Sessions.ts), in the shared layout (payload/email.ts):
- * - practice booking confirmed (with an .ics), changed by staff, cancelled (by the student, or by
- *   staff / an admin override — with the reason; the .ics removes it from the calendar);
- * - a session cancelled, reinstated, moved or placed elsewhere: one e-mail per student of its
- *   group (or of the groups playing its production) per save, with old and new details.
- *   Not for sessions created by fill month, nor more than 30 days ahead, nor in the past.
+ * E-mails of the room calendar, sent from the save hook (payload/collections/RoomBookings.ts), in
+ * the shared layout (payload/email.ts):
+ * practice booking confirmed (with an .ics), changed by staff, cancelled (by the student, or by
+ * staff / an admin override — with the reason; the .ics removes it from the calendar). Changes to
+ * sessions (lessons, rehearsals, shows) are told to the students by hand, not e-mailed.
  * Their texts are in the admin (Beállítások → E-mailek). A failed e-mail never fails the save; it is logged.
  */
 import type { PayloadRequest } from 'payload';
@@ -16,9 +14,8 @@ import { relId, relIds } from '@/payload/rel';
 import { whenText } from './format';
 import { icsFile } from './ics';
 import { BOOKING_KINDS } from './labels';
-import { placeOf, roomNames } from './occupancy';
+import { roomNames } from './occupancy';
 
-const HORIZON_MS = 30 * 86_400_000;
 const STUDIO = 'Morpheus Színműhely';
 
 type Doc = Record<string, unknown>;
@@ -157,121 +154,5 @@ export async function notifyPractice(
     }
   } catch (err) {
     req.payload.logger.error({ err, msg: 'practice e-mail failed' });
-  }
-}
-
-// ── sessions ────────────────────────────────────────────────────────────────
-
-const placeOrPending = async (req: PayloadRequest, s: Doc, pending: string) =>
-  (await placeOf(req.payload, s, req)) ?? pending;
-
-/** Students of the session's group, or of the groups playing its production. */
-async function studentsOf(req: PayloadRequest, s: Doc): Promise<Recipient[]> {
-  let groupIds: number[] = [];
-  const group = relId(s.courseGroup);
-  const production = relId(s.production);
-  if (group) groupIds = [group];
-  else if (production) {
-    const p = await req.payload.findByID({
-      collection: 'productions',
-      id: production,
-      depth: 0,
-      draft: true,
-      req,
-      disableErrors: true,
-    });
-    groupIds = relIds(p?.courseGroups);
-  }
-  if (!groupIds.length) return [];
-  const { docs: groups } = await req.payload.find({
-    collection: 'courseGroups',
-    where: { id: { in: groupIds } },
-    depth: 0,
-    req,
-    limit: 0,
-    pagination: false,
-  });
-  const ids = [...new Set(groups.flatMap((g) => relIds(g.students)))];
-  if (!ids.length) return [];
-  const { docs } = await req.payload.find({
-    collection: 'users',
-    where: { id: { in: ids } },
-    depth: 0,
-    req,
-    limit: 0,
-    pagination: false,
-    select: { email: true, firstName: true },
-  });
-  return docs.map((u) => ({ id: u.id, email: u.email, firstName: u.firstName }));
-}
-
-export async function notifySessionChange(
-  req: PayloadRequest,
-  doc: Doc,
-  previous: Doc | undefined,
-  operation: 'create' | 'update',
-) {
-  try {
-    // `silent`: a show took the rooms (its staff note says so)
-    if (operation !== 'update' || !previous || req.context.generating || req.context.silent) return;
-    const now = Date.now();
-    const starts = [new Date(String(doc.start)).getTime(), new Date(String(previous.start)).getTime()];
-    const ends = [new Date(String(doc.end)).getTime(), new Date(String(previous.end)).getTime()];
-    // not more than 30 days ahead (neither the old nor the new time is near), not in the past
-    if (Math.min(...starts) > now + HORIZON_MS || Math.max(...ends) < now) return;
-
-    const cancelled = previous.status !== 'cancelled' && doc.status === 'cancelled';
-    const reinstated = previous.status === 'cancelled' && doc.status === 'scheduled';
-    const start = new Date(String(doc.start));
-    const end = new Date(String(doc.end));
-    const oldStart = new Date(String(previous.start));
-    const oldEnd = new Date(String(previous.end));
-    const timeChanged = start.getTime() !== oldStart.getTime() || end.getTime() !== oldEnd.getTime();
-    const texts = await emailTexts(req.payload);
-    const c = texts.common;
-    const [place, oldPlace] = await Promise.all([
-      placeOrPending(req, doc, c.placePending),
-      placeOrPending(req, previous, c.placePending),
-    ]);
-    const placeChanged = place !== oldPlace;
-    if (!cancelled && !reinstated && !timeChanged && !placeChanged) return;
-
-    const to = await studentsOf(req, doc);
-    if (!to.length) return;
-    const title = String(doc.displayTitle ?? '');
-    const when = whenText(start, end, 'long');
-    const oldWhen = whenText(oldStart, oldEnd, 'long');
-    const changed = texts.template('sessionChanged');
-    const key = cancelled ? 'sessionCancelled' : reinstated ? 'sessionReinstated' : 'sessionChanged';
-    const valtozas =
-      timeChanged && placeChanged ? changed.changedBoth : timeChanged ? changed.changedTime : changed.changedPlace;
-    await send(req, to, (u) =>
-      fromTemplate(
-        texts,
-        key,
-        {
-          keresztnev: u.firstName,
-          cim: title,
-          mikor: cancelled ? oldWhen : when,
-          hol: cancelled ? oldPlace : place,
-          valtozas,
-        },
-        {
-          greet: u,
-          details: cancelled
-            ? [
-                { label: c.labelWhen, value: oldWhen },
-                { label: c.labelWhere, value: oldPlace },
-              ]
-            : [
-                { label: c.labelWhen, value: when, ...(timeChanged ? { was: oldWhen } : {}) },
-                { label: c.labelWhere, value: place, ...(placeChanged ? { was: oldPlace } : {}) },
-              ],
-          href: siteUrl('/fiokom'),
-        },
-      ),
-    );
-  } catch (err) {
-    req.payload.logger.error({ err, msg: 'session e-mail failed' });
   }
 }
