@@ -97,18 +97,18 @@ function CalendarBadgeIcon({ className, badge }: IconProps & { badge: string }) 
     <svg className={className} viewBox="0 0 24 24" strokeWidth={1.8} {...stroke} aria-hidden="true">
       <rect x="2" y="4" width="14" height="13" rx="2" />
       <path d="M2 8.5h14M6 2.5v3M12 2.5v3" />
-      <circle cx="17" cy="17" r="6.5" fill="currentColor" stroke="var(--color-paper)" strokeWidth={1.5} />
+      <circle cx="15.5" cy="15.5" r="6.5" fill="currentColor" stroke="var(--color-paper)" strokeWidth={1.5} />
       <path d={badge} stroke="var(--color-paper)" strokeWidth={1.8} />
     </svg>
   );
 }
 
 export function CalendarPlusIcon({ className = 'h-[22px] w-[22px] shrink-0' }: IconProps) {
-  return <CalendarBadgeIcon className={className} badge="M17 13.8v6.4M13.8 17h6.4" />;
+  return <CalendarBadgeIcon className={className} badge="M15.5 12.3v6.4M12.3 15.5h6.4" />;
 }
 
 export function CalendarDownloadIcon({ className = 'h-[22px] w-[22px] shrink-0' }: IconProps) {
-  return <CalendarBadgeIcon className={className} badge="M17 13.6v6.4M14.3 17.6l2.7 2.7 2.7-2.7" />;
+  return <CalendarBadgeIcon className={className} badge="M15.5 12.1v6.4M12.8 16.1l2.7 2.7 2.7-2.7" />;
 }
 
 export function ReceiptIcon({ className = 'h-[18px] w-[18px]' }: IconProps) {
