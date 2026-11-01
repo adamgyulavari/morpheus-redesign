@@ -1,6 +1,7 @@
 /**
- * What a student sees in /fiokom: their active groups, the upcoming sessions of those groups and of
- * the productions linked to them, their groupmates' practice, their links and their own bookings.
+ * What a student sees in /fiokom: their groups (ongoing and past), the upcoming sessions of the
+ * ongoing ones and of the productions linked to any of them, their groupmates' practice, their links
+ * and their own bookings.
  * Read on the server for this user only (room data isn't readable through the API by students);
  * staff notes are never included.
  */
@@ -36,7 +37,7 @@ export type OverviewPractice = {
 };
 
 export async function studentOverview(payload: Payload, user: TypedUser) {
-  const { groups, productions } = await studentGroups(payload, user.id);
+  const { groups, past, productions } = await studentGroups(payload, user.id);
   const groupIds = groups.map((g) => g.id);
   const productionIds = productions.map((p) => p.id);
   const now = new Date().toISOString();
@@ -142,6 +143,9 @@ export async function studentOverview(payload: Payload, user: TypedUser) {
     note: relId(b.user) === user.id && b.note ? b.note : undefined,
   });
   const allPractice = practice?.docs ?? [];
+  // the titles of the shows a group plays (its "Játszó csoportok")
+  const showsOf = (groupId: number) =>
+    productions.filter((p) => relIds(p.courseGroups).includes(groupId)).map((p) => p.title);
 
   return {
     active: groups.length > 0 || productions.length > 0,
@@ -150,12 +154,22 @@ export async function studentOverview(payload: Payload, user: TypedUser) {
     groups: groups.map((g) => ({
       id: g.id,
       title: g.title,
+      type: g.type,
+      shows: showsOf(g.id),
       startDate: g.startDate,
       endDate: g.endDate,
       info: g.info,
       instructors: relIds(g.instructors)
         .map((id) => instructorName.get(id))
         .filter(Boolean) as string[],
+    })),
+    /** Ended groups, latest first. */
+    past: past.map((g) => ({
+      id: g.id,
+      title: g.title,
+      startDate: g.startDate,
+      endDate: g.endDate,
+      shows: showsOf(g.id),
     })),
     productions: productions.map((p) => ({ id: p.id, title: p.title })),
     sessions: (sessions?.docs ?? []).map(

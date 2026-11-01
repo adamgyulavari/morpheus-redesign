@@ -49,6 +49,27 @@ function Section({ title, children, action }: { title: string; children: ReactNo
 
 const Empty = ({ children }: { children: ReactNode }) => <p className="text-[15px] text-muted">{children}</p>;
 
+type Group = Awaited<ReturnType<typeof studentOverview>>['groups'][number];
+
+/** A group: its dates, instructors, the shows it plays and the staff's info. */
+function GroupCard({ group: g, plays }: { group: Group; plays: string }) {
+  return (
+    <Card>
+      <h3 className="font-display text-[26px] leading-tight lg:text-[30px]">{g.title}</h3>
+      <p className="text-[15px] font-semibold text-teal">
+        {g.startDate && g.endDate && dateRange(day(g.startDate), day(g.endDate))}
+        {g.instructors.length > 0 && <span className="font-normal text-ink2"> · {g.instructors.join(', ')}</span>}
+      </p>
+      {g.shows.length > 0 && <p className="text-[15px] text-ink2">{fill(plays, { shows: g.shows.join(', ') })}</p>}
+      {g.info && (
+        <div className="text-[16px] leading-[1.7] text-ink2 [&_a]:underline [&_h2]:mb-3 [&_h2]:mt-6 [&_h2]:font-display [&_h2]:text-[24px] [&_h2]:text-ink [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:font-bold [&_h3]:text-ink [&_li]:mb-1 [&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:mb-3 [&_strong]:font-bold [&_strong]:text-ink [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-6">
+          <RichText data={g.info as SerializedEditorState} disableContainer />
+        </div>
+      )}
+    </Card>
+  );
+}
+
 /**
  * The student area's overview. Left: what's coming — the sessions of my groups and their productions,
  * the practice bookings (my groupmates' and mine, with my note and "Lemondás") and my Nyitott Műhely
@@ -71,11 +92,16 @@ export default async function AccountPage() {
       {chunk}
     </Link>
   );
+  // the company and the casts of shows apart from the courses
+  const isEnsemble = (g: Group) => g.type === 'tarsulat' || (g.type === 'egyeb' && g.shows.length > 0);
+  const courses = o.groups.filter((g) => !isEnsemble(g));
+  const ensembles = o.groups.filter(isEnsemble);
   const now = new Date();
   const agenda = upcomingItems(o, mine, (start) => checkCancel(new Date(start), bookingRules, now).ok);
   // workshop-only visitors, show bookers, applicants and those booking rooms without a course see theirs too
   const hasAnything =
     o.active ||
+    o.past.length > 0 ||
     mine.workshops.length > 0 ||
     mine.shows.length > 0 ||
     mine.pending.length > 0 ||
@@ -100,7 +126,7 @@ export default async function AccountPage() {
           </Section>
 
           <div className="flex flex-col gap-10">
-            {(o.groups.length > 0 || mine.pending.length > 0) && (
+            {(courses.length > 0 || mine.pending.length > 0) && (
               <Section title={t.courses}>
                 {mine.pending.map((p) => (
                   <Card key={`a${p.applicationId}`} className="border-dashed">
@@ -123,22 +149,33 @@ export default async function AccountPage() {
                     </p>
                   </Card>
                 ))}
-                {o.groups.map((g) => (
-                  <Card key={g.id}>
-                    <h3 className="font-display text-[26px] leading-tight lg:text-[30px]">{g.title}</h3>
-                    <p className="text-[15px] font-semibold text-teal">
-                      {g.startDate && g.endDate && dateRange(day(g.startDate), day(g.endDate))}
-                      {g.instructors.length > 0 && (
-                        <span className="font-normal text-ink2"> · {g.instructors.join(', ')}</span>
-                      )}
-                    </p>
-                    {g.info && (
-                      <div className="text-[16px] leading-[1.7] text-ink2 [&_a]:underline [&_h2]:mb-3 [&_h2]:mt-6 [&_h2]:font-display [&_h2]:text-[24px] [&_h2]:text-ink [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:font-bold [&_h3]:text-ink [&_li]:mb-1 [&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:mb-3 [&_strong]:font-bold [&_strong]:text-ink [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-6">
-                        <RichText data={g.info as SerializedEditorState} disableContainer />
-                      </div>
-                    )}
-                  </Card>
+                {courses.map((g) => (
+                  <GroupCard key={g.id} group={g} plays={t.plays} />
                 ))}
+              </Section>
+            )}
+
+            {ensembles.length > 0 && (
+              <Section title={t.ensembles}>
+                {ensembles.map((g) => (
+                  <GroupCard key={g.id} group={g} plays={t.plays} />
+                ))}
+              </Section>
+            )}
+
+            {o.past.length > 0 && (
+              <Section title={t.pastCourses}>
+                <ul className="flex flex-col gap-3">
+                  {o.past.map((g) => (
+                    <li key={g.id}>
+                      <p className="text-[16px] font-semibold text-ink">{g.title}</p>
+                      <p className="text-[14px] text-muted">
+                        {g.startDate && g.endDate && dateRange(day(g.startDate), day(g.endDate))}
+                        {g.shows.length > 0 && <> · {fill(t.plays, { shows: g.shows.join(', ') })}</>}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
               </Section>
             )}
 

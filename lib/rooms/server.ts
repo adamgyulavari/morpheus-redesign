@@ -41,18 +41,20 @@ const all = { limit: 0, pagination: false } as const;
 // ── who is asking ───────────────────────────────────────────────────────────
 
 /**
- * The student's groups that haven't ended, and the productions linked to any of their groups — an
- * ended one too: last season's group still plays its show.
+ * The student's groups that haven't ended, the ended ones (latest first), and the productions linked
+ * to any of them — an ended one too: last season's group still plays its show.
  */
 export async function studentGroups(payload: Payload, userId: number) {
   const { docs: mine } = await payload.find({
     collection: 'courseGroups',
     where: { students: { in: [userId] } },
     depth: 0,
-    select: { title: true, startDate: true, endDate: true, info: true, instructors: true },
+    select: { title: true, type: true, startDate: true, endDate: true, info: true, instructors: true },
+    sort: '-endDate',
     ...all,
   });
   const groups = mine.filter((g) => isOngoing(g.endDate));
+  const past = mine.filter((g) => !isOngoing(g.endDate));
   const ids = mine.map((g) => g.id);
   const productions = ids.length
     ? (
@@ -66,7 +68,7 @@ export async function studentGroups(payload: Payload, userId: number) {
         })
       ).docs
     : [];
-  return { groups, productions };
+  return { groups, past, productions };
 }
 
 export async function loadSettings(payload: Payload): Promise<BookingSettings> {
