@@ -655,6 +655,7 @@ export interface Production {
   id: number;
   title: string;
   group: 'company' | 'students';
+  subgroup?: ('classics' | 'own') | null;
   /**
    * Pl. „Dráma”
    */
@@ -2000,7 +2001,18 @@ export interface Page {
                * A *csillagok közé* írt rész kiemelve (dőlten, színesen) jelenik meg.
                */
               heading: string;
-              intro: string;
+              intro?: string | null;
+              /**
+               * Üresen hagyva a hallgatói előadások egy listában jelennek meg.
+               */
+              subgroups?:
+                | {
+                    subgroup: 'classics' | 'own';
+                    heading: string;
+                    intro?: string | null;
+                    id?: string | null;
+                  }[]
+                | null;
               id?: string | null;
             }[];
             /**
@@ -3763,6 +3775,14 @@ export interface PagesSelect<T extends boolean = true> {
                     eyebrow?: T;
                     heading?: T;
                     intro?: T;
+                    subgroups?:
+                      | T
+                      | {
+                          subgroup?: T;
+                          heading?: T;
+                          intro?: T;
+                          id?: T;
+                        };
                     id?: T;
                   };
               anchor?: T;
@@ -4091,6 +4111,7 @@ export interface PagesSelect<T extends boolean = true> {
 export interface ProductionsSelect<T extends boolean = true> {
   title?: T;
   group?: T;
+  subgroup?: T;
   genre?: T;
   byline?: T;
   summary?: T;
