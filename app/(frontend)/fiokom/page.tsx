@@ -6,9 +6,11 @@ import type { ReactNode } from 'react';
 
 import AccountNav from '@/components/account/AccountNav';
 import AccountShell from '@/components/account/AccountShell';
+import CalendarSubscribe from '@/components/account/CalendarSubscribe';
 import { Card } from '@/components/account/Card';
 import { accountMetadata } from '@/components/account/meta';
 import ApplicationActions from '@/components/account/upcoming/ApplicationActions';
+import { calendarToken } from '@/components/account/upcoming/calendar';
 import { upcomingItems } from '@/components/account/upcoming/items';
 import UpcomingList from '@/components/account/upcoming/UpcomingList';
 import { ArrowRight } from '@/components/icons';
@@ -24,6 +26,7 @@ import { checkCancel } from '@/lib/rooms/rules';
 import { loadSettings } from '@/lib/rooms/server';
 import { type OverviewProduction, studentOverview } from '@/lib/rooms/student';
 import { userIsStaffOrAdmin } from '@/payload/access';
+import { siteUrl } from '@/payload/email';
 
 // per visitor, never cached or prerendered (the build has no database)
 export const dynamic = 'force-dynamic';
@@ -106,7 +109,7 @@ function ProductionTile({ production: p }: { production: OverviewProduction }) {
 /**
  * The student area's overview. Left: what's coming — the sessions of my groups and their productions,
  * the practice bookings (my groupmates' and mine, with my note and "Lemondás") and my Nyitott Műhely
- * dates. Right: my current course (with pending applications), the shows I play in, my past courses,
+ * dates, and subscribing to them in a calendar. Right: my current course (with pending applications), the shows I play in, my past courses,
  * links. Fresh on every request.
  * An unfinished payment is on top ("Fizetés folytatása"); invoices are on /fiokom/szamlaim.
  */
@@ -152,9 +155,12 @@ export default async function AccountPage() {
         </Card>
       ) : (
         <div className="grid gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
-          <Section title={t.upcoming}>
-            {agenda.length === 0 ? <Empty>{t.noUpcoming}</Empty> : <UpcomingList items={agenda} />}
-          </Section>
+          <div className="flex flex-col gap-10">
+            <Section title={t.upcoming}>
+              {agenda.length === 0 ? <Empty>{t.noUpcoming}</Empty> : <UpcomingList items={agenda} />}
+            </Section>
+            <CalendarSubscribe feed={siteUrl(`/naptar/${await calendarToken(payload, user.id)}.ics`)} t={t} />
+          </div>
 
           <div className="flex flex-col gap-10">
             {(courses.length > 0 || mine.pending.length > 0) && (

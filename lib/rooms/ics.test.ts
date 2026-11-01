@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { icsFile } from './ics';
+import { icsCalendar, icsFile } from './ics';
 import { at } from './time';
 
 const event = {
@@ -36,5 +36,16 @@ describe('icsFile', () => {
     const lines = ics.split('\r\n');
     expect(lines.some((l) => l.startsWith(' '))).toBe(true);
     expect(lines.every((l) => new TextEncoder().encode(l).length <= 75)).toBe(true);
+  });
+});
+
+describe('icsCalendar', () => {
+  it('names the calendar and lists every event, a cancelled one marked', () => {
+    const ics = icsCalendar('Morpheus Színműhely', [event, { ...event, uid: 'session-3@x', cancelled: true }]);
+    expect(ics).toContain('X-WR-CALNAME:Morpheus Színműhely\r\n');
+    expect(ics).toContain('METHOD:PUBLISH\r\n');
+    expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(2);
+    expect(ics).toContain('STATUS:CANCELLED\r\n');
+    expect(ics).not.toContain('SEQUENCE:1');
   });
 });

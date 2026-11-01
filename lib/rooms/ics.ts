@@ -1,6 +1,7 @@
 /**
- * A one-event iCalendar file (RFC 5545) for e-mails: adding a booking to the student's calendar,
- * or (same UID, higher SEQUENCE, METHOD:CANCEL) removing it again.
+ * iCalendar (RFC 5545): a one-event file for e-mails and the "Naptárba" buttons — adding a booking
+ * to the student's calendar, or (same UID, higher SEQUENCE, METHOD:CANCEL) removing it again — and
+ * the calendar feed a student subscribes to (/naptar/<token>).
  */
 export type IcsEvent = {
   uid: string;
@@ -36,25 +37,37 @@ function fold(line: string): string {
   return parts.join('\r\n ');
 }
 
+const vevent = (e: IcsEvent, now: Date, sequence: number) => [
+  'BEGIN:VEVENT',
+  `UID:${e.uid}`,
+  `SEQUENCE:${sequence}`,
+  `DTSTAMP:${stamp(now)}`,
+  `DTSTART:${stamp(e.start)}`,
+  `DTEND:${stamp(e.end)}`,
+  `SUMMARY:${text(e.summary)}`,
+  ...(e.location ? [`LOCATION:${text(e.location)}`] : []),
+  ...(e.description ? [`DESCRIPTION:${text(e.description)}`] : []),
+  `STATUS:${e.cancelled ? 'CANCELLED' : 'CONFIRMED'}`,
+  'END:VEVENT',
+];
+
+const calendar = (head: string[], events: string[][]) =>
+  `${['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Morpheus Szinmuhely//Teremfoglalas//HU', 'CALSCALE:GREGORIAN', ...head, ...events.flat(), 'END:VCALENDAR'].map(fold).join('\r\n')}\r\n`;
+
 export function icsFile(e: IcsEvent, now = new Date()): string {
-  const lines = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//Morpheus Szinmuhely//Teremfoglalas//HU',
-    'CALSCALE:GREGORIAN',
-    `METHOD:${e.cancelled ? 'CANCEL' : 'PUBLISH'}`,
-    'BEGIN:VEVENT',
-    `UID:${e.uid}`,
-    `SEQUENCE:${e.cancelled ? 1 : 0}`,
-    `DTSTAMP:${stamp(now)}`,
-    `DTSTART:${stamp(e.start)}`,
-    `DTEND:${stamp(e.end)}`,
-    `SUMMARY:${text(e.summary)}`,
-    ...(e.location ? [`LOCATION:${text(e.location)}`] : []),
-    ...(e.description ? [`DESCRIPTION:${text(e.description)}`] : []),
-    `STATUS:${e.cancelled ? 'CANCELLED' : 'CONFIRMED'}`,
-    'END:VEVENT',
-    'END:VCALENDAR',
-  ];
-  return `${lines.map(fold).join('\r\n')}\r\n`;
+  return calendar([`METHOD:${e.cancelled ? 'CANCEL' : 'PUBLISH'}`], [vevent(e, now, e.cancelled ? 1 : 0)]);
+}
+
+/** A subscribed calendar: every event as it is now (a cancelled one stays, marked so); refetched every few hours. */
+export function icsCalendar(name: string, events: IcsEvent[], now = new Date()): string {
+  return calendar(
+    [
+      'METHOD:PUBLISH',
+      `X-WR-CALNAME:${text(name)}`,
+      'X-WR-TIMEZONE:Europe/Budapest',
+      'REFRESH-INTERVAL;VALUE=DURATION:PT3H',
+      'X-PUBLISHED-TTL:PT3H',
+    ],
+    events.map((e) => vevent(e, now, 0)),
+  );
 }

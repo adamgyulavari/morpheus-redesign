@@ -1,7 +1,7 @@
 /** Building blocks of the "Közelgő alkalmak" list: the next item's card, a day's date, a two-line entry. */
 import Link from 'next/link';
 
-import { PinIcon } from '@/components/icons';
+import { CalendarIcon, PinIcon } from '@/components/icons';
 import { fill } from '@/lib/format';
 
 import ApplicationActions from './ApplicationActions';
@@ -41,8 +41,17 @@ export function NextCard({ item, t }: Props) {
         </span>
         {item.booker && <span className="text-muted">{fill(t.bookedBy, { name: item.booker })}</span>}
         {item.note && <span className="italic text-muted">„{item.note}”</span>}
-        {(item.application || item.practice) && (
-          <span className="ml-auto">
+        {(item.handle || item.application || item.practice) && (
+          <span className="ml-auto flex items-center gap-4">
+            {item.handle && (
+              <a
+                href={`/fiokom/naptar/${item.handle}`}
+                className="link inline-flex items-center gap-1.5 text-[14px] font-semibold text-teal"
+              >
+                <CalendarIcon className="h-4 w-4" />
+                {t.addToCalendar}
+              </a>
+            )}
             <Actions item={item} t={t} />
           </span>
         )}
@@ -100,6 +109,16 @@ export function Entry({ item, t }: Props) {
     <div className="flex min-h-12 items-center gap-3.5">
       <KindBadge kind={item.kind} cancelled={item.cancelled} t={t} />
       <EntryText item={item} t={t} />
+      {item.handle && !item.cancelled && (
+        <a
+          href={`/fiokom/naptar/${item.handle}`}
+          className="shrink-0 rounded-full p-2 text-teal transition-colors hover:bg-sand"
+          title={t.addToCalendar}
+          aria-label={`${t.addToCalendar}: ${item.title}`}
+        >
+          <CalendarIcon />
+        </a>
+      )}
       {(item.application || item.practice) && <Actions item={item} t={t} />}
     </div>
   );
