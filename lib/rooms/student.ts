@@ -50,7 +50,7 @@ export async function studentOverview(payload: Payload, user: TypedUser) {
       select: { name: true },
       ...all,
     }),
-    groupIds.length
+    groupIds.length || productionIds.length
       ? payload.find({
           collection: 'sessions',
           where: {
@@ -58,7 +58,7 @@ export async function studentOverview(payload: Payload, user: TypedUser) {
               { end: { greater_than: now } },
               {
                 or: [
-                  { courseGroup: { in: groupIds } },
+                  ...(groupIds.length ? [{ courseGroup: { in: groupIds } }] : []),
                   ...(productionIds.length ? [{ production: { in: productionIds } }] : []),
                 ],
               },
@@ -144,7 +144,7 @@ export async function studentOverview(payload: Payload, user: TypedUser) {
   const allPractice = practice?.docs ?? [];
 
   return {
-    active: groups.length > 0,
+    active: groups.length > 0 || productions.length > 0,
     /** May book rooms (staff's permission). */
     mayBook: mayBookRooms(user),
     groups: groups.map((g) => ({

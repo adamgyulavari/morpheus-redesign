@@ -7,9 +7,9 @@
 import type { Payload, TypedUser, Where } from 'payload';
 import { cache } from 'react';
 import { applicationSettings } from '@/lib/applications/settings';
-import { todayInBudapest } from '@/lib/dates';
 import { type Result, say } from '@/lib/messages';
 import { userIsStaffOrAdmin } from '@/payload/access';
+import { isOngoing } from '@/payload/collections/CourseGroups';
 import { relId, relIds } from '@/payload/rel';
 import { uiTexts } from '@/payload/ui-texts';
 import type { Session } from '@/payload-types';
@@ -40,17 +40,20 @@ const all = { limit: 0, pagination: false } as const;
 
 // ── who is asking ───────────────────────────────────────────────────────────
 
-/** The student's groups that haven't ended, and the productions linked to them. */
+/**
+ * The student's groups that haven't ended, and the productions linked to any of their groups — an
+ * ended one too: last season's group still plays its show.
+ */
 export async function studentGroups(payload: Payload, userId: number) {
-  const today = todayInBudapest();
-  const { docs: groups } = await payload.find({
+  const { docs: mine } = await payload.find({
     collection: 'courseGroups',
-    where: { and: [{ students: { in: [userId] } }, { endDate: { greater_than_equal: `${today}T00:00:00.000Z` } }] },
+    where: { students: { in: [userId] } },
     depth: 0,
     select: { title: true, startDate: true, endDate: true, info: true, instructors: true },
     ...all,
   });
-  const ids = groups.map((g) => g.id);
+  const groups = mine.filter((g) => isOngoing(g.endDate));
+  const ids = mine.map((g) => g.id);
   const productions = ids.length
     ? (
         await payload.find({
