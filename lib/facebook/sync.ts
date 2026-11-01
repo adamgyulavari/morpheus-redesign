@@ -51,7 +51,9 @@ const differs = (s: Show, w: ReturnType<typeof forShow>) =>
   ('ticketUrl' in w && (s.ticketUrl ?? null) !== w.ticketUrl) ||
   Boolean(s.hidden);
 
-export async function syncFromFacebook(payload: Payload, events?: FbEvent[]): Promise<SyncResult> {
+export async function syncFromFacebook(payload: Payload, notify: boolean, events?: FbEvent[]): Promise<SyncResult> {
+  // a show at our venue cancels student practice in its way: its student is e-mailed with `notify`
+  const context = { notify };
   const list = events ?? (await upcomingEvents());
   const today = todayInBudapest();
   const [{ docs: productions }, { docs: venues }, { docs: shows }] = await Promise.all([
@@ -96,6 +98,7 @@ export async function syncFromFacebook(payload: Payload, events?: FbEvent[]): Pr
       const doc = await payload.create({
         collection: 'shows',
         data: { ...w, bookingMode: 'external', facebookEventId: e.id, hidden: false },
+        context,
       });
       result.created.push({ ...line, showId: doc.id });
       if (doc.roomNote) result.rooms.push({ ...line, showId: doc.id, note: doc.roomNote });
@@ -104,6 +107,7 @@ export async function syncFromFacebook(payload: Payload, events?: FbEvent[]): Pr
         collection: 'shows',
         id: target.id,
         data: { ...forShow(target, w), facebookEventId: e.id, hidden: false },
+        context,
       });
       if (doc.roomNote && doc.roomNote !== target.roomNote)
         result.rooms.push({ ...line, showId: target.id, note: doc.roomNote });

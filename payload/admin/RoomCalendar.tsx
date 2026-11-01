@@ -43,6 +43,7 @@ import type { ScheduleEvent, WorkshopFill } from '@/lib/rooms/server';
 import { addDays, at, clockOf, dayOf, daysOfMonth } from '@/lib/rooms/time';
 
 import s from './admin.module.css';
+import { EmailToggle } from './EmailToggle';
 
 type Options = NonNullable<Awaited<ReturnType<typeof calendarOptions>>>;
 type Unplaced = NonNullable<Awaited<ReturnType<typeof adminSchedule>>>['unplaced'];
@@ -106,6 +107,12 @@ export default function RoomCalendar({ isAdmin }: { isAdmin: boolean }) {
   if (!opts) return <p className={s.muted}>Betöltés…</p>;
 
   const onEventChange = async (e: ScheduleEvent, change: { start: Date; end: Date }, revert: () => void) => {
+    // a student's practice: moved in the form, where its e-mail can be left out
+    if (e.kind === 'practice') {
+      revert();
+      setDraft({ start: change.start, end: change.end, roomIds: e.roomIds, existing: e });
+      return say('Diák-gyakorlás: az új időpontot az űrlapon mentsd.');
+    }
     const times = { start: change.start.toISOString(), end: change.end.toISOString() };
     // an external session has no booking: the session itself moves
     const r = e.bookingId
@@ -269,6 +276,7 @@ function EntryForm({
   const [location, setLocation] = useState<LocationType>(draft.existing?.external ? 'external' : 'room');
   const [confirm, setConfirm] = useState<'cancel' | 'delete' | null>(null);
   const [override, setOverride] = useState(false);
+  const [notify, setNotify] = useState(true);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -279,6 +287,8 @@ function EntryForm({
   const withLocation = isSession || (isNew && what === 'session');
   const withRooms = !withLocation || location === 'room';
   const heading = placing ? `Elhelyezés: ${placing.title}` : existing ? existing.title : 'Új bejegyzés';
+  // e-mails: the student of this practice booking (moved, cancelled), or those whose practice the override cancels
+  const practice = existing?.kind === 'practice';
 
   const save = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -295,9 +305,9 @@ function EntryForm({
     let r: { ok: boolean; reason?: string; locationType?: string };
     const sessionId = placing?.sessionId ?? existing?.sessionId;
     if (sessionId) {
-      r = await updateSession(sessionId, { ...times, ...place, overridePractice: override });
+      r = await updateSession(sessionId, { ...times, ...place, overridePractice: override, notify });
     } else if (existing?.bookingId) {
-      r = await updateBooking(existing.bookingId, { ...times, roomIds, overridePractice: override });
+      r = await updateBooking(existing.bookingId, { ...times, roomIds, overridePractice: override, notify });
     } else if (what === 'session') {
       r = await createSession({
         kind,
@@ -307,6 +317,7 @@ function EntryForm({
         ...times,
         ...place,
         overridePractice: override,
+        notify,
       });
     } else {
       r = await createBooking({
@@ -315,6 +326,7 @@ function EntryForm({
         ...times,
         roomIds,
         overridePractice: override,
+        notify,
       });
     }
     setBusy(false);
@@ -333,7 +345,11 @@ function EntryForm({
         : existing.sessionId
           ? await updateSession(existing.sessionId, { status: 'cancelled' })
           : existing.bookingId
-            ? await updateBooking(existing.bookingId, { status: 'cancelled', cancelReason: 'A munkatársak lemondták.' })
+            ? await updateBooking(existing.bookingId, {
+                status: 'cancelled',
+                cancelReason: 'A munkatársak lemondták.',
+                notify,
+              })
             : { ok: false as const, reason: 'Ismeretlen bejegyzés.' };
     setBusy(false);
     if (!r.ok) return setError(r.reason);
@@ -483,10 +499,22 @@ function EntryForm({
           <span>
             Ütköző diákfoglalások felülírása
             <span className={s.muted} style={{ display: 'block' }}>
-              Mentéskor lemondja az útban lévő diák-gyakorlásokat (a diákok e-mailt kapnak).
+              Mentéskor lemondja az útban lévő diák-gyakorlásokat.
             </span>
           </span>
         </label>
+      )}
+      {(practice || override) && (
+        <EmailToggle
+          checked={notify}
+          onChange={setNotify}
+          to={practice ? existing?.booker || 'a diák' : 'az érintett diákok'}
+          what={
+            practice
+              ? 'Ha áthelyezed vagy lemondod: értesítés a foglalásáról'
+              : 'Értesítés, hogy az adminisztrátor lemondta a gyakorlásukat'
+          }
+        />
       )}
       {error && (
         <p className={s.error} role="alert">
@@ -495,7 +523,11 @@ function EntryForm({
       )}
       {confirm ? (
         <div className={s.row}>
-          <span className={s.notice}>{confirm === 'delete' ? 'Biztosan törlöd?' : 'Biztosan lemondod?'}</span>
+          <span className={s.notice}>
+            {confirm === 'delete'
+              ? 'Biztosan törlöd? (E-mail nem megy.)'
+              : `Biztosan lemondod?${practice ? (notify ? ' (A diák e-mailt kap.)' : ' (E-mail nem megy.)') : ''}`}
+          </span>
           <button type="button" className={`${s.btn} ${s.danger}`} onClick={act} disabled={busy}>
             Igen
           </button>

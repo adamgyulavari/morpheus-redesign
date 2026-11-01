@@ -21,6 +21,7 @@ import {
 import { APPLICATION_STATUSES, WORKSHOP_STATUSES } from '@/lib/applications/labels';
 import type { Decision } from '@/lib/applications/server';
 import s from './admin.module.css';
+import { EmailToggle } from './EmailToggle';
 
 type Data = NonNullable<Awaited<ReturnType<typeof dashboardData>>>;
 type App = Data['beginners'][number];
@@ -283,17 +284,32 @@ function DecisionDialog({
   groups: Data['groups']['beginner'];
   busy: boolean;
   onClose: () => void;
-  onDecide: (input: { decision: Decision; paid?: boolean; paymentNote?: string; groupId?: number | null }) => void;
+  onDecide: (input: {
+    decision: Decision;
+    paid?: boolean;
+    paymentNote?: string;
+    groupId?: number | null;
+    notify: boolean;
+  }) => void;
 }) {
   const titleId = useId();
   const [paid, setPaid] = useState(app.paidOffline);
   const [note, setNote] = useState(app.paymentNote);
   const [group, setGroup] = useState<number | ''>(app.group?.id ?? (groups.length === 1 ? (groups[0]?.id ?? '') : ''));
   const [confirm, setConfirm] = useState<Decision | null>(null);
+  const [notify, setNotify] = useState(true);
   const payment = kind === 'professional' ? {} : { paid, paymentNote: note };
   // szakmai: always chosen at admission; kezdő: only when the application came without a group
   const choosesGroup = kind === 'professional' || (kind === 'beginner' && !app.group);
-  const go = (decision: Decision) => onDecide({ decision, ...payment, groupId: group || null });
+  const go = (decision: Decision) => onDecide({ decision, ...payment, groupId: group || null, notify });
+  // what the e-mailing button sends: admitting to a course, or cancelling a workshop place
+  const emails =
+    kind === 'workshop'
+      ? app.status === 'registered' && { what: 'Lemondáskor: értesítés, hogy lemondtuk a helyét' }
+      : (kind === 'beginner' || app.status === 'new' || app.status === 'interview') && {
+          what: 'Felvételkor: „Felvettünk a csoportba” üdvözlő levél',
+        };
+  const mail = notify ? '(Üdvözlő levél megy.)' : '(E-mail nem megy.)';
   // decisions that can't be undone ask once more (the button's text changes)
   const ask = (decision: Decision) => (confirm === decision ? go(decision) : setConfirm(decision));
   const label = (decision: Decision, text: string, sure: string) => (confirm === decision ? sure : text);
@@ -343,6 +359,10 @@ function DecisionDialog({
           </label>
         )}
 
+        {emails && (
+          <EmailToggle checked={notify} onChange={setNotify} to={`${app.name} (${app.email})`} what={emails.what} />
+        )}
+
         <div className={s.actions} style={{ justifyContent: 'flex-start', flexWrap: 'wrap' }}>
           {kind !== 'professional' && (
             <button type="button" className={s.btn} disabled={busy} onClick={() => go('save')}>
@@ -357,12 +377,8 @@ function DecisionDialog({
               onClick={() => ask('admit')}
             >
               {choosesGroup
-                ? label(
-                    'admit',
-                    'Mentés és csoportba helyezés',
-                    'Biztosan ebbe a csoportba veszed fel? (Üdvözlő levél megy.)',
-                  )
-                : label('admit', 'Mentés és felvétel', 'Biztosan felveszed? (Üdvözlő levél megy.)')}
+                ? label('admit', 'Mentés és csoportba helyezés', `Biztosan ebbe a csoportba veszed fel? ${mail}`)
+                : label('admit', 'Mentés és felvétel', `Biztosan felveszed? ${mail}`)}
             </button>
           )}
           {kind === 'professional' && app.status === 'new' && (
@@ -377,7 +393,7 @@ function DecisionDialog({
               disabled={busy || !group}
               onClick={() => ask('admit')}
             >
-              {label('admit', 'Felvétel és csoportba helyezés', 'Biztosan felveszed ebbe a csoportba?')}
+              {label('admit', 'Felvétel és csoportba helyezés', `Biztosan felveszed ebbe a csoportba? ${mail}`)}
             </button>
           )}
           {kind !== 'workshop' && (
@@ -387,7 +403,7 @@ function DecisionDialog({
           )}
           {kind === 'workshop' && app.status === 'registered' && (
             <button type="button" className={`${s.btn} ${s.danger}`} disabled={busy} onClick={() => ask('cancel')}>
-              {label('cancel', 'Lemondás', 'Biztosan lemondod? (E-mailt kap.)')}
+              {label('cancel', 'Lemondás', `Biztosan lemondod? ${notify ? '(E-mailt kap.)' : '(E-mail nem megy.)'}`)}
             </button>
           )}
         </div>
@@ -404,6 +420,7 @@ function DecisionDialog({
 function Workshop({ w, busy, act, manage }: { w: Data['workshops'][number]; busy: boolean; act: Act; manage: Manage }) {
   const [adding, setAdding] = useState(false);
   const [writing, setWriting] = useState(false);
+  const [confirmAdd, setConfirmAdd] = useState(true);
   const status =
     w.status === 'cancelled'
       ? 'Elmarad'
@@ -416,7 +433,7 @@ function Workshop({ w, busy, act, manage }: { w: Data['workshops'][number]; busy
     const f = new FormData(e.currentTarget);
     const v = (k: string) => String(f.get(k) ?? '').trim();
     const input = { lastName: v('lastName'), firstName: v('firstName'), email: v('email'), phone: v('phone') };
-    if (await act(() => addParticipantAction(w.id, input))) setAdding(false);
+    if (await act(() => addParticipantAction(w.id, input, confirmAdd))) setAdding(false);
   };
   const send = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -507,8 +524,14 @@ function Workshop({ w, busy, act, manage }: { w: Data['workshops'][number]; busy
             </label>
           </div>
           <p className={s.muted} style={{ margin: 0 }}>
-            Ha nincs még fiókja, létrehozzuk; visszaigazolást kap belépési linkkel.
+            Ha nincs még fiókja, létrehozzuk.
           </p>
+          <EmailToggle
+            checked={confirmAdd}
+            onChange={setConfirmAdd}
+            to="az új résztvevő"
+            what="Visszaigazolás a jelentkezésről, belépési linkkel"
+          />
           <div className={s.row}>
             <button type="submit" className={`${s.btn} ${s.primary}`} disabled={busy}>
               Hozzáadás

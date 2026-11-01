@@ -90,6 +90,8 @@ export type SessionInput = {
   roomIds: number[];
   externalLocation?: string;
   overridePractice?: boolean;
+  /** Students whose practice an override cancels get an e-mail. */
+  notify: boolean;
 };
 
 export async function createSession(input: SessionInput): Promise<Result<{ id: number }>> {
@@ -113,6 +115,7 @@ export async function createSession(input: SessionInput): Promise<Result<{ id: n
       },
       user,
       overrideAccess: false,
+      context: { notify: input.notify },
     });
     return { ok: true, id: doc.id };
   } catch (err) {
@@ -121,7 +124,7 @@ export async function createSession(input: SessionInput): Promise<Result<{ id: n
 }
 
 export type SessionChange = Partial<
-  Pick<SessionInput, 'start' | 'end' | 'locationType' | 'roomIds' | 'externalLocation' | 'overridePractice'>
+  Pick<SessionInput, 'start' | 'end' | 'locationType' | 'roomIds' | 'externalLocation' | 'overridePractice' | 'notify'>
 > & {
   status?: 'scheduled' | 'cancelled';
 };
@@ -130,7 +133,7 @@ export type SessionChange = Partial<
 export async function updateSession(id: number, change: SessionChange): Promise<Result<{ locationType: string }>> {
   const user = await staff();
   if (!user) return denied;
-  const { roomIds, ...rest } = change;
+  const { roomIds, notify, ...rest } = change;
   try {
     const doc = await (await payloadClient()).update({
       collection: 'sessions',
@@ -138,6 +141,7 @@ export async function updateSession(id: number, change: SessionChange): Promise<
       data: { ...rest, ...(roomIds ? { rooms: roomIds } : {}) },
       user,
       overrideAccess: false,
+      context: { notify },
     });
     return { ok: true, locationType: doc.locationType };
   } catch (err) {
@@ -152,17 +156,20 @@ export type BookingInput = {
   end: string;
   roomIds: number[];
   overridePractice?: boolean;
+  notify: boolean;
 };
 
 export async function createBooking(input: BookingInput): Promise<Result<{ id: number }>> {
   const user = await staff();
   if (!user) return denied;
   try {
+    const { notify, ...data } = input;
     const doc = await (await payloadClient()).create({
       collection: 'roomBookings',
-      data: { ...input, rooms: input.roomIds, status: 'confirmed' },
+      data: { ...data, rooms: input.roomIds, status: 'confirmed' },
       user,
       overrideAccess: false,
+      context: { notify },
     });
     return { ok: true, id: doc.id };
   } catch (err) {
@@ -180,12 +187,14 @@ export async function updateBooking(
     status?: 'confirmed' | 'cancelled';
     cancelReason?: string;
     overridePractice?: boolean;
+    /** The student of a practice booking (or of the practice an override cancels) gets an e-mail. */
+    notify?: boolean;
   },
 ): Promise<Result> {
   const user = await staff();
   if (!user) return denied;
   const payload = await payloadClient();
-  const { roomIds, ...rest } = change;
+  const { roomIds, notify, ...rest } = change;
   try {
     const booking = await payload.findByID({ collection: 'roomBookings', id, depth: 0, user, overrideAccess: false });
     if (booking.kind === 'session' && booking.session) {
@@ -195,6 +204,7 @@ export async function updateBooking(
         end: rest.end,
         roomIds,
         overridePractice: rest.overridePractice,
+        notify,
         ...(rest.status === 'cancelled' ? { status: 'cancelled' } : {}),
       });
     }
@@ -204,6 +214,7 @@ export async function updateBooking(
       data: { ...rest, ...(roomIds ? { rooms: roomIds } : {}) },
       user,
       overrideAccess: false,
+      context: { notify },
     });
     return { ok: true };
   } catch (err) {

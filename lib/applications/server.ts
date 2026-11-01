@@ -685,9 +685,16 @@ export async function runWorkshopCutoffs(payload: Payload, now = new Date()) {
 
 /**
  * "Felvétel a kurzusba": the person joins the course group's students; a
- * professional application becomes `accepted` (with the group, if it had none). Welcome e-mail.
+ * professional application becomes `accepted` (with the group, if it had none). Welcome e-mail
+ * with `notify`.
  */
-export async function admit(payload: Payload, staff: TypedUser, id: number, groupId?: number | null): Promise<Result> {
+export async function admit(
+  payload: Payload,
+  staff: TypedUser,
+  id: number,
+  groupId: number | null | undefined,
+  notify: boolean,
+): Promise<Result> {
   const a = await payload.findByID({ collection: 'applications', id, depth: 1, disableErrors: true });
   if (a?.kind !== 'beginner' && a?.kind !== 'professional') return { ok: false, reason: 'Ez nem kurzusjelentkezés.' };
   const targetId = relId(a.courseGroup) ?? groupId ?? null;
@@ -714,6 +721,7 @@ export async function admit(payload: Payload, staff: TypedUser, id: number, grou
   } catch (err) {
     return { ok: false, reason: errorMessage(err) };
   }
+  if (!notify) return { ok: true };
   const settings = await applicationSettings(payload);
   const firstName = typeof a.user === 'object' ? a.user?.firstName : null;
   await sendAccepted(payload, settings, applicantOf(a, firstName), courseInfo(group));
@@ -756,11 +764,12 @@ export async function review(payload: Payload, id: number, status: 'interview' |
   return { ok: true };
 }
 
-/** Adds someone to a workshop date by hand (an account is found or made, as on the site). */
+/** Adds someone to a workshop date by hand (an account is found or made, as on the site); `notify`: the confirmation e-mail. */
 export async function addParticipant(
   payload: Payload,
   sessionId: number,
   input: ApplicantInput,
+  notify: boolean,
 ): Promise<Result<{ applicationId: number }>> {
   const invalid = validateInput({ ...input, kind: 'workshop' }, null, (await uiTexts(payload)).signupErrors);
   if (invalid) return { ok: false, reason: invalid };
@@ -779,19 +788,21 @@ export async function addParticipant(
         phone: applicant.phone,
       },
     });
-    const settings = await applicationSettings(payload);
-    await sendReceived(payload, settings, applicant, 'workshop', await workshopInfo(payload, s, settings), {
-      created,
-      loggedIn: false,
-    });
+    if (notify) {
+      const settings = await applicationSettings(payload);
+      await sendReceived(payload, settings, applicant, 'workshop', await workshopInfo(payload, s, settings), {
+        created,
+        loggedIn: false,
+      });
+    }
     return { ok: true, applicationId: doc.id };
   } catch (err) {
     return { ok: false, reason: errorMessage(err) };
   }
 }
 
-/** Staff cancel a participant (an e-mail tells them). */
-export async function cancelByStaff(payload: Payload, id: number): Promise<Result> {
+/** Staff cancel a participant (with `notify`, an e-mail tells them). */
+export async function cancelByStaff(payload: Payload, id: number, notify: boolean): Promise<Result> {
   const a = await payload.findByID({ collection: 'applications', id, depth: 1, disableErrors: true });
   if (!a || a.kind === 'professional' || a.status !== 'registered')
     return { ok: false, reason: 'Ez a jelentkezés nem mondható le.' };
@@ -800,6 +811,7 @@ export async function cancelByStaff(payload: Payload, id: number): Promise<Resul
     id,
     data: { status: 'cancelled', cancelReason: 'A munkatársak lemondták.' },
   });
+  if (!notify) return { ok: true };
   const settings = await applicationSettings(payload);
   const { info } = await targetAndCount(payload, a, settings);
   await sendCancellation(
@@ -1071,7 +1083,7 @@ export async function decide(
   payload: Payload,
   staff: TypedUser,
   id: number,
-  input: { decision: Decision; paid?: boolean; paymentNote?: string; groupId?: number | null },
+  input: { decision: Decision; paid?: boolean; paymentNote?: string; groupId?: number | null; notify: boolean },
 ): Promise<Result<{ message: string }>> {
   const a = await payload.findByID({ collection: 'applications', id, depth: 0, disableErrors: true });
   if (!a) return { ok: false, reason: 'Nincs ilyen jelentkezés.' };
@@ -1090,8 +1102,12 @@ export async function decide(
     case 'save':
       return saved;
     case 'admit': {
-      const r = await admit(payload, staff, id, input.groupId);
-      return r.ok ? { ok: true, message: 'Felvéve a csoportba; az üdvözlő levél elment.' } : r;
+      const r = await admit(payload, staff, id, input.groupId, input.notify);
+      if (!r.ok) return r;
+      return {
+        ok: true,
+        message: `Felvéve a csoportba; ${input.notify ? 'az üdvözlő levél elment' : 'e-mail nem ment'}.`,
+      };
     }
     case 'interview': {
       const r = await review(payload, id, 'interview');
@@ -1112,8 +1128,9 @@ export async function decide(
       return { ok: true, message: 'Elutasítva, lekerült a listáról (e-mail nem ment).' };
     }
     case 'cancel': {
-      const r = await cancelByStaff(payload, id);
-      return r.ok ? { ok: true, message: 'Lemondva; a résztvevő e-mailt kapott.' } : r;
+      const r = await cancelByStaff(payload, id, input.notify);
+      if (!r.ok) return r;
+      return { ok: true, message: `Lemondva; ${input.notify ? 'a résztvevő e-mailt kapott' : 'e-mail nem ment'}.` };
     }
   }
 }
