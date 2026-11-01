@@ -38,10 +38,11 @@ import * as migration_20261020_014055_guest_role from './20261020_014055_guest_r
 import * as migration_20261020_014320_show_tickets from './20261020_014320_show_tickets';
 import * as migration_20261020_015052_public_ids from './20261020_015052_public_ids';
 import * as migration_20261020_120000_show_booking_texts from './20261020_120000_show_booking_texts';
+import * as migration_20261020_130117_tarsulat from './20261020_130117_tarsulat';
 import * as migration_20261021_184054_google_login from './20261021_184054_google_login';
 import * as migration_20261021_230000_ui_texts_account from './20261021_230000_ui_texts_account';
-import * as migration_20261020_130117_tarsulat from './20261020_130117_tarsulat';
 import * as migration_20261024_144626_home_hero_photos from './20261024_144626_home_hero_photos';
+import * as migration_20261101_125147_footer_terms_link from './20261101_125147_footer_terms_link';
 
 export const migrations = [
   {
@@ -245,9 +246,14 @@ export const migrations = [
     name: '20261020_120000_show_booking_texts',
   },
   {
+    up: migration_20261020_130117_tarsulat.up,
+    down: migration_20261020_130117_tarsulat.down,
+    name: '20261020_130117_tarsulat',
+  },
+  {
     up: migration_20261021_184054_google_login.up,
     down: migration_20261021_184054_google_login.down,
-    name: '20261021_184054_google_login'
+    name: '20261021_184054_google_login',
   },
   {
     up: migration_20261021_230000_ui_texts_account.up,
@@ -255,13 +261,13 @@ export const migrations = [
     name: '20261021_230000_ui_texts_account',
   },
   {
-    up: migration_20261020_130117_tarsulat.up,
-    down: migration_20261020_130117_tarsulat.down,
-    name: '20261020_130117_tarsulat',
-  },
-  {
     up: migration_20261024_144626_home_hero_photos.up,
     down: migration_20261024_144626_home_hero_photos.down,
     name: '20261024_144626_home_hero_photos',
+  },
+  {
+    up: migration_20261101_125147_footer_terms_link.up,
+    down: migration_20261101_125147_footer_terms_link.down,
+    name: '20261101_125147_footer_terms_link',
   },
 ];

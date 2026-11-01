@@ -4898,6 +4898,13 @@ export interface SiteSetting {
      */
     href: string;
   };
+  terms: {
+    label: string;
+    /**
+     * Oldal (pl. /kapcsolat), szakasz (#idopontok) vagy teljes webcím (https://…).
+     */
+    href: string;
+  };
   contact: {
     email: string;
     address: string;
@@ -5803,6 +5810,12 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         id?: T;
       };
   privacy?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+      };
+  terms?:
     | T
     | {
         label?: T;
