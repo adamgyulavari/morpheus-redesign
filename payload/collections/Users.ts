@@ -131,6 +131,14 @@ export const Users: CollectionConfig = {
       },
     },
     {
+      // the secret of the account's calendar feed (/naptar/<token>), made when /fiokom first shows it
+      name: 'calendarToken',
+      type: 'text',
+      unique: true,
+      index: true,
+      hidden: true,
+    },
+    {
       // the buyer on invoices; prefilled at checkout (/fizetes), editable in /fiokom/adatok
       name: 'billing',
       label: 'Számlázási adatok',

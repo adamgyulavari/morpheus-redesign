@@ -5,6 +5,7 @@
  * Read on the server for this user only (room data isn't readable through the API by students);
  * staff notes are never included.
  */
+import { createHmac } from 'node:crypto';
 import type { Payload, TypedUser } from 'payload';
 
 import { img } from '@/lib/cms-map';
@@ -19,6 +20,8 @@ const all = { limit: 0, pagination: false } as const;
 
 export type OverviewSession = {
   id: number;
+  /** Its handle in the "Naptárba" link: opaque, not the sequential id. */
+  ref: string;
   title: string;
   kind: SessionKind;
   start: string;
@@ -41,11 +44,12 @@ export type OverviewPractice = {
   note?: string;
 };
 
-export async function studentOverview(payload: Payload, user: TypedUser) {
+/** `since`: the sessions and bookings ending after it (the calendar feed's reaches back); by default now. */
+export async function studentOverview(payload: Payload, user: TypedUser, since?: Date) {
   const { groups, past, productions } = await studentGroups(payload, user.id);
   const groupIds = groups.map((g) => g.id);
   const productionIds = productions.map((p) => p.id);
-  const now = new Date().toISOString();
+  const now = (since ?? new Date()).toISOString();
 
   const [rooms, instructors, sessions, practice, links, shows] = await Promise.all([
     payload.find({ collection: 'rooms', depth: 0, select: { name: true }, ...all }),
@@ -82,7 +86,7 @@ export async function studentOverview(payload: Payload, user: TypedUser) {
             externalLocation: true,
           },
           sort: 'start',
-          limit: 40,
+          limit: since ? 500 : 40,
         })
       : null,
     // my own bookings always (also without a course, with the permission); my groupmates' with a group
@@ -111,7 +115,7 @@ export async function studentOverview(payload: Payload, user: TypedUser) {
         rooms: { name: true },
       },
       sort: 'start',
-      limit: 60,
+      limit: since ? 500 : 60,
     }),
     groupIds.length
       ? payload.find({
@@ -177,6 +181,7 @@ export async function studentOverview(payload: Payload, user: TypedUser) {
     sessions: (sessions?.docs ?? []).map(
       (s): OverviewSession => ({
         id: s.id,
+        ref: createHmac('sha256', payload.secret).update(`session-${s.id}`).digest('base64url').slice(0, 16),
         title: s.displayTitle ?? '',
         kind: s.kind as SessionKind,
         start: s.start,

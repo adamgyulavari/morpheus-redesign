@@ -19,6 +19,8 @@ import { showStart } from './shows';
 
 export type MyWorkshop = {
   applicationId: number;
+  /** The sign-up's public id: the handle in its "Naptárba" link. */
+  uid: string;
   sessionId: number;
   title: string;
   start: string;
@@ -68,7 +70,14 @@ async function titles(payload: Payload, collection: 'productions' | 'venues', id
   return new Map(docs.map((d) => [d.id, 'title' in d ? d.title : d.shortName]));
 }
 
-export async function myApplications(payload: Payload, user: TypedUser, activeGroupIds: number[], now = new Date()) {
+/** `since`: the dates and shows after it (the calendar feed's reaches back); by default now. */
+export async function myApplications(
+  payload: Payload,
+  user: TypedUser,
+  activeGroupIds: number[],
+  now = new Date(),
+  since = now,
+) {
   const settings = await applicationSettings(payload);
   const { docs } = await payload.find({
     collection: 'applications',
@@ -110,10 +119,11 @@ export async function myApplications(payload: Payload, user: TypedUser, activeGr
   for (const a of docs) {
     if (a.kind === 'workshop') {
       const s = typeof a.session === 'object' ? a.session : null;
-      if (!s || new Date(s.end) <= now) continue;
+      if (!s || new Date(s.end) <= since) continue;
       const actions = await allowedActions(payload, a, settings, now);
       workshops.push({
         applicationId: a.id,
+        uid: a.uid ?? '',
         sessionId: s.id,
         title: s.title || APPLICATION_KINDS.workshop,
         start: s.start,
@@ -133,7 +143,7 @@ export async function myApplications(payload: Payload, user: TypedUser, activeGr
       const s = typeof a.show === 'object' ? a.show : null;
       if (!s || a.status !== 'registered') continue;
       const start = showStart(s);
-      if (start <= now) continue;
+      if (start <= since) continue;
       shows.push({
         applicationId: a.id,
         uid: a.uid ?? '',

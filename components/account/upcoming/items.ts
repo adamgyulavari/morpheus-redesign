@@ -13,6 +13,10 @@ export type UpcomingKind = SessionKind | 'practice';
 
 export type UpcomingItem = {
   key: string;
+  /** Its UID in calendars — the same as in the e-mails' invites, so adding it twice doesn't double it. */
+  uid: string;
+  /** Its "Naptárba" link's handle (a session's opaque ref, a sign-up's public id); none for practice. */
+  handle?: string;
   kind: UpcomingKind;
   /** The session's title, or the group / production a practice is for. */
   title: string;
@@ -34,6 +38,8 @@ export type UpcomingItem = {
   application?: { id: number; canCancel: boolean; canMove: boolean; moveTargets: { id: number; label: string }[] };
 };
 
+const uid = (key: string) => `${key}@morpheus-szinmuhely.hu`;
+
 export function upcomingItems(
   o: StudentOverview,
   mine: MyApplications,
@@ -45,6 +51,8 @@ export function upcomingItems(
     ...o.sessions.map(
       (s): UpcomingItem => ({
         key: `s${s.id}`,
+        uid: uid(`session-${s.id}`),
+        handle: `s-${s.ref}`,
         kind: s.kind,
         title: s.title,
         start: s.start,
@@ -56,6 +64,7 @@ export function upcomingItems(
     ...[...o.ownPractice, ...o.groupPractice].map(
       (b): UpcomingItem => ({
         key: `p${b.id}`,
+        uid: uid(`booking-${b.id}`),
         kind: 'practice',
         title: b.owner ?? b.booker,
         start: b.start,
@@ -70,6 +79,8 @@ export function upcomingItems(
     ...mine.workshops.map(
       (w): UpcomingItem => ({
         key: `w${w.applicationId}`,
+        uid: uid(`application-${w.applicationId}`),
+        handle: w.uid && `a-${w.uid}`,
         kind: 'workshop',
         title: w.title,
         start: w.start,
@@ -82,6 +93,8 @@ export function upcomingItems(
     ...mine.shows.map(
       (s): UpcomingItem => ({
         key: `j${s.applicationId}`,
+        uid: uid(`application-${s.applicationId}`),
+        handle: s.uid && `a-${s.uid}`,
         kind: 'show',
         title: `${s.title} (${s.seats} jegy)`,
         start: s.start,

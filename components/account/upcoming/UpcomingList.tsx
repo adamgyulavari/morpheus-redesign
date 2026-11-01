@@ -8,12 +8,19 @@ import type { UpcomingItem } from './items';
 import { byDay } from './items';
 import { DateBlock, Entry, NextCard, splitNext } from './parts';
 
-export default async function UpcomingList({ items }: { items: UpcomingItem[] }) {
+/** `calendarAlways`: each item's calendar links without hovering (guests, who have no subscription). */
+export default async function UpcomingList({
+  items,
+  calendarAlways,
+}: {
+  items: UpcomingItem[];
+  calendarAlways?: boolean;
+}) {
   const { next, rest } = splitNext(items);
   const t = (await getUi()).upcoming;
   return (
     <div className="flex flex-col gap-6">
-      {next && <NextCard item={next} t={t} />}
+      {next && <NextCard item={next} t={t} always={calendarAlways} />}
       {rest.length > 0 && (
         <ol className="flex flex-col border-b border-line">
           {byDay(rest).map(({ day, items }) => (
@@ -27,7 +34,7 @@ export default async function UpcomingList({ items }: { items: UpcomingItem[] })
               <ul className="flex flex-col gap-2">
                 {items.map((i) => (
                   <li key={i.key}>
-                    <Entry item={i} t={t} />
+                    <Entry item={i} t={t} always={calendarAlways} />
                   </li>
                 ))}
               </ul>
