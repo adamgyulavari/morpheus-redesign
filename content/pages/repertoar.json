@@ -43,20 +43,14 @@
         {
           "group": "company",
           "eyebrow": "A társulat",
-          "heading": "Nagyszínpadi produkciók",
+          "heading": "Társulati előadások",
           "intro": "Oktatóink és hallgatóink közös produkciói, rendezett, bemutatott darabok."
-        },
-        {
-          "group": "classics",
-          "eyebrow": "Klasszikusok",
-          "heading": "Hallgatói előadások",
-          "intro": "Halhatatlan klasszikusok a Morpheus Színműhely hallgatóinak előadásában."
         },
         {
           "group": "students",
           "eyebrow": "Hallgatóink",
-          "heading": "Hallgatóink saját előadásai",
-          "intro": "Az alábbi előadásokat hallgatóink hozták létre és ők is viszik színre."
+          "heading": "Hallgatóink saját alkotásai",
+          "intro": "Ezeket az előadásokat hallgatóink hozták létre, és ők viszik színpadra."
         }
       ]
     },

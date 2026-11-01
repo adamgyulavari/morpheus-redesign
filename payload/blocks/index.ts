@@ -493,7 +493,7 @@ export const blocks: Block[] = [
     slug: 'repertoire',
     lists: ['shows', 'productions', 'venues'],
     label: 'Repertoár',
-    description: 'A darabok csoportonként (nagyszínpadi / hallgatói / hallgatóink saját előadásai).',
+    description: 'A darabok csoportonként (nagyszínpadi / hallgatói, ez utóbbi alcsoportokra bontva).',
     fields: [
       cards('groups', 'Csoportok', 'Csoport', [
         {
@@ -503,12 +503,37 @@ export const blocks: Block[] = [
           required: true,
           options: [
             { label: 'Nagyszínpadi produkciók', value: 'company' },
-            { label: 'Hallgatói előadások (klasszikusok)', value: 'classics' },
-            { label: 'Hallgatóink saját előadásai', value: 'students' },
+            { label: 'Hallgatói előadások', value: 'students' },
           ],
         },
         ...section(),
-        textarea('intro', 'Bevezető', { required: true }),
+        textarea('intro', 'Bevezető'),
+        {
+          ...cards(
+            'subgroups',
+            'Alcsoportok',
+            'Alcsoport',
+            [
+              {
+                name: 'subgroup',
+                label: 'Alcsoport',
+                type: 'select',
+                required: true,
+                options: [
+                  { label: 'Klasszikusok', value: 'classics' },
+                  { label: 'Saját készítésű előadások', value: 'own' },
+                ],
+              },
+              text('heading', 'Cím', { required: true }),
+              textarea('intro', 'Bevezető'),
+            ],
+            false,
+          ),
+          admin: {
+            condition: (_, sibling) => sibling?.group === 'students',
+            description: 'Üresen hagyva a hallgatói előadások egy listában jelennek meg.',
+          },
+        } as Field,
       ]),
     ],
   }),

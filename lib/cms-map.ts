@@ -138,6 +138,7 @@ export function production(p: P.Production): Production {
     id: String(p.id),
     slug: p.slug,
     group: p.group,
+    subgroup: p.group === 'students' ? (p.subgroup ?? 'own') : undefined,
     title: p.title,
     genre: opt(p.genre),
     byline: p.byline,

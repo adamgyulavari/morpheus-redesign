@@ -248,7 +248,6 @@ export async function PageHeroBlock({ block, className, ctx }: BlockProps<'pageH
           counts={{
             all: productions.length,
             company: productions.filter((p) => p.group === 'company').length,
-            classics: productions.filter((p) => p.group === 'classics').length,
             students: productions.filter((p) => p.group === 'students').length,
           }}
         />

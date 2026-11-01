@@ -71,9 +71,20 @@ export const Productions: CollectionConfig = {
                   defaultValue: 'company',
                   options: [
                     { label: 'Nagyszínpadi produkció', value: 'company' },
-                    { label: 'Hallgatói előadás (klasszikus)', value: 'classics' },
-                    { label: 'Hallgatóink saját előadása', value: 'students' },
+                    { label: 'Hallgatói előadás', value: 'students' },
                   ],
+                },
+                {
+                  name: 'subgroup',
+                  label: 'Alcsoport',
+                  type: 'select',
+                  required: true,
+                  defaultValue: 'own',
+                  options: [
+                    { label: 'Klasszikus', value: 'classics' },
+                    { label: 'Saját készítésű', value: 'own' },
+                  ],
+                  admin: { condition: (_, s) => s?.group === 'students' },
                 },
                 text('genre', 'Műfaj', { description: 'Pl. „Dráma”' }),
               ],

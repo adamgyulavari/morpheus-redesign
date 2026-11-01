@@ -25,7 +25,9 @@ export type Fact = { label: string; value?: string; href?: string; coursePrice?:
 
 // ── Productions & shows ─────────────────────────────────────────────────────
 
-export type ProductionGroup = 'company' | 'classics' | 'students';
+export type ProductionGroup = 'company' | 'students';
+/** The students' plays, in two parts on the repertoire. */
+export type ProductionSubgroup = 'classics' | 'own';
 
 /** One line of the cast. `names` has more than one entry for alternating (double) casts. */
 export type CastEntry = { role?: string; roleNote?: string; names: string[] };
@@ -35,6 +37,7 @@ export type Production = {
   id: string;
   slug: string;
   group: ProductionGroup;
+  subgroup?: ProductionSubgroup;
   title: string;
   genre?: string;
   /** Shown next to the genre and under the title in show rows — the author, or e.g. "Hallgatói előadás". */
@@ -397,7 +400,14 @@ export type Block = BlockBase &
         links: Link[];
       }
     | { blockType: 'nextShowBanner'; link: Link }
-    | { blockType: 'repertoire'; groups: (Section & { group: ProductionGroup; intro: string })[] }
+    | {
+        blockType: 'repertoire';
+        groups: (Section & {
+          group: ProductionGroup;
+          intro?: string;
+          subgroups?: { subgroup: ProductionSubgroup; heading: string; intro?: string }[];
+        })[];
+      }
     | (Section & { blockType: 'contactCard'; cta: Link })
     | (Section & {
         blockType: 'courseStarts';
