@@ -119,7 +119,11 @@ export async function NextShowBanner({ block, className }: BlockProps<'nextShowB
   );
 }
 
-/** The productions, one section per group (filterable by the hero's chips). Posters alternate left/right across the list. */
+/**
+ * The productions, one section per group (filterable by the hero's chips); a group with subgroups
+ * (the students' classics and own pieces) lists them in parts, each under its own heading. Posters
+ * alternate left/right across the list.
+ */
 export async function Repertoire({ block, className }: BlockProps<'repertoire'>) {
   const [ui, productions, nextShows, settings] = await Promise.all([
     getUi(),
@@ -127,38 +131,59 @@ export async function Repertoire({ block, className }: BlockProps<'repertoire'>)
     getNextShowByProduction(),
     getSiteSettings(),
   ]);
-  const position = new Map(productions.map((p, i) => [p.id, i]));
+  // the posters alternate in the order the cards are shown, across groups and their parts
+  let shown = 0;
   const labels = { onStage: ui.shows.onStage, nextShow: ui.shows.nextShow, more: ui.common.more };
-  return block.groups.map((group, gi) => (
-    <FilterGroup
-      key={group.group}
-      group={group.group}
-      id={gi === 0 ? block.anchor : undefined}
-      className={`mx-auto flex max-w-[1440px] flex-col gap-6 px-5 lg:gap-11 lg:px-20 ${gi === 0 ? className : 'mt-16 lg:mt-[120px]'}`}
-    >
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
-        <div className="flex flex-col gap-3.5">
-          <Eyebrow>{group.eyebrow}</Eyebrow>
-          <h2 className="font-display text-[40px] leading-[1.02] lg:text-[68px]">{group.heading}</h2>
+  const list = (items: typeof productions) => (
+    <PosterFit className="flex flex-col gap-5 lg:gap-9">
+      {items.map((production) => (
+        <ProductionCard
+          key={production.id}
+          production={production}
+          nextShow={nextShows.get(production.id)}
+          posterFirst={shown++ % 2 === 0}
+          labels={labels}
+          upcomingShowsUrl={settings.urls.upcomingShows}
+        />
+      ))}
+    </PosterFit>
+  );
+  return block.groups.map((group, gi) => {
+    const inGroup = productions.filter((p) => p.group === group.group);
+    return (
+      <FilterGroup
+        key={group.group}
+        group={group.group}
+        id={gi === 0 ? block.anchor : undefined}
+        className={`mx-auto flex max-w-[1440px] flex-col gap-6 px-5 lg:gap-11 lg:px-20 ${gi === 0 ? className : 'mt-16 lg:mt-[120px]'}`}
+      >
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
+          <div className="flex flex-col gap-3.5">
+            <Eyebrow>{group.eyebrow}</Eyebrow>
+            <h2 className="font-display text-[40px] leading-[1.02] lg:text-[68px]">{group.heading}</h2>
+          </div>
+          {group.intro && (
+            <p className="text-[15px] leading-relaxed text-ink2 lg:max-w-[420px] lg:text-lg lg:leading-[28px]">
+              {group.intro}
+            </p>
+          )}
         </div>
-        <p className="text-[15px] leading-relaxed text-ink2 lg:max-w-[420px] lg:text-lg lg:leading-[28px]">
-          {group.intro}
-        </p>
-      </div>
-      <PosterFit className="flex flex-col gap-5 lg:gap-9">
-        {productions
-          .filter((p) => p.group === group.group)
-          .map((production) => (
-            <ProductionCard
-              key={production.id}
-              production={production}
-              nextShow={nextShows.get(production.id)}
-              posterFirst={(position.get(production.id) ?? 0) % 2 === 0}
-              labels={labels}
-              upcomingShowsUrl={settings.urls.upcomingShows}
-            />
-          ))}
-      </PosterFit>
-    </FilterGroup>
-  ));
+        {group.subgroups?.length
+          ? group.subgroups.map((sub) => (
+              <div key={sub.subgroup} className="mt-4 flex flex-col gap-5 lg:mt-6 lg:gap-9">
+                <div className="flex flex-col gap-2 border-t border-line pt-6 lg:flex-row lg:items-end lg:justify-between lg:gap-12 lg:pt-9">
+                  <h3 className="font-display text-[30px] leading-[1.05] lg:text-[44px]">{sub.heading}</h3>
+                  {sub.intro && (
+                    <p className="text-[15px] leading-relaxed text-ink2 lg:max-w-[420px] lg:text-lg lg:leading-[28px]">
+                      {sub.intro}
+                    </p>
+                  )}
+                </div>
+                {list(inGroup.filter((p) => p.subgroup === sub.subgroup))}
+              </div>
+            ))
+          : list(inGroup)}
+      </FilterGroup>
+    );
+  });
 }

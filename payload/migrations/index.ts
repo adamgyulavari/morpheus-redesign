@@ -44,6 +44,7 @@ import * as migration_20261021_230000_ui_texts_account from './20261021_230000_u
 import * as migration_20261024_144626_home_hero_photos from './20261024_144626_home_hero_photos';
 import * as migration_20261101_125147_footer_terms_link from './20261101_125147_footer_terms_link';
 import * as migration_20261101_135633_repertoire_subgroups from './20261101_135633_repertoire_subgroups';
+import * as migration_20261101_170000_repertoire_filter_texts from './20261101_170000_repertoire_filter_texts';
 
 export const migrations = [
   {
@@ -275,5 +276,10 @@ export const migrations = [
     up: migration_20261101_135633_repertoire_subgroups.up,
     down: migration_20261101_135633_repertoire_subgroups.down,
     name: '20261101_135633_repertoire_subgroups',
+  },
+  {
+    up: migration_20261101_170000_repertoire_filter_texts.up,
+    down: migration_20261101_170000_repertoire_filter_texts.down,
+    name: '20261101_170000_repertoire_filter_texts',
   },
 ];

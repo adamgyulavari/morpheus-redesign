@@ -121,7 +121,7 @@ const SITE = {
   ],
   repertoire: [
     'Repertoár szűrő',
-    { filter: 'Szűrés (felolvasott)', all: 'Mind', company: 'Társulati', students: 'Hallgatói' },
+    { filter: 'Szűrés (felolvasott)', all: 'Mind', company: 'Nagyszínpadi', students: 'Hallgatói' },
   ],
   reviews: [
     'Vélemények',
