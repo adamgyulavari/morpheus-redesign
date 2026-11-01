@@ -402,7 +402,8 @@ export type Block = BlockBase &
     | { blockType: 'nextShowBanner'; link: Link }
     | {
         blockType: 'repertoire';
-        groups: (Section & {
+        groups: (Omit<Section, 'eyebrow'> & {
+          eyebrow?: string;
           group: ProductionGroup;
           intro?: string;
           subgroups?: { subgroup: ProductionSubgroup; heading: string; intro?: string }[];
