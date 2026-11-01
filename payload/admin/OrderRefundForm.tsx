@@ -5,6 +5,7 @@ import { useState, useTransition } from 'react';
 import { formatHuf } from '@/lib/format';
 import { refundOrderAction } from '@/lib/payments/admin-actions';
 import s from './admin.module.css';
+import { EmailToggle } from './EmailToggle';
 
 /** The refund box: amount (default: all that is left), the reason, then a second click to confirm. */
 export function OrderRefundForm({
@@ -22,17 +23,20 @@ export function OrderRefundForm({
   const [amount, setAmount] = useState(left);
   const [note, setNote] = useState('');
   const [sure, setSure] = useState(false);
+  const [sendEmail, setSendEmail] = useState(true);
+  // only a full refund reverses the invoice (a storno, which Számlázz.hu e-mails)
+  const full = amount === left;
   const [answer, setAnswer] = useState<{ text: string; error?: boolean } | null>(null);
   const [pending, start] = useTransition();
   const valid = amount >= 1 && amount <= left && note.trim().length > 0;
 
   const refund = () =>
     start(async () => {
-      const r = await refundOrderAction(orderId, amount, note);
+      const r = await refundOrderAction(orderId, amount, note, sendEmail);
       setSure(false);
       if (!r.ok) return setAnswer({ text: r.reason, error: true });
       setAnswer({
-        text: `${formatHuf(r.amount)} visszatérítve.${r.full ? ' A számlát sztornóztuk.' : ' A számlát kézzel kell helyesbíteni a Számlázz.hu-ban.'}`,
+        text: `${formatHuf(r.amount)} visszatérítve.${r.full ? ` A számlát sztornóztuk${sendEmail ? ', a vevő e-mailben megkapja' : ' (e-mail nem ment)'}.` : ' A számlát kézzel kell helyesbíteni a Számlázz.hu-ban.'}`,
       });
       router.refresh();
     });
@@ -44,6 +48,14 @@ export function OrderRefundForm({
         A fizetési szolgáltatón keresztül, a kártyára. Fizetve: {paidText}; visszatéríthető: {leftText}. A jelentkezés
         nem változik — ha kell, mondd le a Jelentkezések oldalon.
       </p>
+      {full && (
+        <EmailToggle
+          checked={sendEmail}
+          onChange={setSendEmail}
+          to="a vevő"
+          what="A sztornó számla a Számlázz.hu-tól (teljes visszatérítésnél)"
+        />
+      )}
       <div className={s.row} style={{ gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
         <label className={s.field} style={{ width: 160 }}>
           Összeg (Ft)

@@ -43,6 +43,10 @@ describe('invoiceXml', () => {
     expect(xml).toContain('<fizetve>false</fizetve>');
     expect(invoiceXml('KEY', invoice)).toContain('<fizmod>Bankkártya</fizmod>');
   });
+  it('e-mailed to the buyer unless staff left it out', () => {
+    expect(invoiceXml('KEY', invoice)).toContain('<sendEmail>true</sendEmail>');
+    expect(invoiceXml('KEY', { ...invoice, sendEmail: false })).toContain('<sendEmail>false</sendEmail>');
+  });
 });
 
 describe('stornoXml / pdfXml', () => {
@@ -56,6 +60,17 @@ describe('stornoXml / pdfXml', () => {
     });
     expect(xml).toContain('<szamlaszam>MSZ-2026-1</szamlaszam>');
     expect(xml).toContain('<tipus>SS</tipus>');
+    expect(xml).toContain('<vevo><email>anna@example.com</email></vevo>');
+  });
+  it('storno without e-mail: no address given', () => {
+    const xml = stornoXml('KEY', {
+      invoiceNumber: 'MSZ-2026-1',
+      externalId: 'storno-3',
+      issueDate: '2026-10-17',
+      email: 'anna@example.com',
+      sendEmail: false,
+    });
+    expect(xml).toContain('<vevo></vevo>');
   });
   it('pdf: the invoice number', () => {
     expect(pdfXml('KEY', 'MSZ-2026-1')).toContain('<szamlaszam>MSZ-2026-1</szamlaszam>');

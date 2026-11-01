@@ -39,6 +39,8 @@ export type InvoiceData = {
   vat: VatMode;
   /** Paid by card at the checkout (default), or an unpaid invoice to pay by transfer by `dueDate`. */
   payment?: { method: 'card' } | { method: 'transfer'; dueDate: string };
+  /** Számlázz.hu e-mails it to the buyer (default); false: staff left the e-mail out. */
+  sendEmail?: boolean;
 };
 
 export type VatMode = 'AAM' | '27' | '18' | '5';
@@ -111,7 +113,7 @@ export function invoiceXml(key: string, d: InvoiceData): string {
       ['telepules', d.buyer.city],
       ['cim', d.buyer.address],
       ['email', d.buyer.email],
-      ['sendEmail', true],
+      ['sendEmail', d.sendEmail ?? true],
       ['adoszam', d.buyer.taxNumber],
     ])}</vevo>`,
     `<tetelek>${items}</tetelek>`,
@@ -119,10 +121,17 @@ export function invoiceXml(key: string, d: InvoiceData): string {
   ].join('');
 }
 
-/** xmlszamlast: a storno (reversal) of an issued invoice, e-mailed to the buyer as well. */
+/** xmlszamlast: a storno (reversal) of an issued invoice, e-mailed to the buyer as well (unless `sendEmail` is false: no address is given). */
 export function stornoXml(
   key: string,
-  d: { invoiceNumber: string; externalId: string; issueDate: string; email: string; note?: string },
+  d: {
+    invoiceNumber: string;
+    externalId: string;
+    issueDate: string;
+    email: string;
+    note?: string;
+    sendEmail?: boolean;
+  },
 ): string {
   return [
     head('xmlszamlast'),
@@ -140,7 +149,7 @@ export function stornoXml(
       ['megjegyzes', d.note],
       ['tipus', 'SS'],
     ])}</fejlec>`,
-    `<vevo>${tags([['email', d.email]])}</vevo>`,
+    `<vevo>${tags([['email', d.sendEmail === false ? undefined : d.email]])}</vevo>`,
     '</xmlszamlast>',
   ].join('');
 }

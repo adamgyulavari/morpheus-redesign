@@ -6,8 +6,8 @@ import { userIsAdmin } from '@/payload/access';
 
 import { refundOrder } from './refunds';
 
-export async function refundOrderAction(orderId: number, amount: number | null, note: string) {
+export async function refundOrderAction(orderId: number, amount: number | null, note: string, sendEmail: boolean) {
   const user = await getCurrentUser();
   if (!user || !userIsAdmin(user)) return { ok: false as const, reason: 'Ehhez adminisztrátori jogosultság kell.' };
-  return refundOrder(await payloadClient(), orderId, { amount: amount ?? undefined, note }, user.id);
+  return refundOrder(await payloadClient(), orderId, { amount: amount ?? undefined, note, sendEmail }, user.id);
 }

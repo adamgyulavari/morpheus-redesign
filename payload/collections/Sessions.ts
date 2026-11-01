@@ -10,7 +10,14 @@ import { isStaffOrAdminField } from '@/payload/access';
 import { dateTime, relationship, text, textarea } from '../fields';
 import { type Rel, relId, relIds } from '../rel';
 import { collectionRevalidation } from '../revalidate';
-import { blockingClashes, failer, mayOverridePractice, overridePracticeField } from './placement';
+import {
+  blockingClashes,
+  failer,
+  mayOverridePractice,
+  notifyField,
+  notifyFromForm,
+  overridePracticeField,
+} from './placement';
 import { staffOnly } from './Rooms';
 
 const workshopCode = () => randomBytes(6).toString('base64url');
@@ -106,6 +113,7 @@ export const Sessions: CollectionConfig = {
   },
   defaultSort: 'start',
   hooks: {
+    beforeOperation: [notifyFromForm],
     beforeChange: [
       async ({ data, originalDoc, operation, req }) => {
         const before = (originalDoc ?? {}) as SessionDoc;
@@ -380,7 +388,10 @@ export const Sessions: CollectionConfig = {
         description: 'A hónap újbóli feltöltése és a generált alkalmak törlése nem nyúl hozzá.',
       },
     },
-    overridePracticeField('Csak adminisztrátor: az ütköző diák-gyakorlásokat lemondja (a diákok e-mailt kapnak).'),
+    overridePracticeField('Csak adminisztrátor: az ütköző diák-gyakorlásokat lemondja.'),
+    notifyField('Bepipálva e-mailt kapnak a diákok, akiknek a gyakorlását a felülírás lemondja.', (data) =>
+      Boolean(data?.overridePractice),
+    ),
   ],
 };
 

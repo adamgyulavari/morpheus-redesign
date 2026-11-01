@@ -9,6 +9,7 @@ import { useCallback, useEffect, useState, useTransition } from 'react';
 import { formatHuf } from '@/lib/format';
 import { billingRunData, issueRunAction, markPaidAction } from '@/lib/invoicing/admin-actions';
 import s from './admin.module.css';
+import { EmailToggle } from './EmailToggle';
 
 type Data = NonNullable<Awaited<ReturnType<typeof billingRunData>>>;
 type Line = Data['lines'][number];
@@ -31,6 +32,7 @@ export default function BillingRun() {
   const [amounts, setAmounts] = useState<Record<string, number>>({});
   const [toast, setToast] = useState<{ text: string; error?: boolean } | null>(null);
   const [results, setResults] = useState<Record<string, { ok: boolean; message: string }>>({});
+  const [sendEmail, setSendEmail] = useState(true);
   const [pending, start] = useTransition();
 
   const load = useCallback(
@@ -57,6 +59,7 @@ export default function BillingRun() {
       const r = await issueRunAction(
         month,
         chosen.map((l) => ({ key: l.key, amount: amounts[l.key] ?? l.amount })),
+        sendEmail,
       );
       if (!r) return setToast({ text: 'Ehhez munkatársi jogosultság kell.', error: true });
       setResults(Object.fromEntries(r.map((x) => [x.key, x])));
@@ -188,11 +191,16 @@ export default function BillingRun() {
         {rows('instalment').length ? table(rows('instalment')) : <p className={s.muted}>Nincs esedékes részlet.</p>}
       </section>
 
+      <EmailToggle
+        checked={sendEmail}
+        onChange={setSendEmail}
+        to={`a kijelölt ${chosen.length} számla vevője`}
+        what="A Számlázz.hu e-mailben küldi ki a számlát (átutalással fizetendő)"
+      />
       <div className={s.row} style={{ gap: 12, alignItems: 'center' }}>
         <button type="button" className={`${s.btn} ${s.primary}`} disabled={pending || !chosen.length} onClick={issue}>
           {pending ? 'Egy pillanat…' : `Számlák kiállítása (${chosen.length} db, ${formatHuf(total)})`}
         </button>
-        <span className={s.muted}>Átutalással fizetendő számlák; a Számlázz.hu e-mailben küldi ki őket.</span>
       </div>
 
       <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

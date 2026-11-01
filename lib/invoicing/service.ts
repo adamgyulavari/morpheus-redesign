@@ -138,11 +138,12 @@ export type TransferCharge = {
 
 /**
  * An invoice to pay by transfer (Havi számlázás): unpaid, due in `transferDueDays`, e-mailed by
- * Számlázz.hu. Once per key; again only after a definite failure.
+ * Számlázz.hu with `sendEmail`. Once per key; again only after a definite failure.
  */
 export async function issueTransferInvoice(
   payload: Payload,
   c: TransferCharge,
+  sendEmail: boolean,
   now = new Date(),
 ): Promise<Invoice | null> {
   const existing = await byKey(payload, c.key);
@@ -164,6 +165,7 @@ export async function issueTransferInvoice(
     items: [{ name: c.label, quantity: 1, unit: c.unit, gross: c.gross }],
     vat,
     payment: { method: 'transfer', dueDate },
+    sendEmail,
   };
   return record(payload, existing, {
     key: c.key,
@@ -181,11 +183,12 @@ export async function issueTransferInvoice(
   });
 }
 
-/** A storno of an issued invoice (a refund). In "off" mode a draft, like the invoice. */
+/** A storno of an issued invoice (a refund), e-mailed to the buyer with `sendEmail`. In "off" mode a draft, like the invoice. */
 export async function stornoInvoice(
   payload: Payload,
   invoiceId: number,
   reason: string,
+  sendEmail: boolean,
   now = new Date(),
 ): Promise<Invoice | null> {
   const invoice = await payload.findByID({ collection: 'invoices', id: invoiceId, depth: 0 });
@@ -200,6 +203,7 @@ export async function stornoInvoice(
     issueDate: todayInBudapest(now),
     email,
     note: reason,
+    sendEmail,
   };
   return record(payload, existing, {
     key,

@@ -18,6 +18,7 @@ import {
 import { date, fullRichText, image, importId, paragraphsRichText, relationship, text, textarea, time } from '../fields';
 import { previewPath } from '../preview';
 import { collectionRevalidation } from '../revalidate';
+import { notifyField, notifyFromForm } from './placement';
 
 const slug = () =>
   slugField({
@@ -268,6 +269,7 @@ export const Shows: CollectionConfig = {
   defaultSort: '-date',
   hooks: {
     ...collectionRevalidation('shows'),
+    beforeOperation: [notifyFromForm],
     beforeValidate: [
       // saved without the admin form (the form fills them when Saját foglalás is chosen): the defaults
       async ({ data, originalDoc, req }) => {
@@ -449,9 +451,12 @@ export const Shows: CollectionConfig = {
         readOnly: true,
         position: 'sidebar',
         description:
-          'A saját helyszínen az előadás minden termet lefoglal; ami az útjában volt, itt látszik (a diákok e-mailt kaptak, a többiekkel egyeztess).',
+          'A saját helyszínen az előadás minden termet lefoglal; ami az útjában volt, itt látszik (a többiekkel egyeztess).',
       },
     },
+    notifyField(
+      'Ha az előadás a saját helyszínen diák-gyakorlást mond le: bepipálva a diák e-mailt kap a lemondásról.',
+    ),
     importId,
   ],
 };

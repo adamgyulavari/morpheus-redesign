@@ -22,9 +22,9 @@ export async function billingRunData(month: string) {
   return { lines, open, mode };
 }
 
-export async function issueRunAction(month: string, picks: { key: string; amount: number }[]) {
+export async function issueRunAction(month: string, picks: { key: string; amount: number }[], sendEmail: boolean) {
   if (!(await isStaff())) return null;
-  return issueRun(await payloadClient(), month, picks.slice(0, 500));
+  return issueRun(await payloadClient(), month, picks.slice(0, 500), sendEmail);
 }
 
 export async function markPaidAction(invoiceId: number) {
