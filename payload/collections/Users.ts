@@ -203,5 +203,11 @@ export const Users: CollectionConfig = {
       on: 'students',
       admin: { defaultColumns: ['title', 'startDate', 'endDate'] },
     },
+    {
+      // admins: another account of the same person merged into this one (lib/accounts/merge)
+      name: 'merge',
+      type: 'ui',
+      admin: { components: { Field: '@/payload/admin/MergeUser#MergeUser' } },
+    },
   ],
 };
