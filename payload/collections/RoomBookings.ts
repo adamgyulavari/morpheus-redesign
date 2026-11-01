@@ -6,7 +6,14 @@ import { clashMessage, findClashes, roomNames, syncOccupancy } from '@/lib/rooms
 
 import { dateTime, relationship, text, textarea } from '../fields';
 import { type Rel, relId, relIds } from '../rel';
-import { blockingClashes, failer, mayOverridePractice, overridePracticeField } from './placement';
+import {
+  blockingClashes,
+  failer,
+  mayOverridePractice,
+  notifyField,
+  notifyFromForm,
+  overridePracticeField,
+} from './placement';
 import { staffOnly } from './Rooms';
 
 type BookingDoc = {
@@ -60,6 +67,7 @@ export const RoomBookings: CollectionConfig = {
   },
   defaultSort: '-start',
   hooks: {
+    beforeOperation: [notifyFromForm],
     beforeChange: [
       async ({ data, originalDoc, req }) => {
         const b = { ...(originalDoc as BookingDoc | undefined), ...(data as BookingDoc) };
@@ -216,7 +224,11 @@ export const RoomBookings: CollectionConfig = {
     },
     textarea('notes', 'Belső megjegyzés', { description: 'Csak a munkatársak látják.' }),
     overridePracticeField(
-      'Csak adminisztrátor: az ütköző diák-gyakorlásokat lemondja (a diákok e-mailt kapnak). Alkalommal és bérléssel ütközni nem lehet.',
+      'Csak adminisztrátor: az ütköző diák-gyakorlásokat lemondja. Alkalommal és bérléssel ütközni nem lehet.',
+    ),
+    notifyField(
+      'Bepipálva e-mailt kap a diák, ha a gyakorlását áthelyezed vagy lemondod, és azok is, akiknek a gyakorlását a felülírás lemondja.',
+      (data) => data?.kind === 'practice' || Boolean(data?.overridePractice),
     ),
   ],
 };

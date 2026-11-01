@@ -643,9 +643,13 @@ export interface Session {
    */
   customized?: boolean | null;
   /**
-   * Csak adminisztrátor: az ütköző diák-gyakorlásokat lemondja (a diákok e-mailt kapnak).
+   * Csak adminisztrátor: az ütköző diák-gyakorlásokat lemondja.
    */
   overridePractice?: boolean | null;
+  /**
+   * Bepipálva e-mailt kapnak a diákok, akiknek a gyakorlását a felülírás lemondja.
+   */
+  notify?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -978,9 +982,13 @@ export interface Show {
     | null;
   title?: string | null;
   /**
-   * A saját helyszínen az előadás minden termet lefoglal; ami az útjában volt, itt látszik (a diákok e-mailt kaptak, a többiekkel egyeztess).
+   * A saját helyszínen az előadás minden termet lefoglal; ami az útjában volt, itt látszik (a többiekkel egyeztess).
    */
   roomNote?: string | null;
+  /**
+   * Ha az előadás a saját helyszínen diák-gyakorlást mond le: bepipálva a diák e-mailt kap a lemondásról.
+   */
+  notify?: boolean | null;
   importId?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -1039,9 +1047,13 @@ export interface RoomBooking {
    */
   notes?: string | null;
   /**
-   * Csak adminisztrátor: az ütköző diák-gyakorlásokat lemondja (a diákok e-mailt kapnak). Alkalommal és bérléssel ütközni nem lehet.
+   * Csak adminisztrátor: az ütköző diák-gyakorlásokat lemondja. Alkalommal és bérléssel ütközni nem lehet.
    */
   overridePractice?: boolean | null;
+  /**
+   * Bepipálva e-mailt kap a diák, ha a gyakorlását áthelyezed vagy lemondod, és azok is, akiknek a gyakorlását a felülírás lemondja.
+   */
+  notify?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -3173,6 +3185,7 @@ export interface ShowsSelect<T extends boolean = true> {
       };
   title?: T;
   roomNote?: T;
+  notify?: T;
   importId?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -4676,6 +4689,7 @@ export interface SessionsSelect<T extends boolean = true> {
       };
   customized?: T;
   overridePractice?: T;
+  notify?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -4701,6 +4715,7 @@ export interface RoomBookingsSelect<T extends boolean = true> {
   note?: T;
   notes?: T;
   overridePractice?: T;
+  notify?: T;
   updatedAt?: T;
   createdAt?: T;
 }

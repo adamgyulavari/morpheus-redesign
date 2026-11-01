@@ -100,7 +100,7 @@ export async function markOrderRefunded(payload: Payload, orderId: number, full:
 export async function afterOrderRefund(
   payload: Payload,
   order: Pick<Order, 'id' | 'label' | 'kind' | 'application'>,
-  r: { full: boolean; amount: number; where: 'dashboard' | 'admin'; note?: string },
+  r: { full: boolean; amount: number; where: 'dashboard' | 'admin'; note?: string; sendEmail?: boolean },
 ) {
   const settings = await applicationSettings(payload);
   // a show's tickets refunded in full: the seats are free again
@@ -111,7 +111,8 @@ export async function afterOrderRefund(
       where: { and: [{ order: { equals: order.id } }, { kind: { equals: 'invoice' } }] },
       depth: 0,
     });
-    for (const invoice of docs) await stornoInvoice(payload, invoice.id, 'Visszatérítés');
+    // a refund in the provider's dashboard: e-mailed as usual; staff's: as they chose
+    for (const invoice of docs) await stornoInvoice(payload, invoice.id, 'Visszatérítés', r.sendEmail ?? true);
   }
   await sendStaffAlert(payload, settings, r.full ? 'visszatérítés' : 'részleges visszatérítés', [
     r.where === 'dashboard'
@@ -183,7 +184,7 @@ export async function refundAutomatically(
 export async function refundOrder(
   payload: Payload,
   orderId: number,
-  input: { amount?: number; note: string },
+  input: { amount?: number; note: string; sendEmail: boolean },
   by: number,
 ): Promise<Result<{ full: boolean; amount: number }>> {
   const note = input.note.trim();
@@ -198,7 +199,7 @@ export async function refundOrder(
   if (!done.ok) return done;
   const full = done.left === 0;
   await markOrderRefunded(payload, orderId, full);
-  await afterOrderRefund(payload, order, { full, amount, where: 'admin', note });
+  await afterOrderRefund(payload, order, { full, amount, where: 'admin', note, sendEmail: input.sendEmail });
   return { ok: true, full, amount };
 }
 

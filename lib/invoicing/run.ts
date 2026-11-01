@@ -152,11 +152,12 @@ export async function billingRun(payload: Payload, month: string): Promise<RunLi
 
 export type RunResult = { key: string; ok: boolean; message: string };
 
-/** Issues the picked lines (as recomputed now: only due, not yet invoiced, with an address). */
+/** Issues the picked lines (as recomputed now: only due, not yet invoiced, with an address); `sendEmail`: Számlázz.hu e-mails them. */
 export async function issueRun(
   payload: Payload,
   month: string,
   picks: { key: string; amount: number }[],
+  sendEmail: boolean,
   now = new Date(),
 ): Promise<RunResult[]> {
   const lines = await billingRun(payload, month);
@@ -188,6 +189,7 @@ export async function issueRun(
         unit: l.kind === 'monthly' ? 'hónap' : 'részlet',
         gross,
       },
+      sendEmail,
       now,
     );
     results.push(

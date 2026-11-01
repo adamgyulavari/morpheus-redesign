@@ -1,8 +1,8 @@
 /**
- * What sessions and room bookings share when they take rooms: validation errors, the clash check
- * and the admin's "override student practice" box.
+ * What sessions and room bookings share when they take rooms: validation errors, the clash check,
+ * the admin's "override student practice" box and the "E-mail a diákoknak" box.
  */
-import { type CheckboxField, type PayloadRequest, ValidationError } from 'payload';
+import { type CheckboxField, type CollectionBeforeOperationHook, type PayloadRequest, ValidationError } from 'payload';
 
 import { type Clash, findClashes } from '@/lib/rooms/occupancy';
 
@@ -46,3 +46,26 @@ export const overridePracticeField = (description: string): CheckboxField => ({
   access: { create: isAdminField, update: isAdminField, read: isAdminField },
   admin: { position: 'sidebar', description },
 });
+
+/**
+ * The admin forms' "E-mail a diákoknak" box (not stored, ticked by default): unticked, the practice
+ * e-mails this save would send are left out. Needs `notifyFromForm` among the collection's hooks.
+ */
+export const notifyField = (
+  description: string,
+  condition?: NonNullable<CheckboxField['admin']>['condition'],
+): CheckboxField => ({
+  name: 'notify',
+  label: 'E-mail a diákoknak',
+  type: 'checkbox',
+  virtual: true,
+  defaultValue: true,
+  admin: { position: 'sidebar', description, condition },
+});
+
+/** The box's answer for the whole save (`req.context.notify`, read by lib/rooms/notify); without the field (server code) nothing changes. */
+export const notifyFromForm: CollectionBeforeOperationHook = ({ args, operation }) => {
+  const data = 'data' in args ? (args.data as { notify?: boolean } | undefined) : undefined;
+  if ((operation === 'create' || operation === 'update') && data?.notify === false) args.req.context.notify = false;
+  return args;
+};
