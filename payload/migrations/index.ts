@@ -45,7 +45,7 @@ import * as migration_20261024_144626_home_hero_photos from './20261024_144626_h
 import * as migration_20261101_125147_footer_terms_link from './20261101_125147_footer_terms_link';
 import * as migration_20261101_135633_repertoire_subgroups from './20261101_135633_repertoire_subgroups';
 import * as migration_20261101_170000_repertoire_filter_texts from './20261101_170000_repertoire_filter_texts';
-import * as migration_20261101_200000_account_ensembles_texts from './20261101_200000_account_ensembles_texts';
+import * as migration_20261101_200000_account_productions_texts from './20261101_200000_account_productions_texts';
 
 export const migrations = [
   {
@@ -284,8 +284,8 @@ export const migrations = [
     name: '20261101_170000_repertoire_filter_texts',
   },
   {
-    up: migration_20261101_200000_account_ensembles_texts.up,
-    down: migration_20261101_200000_account_ensembles_texts.down,
-    name: '20261101_200000_account_ensembles_texts',
+    up: migration_20261101_200000_account_productions_texts.up,
+    down: migration_20261101_200000_account_productions_texts.down,
+    name: '20261101_200000_account_productions_texts',
   },
 ];
