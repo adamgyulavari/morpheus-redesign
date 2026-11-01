@@ -119,7 +119,7 @@ export async function placeShow(req: PayloadRequest, show: ShowDoc, previous?: S
       });
       lines.push(
         c.kind === 'practice'
-          ? `${c.title}, ${when} — lemondva (a diák e-mailt kapott)`
+          ? `${c.title}, ${when} — lemondva (${req.context.notify === false ? 'e-mail nem ment' : 'a diák e-mailt kapott'})`
           : `${BOOKING_KINDS[c.kind]}: ${c.title}, ${when} — lemondva (e-mail nem ment)`,
       );
     }

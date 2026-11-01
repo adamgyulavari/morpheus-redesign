@@ -2,16 +2,17 @@
 
 /**
  * Above the Előadás-időpontok list: "Szinkronizálás a Facebookról" — the page's upcoming events
- * become dates (lib/facebook/sync). Says what changed, and what needs a person. Opened with
- * `#szinkron` (the admin home's quick action) it starts at once — a fragment, not a query
- * parameter: the list view rewrites its query and would keep it, so a reload would sync again.
+ * become dates (lib/facebook/sync). Says what changed, and what needs a person. Never starts by
+ * itself: whether a student whose practice a show cancels is e-mailed is chosen first.
  */
 import { Button } from '@payloadcms/ui';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 
 import { syncFacebookAction } from '@/lib/facebook/actions';
 import type { SyncLine, SyncResult } from '@/lib/facebook/sync';
+
+import { EmailToggle } from './EmailToggle';
 
 const box = {
   margin: '0 0 24px',
@@ -48,25 +49,17 @@ function Lines({ title, lines, tone }: { title: string; lines: SyncLine[]; tone?
 export function FacebookSync() {
   const [result, setResult] = useState<SyncResult | null>(null);
   const [error, setError] = useState('');
+  const [notify, setNotify] = useState(true);
   const [pending, start] = useTransition();
   const router = useRouter();
   const run = () =>
     start(async () => {
       setError('');
-      const r = await syncFacebookAction();
+      const r = await syncFacebookAction(notify);
       if (!r.ok) return setError(r.reason);
       setResult(r.result);
       router.refresh();
     });
-  // from the quick action: once, and the address loses the fragment (a reload doesn't sync again)
-  const started = useRef(false);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: on arrival only
-  useEffect(() => {
-    if (window.location.hash !== '#szinkron' || started.current) return;
-    started.current = true;
-    window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search);
-    run();
-  }, []);
   const nothing =
     result &&
     !result.created.length &&
@@ -84,6 +77,14 @@ export function FacebookSync() {
           A Facebook-oldal közelgő eseményei ide kerülnek: az előadás a címéből, a helyszín a nevéből; az időpont, a
           helyszín és a jegylink a Facebookot követi.
         </span>
+      </div>
+      <div style={{ marginTop: 12 }}>
+        <EmailToggle
+          checked={notify}
+          onChange={setNotify}
+          to="a diákok, akiknek a gyakorlását egy saját helyszínes előadás lemondja"
+          what="Értesítés a lemondott gyakorlásról"
+        />
       </div>
       {error && <p style={{ margin: '12px 0 0', color: 'var(--theme-error-500)' }}>{error}</p>}
       {result && (

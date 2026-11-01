@@ -40,9 +40,12 @@ export async function participantList(sessionId: number) {
   return participants(await payloadClient(), sessionId);
 }
 
-export async function addParticipantAction(sessionId: number, input: ApplicantInput): Promise<Result> {
+export async function addParticipantAction(sessionId: number, input: ApplicantInput, notify: boolean): Promise<Result> {
   if (!(await staff())) return denied;
-  return done(await addParticipant(await payloadClient(), sessionId, input), 'Hozzáadva.');
+  return done(
+    await addParticipant(await payloadClient(), sessionId, input, notify),
+    notify ? 'Hozzáadva; a visszaigazolás elment.' : 'Hozzáadva (e-mail nem ment).',
+  );
 }
 
 export async function messageParticipantsAction(sessionId: number, subject: string, message: string): Promise<Result> {
@@ -61,7 +64,7 @@ export async function dashboardData() {
 /** The dashboard dialog's one button: payment fields, then the decision (lib/applications/server decide). */
 export async function decideAction(
   id: number,
-  input: { decision: Decision; paid?: boolean; paymentNote?: string; groupId?: number | null },
+  input: { decision: Decision; paid?: boolean; paymentNote?: string; groupId?: number | null; notify: boolean },
 ): Promise<Result> {
   const user = await staff();
   if (!user) return denied;

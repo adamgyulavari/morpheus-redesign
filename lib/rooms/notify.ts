@@ -56,7 +56,8 @@ export async function notifyPractice(
   operation: 'create' | 'update',
 ) {
   try {
-    if (doc.kind !== 'practice') return;
+    // the admin action said not to (its "E-mail megy ki" box unticked)
+    if (doc.kind !== 'practice' || req.context.notify === false) return;
     const userId = relId(doc.user);
     if (!userId) return;
     const user = (await req.payload.findByID({
