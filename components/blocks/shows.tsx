@@ -159,7 +159,7 @@ export async function Repertoire({ block, className }: BlockProps<'repertoire'>)
       >
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
           <div className="flex flex-col gap-3.5">
-            <Eyebrow>{group.eyebrow}</Eyebrow>
+            {group.eyebrow && <Eyebrow>{group.eyebrow}</Eyebrow>}
             <h2 className="font-display text-[40px] leading-[1.02] lg:text-[68px]">{group.heading}</h2>
           </div>
           {group.intro && (

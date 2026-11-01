@@ -506,7 +506,7 @@ export const blocks: Block[] = [
             { label: 'Hallgatói előadások', value: 'students' },
           ],
         },
-        ...section(),
+        { type: 'row', fields: [eyebrow({ required: false }), emphasised('heading', 'Cím', { required: true })] },
         textarea('intro', 'Bevezető'),
         {
           ...cards(

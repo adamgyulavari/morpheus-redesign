@@ -1996,7 +1996,7 @@ export interface Page {
               /**
                * Kis, nagybetűs sor a cím fölött.
                */
-              eyebrow: string;
+              eyebrow?: string | null;
               /**
                * A *csillagok közé* írt rész kiemelve (dőlten, színesen) jelenik meg.
                */
