@@ -23,6 +23,7 @@ import { MetaDescriptionComponent as MetaDescriptionComponent_a8a977ebc872c5d5ea
 import { MetaImageComponent as MetaImageComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { PreviewComponent as PreviewComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { SlugField as SlugField_2b8867833a34864a02ddf429b0728a40 } from '@payloadcms/next/client'
+import { MergeUser as MergeUser_3db05d9ed1be35cf82c3057cb8a93bf1 } from '@/payload/admin/MergeUser'
 import { OrderRefund as OrderRefund_2fdb2c83acf518cf40f4dc71f406681c } from '@/payload/admin/OrderRefund'
 import { UiTextsField as UiTextsField_73b516e5921b843e921a02374d42da34 } from '@/payload/admin/UiTextsField'
 import { Icon as Icon_d43c264eeb853a721bfab269b703774e } from '@/payload/admin/Graphics'
@@ -64,6 +65,7 @@ export const importMap = {
   "@payloadcms/plugin-seo/client#MetaImageComponent": MetaImageComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/plugin-seo/client#PreviewComponent": PreviewComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/next/client#SlugField": SlugField_2b8867833a34864a02ddf429b0728a40,
+  "@/payload/admin/MergeUser#MergeUser": MergeUser_3db05d9ed1be35cf82c3057cb8a93bf1,
   "@/payload/admin/OrderRefund#OrderRefund": OrderRefund_2fdb2c83acf518cf40f4dc71f406681c,
   "@/payload/admin/UiTextsField#UiTextsField": UiTextsField_73b516e5921b843e921a02374d42da34,
   "@/payload/admin/Graphics#Icon": Icon_d43c264eeb853a721bfab269b703774e,
