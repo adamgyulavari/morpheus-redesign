@@ -1,10 +1,12 @@
 /** Building blocks of the "Közelgő alkalmak" list: the next item's card, a day's date, a two-line entry. */
 import Link from 'next/link';
 
-import { CalendarIcon, PinIcon } from '@/components/icons';
+import { PinIcon } from '@/components/icons';
 import { fill } from '@/lib/format';
+import { googleCalendarUrl } from '@/lib/rooms/ics';
 
 import ApplicationActions from './ApplicationActions';
+import { calendarEvent } from './calendar';
 import type { UpcomingItem } from './items';
 import { dateParts, timeRange } from './items';
 import { CANCELLED, KIND_STYLE, KindBadge, KindLabel, NoPlace, type UpcomingTexts } from './kinds';
@@ -21,7 +23,7 @@ export function NextCard({ item, t }: Props) {
   const k = KIND_STYLE[item.kind];
   return (
     <article
-      className="flex flex-col gap-5 rounded-3xl border p-6 lg:p-8"
+      className="group flex flex-col gap-5 rounded-3xl border p-6 lg:p-8"
       style={{ background: `color-mix(in srgb, ${k.tint} 55%, var(--color-paper))`, borderColor: k.tint }}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -41,17 +43,9 @@ export function NextCard({ item, t }: Props) {
         </span>
         {item.booker && <span className="text-muted">{fill(t.bookedBy, { name: item.booker })}</span>}
         {item.note && <span className="italic text-muted">„{item.note}”</span>}
-        {(item.handle || item.application || item.practice) && (
-          <span className="ml-auto flex items-center gap-4">
-            {item.handle && (
-              <a
-                href={`/fiokom/naptar/${item.handle}`}
-                className="link inline-flex items-center gap-1.5 text-[14px] font-semibold text-teal"
-              >
-                <CalendarIcon className="h-4 w-4" />
-                {t.addToCalendar}
-              </a>
-            )}
+        {item.handle && <CalendarLinks item={item} t={t} />}
+        {(item.application || item.practice) && (
+          <span className="ml-auto">
             <Actions item={item} t={t} />
           </span>
         )}
@@ -106,21 +100,30 @@ function EntryText({ item, t }: Props) {
 /** An entry with its kind's icon in a tinted circle, centred on the two lines. */
 export function Entry({ item, t }: Props) {
   return (
-    <div className="flex min-h-12 items-center gap-3.5">
+    <div className="group flex min-h-12 items-center gap-3.5">
       <KindBadge kind={item.kind} cancelled={item.cancelled} t={t} />
       <EntryText item={item} t={t} />
-      {item.handle && !item.cancelled && (
-        <a
-          href={`/fiokom/naptar/${item.handle}`}
-          className="shrink-0 rounded-full p-2 text-teal transition-colors hover:bg-sand"
-          title={t.addToCalendar}
-          aria-label={`${t.addToCalendar}: ${item.title}`}
-        >
-          <CalendarIcon />
-        </a>
-      )}
+      {item.handle && !item.cancelled && <CalendarLinks item={item} t={t} />}
       {(item.application || item.practice) && <Actions item={item} t={t} />}
     </div>
+  );
+}
+
+/**
+ * "Google Naptár" and ".ics" for one item, shown while the row (or card) is hovered or focused —
+ * for those who want it; the "Naptár" box's subscription is the way for everyone else.
+ */
+function CalendarLinks({ item, t }: Props) {
+  const link = 'link whitespace-nowrap text-[14px] font-semibold text-teal';
+  return (
+    <span className="sr-only shrink-0 items-center gap-4 group-focus-within:not-sr-only group-focus-within:flex group-hover:not-sr-only group-hover:flex">
+      <a href={googleCalendarUrl(calendarEvent(item, t.kinds))} target="_blank" rel="noopener" className={link}>
+        {t.googleCalendar}
+      </a>
+      <a href={`/fiokom/naptar/${item.handle}`} download className={link}>
+        {t.downloadIcs}
+      </a>
+    </span>
   );
 }
 

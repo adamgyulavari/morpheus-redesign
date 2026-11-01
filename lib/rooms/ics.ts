@@ -71,3 +71,15 @@ export function icsCalendar(name: string, events: IcsEvent[], now = new Date()):
     events.map((e) => vevent(e, now, 0)),
   );
 }
+
+/** The same event as a Google Calendar "add event" link (opens Google with the event filled in). */
+export function googleCalendarUrl(e: IcsEvent): string {
+  const q = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: e.summary,
+    dates: `${stamp(e.start)}/${stamp(e.end)}`,
+    ...(e.description ? { details: e.description } : {}),
+    ...(e.location ? { location: e.location } : {}),
+  });
+  return `https://calendar.google.com/calendar/render?${q}`;
+}

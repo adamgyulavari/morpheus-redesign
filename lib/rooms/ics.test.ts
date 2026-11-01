@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { icsCalendar, icsFile } from './ics';
+import { googleCalendarUrl, icsCalendar, icsFile } from './ics';
 import { at } from './time';
 
 const event = {
@@ -47,5 +47,15 @@ describe('icsCalendar', () => {
     expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(2);
     expect(ics).toContain('STATUS:CANCELLED\r\n');
     expect(ics).not.toContain('SEQUENCE:1');
+  });
+});
+
+describe('googleCalendarUrl', () => {
+  it('fills in the event, in UTC', () => {
+    const url = new URL(googleCalendarUrl(event));
+    expect(url.searchParams.get('action')).toBe('TEMPLATE');
+    expect(url.searchParams.get('text')).toBe(event.summary);
+    expect(url.searchParams.get('dates')).toBe('20261120T090000Z/20261120T110000Z');
+    expect(url.searchParams.get('location')).toBe(event.location);
   });
 });

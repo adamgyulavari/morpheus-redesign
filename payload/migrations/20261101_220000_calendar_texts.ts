@@ -1,7 +1,7 @@
 import { type MigrateDownArgs, type MigrateUpArgs, sql } from '@payloadcms/db-postgres';
 
-// Felületi szövegek: /fiokom's "Naptár" box (subscribing to the calendar feed) and the "Naptárba"
-// link of an item. A data change in the `hu` document.
+// Felületi szövegek: /fiokom's "Naptár" box (subscribing to the calendar feed) and an item's
+// "Google Naptár" / ".ics letöltése" links. A data change in the `hu` document.
 const overview = JSON.stringify({
   calendar: 'Naptár',
   calendarText:
@@ -11,7 +11,7 @@ const overview = JSON.stringify({
   calendarCopy: 'Link másolása',
   calendarCopied: 'Másolva ✓',
 });
-const upcoming = JSON.stringify({ addToCalendar: 'Naptárba' });
+const upcoming = JSON.stringify({ googleCalendar: 'Google Naptár', downloadIcs: '.ics letöltése' });
 
 export async function up({ db }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`
@@ -27,6 +27,6 @@ export async function down({ db }: MigrateDownArgs): Promise<void> {
   UPDATE "ui_texts" SET "texts" = jsonb_set("texts", '{overview}', ("texts"->'overview') - 'calendar' - 'calendarText' - 'calendarGoogle' - 'calendarApple' - 'calendarCopy' - 'calendarCopied', true)
   WHERE "lang" = 'hu';`);
   await db.execute(sql`
-  UPDATE "ui_texts" SET "texts" = jsonb_set("texts", '{upcoming}', ("texts"->'upcoming') - 'addToCalendar', true)
+  UPDATE "ui_texts" SET "texts" = jsonb_set("texts", '{upcoming}', ("texts"->'upcoming') - 'googleCalendar' - 'downloadIcs', true)
   WHERE "lang" = 'hu';`);
 }

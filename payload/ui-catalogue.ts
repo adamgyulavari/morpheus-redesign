@@ -383,7 +383,8 @@ const ACCOUNT = {
       cancelledKind: 'Elmarad (sorban) — {kind} = fajta',
       practice: 'Gyakorlás lemondásakor — {title} = mi',
       tickets: 'Jegyek link',
-      addToCalendar: 'Naptárba link (egy alkalom)',
+      googleCalendar: 'Egy alkalom: Google Naptár link (sor fölé víve)',
+      downloadIcs: 'Egy alkalom: .ics letöltése link (sor fölé víve)',
       noRefund: { long: 'Nyitott Műhely lemondása előtt' },
       kinds: [
         'Fajták',
