@@ -336,6 +336,7 @@ export const siteSettings = (s: P.SiteSetting): SiteSettings => ({
     social: c.social || undefined,
   })),
   privacy: link(s.privacy),
+  terms: link(s.terms),
   contact: { email: s.contact.email, address: s.contact.address, primaryPersonId: idOf(s.contact.primaryPerson) },
   social: { facebook: s.social.facebook, instagram: s.social.instagram, tixa: opt(s.social.tixa) },
   urls: { upcomingShows: s.urls.upcomingShows, repertoire: s.urls.repertoire },

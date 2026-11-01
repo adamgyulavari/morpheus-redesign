@@ -233,6 +233,7 @@ export type SiteSettings = {
   /** `social: true` adds the Facebook/Instagram icons under the column's links. */
   footerColumns: { title: string; links: Link[]; social?: boolean }[];
   privacy: Link;
+  terms: Link;
   contact: { email: string; address: string; primaryPersonId: string };
   /** `tixa`: the organiser page on the ticketing site (all our shows). */
   social: { facebook: string; instagram: string; tixa?: string };

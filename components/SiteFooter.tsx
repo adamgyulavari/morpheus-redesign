@@ -6,7 +6,7 @@ import SmartLink from './SmartLink';
 import SocialLinks from './SocialLinks';
 
 export default async function SiteFooter() {
-  const [{ name, tagline, copyright, footerColumns, privacy, social }, ui] = await Promise.all([
+  const [{ name, tagline, copyright, footerColumns, privacy, terms, social }, ui] = await Promise.all([
     getSiteSettings(),
     getUi(),
   ]);
@@ -40,9 +40,14 @@ export default async function SiteFooter() {
             // biome-ignore lint/performance/noImgElement: the payment provider's own SVG, shown as given
             <img src={banner.dark} alt={banner.alt} className="my-2 block h-auto w-full max-w-[220px] sm:my-0" />
           )}
-          <SmartLink href={privacy.href} className="link self-start">
-            {privacy.label}
-          </SmartLink>
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:gap-6">
+            <SmartLink href={terms.href} className="link self-start">
+              {terms.label}
+            </SmartLink>
+            <SmartLink href={privacy.href} className="link self-start">
+              {privacy.label}
+            </SmartLink>
+          </div>
         </div>
       </div>
     </footer>
