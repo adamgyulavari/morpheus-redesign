@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Repertoire filter "Mind / Társulati előadások / Hallgatói előadások".
+ * Repertoire filter "Mind / Nagyszínpadi produkciók / Hallgatói előadások".
  * The chips live in the hero and the sections further down, so the state is shared through a small
  * context: <RepertoireFilter> wraps the page, <FilterChips> renders the buttons, <FilterGroup> wraps
  * each server-rendered section and hides it when filtered out. Only the state is client-side; the
