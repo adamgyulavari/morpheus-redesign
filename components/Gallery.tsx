@@ -81,14 +81,18 @@ export default function Gallery({ images, label }: { images: ImageRef[]; label: 
         className="m-auto max-h-[92vh] w-[min(94vw,1100px)] overflow-visible border-0 bg-transparent p-0 backdrop:bg-night/85"
       >
         {current && (
-          <figure className="flex flex-col items-center gap-3">
+          <figure className="flex w-full flex-col items-center gap-3">
+            {/* an explicit width (an auto one follows whichever srcset file loaded, and came out tiny):
+                the dialog's, at most the photo's own and what fits in 80vh */}
             <Image
               src={current.src}
               alt={current.alt}
               width={current.width}
               height={current.height}
-              sizes="94vw"
-              className="max-h-[80vh] w-auto rounded-xl object-contain"
+              sizes="(min-width: 1170px) 1100px, 94vw"
+              loading="eager"
+              className="h-auto rounded-xl"
+              style={{ width: `min(100%, ${current.width}px, calc(80vh * ${current.width / current.height}))` }}
             />
             <figcaption className="text-sm text-mist">
               {(index ?? 0) + 1} / {images.length}
