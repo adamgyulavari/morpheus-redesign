@@ -8,6 +8,17 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   output: 'standalone',
   // Redirects (old addresses → pages) are content: the Átirányítások collection in the admin.
+  // One login for everyone: the admin's sends to the site's (/belepes: Google, login link, password),
+  // back to where Payload was going (its `redirect`, an /admin path; /belepes checks it).
+  redirects: async () => [
+    {
+      source: '/admin/login',
+      has: [{ type: 'query', key: 'redirect', value: '(?<back>/admin.*)' }],
+      destination: '/belepes?vissza=:back',
+      permanent: false,
+    },
+    { source: '/admin/login', destination: '/belepes?vissza=/admin', permanent: false },
+  ],
   images: {
     // Uploaded media, served by Payload (from local disk or S3)
     localPatterns: [{ pathname: '/api/media/file/**' }],
