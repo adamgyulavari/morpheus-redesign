@@ -1,4 +1,5 @@
 import { ArrowRight } from '@/components/icons';
+import JsonLd from '@/components/JsonLd';
 import PosterFit from '@/components/PosterFit';
 import ProductionCard from '@/components/ProductionCard';
 import { FilterGroup } from '@/components/RepertoireFilter';
@@ -17,6 +18,7 @@ import {
 } from '@/lib/data';
 import { monthLong, showDateLine, year } from '@/lib/dates';
 import { fill } from '@/lib/format';
+import { showEvents } from '@/lib/structured-data';
 import type { ShowWithRelations, UiStrings } from '@/lib/types';
 
 import type { BlockProps } from './types';
@@ -39,7 +41,7 @@ function Rows({ shows, ui }: { shows: ShowWithRelations[]; ui: UiStrings }) {
 
 /** Upcoming shows: one list under a heading (homepage), or grouped by month (/kozelgo-eloadasok). */
 export async function UpcomingShows({ block, className }: BlockProps<'upcomingShows'>) {
-  const [ui, shows] = await Promise.all([getUi(), getUpcomingShows()]);
+  const [ui, shows, settings] = await Promise.all([getUi(), getUpcomingShows(), getSiteSettings()]);
   const byMonth = block.variant === 'byMonth';
 
   // group by month: "2026. október"
@@ -83,6 +85,7 @@ export async function UpcomingShows({ block, className }: BlockProps<'upcomingSh
           <ArrowLink key={link.href} link={link} className="self-start" />
         ))}
       </div>
+      <JsonLd data={showEvents(shows, settings)} />
     </section>
   );
 }

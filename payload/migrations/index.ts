@@ -48,6 +48,7 @@ import * as migration_20261101_170000_repertoire_filter_texts from './20261101_1
 import * as migration_20261101_200000_account_productions_texts from './20261101_200000_account_productions_texts';
 import * as migration_20261101_212529_calendar_token from './20261101_212529_calendar_token';
 import * as migration_20261101_220000_calendar_texts from './20261101_220000_calendar_texts';
+import * as migration_20261104_222608_site_share_image from './20261104_222608_site_share_image';
 
 export const migrations = [
   {
@@ -299,5 +300,10 @@ export const migrations = [
     up: migration_20261101_220000_calendar_texts.up,
     down: migration_20261101_220000_calendar_texts.down,
     name: '20261101_220000_calendar_texts',
+  },
+  {
+    up: migration_20261104_222608_site_share_image.up,
+    down: migration_20261104_222608_site_share_image.down,
+    name: '20261104_222608_site_share_image'
   },
 ];

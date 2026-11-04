@@ -5,6 +5,7 @@ import { Fragment } from 'react';
 
 import Gallery from '@/components/Gallery';
 import { ArrowLeft, ArrowRight } from '@/components/icons';
+import JsonLd from '@/components/JsonLd';
 import Lines from '@/components/Lines';
 import SiteLayout from '@/components/layouts/SiteLayout';
 import ShowButton from '@/components/ShowButton';
@@ -16,6 +17,7 @@ import { dayOfMonth, monthLong, weekday } from '@/lib/dates';
 import { fill, firstSentence } from '@/lib/format';
 import { redirectOrNotFound } from '@/lib/not-found';
 import { pageMetadata } from '@/lib/seo';
+import { showEvents } from '@/lib/structured-data';
 
 /**
  * The production page template (not a block page: its layout follows the production record).
@@ -364,6 +366,7 @@ export default async function ProductionPage({ params }: Props) {
       </section>
 
       <CtaBand {...cta} className="my-16 lg:my-[120px]" />
+      <JsonLd data={showEvents(shows, settings)} />
     </SiteLayout>
   );
 }

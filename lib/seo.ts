@@ -38,5 +38,9 @@ export function pageMetadata({
   };
 }
 
+/** NOINDEX=true (staging): no page is indexed and robots.txt turns crawlers away, so a copy never competes with the site. */
+export const indexable = () => process.env.NOINDEX !== 'true';
+
 /** Same as the previous (WordPress) site: allow large image previews in search results. */
-export const robots: Metadata['robots'] = { index: true, follow: true, 'max-image-preview': 'large' };
+export const robots = (): Metadata['robots'] =>
+  indexable() ? { index: true, follow: true, 'max-image-preview': 'large' } : { index: false, follow: false };

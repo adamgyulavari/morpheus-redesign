@@ -4902,6 +4902,10 @@ export interface SiteSetting {
   name: string;
   tagline: string;
   copyright: string;
+  /**
+   * Facebookon és más oldalakon megosztva ez látszik azokon az oldalakon, amelyeknek nincs saját megosztási képe és fejlécfotója (1200×630-ra vágva).
+   */
+  shareImage?: (number | null) | Media;
   nav: {
     label: string;
     /**
@@ -5824,6 +5828,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   name?: T;
   tagline?: T;
   copyright?: T;
+  shareImage?: T;
   nav?:
     | T
     | {

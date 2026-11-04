@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
 
 import RenderBlocks from '@/components/blocks';
+import JsonLd from '@/components/JsonLd';
 import MinimalLayout from '@/components/layouts/MinimalLayout';
 import SiteLayout from '@/components/layouts/SiteLayout';
 import RepertoireFilter from '@/components/RepertoireFilter';
-import { getPage, getSiteSettings } from '@/lib/data';
+import { getPage, getShareImage, getSiteSettings } from '@/lib/data';
 import { redirectOrNotFound } from '@/lib/not-found';
 import { pageMetadata } from '@/lib/seo';
+import { organization } from '@/lib/structured-data';
 import type { Page } from '@/lib/types';
 
 /**
@@ -38,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return pageMetadata({
     title: meta.title || `${page.title} — ${settings.name}`,
     description: meta.description,
-    image: meta.image,
+    image: meta.image ?? (await getShareImage()),
     path,
     siteName: settings.name,
   });
@@ -52,6 +54,8 @@ export default async function ContentPage({ params }: Props) {
   const path = pathOf((await params).slug);
   const page = await getPage(path);
   if (!page) return redirectOrNotFound(path);
+  // the home page describes the theatre itself
+  const settings = path === '/' ? await getSiteSettings() : undefined;
 
   const Layout = page.layout === 'minimal' ? MinimalLayout : SiteLayout;
   const blocks = <RenderBlocks blocks={page.blocks} layout={page.layout} ctx={{ path }} />;
@@ -59,6 +63,7 @@ export default async function ContentPage({ params }: Props) {
     <Layout>
       {/* which document this is, for the staff edit overlay (components/edit) */}
       <span hidden data-cms-doc={`pages/${page.id}`} />
+      {settings && <JsonLd data={organization(settings)} />}
       {needsRepertoireFilter(page) ? <RepertoireFilter>{blocks}</RepertoireFilter> : blocks}
     </Layout>
   );

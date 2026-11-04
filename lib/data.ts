@@ -31,6 +31,7 @@ import type {
   ContactPerson,
   Course,
   CtaBand,
+  ImageRef,
   Instructor,
   OpenWorkshopSession,
   Page,
@@ -74,6 +75,19 @@ const numId = (id: string) => (/^\d+$/.test(id) ? Number(id) : id);
 
 export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
   return map.siteSettings(await (await payload()).findGlobal({ slug: 'siteSettings', depth: 0 }));
+});
+
+/** The site-wide share image (Weboldal beállításai): for pages without their own or a hero photo. */
+export const getShareImage = cache(async (): Promise<ImageRef | undefined> => {
+  const { shareImageId } = await getSiteSettings();
+  if (!shareImageId) return undefined;
+  const m = await (await payload()).findByID({
+    collection: 'media',
+    id: numId(shareImageId),
+    depth: 0,
+    disableErrors: true,
+  });
+  return map.img(m, 'og');
 });
 
 /** Component text (labels, empty states, aria labels) — the UI texts of a language. */

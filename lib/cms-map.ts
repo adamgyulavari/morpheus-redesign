@@ -343,6 +343,7 @@ export const siteSettings = (s: P.SiteSetting): SiteSettings => ({
   urls: { upcomingShows: s.urls.upcomingShows, repertoire: s.urls.repertoire },
   map: { embedUrl: s.map.embedUrl, directionsUrl: s.map.directionsUrl, title: s.map.title },
   productionPage: { ctaBand: idOf(s.productionPage.ctaBand) },
+  shareImageId: s.shareImage ? idOf(s.shareImage) : undefined,
 });
 
 // ── pages & blocks ──────────────────────────────────────────────────────────
@@ -435,12 +436,26 @@ export function block(raw: RawBlock): Block {
   return b as unknown as Block;
 }
 
-export const page = (p: P.Page): Page => ({
-  id: String(p.id),
-  path: p.path,
-  title: p.title,
-  // empty title: the route falls back to "<title> — <site name>"
-  meta: { title: p.meta?.title ?? '', description: opt(p.meta?.description), image: img(p.meta?.image, 'og') },
-  layout: p.layout,
-  blocks: (p.blocks ?? []).map(block),
-});
+/** The page's hero: its lead and photo stand in for an empty SEO description and image (as payload/seo.ts generates them). */
+const heroOf = (p: P.Page) => {
+  const h = p.blocks?.find((b) => b.blockType === 'pageHero' || b.blockType === 'homeHero');
+  if (!h) return undefined;
+  return { lead: h.lead, image: 'image' in h ? h.image : h.photos?.[0]?.photo };
+};
+
+export const page = (p: P.Page): Page => {
+  const hero = heroOf(p);
+  return {
+    id: String(p.id),
+    path: p.path,
+    title: p.title,
+    // empty title: the route falls back to "<title> — <site name>"; an empty image: the hero's, then the site's
+    meta: {
+      title: p.meta?.title ?? '',
+      description: opt(p.meta?.description) ?? opt(hero?.lead),
+      image: img(p.meta?.image, 'og') ?? img(hero?.image, 'og'),
+    },
+    layout: p.layout,
+    blocks: (p.blocks ?? []).map(block),
+  };
+};

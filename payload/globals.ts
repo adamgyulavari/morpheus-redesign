@@ -3,7 +3,7 @@ import type { GlobalConfig } from 'payload';
 import { WEEKDAYS } from '@/lib/rooms/labels';
 
 import { anyone, isAdmin, isStaffOrAdmin } from './access';
-import { date, link, links, relationship, text, textarea, time } from './fields';
+import { date, image, link, links, relationship, text, textarea, time } from './fields';
 import { globalRevalidation } from './revalidate';
 
 const access = { read: anyone, update: isStaffOrAdmin };
@@ -26,6 +26,10 @@ export const SiteSettings: GlobalConfig = {
             text('name', 'A színműhely neve', { required: true }),
             text('tagline', 'Jelmondat', { required: true }),
             text('copyright', 'Copyright sor', { required: true }),
+            image('shareImage', 'Alapértelmezett megosztási kép', {
+              description:
+                'Facebookon és más oldalakon megosztva ez látszik azokon az oldalakon, amelyeknek nincs saját megosztási képe és fejlécfotója (1200×630-ra vágva).',
+            }),
           ],
         },
         {
