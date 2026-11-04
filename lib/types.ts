@@ -244,6 +244,8 @@ export type SiteSettings = {
   map: { embedUrl: string; directionsUrl: string; title: string };
   /** Settings of the production detail template (/repertoar/[slug]). */
   productionPage: { ctaBand: string };
+  /** The share image of pages without their own (a media id). */
+  shareImageId?: string;
 };
 
 /** A reusable call-to-action band (referenced by id from pages). */

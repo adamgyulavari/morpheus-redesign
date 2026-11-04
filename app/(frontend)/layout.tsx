@@ -18,7 +18,7 @@ import './globals.css';
 // metadataBase makes relative image URLs (Open Graph) absolute; read at runtime, not inlined.
 export async function generateMetadata(): Promise<Metadata> {
   const base = serverUrl();
-  return { title: (await getSiteSettings()).name, metadataBase: base ? new URL(base) : undefined, robots };
+  return { title: (await getSiteSettings()).name, metadataBase: base ? new URL(base) : undefined, robots: robots() };
 }
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
