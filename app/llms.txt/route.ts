@@ -5,7 +5,7 @@ import { serverUrl } from '@/lib/env';
 /**
  * /llms.txt (llmstxt.org): the site in Markdown for AI assistants — the pages, the productions and the
  * coming shows with their addresses, built from the CMS on each request (no database at build time).
- * The headings are for machines, so they are not UI texts.
+ * The headings are the file's structure (not UI texts), in Hungarian like its content.
  */
 export const dynamic = 'force-dynamic';
 
@@ -26,17 +26,17 @@ export async function GET() {
     '',
     `${settings.contact.address} · ${settings.contact.email}`,
     '',
-    '## Pages',
+    '## Oldalak',
     '',
     ...pages.map((p) => item(p.title, `${base}${p.path}`, p.meta.description)),
     '',
-    '## Productions',
+    '## Előadások',
     '',
     ...productions.map((p) => item(p.title, `${base}/repertoar/${p.slug}`, `${p.byline}. ${p.summary}`)),
     '',
     ...(shows.length
       ? [
-          '## Upcoming shows',
+          '## Közelgő előadások',
           '',
           ...shows.map((s) =>
             item(
