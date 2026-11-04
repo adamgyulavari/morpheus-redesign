@@ -29,16 +29,20 @@ export const organization = (s: SiteSettings): Thing => ({
  * registration form.
  */
 function offers(show: ShowWithRelations, page: string): Thing | undefined {
-  const b = show.booking;
-  if (b && b.state !== 'closed') {
+  const booking = show.booking;
+  // booked on the site: nothing on offer once its sales are closed
+  if (booking) {
+    if (booking.state === 'closed') return undefined;
+    const availability = booking.state === 'full' ? 'SoldOut' : 'InStock';
     return {
       '@type': 'Offer',
       url: page,
-      price: b.price,
+      price: booking.price,
       priceCurrency: 'HUF',
-      availability: `https://schema.org/${b.state === 'full' ? 'SoldOut' : 'InStock'}`,
+      availability: `https://schema.org/${availability}`,
     };
   }
+  // elsewhere: the ticketing site (its price is not known here), or a free registration form
   if (show.ticketUrl) return { '@type': 'Offer', url: show.ticketUrl };
   if (show.registrationUrl) return { '@type': 'Offer', url: show.registrationUrl, price: 0, priceCurrency: 'HUF' };
   return undefined;
