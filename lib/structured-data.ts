@@ -3,7 +3,6 @@
  * listed show as an event (Google's event results: date, place, tickets). Rendered by components/JsonLd.
  */
 import { serverUrl } from './env';
-import { showCheckoutPath } from './payments/links';
 import { at } from './rooms/time';
 import type { ShowWithRelations, SiteSettings } from './types';
 
@@ -24,13 +23,17 @@ export const organization = (s: SiteSettings): Thing => ({
   sameAs: [s.social.facebook, s.social.instagram].filter(Boolean),
 });
 
-/** Where the visitor gets in: our own booking (price, sold out), the ticketing site or a free registration. */
-function offers(show: ShowWithRelations): Thing | undefined {
+/**
+ * Where the visitor gets in: booked on the site, the show's own page (its button: the checkout, or the
+ * free registration dialog) with the price and whether it is sold out; else the ticketing site or a
+ * registration form.
+ */
+function offers(show: ShowWithRelations, page: string): Thing | undefined {
   const b = show.booking;
   if (b && b.state !== 'closed') {
     return {
       '@type': 'Offer',
-      url: absolute(showCheckoutPath(b.code)),
+      url: page,
       price: b.price,
       priceCurrency: 'HUF',
       availability: `https://schema.org/${b.state === 'full' ? 'SoldOut' : 'InStock'}`,
@@ -45,6 +48,7 @@ function offers(show: ShowWithRelations): Thing | undefined {
 export const showEvents = (shows: ShowWithRelations[], s: SiteSettings): Thing[] =>
   shows.map((show) => {
     const p = show.production;
+    const page = absolute(p.detailPage ? `/repertoar/${p.slug}` : `${s.urls.upcomingShows}#eloadas-${show.id}`);
     return {
       '@context': 'https://schema.org',
       '@type': 'TheaterEvent',
@@ -53,11 +57,11 @@ export const showEvents = (shows: ShowWithRelations[], s: SiteSettings): Thing[]
       startDate: at(show.date, show.time).toISOString(),
       eventStatus: 'https://schema.org/EventScheduled',
       eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
-      url: absolute(p.detailPage ? `/repertoar/${p.slug}` : `${s.urls.upcomingShows}#eloadas-${show.id}`),
+      url: page,
       image: absolute(p.poster.src),
       location: { '@type': 'Place', name: show.venue.shortName, address: show.venue.name },
       performer: group(s),
       organizer: group(s),
-      offers: offers(show),
+      offers: offers(show, page),
     };
   });
