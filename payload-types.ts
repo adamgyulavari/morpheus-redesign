@@ -2479,6 +2479,10 @@ export interface Page {
     image?: (number | null) | Media;
   };
   layout: 'site' | 'minimal';
+  /**
+   * Nem kerül a Google-be és az oldaltérképbe (pl. a bio linkoldal). A link ettől még működik.
+   */
+  noindex?: boolean | null;
   importId?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -2798,7 +2802,7 @@ export interface MockPayment {
 export interface Redirect {
   id: number;
   /**
-   * A régi cím, a domain nélkül, perjellel kezdve: pl. /rolunk-2 (a végén lévő perjel nem számít).
+   * A régi cím, a domain nélkül, perjellel kezdve: pl. /rolunk-2 (a végén lévő perjel nem számít). /* a végén: minden alatta lévő cím, pl. /events/* (ha nincs pontos egyezés).
    */
   from: string;
   to?: {
@@ -4117,6 +4121,7 @@ export interface PagesSelect<T extends boolean = true> {
         image?: T;
       };
   layout?: T;
+  noindex?: T;
   importId?: T;
   updatedAt?: T;
   createdAt?: T;

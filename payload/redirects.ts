@@ -44,7 +44,7 @@ export const redirectsConfig: RedirectsPluginConfig = {
               admin: {
                 ...field.admin,
                 description:
-                  'A régi cím, a domain nélkül, perjellel kezdve: pl. /rolunk-2 (a végén lévő perjel nem számít).',
+                  'A régi cím, a domain nélkül, perjellel kezdve: pl. /rolunk-2 (a végén lévő perjel nem számít). /* a végén: minden alatta lévő cím, pl. /events/* (ha nincs pontos egyezés).',
               },
             } as Field)
           : field,

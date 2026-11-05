@@ -14,6 +14,7 @@ export function pageMetadata({
   path,
   siteName,
   type = 'website',
+  noindex = false,
 }: {
   title: string;
   description?: string;
@@ -21,10 +22,13 @@ export function pageMetadata({
   path: string;
   siteName: string;
   type?: 'website' | 'article';
+  /** Rejtve a keresők elől: its links are still followed. */
+  noindex?: boolean;
 }): Metadata {
   return {
     title,
     description,
+    ...(noindex && { robots: { index: false, follow: true } }),
     alternates: { canonical: path },
     openGraph: {
       type,
@@ -38,7 +42,7 @@ export function pageMetadata({
   };
 }
 
-/** NOINDEX=true (staging): no page is indexed and robots.txt turns crawlers away, so a copy never competes with the site. */
+/** NOINDEX=true (staging): no page is indexed (robots.txt still lets crawlers read that), so a copy never competes with the site. */
 export const indexable = () => process.env.NOINDEX !== 'true';
 
 /** Same as the previous (WordPress) site: allow large image previews in search results. */

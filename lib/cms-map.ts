@@ -160,6 +160,7 @@ export function production(p: P.Production): Production {
     note: opt(p.note),
     poster: imgReq(p.poster, 'poster'),
     meta: { title: opt(p.meta?.title), description: opt(p.meta?.description), image: img(p.meta?.image, 'og') },
+    updatedAt: p.updatedAt,
   };
 }
 
@@ -457,5 +458,7 @@ export const page = (p: P.Page): Page => {
     },
     layout: p.layout,
     blocks: (p.blocks ?? []).map(block),
+    noindex: p.noindex ?? false,
+    updatedAt: p.updatedAt,
   };
 };

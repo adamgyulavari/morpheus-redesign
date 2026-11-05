@@ -28,7 +28,7 @@ export async function GET() {
     '',
     '## Oldalak',
     '',
-    ...pages.map((p) => item(p.title, `${base}${p.path}`, p.meta.description)),
+    ...pages.filter((p) => !p.noindex).map((p) => item(p.title, `${base}${p.path}`, p.meta.description)),
     '',
     '## Előadások',
     '',
