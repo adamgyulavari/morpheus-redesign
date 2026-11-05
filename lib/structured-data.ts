@@ -12,14 +12,24 @@ const absolute = (path: string) => (/^https?:/.test(path) ? path : `${serverUrl(
 
 const group = (s: SiteSettings): Thing => ({ '@type': 'PerformingGroup', name: s.name, url: absolute('/') });
 
-/** The theatre: name, address, e-mail, logo and its social profiles. */
-export const organization = (s: SiteSettings): Thing => ({
+/** "1027 Budapest, Frankel Leó út 6." as its parts; any other wording as it is. */
+export function postalAddress(address: string): Thing | string {
+  const parts = address.match(/^(\d{4}) ([^,]+), (.+)$/);
+  if (!parts) return address;
+  const [, postalCode, addressLocality, streetAddress] = parts;
+  return { '@type': 'PostalAddress', streetAddress, postalCode, addressLocality, addressCountry: 'HU' };
+}
+
+/** The theatre (a company that also teaches): name, address, e-mail and phone, logo, its social profiles. */
+export const organization = (s: SiteSettings, phone?: string): Thing => ({
   '@context': 'https://schema.org',
   ...group(s),
+  '@type': ['PerformingGroup', 'EducationalOrganization'],
   description: s.tagline,
-  logo: absolute('/logo.svg'),
+  logo: absolute('/logo.png'),
   email: s.contact.email,
-  address: s.contact.address,
+  telephone: phone,
+  address: postalAddress(s.contact.address),
   sameAs: [s.social.facebook, s.social.instagram].filter(Boolean),
 });
 
@@ -63,7 +73,7 @@ export const showEvents = (shows: ShowWithRelations[], s: SiteSettings): Thing[]
       eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
       url: page,
       image: absolute(p.poster.src),
-      location: { '@type': 'Place', name: show.venue.shortName, address: show.venue.name },
+      location: { '@type': 'Place', name: show.venue.shortName, address: postalAddress(show.venue.name) },
       performer: group(s),
       organizer: group(s),
       offers: offers(show, page),

@@ -5,7 +5,7 @@ import JsonLd from '@/components/JsonLd';
 import MinimalLayout from '@/components/layouts/MinimalLayout';
 import SiteLayout from '@/components/layouts/SiteLayout';
 import RepertoireFilter from '@/components/RepertoireFilter';
-import { getPage, getShareImage, getSiteSettings } from '@/lib/data';
+import { getContactPerson, getPage, getShareImage, getSiteSettings } from '@/lib/data';
 import { redirectOrNotFound } from '@/lib/not-found';
 import { pageMetadata } from '@/lib/seo';
 import { organization } from '@/lib/structured-data';
@@ -51,12 +51,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 const needsRepertoireFilter = (page: Page) =>
   page.blocks.some((b) => b.blockType === 'repertoire' || (b.blockType === 'pageHero' && b.repertoireFilter));
 
+/** The theatre's structured data, with the phone of its main contact (as on /kapcsolat). */
+async function theatreStructuredData() {
+  const settings = await getSiteSettings();
+  const mainContact = await getContactPerson(settings.contact.primaryPersonId);
+  return organization(settings, mainContact.phone);
+}
+
 export default async function ContentPage({ params }: Props) {
   const path = pathOf((await params).slug);
   const page = await getPage(path);
   if (!page) return redirectOrNotFound(path);
-  // the home page describes the theatre itself
-  const settings = path === '/' ? await getSiteSettings() : undefined;
+  const homeStructuredData = path === '/' ? await theatreStructuredData() : undefined;
 
   const Layout = page.layout === 'minimal' ? MinimalLayout : SiteLayout;
   const blocks = <RenderBlocks blocks={page.blocks} layout={page.layout} ctx={{ path }} />;
@@ -64,7 +70,7 @@ export default async function ContentPage({ params }: Props) {
     <Layout>
       {/* which document this is, for the staff edit overlay (components/edit) */}
       <span hidden data-cms-doc={`pages/${page.id}`} />
-      {settings && <JsonLd data={organization(settings)} />}
+      {homeStructuredData && <JsonLd data={homeStructuredData} />}
       {needsRepertoireFilter(page) ? <RepertoireFilter>{blocks}</RepertoireFilter> : blocks}
     </Layout>
   );
