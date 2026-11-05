@@ -43,6 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     image: meta.image ?? (await getShareImage()),
     path,
     siteName: settings.name,
+    noindex: page.noindex,
   });
 }
 

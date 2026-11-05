@@ -14,6 +14,7 @@ export function pageMetadata({
   path,
   siteName,
   type = 'website',
+  noindex = false,
 }: {
   title: string;
   description?: string;
@@ -21,10 +22,13 @@ export function pageMetadata({
   path: string;
   siteName: string;
   type?: 'website' | 'article';
+  /** Rejtve a keresők elől: its links are still followed. */
+  noindex?: boolean;
 }): Metadata {
   return {
     title,
     description,
+    ...(noindex && { robots: { index: false, follow: true } }),
     alternates: { canonical: path },
     openGraph: {
       type,

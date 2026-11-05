@@ -67,6 +67,8 @@ export type Production = {
   poster: ImageRef;
   /** SEO overrides; the detail page falls back to "<title> — <site>", the first sentence and the poster. */
   meta?: Partial<PageMeta>;
+  /** ISO timestamp of the last edit (the sitemap's lastmod). */
+  updatedAt: string;
 };
 
 export type Venue = { id: string; name: string; shortName: string };
@@ -280,6 +282,10 @@ export type Page = {
   meta: PageMeta;
   layout: 'site' | 'minimal';
   blocks: Block[];
+  /** "Rejtve a keresők elől": noindex, left out of the sitemap and llms.txt. */
+  noindex: boolean;
+  /** ISO timestamp of the last edit (the sitemap's lastmod). */
+  updatedAt: string;
 };
 
 /** Vertical space above/below a block: none, xs (24/48px), sm (40/64), md (48/88), lg (64/120). */
