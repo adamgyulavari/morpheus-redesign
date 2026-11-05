@@ -46,6 +46,7 @@ const GROUPS: [string, BlockType[]][] = [
       'imageText',
       'linkCards',
       'questions',
+      'faq',
       'benefits',
       'curriculum',
       'featureCards',
@@ -323,6 +324,24 @@ export const blocks: Block[] = [
       cards('items', 'Kérdések', 'Kérdés', titleText()),
       emphasised('closing', 'Záró mondat', { required: true }),
       link('cta', 'Gomb', { required: true }),
+    ],
+  }),
+  block({
+    slug: 'faq',
+    label: 'Gyakori kérdések',
+    description: 'Kérdések és válaszok, lenyitható sorokban. A Google is látja (találati oldalon is megjelenhetnek).',
+    fields: [
+      {
+        type: 'row',
+        fields: [
+          eyebrow({ required: false }),
+          { ...emphasised('heading', 'Cím', { required: true }), defaultValue: 'Gyakori kérdések' },
+        ],
+      },
+      cards('items', 'Kérdések', 'Kérdés', [
+        text('question', 'Kérdés', { required: true }),
+        { name: 'answer', label: 'Válasz', type: 'richText', editor: linksRichText, required: true },
+      ]),
     ],
   }),
   block({

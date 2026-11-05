@@ -369,6 +369,13 @@ export type Block = BlockBase &
       }
     | (Section & { blockType: 'linkCards'; cards: { eyebrow: string; title: string; href: string; text: string }[] })
     | (Section & { blockType: 'questions'; items: { title: string; text: string }[]; closing: Emphasised; cta: Link })
+    | {
+        blockType: 'faq';
+        eyebrow?: string;
+        heading: Emphasised;
+        /** Each answer: its paragraphs, each a list of segments (text and links). */
+        items: { question: string; answer: Segment[][] }[];
+      }
     | (Section & { blockType: 'benefits'; text?: string; items?: string[] })
     | (Section & {
         blockType: 'curriculum';
