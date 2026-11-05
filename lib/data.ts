@@ -382,14 +382,19 @@ export const getTeamBuildingProgrammes = cache(async (): Promise<TeamBuildingPro
  */
 export async function getRedirect(path: string): Promise<{ href: string; permanent: boolean } | undefined> {
   const bare = path.replace(/\/+$/, '') || '/';
+  // the address itself, then "/events/*"-style entries, the closest first: /events/a/b → /events/a/*, /events/*
+  const segments = bare.split('/').filter(Boolean);
+  const wildcards = segments.map((_, i) => `/${segments.slice(0, segments.length - i).join('/')}/*`);
+  const candidates = [bare, `${bare}/`, ...wildcards];
   const { docs } = await (await payload()).find({
     collection: 'redirects',
-    where: { from: { in: [bare, `${bare}/`] } },
+    where: { from: { in: candidates } },
     depth: 1,
     populate: { pages: { path: true }, productions: { slug: true } },
-    limit: 1,
+    limit: candidates.length,
   });
-  const r = docs[0];
+  const rank = (from: string) => candidates.indexOf(from);
+  const r = docs.sort((a, b) => rank(a.from) - rank(b.from))[0];
   if (!r) return undefined;
   const target = r.to?.type === 'reference' ? r.to.reference : undefined;
   const ref = target && typeof target.value === 'object' ? target.value : undefined;
