@@ -1535,6 +1535,49 @@ export interface Page {
             /**
              * Kis, nagybetűs sor a cím fölött.
              */
+            eyebrow?: string | null;
+            /**
+             * A *csillagok közé* írt rész kiemelve (dőlten, színesen) jelenik meg.
+             */
+            heading: string;
+            items: {
+              question: string;
+              answer: {
+                root: {
+                  type: string;
+                  children: {
+                    type: any;
+                    version: number;
+                    [k: string]: unknown;
+                  }[];
+                  direction: ('ltr' | 'rtl') | null;
+                  format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                  indent: number;
+                  version: number;
+                };
+                [k: string]: unknown;
+              };
+              id?: string | null;
+            }[];
+            /**
+             * A szakasz azonosítója linkekhez, pl. „idopontok” → /oldal#idopontok. Ékezet és szóköz nélkül.
+             */
+            anchor?: string | null;
+            /**
+             * Üresen hagyva az alapértelmezett térköz érvényes.
+             */
+            spacing?: {
+              top?: ('none' | 'xs' | 'sm' | 'md' | 'lg') | null;
+              bottom?: ('none' | 'xs' | 'sm' | 'md' | 'lg') | null;
+            };
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'faq';
+          }
+        | {
+            /**
+             * Kis, nagybetűs sor a cím fölött.
+             */
             eyebrow: string;
             /**
              * A *csillagok közé* írt rész kiemelve (dőlten, színesen) jelenik meg.
@@ -3422,6 +3465,28 @@ export interface PagesSelect<T extends boolean = true> {
                 | {
                     label?: T;
                     href?: T;
+                  };
+              anchor?: T;
+              spacing?:
+                | T
+                | {
+                    top?: T;
+                    bottom?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        faq?:
+          | T
+          | {
+              eyebrow?: T;
+              heading?: T;
+              items?:
+                | T
+                | {
+                    question?: T;
+                    answer?: T;
+                    id?: T;
                   };
               anchor?: T;
               spacing?:

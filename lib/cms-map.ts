@@ -111,6 +111,20 @@ const linkHref = (n: LexNode): string | undefined => {
 };
 
 /** Rich text with links → text segments (`{ text, href? }`), paragraphs joined by a space. */
+/** Paragraphs with links, as they are: one list of segments per paragraph. */
+export function paragraphSegmentsFromRichText(state: SerializedEditorState | null | undefined): Segment[][] {
+  const root = state?.root as unknown as LexNode | undefined;
+  return (root?.children ?? [])
+    .map((p) =>
+      (p.children ?? []).map((n) =>
+        n.type === 'link' || n.type === 'autolink'
+          ? { text: plain(n.children), href: linkHref(n) }
+          : { text: n.type === 'linebreak' ? '\n' : (n.text ?? plain(n.children)) },
+      ),
+    )
+    .filter((p) => p.some((seg) => seg.text.trim()));
+}
+
 export function segmentsFromRichText(state: SerializedEditorState | null | undefined): Segment[] {
   const root = state?.root as unknown as LexNode | undefined;
   const out: Segment[] = [];
@@ -428,6 +442,14 @@ export function block(raw: RawBlock): Block {
       if (!r?.inquiry?.href && !r?.text?.length) delete b.rolling;
       break;
     }
+    case 'faq':
+      // the answers keep their paragraphs (the generic conversion runs them together)
+      if (raw.blockType === 'faq')
+        b.items = (raw.items ?? []).map((i) => ({
+          question: i.question,
+          answer: paragraphSegmentsFromRichText(i.answer as SerializedEditorState),
+        }));
+      break;
     case 'offerings':
       b.cards = ((b.cards as Record<string, unknown>[] | undefined) ?? []).map((c) =>
         c.course ? { course: c.course } : { facts: [], ...c },

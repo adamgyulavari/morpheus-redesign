@@ -50,6 +50,7 @@ import * as migration_20261101_212529_calendar_token from './20261101_212529_cal
 import * as migration_20261101_220000_calendar_texts from './20261101_220000_calendar_texts';
 import * as migration_20261104_222608_site_share_image from './20261104_222608_site_share_image';
 import * as migration_20261105_225054_page_noindex from './20261105_225054_page_noindex';
+import * as migration_20261105_233548_faq_block from './20261105_233548_faq_block';
 
 export const migrations = [
   {
@@ -310,6 +311,11 @@ export const migrations = [
   {
     up: migration_20261105_225054_page_noindex.up,
     down: migration_20261105_225054_page_noindex.down,
-    name: '20261105_225054_page_noindex'
+    name: '20261105_225054_page_noindex',
+  },
+  {
+    up: migration_20261105_233548_faq_block.up,
+    down: migration_20261105_233548_faq_block.down,
+    name: '20261105_233548_faq_block'
   },
 ];
