@@ -81,6 +81,16 @@ export const Pages: CollectionConfig = {
       ],
       admin: { position: 'sidebar' },
     },
+    {
+      name: 'noindex',
+      label: 'Rejtve a keresők elől',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        position: 'sidebar',
+        description: 'Nem kerül a Google-be és az oldaltérképbe (pl. a bio linkoldal). A link ettől még működik.',
+      },
+    },
     importId,
   ],
 };
