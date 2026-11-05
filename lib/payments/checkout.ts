@@ -7,7 +7,7 @@
  */
 import { randomBytes } from 'node:crypto';
 
-import type { Payload, TypedUser, Where } from 'payload';
+import type { Payload, Where } from 'payload';
 
 import { fits } from '@/lib/applications/capacity';
 import type { Applicant, TargetInfo } from '@/lib/applications/notify';
@@ -32,7 +32,7 @@ import { errorMessage } from '@/lib/rooms/server';
 import { siteUrl } from '@/payload/email';
 import { relId } from '@/payload/rel';
 import { uiTexts } from '@/payload/ui-texts';
-import type { Application, Order } from '@/payload-types';
+import type { Application, Order, User } from '@/payload-types';
 
 import { type Billing, clean, validateBilling } from './billing';
 import { sendPaymentLink } from './notify';
@@ -52,7 +52,7 @@ export type CheckoutInput = ApplicantInput & { sessionId: number; billing: Billi
  */
 export async function checkout(
   payload: Payload,
-  viewer: TypedUser | null,
+  viewer: User | null,
   input: CheckoutInput,
   now = new Date(),
 ): Promise<Started> {
@@ -98,7 +98,7 @@ export function dueNow(option: { amount: number; installments?: number | null })
  */
 export async function checkoutCourse(
   payload: Payload,
-  viewer: TypedUser | null,
+  viewer: User | null,
   input: CourseCheckoutInput,
   now = new Date(),
 ): Promise<Started> {
@@ -147,7 +147,7 @@ export type ShowCheckoutInput = ApplicantInput & { showId: number; seats: number
 /** Tickets for a show booked on the site (a free one is booked without the checkout). */
 export async function checkoutShow(
   payload: Payload,
-  viewer: TypedUser | null,
+  viewer: User | null,
   input: ShowCheckoutInput,
   now = new Date(),
 ): Promise<Started> {
@@ -181,7 +181,7 @@ export async function checkoutShow(
 /** Both checkouts begin alike: the person's details and billing are valid, online payment is on. */
 async function begin(
   payload: Payload,
-  viewer: TypedUser | null,
+  viewer: User | null,
   input: ApplicantInput & { billing: Billing },
   kind: Application['kind'],
 ): Promise<Result<{ billing: Billing; holdMinutes: number }>> {
@@ -211,7 +211,7 @@ type NewOrder = {
  */
 async function order(
   payload: Payload,
-  viewer: TypedUser | null,
+  viewer: User | null,
   input: ApplicantInput,
   { billing, holdMinutes }: { billing: Billing; holdMinutes: number },
   now: Date,

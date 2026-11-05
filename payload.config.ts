@@ -2,6 +2,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { postgresAdapter } from '@payloadcms/db-postgres';
+import { mcpPlugin } from '@payloadcms/plugin-mcp';
 import { redirectsPlugin } from '@payloadcms/plugin-redirects';
 import { seoPlugin } from '@payloadcms/plugin-seo';
 import { lexicalEditor } from '@payloadcms/richtext-lexical';
@@ -34,6 +35,7 @@ import { Users } from './payload/collections/Users';
 import { emailAdapter } from './payload/email';
 import { EmailTexts } from './payload/email-texts';
 import { ApplicationSettings, BillingSettings, RoomBookingSettings, SiteSettings } from './payload/globals';
+import { mcpConfig } from './payload/mcp';
 import { migrations } from './payload/migrations';
 import { arrangeNav } from './payload/nav';
 import { redirectsConfig, redirectsTranslationsHu } from './payload/redirects';
@@ -177,6 +179,8 @@ export default buildConfig({
     }),
     // old / retired addresses → current pages (see payload/redirects.ts)
     redirectsPlugin(redirectsConfig),
+    // an AI assistant edits the content through /api/mcp, with an admin's key (see payload/mcp.ts)
+    mcpPlugin(mcpConfig),
     s3,
   ],
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },

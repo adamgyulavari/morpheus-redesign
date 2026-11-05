@@ -51,6 +51,7 @@ import * as migration_20261101_220000_calendar_texts from './20261101_220000_cal
 import * as migration_20261104_222608_site_share_image from './20261104_222608_site_share_image';
 import * as migration_20261105_225054_page_noindex from './20261105_225054_page_noindex';
 import * as migration_20261105_233548_faq_block from './20261105_233548_faq_block';
+import * as migration_20261105_233847_mcp_api_keys from './20261105_233847_mcp_api_keys';
 
 export const migrations = [
   {
@@ -317,5 +318,10 @@ export const migrations = [
     up: migration_20261105_233548_faq_block.up,
     down: migration_20261105_233548_faq_block.down,
     name: '20261105_233548_faq_block'
+  },
+  {
+    up: migration_20261105_233847_mcp_api_keys.up,
+    down: migration_20261105_233847_mcp_api_keys.down,
+    name: '20261105_233847_mcp_api_keys'
   },
 ];

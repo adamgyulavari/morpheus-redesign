@@ -6,7 +6,7 @@
 import { randomBytes } from 'node:crypto';
 
 import { sql } from '@payloadcms/db-postgres';
-import { createLocalReq, type Payload, type PayloadRequest, type TypedUser, type Where } from 'payload';
+import { createLocalReq, type Payload, type PayloadRequest, type Where } from 'payload';
 import { cache } from 'react';
 
 import { dateRange } from '@/lib/dates';
@@ -20,7 +20,7 @@ import { dbOf } from '@/payload/db';
 import { relId, relIds } from '@/payload/rel';
 import type { UiStrings } from '@/payload/ui-catalogue';
 import { uiTexts } from '@/payload/ui-texts';
-import type { CourseGroup, Session } from '@/payload-types';
+import type { CourseGroup, Session, User } from '@/payload-types';
 
 import { APPLICATION_KINDS, type ApplicationKind, type ApplicationStatus, SIGNUP_KIND_OF_TYPE } from './labels';
 import {
@@ -186,7 +186,7 @@ async function keepPhone(payload: Payload, userId: number, phone: string) {
 
 export async function applicantFor(
   payload: Payload,
-  viewer: TypedUser | null,
+  viewer: User | null,
   input: ApplicantInput,
 ): Promise<{ applicant: Applicant; created: boolean }> {
   if (viewer) {
@@ -265,7 +265,7 @@ const EMAIL =
 /** Checks the form's fields (the rest is checked against the date or course). */
 export function validateInput(
   input: Omit<SignUpInput, 'kind'> & { kind: ApplicationKind },
-  viewer: TypedUser | null,
+  viewer: User | null,
   t: UiStrings['signupErrors'],
 ): string | null {
   if (!viewer && (!input.lastName.trim() || !input.firstName.trim())) return t.name;
@@ -282,7 +282,7 @@ export function validateInput(
  */
 export async function signUp(
   payload: Payload,
-  viewer: TypedUser | null,
+  viewer: User | null,
   input: SignUpInput,
   now = new Date(),
 ): Promise<Result<{ applicationId: number }>> {
@@ -358,7 +358,7 @@ export async function signUp(
 
 // ── the participant: cancel, move ───────────────────────────────────────────
 
-async function ownApplication(payload: Payload, user: TypedUser, id: number) {
+async function ownApplication(payload: Payload, user: User, id: number) {
   const a = await payload.findByID({ collection: 'applications', id, depth: 0, disableErrors: true });
   return a && relId(a.user) === user.id ? a : null;
 }
@@ -424,7 +424,7 @@ export async function allowedActions(
 }
 
 /** The participant cancels (workshop, beginner) or withdraws (professional). */
-export async function cancelOwn(payload: Payload, user: TypedUser, id: number, now = new Date()): Promise<Result> {
+export async function cancelOwn(payload: Payload, user: User, id: number, now = new Date()): Promise<Result> {
   const ui = await uiTexts(payload);
   const a = await ownApplication(payload, user, id);
   if (!a) return { ok: false, reason: ui.signupErrors.noApplication };
@@ -475,7 +475,7 @@ async function targetAndCount(
 /** One click: the application moves to another open date (a new one; the old becomes `moved`). */
 export async function moveOwn(
   payload: Payload,
-  user: TypedUser,
+  user: User,
   id: number,
   toSessionId: number,
   now = new Date(),
@@ -690,7 +690,7 @@ export async function runWorkshopCutoffs(payload: Payload, now = new Date()) {
  */
 export async function admit(
   payload: Payload,
-  staff: TypedUser,
+  staff: User,
   id: number,
   groupId: number | null | undefined,
   notify: boolean,
@@ -732,7 +732,7 @@ export async function admit(
  * The person joins the group's students — Felvétel by staff (their rights apply), or a paid kezdő
  * sign-up (the system). Room booking is not given here: staff turn it on on the account.
  */
-export async function joinGroup(req: PayloadRequest, userId: number, g: CourseGroup, staff?: TypedUser) {
+export async function joinGroup(req: PayloadRequest, userId: number, g: CourseGroup, staff?: User) {
   const students = relIds(g.students);
   if (!students.includes(userId))
     await req.payload.update({
@@ -1081,7 +1081,7 @@ export type Decision = 'save' | 'admit' | 'interview' | 'reject' | 'cancel';
  */
 export async function decide(
   payload: Payload,
-  staff: TypedUser,
+  staff: User,
   id: number,
   input: { decision: Decision; paid?: boolean; paymentNote?: string; groupId?: number | null; notify: boolean },
 ): Promise<Result<{ message: string }>> {

@@ -4,11 +4,10 @@
  * The admin room calendar (/admin/teremnaptar). Staff only; writes go through the Local API with the
  * staff member's own rights, so the collections' access rules and the admin-only override still apply.
  */
-import type { TypedUser } from 'payload';
 
 import { getCurrentUser, payloadClient } from '@/lib/auth';
 import { userIsStaffOrAdmin } from '@/payload/access';
-
+import type { User } from '@/payload-types';
 import type { LocationType, SessionKind } from './labels';
 import {
   applyFill,
@@ -27,7 +26,7 @@ import {
 
 type Result<T = object> = ({ ok: true } & T) | { ok: false; reason: string };
 
-async function staff(): Promise<TypedUser | null> {
+async function staff(): Promise<User | null> {
   const user = await getCurrentUser();
   return user && userIsStaffOrAdmin(user) ? user : null;
 }

@@ -1,8 +1,8 @@
 /** The account's orders and invoices (/fiokom/szamlaim, the overview's "Fizetés folytatása"). */
-import type { Payload, TypedUser } from 'payload';
+import type { Payload } from 'payload';
 
 import { relId } from '@/payload/rel';
-import type { Invoice } from '@/payload-types';
+import type { Invoice, User } from '@/payload-types';
 
 import { lapsed } from './orders';
 
@@ -29,7 +29,7 @@ export type MyBill = MyInvoice & {
 };
 
 /** Paid (and refunded) orders with their invoices, newest first; and the unfinished payments. */
-export async function myOrders(payload: Payload, user: TypedUser, now = new Date()) {
+export async function myOrders(payload: Payload, user: User, now = new Date()) {
   const own = { user, overrideAccess: false } as const;
   const [{ docs: orders }, { docs: invoices }] = await Promise.all([
     payload.find({

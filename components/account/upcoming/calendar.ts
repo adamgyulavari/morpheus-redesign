@@ -6,7 +6,7 @@
  */
 import { randomBytes } from 'node:crypto';
 import { sql } from '@payloadcms/db-postgres';
-import type { Payload, TypedUser } from 'payload';
+import type { Payload } from 'payload';
 
 import { myApplications } from '@/lib/applications/overview';
 import type { IcsEvent } from '@/lib/rooms/ics';
@@ -14,7 +14,7 @@ import { studentOverview } from '@/lib/rooms/student';
 import { dbOf } from '@/payload/db';
 import { siteUrl } from '@/payload/email';
 import type { UiStrings } from '@/payload/ui-catalogue';
-
+import type { User } from '@/payload-types';
 import { type UpcomingItem, upcomingItems } from './items';
 
 const DAYS_BACK = 60;
@@ -31,7 +31,7 @@ export async function calendarToken(payload: Payload, userId: number): Promise<s
   return String(rows[0]?.calendar_token ?? made);
 }
 
-export async function userByCalendarToken(payload: Payload, token: string): Promise<TypedUser | null> {
+export async function userByCalendarToken(payload: Payload, token: string): Promise<User | null> {
   if (!TOKEN.test(token)) return null;
   const { docs } = await payload.find({
     collection: 'users',
@@ -39,11 +39,11 @@ export async function userByCalendarToken(payload: Payload, token: string): Prom
     depth: 0,
     limit: 1,
   });
-  return (docs[0] as TypedUser | undefined) ?? null;
+  return (docs[0] as User | undefined) ?? null;
 }
 
 /** The person's items from a while ago on, without groupmates' practice. */
-export async function calendarItems(payload: Payload, user: TypedUser, now = new Date()): Promise<UpcomingItem[]> {
+export async function calendarItems(payload: Payload, user: User, now = new Date()): Promise<UpcomingItem[]> {
   const since = new Date(now.getTime() - DAYS_BACK * 86_400_000);
   const o = await studentOverview(payload, user, since);
   const mine = await myApplications(

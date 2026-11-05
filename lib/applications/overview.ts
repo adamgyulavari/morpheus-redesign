@@ -3,14 +3,14 @@
  * bookings (for "Közelgő alkalmak", with cancel / move where allowed) and their pending course
  * applications (for "Kurzusaim"). Read on the server for this user only.
  */
-import type { Payload, TypedUser } from 'payload';
+import type { Payload } from 'payload';
 
 import { dateRange, monthDayShort, weekday } from '@/lib/dates';
 import { placeText } from '@/lib/rooms/format';
 import { roomNameMap } from '@/lib/rooms/occupancy';
 import { clockOf, dayOf } from '@/lib/rooms/time';
 import { relId } from '@/payload/rel';
-import type { Course, CourseGroup } from '@/payload-types';
+import type { Course, CourseGroup, User } from '@/payload-types';
 
 import { APPLICATION_KINDS } from './labels';
 import { allowedActions, upcomingWorkshops } from './server';
@@ -73,7 +73,7 @@ async function titles(payload: Payload, collection: 'productions' | 'venues', id
 /** `since`: the dates and shows after it (the calendar feed's reaches back); by default now. */
 export async function myApplications(
   payload: Payload,
-  user: TypedUser,
+  user: User,
   activeGroupIds: number[],
   now = new Date(),
   since = now,

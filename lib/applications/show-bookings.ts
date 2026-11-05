@@ -4,7 +4,7 @@
  * (lib/payments/checkout.ts checkoutShow). Cancelling: cancelOwn (free bookings only). The admin's
  * list of them: showDashboard.
  */
-import type { Payload, TypedUser } from 'payload';
+import type { Payload } from 'payload';
 
 import { todayInBudapest } from '@/lib/dates';
 import { say } from '@/lib/messages';
@@ -12,7 +12,7 @@ import { billingSettings } from '@/lib/payments/settings';
 import { errorMessage } from '@/lib/rooms/server';
 import { relId } from '@/payload/rel';
 import { uiTexts } from '@/payload/ui-texts';
-import type { Application } from '@/payload-types';
+import type { Application, User } from '@/payload-types';
 
 import { APPLICATION_KINDS } from './labels';
 import { sendShowRegistered, sendStaffNew } from './notify';
@@ -26,7 +26,7 @@ export type ShowBookingInput = ApplicantInput & { showId: number; seats: number 
 
 export async function bookFreeShow(
   payload: Payload,
-  viewer: TypedUser | null,
+  viewer: User | null,
   input: ShowBookingInput,
   now = new Date(),
 ): Promise<Result<{ applicationId: number }>> {
