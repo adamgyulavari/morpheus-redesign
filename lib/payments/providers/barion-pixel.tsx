@@ -1,16 +1,14 @@
 /**
  * The Barion Pixel's base version, in the <head> of every page: Barion requires it of every shop (its
  * fraud prevention, on legitimate interest: no consent needed, no consent manager may block it).
- * Barion's own snippet, as published. `BARION_PIXEL_ID` (BP-<10 characters>-<2 digits>, different on
- * Barion's test and live systems) is read at runtime; without a valid one nothing is added.
+ * Barion's own snippet, as published. `BARION_PIXEL_ID` (BP-…, different on
+ * Barion's test and live systems) is read at runtime; without it nothing is added.
  */
 import Script from 'next/script';
 
-const PIXEL_ID = /^BP-[0-9A-Za-z]{10}-\d{2}$/;
-
 export default function BarionPixel() {
   const id = process.env.BARION_PIXEL_ID;
-  if (!id || !PIXEL_ID.test(id)) return null;
+  if (!id) return null;
   return (
     <>
       <Script id="barion-pixel" strategy="beforeInteractive">
