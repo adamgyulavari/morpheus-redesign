@@ -1,5 +1,5 @@
-# On every push to main: lint (Biome), build the Docker image (no database needed), push it to GitHub
-# Container Registry, then ask Coolify to deploy it. The container runs pending migrations when it starts.
+# On every push to main: lint (Biome) and, in parallel, build the Docker image (no database needed) and
+# push it to GitHub Container Registry; when both pass, ask Coolify to deploy it. The container runs pending migrations when it starts.
 #
 # GitHub environment "production": variable COOLIFY_WEBHOOK (the app's deploy webhook URL) and
 # secret COOLIFY_TOKEN (a Coolify API token).
@@ -30,8 +30,8 @@ jobs:
 
       - run: biome ci
 
+  # runs alongside lint; only the deploy waits for both
   build:
-    needs: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -60,10 +60,11 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # zstd: much faster to compress than the default gzip (the export was minutes when deps changed)
+          cache-to: type=gha,mode=max,compression=zstd
 
   deploy:
-    needs: build
+    needs: [lint, build]
     runs-on: ubuntu-latest
     # the secrets/variables below are defined on this GitHub environment
     environment:

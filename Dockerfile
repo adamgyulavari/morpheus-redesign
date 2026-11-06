@@ -12,11 +12,12 @@ FROM base AS deps
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# 2. build (output: 'standalone')
-FROM base AS build
-COPY --from=deps /app/node_modules ./node_modules
+# 2. build (output: 'standalone'), on top of the deps layer rather than a copy of node_modules.
+# .next/cache is dropped: the next build starts from new sources anyway, and it would only bloat the
+# layer that is exported to the build cache.
+FROM deps AS build
 COPY . .
-RUN npm run build
+RUN npm run build && rm -rf .next/cache
 
 # 3. slim runtime: only the traced standalone server, static assets and public files
 FROM node:24-alpine AS runtime
