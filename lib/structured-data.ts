@@ -11,7 +11,11 @@ type Thing = Record<string, unknown>;
 
 const absolute = (path: string) => (/^https?:/.test(path) ? path : `${serverUrl()}${path}`);
 
-const group = (s: SiteSettings): Thing => ({ '@type': 'PerformingGroup', name: s.name, url: absolute('/') });
+const group = (settings: SiteSettings): Thing => ({
+  '@type': 'PerformingGroup',
+  name: settings.name,
+  url: absolute('/'),
+});
 
 /** "1027 Budapest, Frankel Leó út 6." as its parts; any other wording as it is. */
 export function postalAddress(address: string): Thing | string {
@@ -22,16 +26,16 @@ export function postalAddress(address: string): Thing | string {
 }
 
 /** The theatre (a company that also teaches): name, address, e-mail and phone, logo, its social profiles. */
-export const organization = (s: SiteSettings, phone?: string): Thing => ({
+export const organization = (settings: SiteSettings, phone?: string): Thing => ({
   '@context': 'https://schema.org',
-  ...group(s),
+  ...group(settings),
   '@type': ['PerformingGroup', 'EducationalOrganization'],
-  description: s.tagline,
+  description: settings.tagline,
   logo: absolute('/logo.png'),
-  email: s.contact.email,
+  email: settings.contact.email,
   telephone: phone,
-  address: postalAddress(s.contact.address),
-  sameAs: [s.social.facebook, s.social.instagram].filter(Boolean),
+  address: postalAddress(settings.contact.address),
+  sameAs: [settings.social.facebook, settings.social.instagram].filter(Boolean),
 });
 
 /**
@@ -60,23 +64,25 @@ function offers(show: ShowWithRelations, page: string): Thing | undefined {
 }
 
 /** The shows as theatre events, each at its own address: its production page, else its row in the list. */
-export const showEvents = (shows: ShowWithRelations[], s: SiteSettings): Thing[] =>
+export const showEvents = (shows: ShowWithRelations[], settings: SiteSettings): Thing[] =>
   shows.map((show) => {
-    const p = show.production;
-    const page = absolute(p.detailPage ? `/repertoar/${p.slug}` : `${s.urls.upcomingShows}#eloadas-${show.id}`);
+    const production = show.production;
+    const page = absolute(
+      production.detailPage ? `/repertoar/${production.slug}` : `${settings.urls.upcomingShows}#eloadas-${show.id}`,
+    );
     return {
       '@context': 'https://schema.org',
       '@type': 'TheaterEvent',
-      name: show.label ? `${p.title} (${show.label})` : p.title,
-      description: p.summary,
+      name: show.label ? `${production.title} (${show.label})` : production.title,
+      description: production.summary,
       startDate: at(show.date, show.time).toISOString(),
       eventStatus: 'https://schema.org/EventScheduled',
       eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
       url: page,
-      image: absolute(p.poster.src),
+      image: absolute(production.poster.src),
       location: { '@type': 'Place', name: show.venue.shortName, address: postalAddress(show.venue.name) },
-      performer: group(s),
-      organizer: group(s),
+      performer: group(settings),
+      organizer: group(settings),
       offers: offers(show, page),
     };
   });
@@ -85,7 +91,7 @@ type FaqItem = Extract<Block, { blockType: 'faq' }>['items'][number];
 
 /** Every FAQ block of a page as one FAQPage (Google takes one per page); the answers as plain text. */
 export function faqPage(blocks: Block[]): Thing | undefined {
-  const items: FaqItem[] = blocks.flatMap((b) => (b.blockType === 'faq' ? b.items : []));
+  const items: FaqItem[] = blocks.flatMap((block) => (block.blockType === 'faq' ? block.items : []));
   if (!items.length) return undefined;
   return {
     '@context': 'https://schema.org',
@@ -95,7 +101,7 @@ export function faqPage(blocks: Block[]): Thing | undefined {
       name: item.question,
       acceptedAnswer: {
         '@type': 'Answer',
-        text: item.answer.map((paragraph) => paragraph.map((seg) => seg.text).join('')).join('\n\n'),
+        text: item.answer.map((paragraph) => paragraph.map((segment) => segment.text).join('')).join('\n\n'),
       },
     })),
   };

@@ -11,8 +11,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [pages, productions] = await Promise.all([getPages(), getProductionsWithDetailPage()]);
   return [
     ...pages
-      .filter((p) => !p.noindex)
-      .map((p) => ({ url: `${base}${p.path}`, lastModified: p.updatedAt, priority: p.path === '/' ? 1 : 0.7 })),
-    ...productions.map((p) => ({ url: `${base}/repertoar/${p.slug}`, lastModified: p.updatedAt, priority: 0.6 })),
+      .filter((page) => !page.noindex)
+      .map((page) => ({
+        url: `${base}${page.path}`,
+        lastModified: page.updatedAt,
+        priority: page.path === '/' ? 1 : 0.7,
+      })),
+    ...productions.map((production) => ({
+      url: `${base}/repertoar/${production.slug}`,
+      lastModified: production.updatedAt,
+      priority: 0.6,
+    })),
   ];
 }

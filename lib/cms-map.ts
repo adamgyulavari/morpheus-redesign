@@ -115,14 +115,14 @@ const linkHref = (n: LexNode): string | undefined => {
 export function paragraphSegmentsFromRichText(state: SerializedEditorState | null | undefined): Segment[][] {
   const root = state?.root as unknown as LexNode | undefined;
   return (root?.children ?? [])
-    .map((p) =>
-      (p.children ?? []).map((n) =>
-        n.type === 'link' || n.type === 'autolink'
-          ? { text: plain(n.children), href: linkHref(n) }
-          : { text: n.type === 'linebreak' ? '\n' : (n.text ?? plain(n.children)) },
+    .map((paragraph) =>
+      (paragraph.children ?? []).map((node) =>
+        node.type === 'link' || node.type === 'autolink'
+          ? { text: plain(node.children), href: linkHref(node) }
+          : { text: node.type === 'linebreak' ? '\n' : (node.text ?? plain(node.children)) },
       ),
     )
-    .filter((p) => p.some((seg) => seg.text.trim()));
+    .filter((segments) => segments.some((segment) => segment.text.trim()));
 }
 
 export function segmentsFromRichText(state: SerializedEditorState | null | undefined): Segment[] {
@@ -445,9 +445,9 @@ export function block(raw: RawBlock): Block {
     case 'faq':
       // the answers keep their paragraphs (the generic conversion runs them together)
       if (raw.blockType === 'faq')
-        b.items = (raw.items ?? []).map((i) => ({
-          question: i.question,
-          answer: paragraphSegmentsFromRichText(i.answer as SerializedEditorState),
+        b.items = (raw.items ?? []).map((item) => ({
+          question: item.question,
+          answer: paragraphSegmentsFromRichText(item.answer as SerializedEditorState),
         }));
       break;
     case 'offerings':
@@ -460,27 +460,27 @@ export function block(raw: RawBlock): Block {
 }
 
 /** The page's hero: its lead and photo stand in for an empty SEO description and image (as payload/seo.ts generates them). */
-const heroOf = (p: P.Page) => {
-  const h = p.blocks?.find((b) => b.blockType === 'pageHero' || b.blockType === 'homeHero');
-  if (!h) return undefined;
-  return { lead: h.lead, image: 'image' in h ? h.image : h.photos?.[0]?.photo };
+const heroOf = (page: P.Page) => {
+  const hero = page.blocks?.find((block) => block.blockType === 'pageHero' || block.blockType === 'homeHero');
+  if (!hero) return undefined;
+  return { lead: hero.lead, image: 'image' in hero ? hero.image : hero.photos?.[0]?.photo };
 };
 
-export const page = (p: P.Page): Page => {
-  const hero = heroOf(p);
+export const page = (doc: P.Page): Page => {
+  const hero = heroOf(doc);
   return {
-    id: String(p.id),
-    path: p.path,
-    title: p.title,
+    id: String(doc.id),
+    path: doc.path,
+    title: doc.title,
     // empty title: the route falls back to "<title> — <site name>"; an empty image: the hero's, then the site's
     meta: {
-      title: p.meta?.title ?? '',
-      description: opt(p.meta?.description) ?? opt(hero?.lead),
-      image: img(p.meta?.image, 'og') ?? img(hero?.image, 'og'),
+      title: doc.meta?.title ?? '',
+      description: opt(doc.meta?.description) ?? opt(hero?.lead),
+      image: img(doc.meta?.image, 'og') ?? img(hero?.image, 'og'),
     },
-    layout: p.layout,
-    blocks: (p.blocks ?? []).map(block),
-    noindex: p.noindex ?? false,
-    updatedAt: p.updatedAt,
+    layout: doc.layout,
+    blocks: (doc.blocks ?? []).map(block),
+    noindex: doc.noindex ?? false,
+    updatedAt: doc.updatedAt,
   };
 };

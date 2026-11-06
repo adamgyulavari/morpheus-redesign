@@ -462,9 +462,9 @@ export function Faq({ block, className }: BlockProps<'faq'>) {
               </span>
             </summary>
             <div className="flex max-w-[680px] flex-col gap-3 pb-6 pr-14 text-[15.5px] leading-relaxed text-ink2 lg:text-lg lg:leading-[28px]">
-              {item.answer.map((paragraph, i) => (
+              {item.answer.map((paragraph, position) => (
                 // biome-ignore lint/suspicious/noArrayIndexKey: the answer's paragraphs, fixed by position
-                <p key={i}>
+                <p key={position}>
                   <Segments segments={paragraph} />
                 </p>
               ))}
