@@ -28,23 +28,27 @@ export async function GET() {
     '',
     '## Oldalak',
     '',
-    ...pages.filter((p) => !p.noindex).map((p) => item(p.title, `${base}${p.path}`, p.meta.description)),
+    ...pages
+      .filter((page) => !page.noindex)
+      .map((page) => item(page.title, `${base}${page.path}`, page.meta.description)),
     '',
     '## Előadások',
     '',
-    ...productions.map((p) => item(p.title, `${base}/repertoar/${p.slug}`, `${p.byline}. ${p.summary}`)),
+    ...productions.map((production) =>
+      item(production.title, `${base}/repertoar/${production.slug}`, `${production.byline}. ${production.summary}`),
+    ),
     '',
     ...(shows.length
       ? [
           '## Közelgő előadások',
           '',
-          ...shows.map((s) =>
+          ...shows.map((show) =>
             item(
-              `${showDateLine(s.date, s.time)} — ${s.production.title}`,
-              s.production.detailPage
-                ? `${base}/repertoar/${s.production.slug}`
+              `${showDateLine(show.date, show.time)} — ${show.production.title}`,
+              show.production.detailPage
+                ? `${base}/repertoar/${show.production.slug}`
                 : `${base}${settings.urls.upcomingShows}`,
-              s.venue.name,
+              show.venue.name,
             ),
           ),
           '',

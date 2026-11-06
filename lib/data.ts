@@ -81,13 +81,13 @@ export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
 export const getShareImage = cache(async (): Promise<ImageRef | undefined> => {
   const { shareImageId } = await getSiteSettings();
   if (!shareImageId) return undefined;
-  const m = await (await payload()).findByID({
+  const media = await (await payload()).findByID({
     collection: 'media',
     id: numId(shareImageId),
     depth: 0,
     disableErrors: true,
   });
-  return map.img(m, 'og');
+  return map.img(media, 'og');
 });
 
 /** Component text (labels, empty states, aria labels) — the UI texts of a language. */
@@ -384,7 +384,7 @@ export async function getRedirect(path: string): Promise<{ href: string; permane
   const bare = path.replace(/\/+$/, '') || '/';
   // the address itself, then "/events/*"-style entries, the closest first: /events/a/b → /events/a/*, /events/*
   const segments = bare.split('/').filter(Boolean);
-  const wildcards = segments.map((_, i) => `/${segments.slice(0, segments.length - i).join('/')}/*`);
+  const wildcards = segments.map((_, dropped) => `/${segments.slice(0, segments.length - dropped).join('/')}/*`);
   const candidates = [bare, `${bare}/`, ...wildcards];
   const { docs } = await (await payload()).find({
     collection: 'redirects',
@@ -394,17 +394,17 @@ export async function getRedirect(path: string): Promise<{ href: string; permane
     limit: candidates.length,
   });
   const rank = (from: string) => candidates.indexOf(from);
-  const r = docs.sort((a, b) => rank(a.from) - rank(b.from))[0];
-  if (!r) return undefined;
-  const target = r.to?.type === 'reference' ? r.to.reference : undefined;
+  const match = docs.sort((first, second) => rank(first.from) - rank(second.from))[0];
+  if (!match) return undefined;
+  const target = match.to?.type === 'reference' ? match.to.reference : undefined;
   const ref = target && typeof target.value === 'object' ? target.value : undefined;
   const href =
-    r.to?.type === 'custom'
-      ? r.to.url
+    match.to?.type === 'custom'
+      ? match.to.url
       : target?.relationTo === 'productions'
         ? ref && 'slug' in ref && ref.slug && `/repertoar/${ref.slug}`
         : ref && 'path' in ref && ref.path;
-  return href ? { href, permanent: r.type !== '302' } : undefined;
+  return href ? { href, permanent: match.type !== '302' } : undefined;
 }
 
 /** Whether workshop sign-ups go through the online checkout ("Fizetési beállítások"). */

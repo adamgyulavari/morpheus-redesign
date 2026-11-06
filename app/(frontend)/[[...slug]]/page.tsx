@@ -8,7 +8,7 @@ import RepertoireFilter from '@/components/RepertoireFilter';
 import { getContactPerson, getPage, getShareImage, getSiteSettings } from '@/lib/data';
 import { redirectOrNotFound } from '@/lib/not-found';
 import { pageMetadata } from '@/lib/seo';
-import { organization } from '@/lib/structured-data';
+import { faqPage, organization } from '@/lib/structured-data';
 import type { Page } from '@/lib/types';
 
 /**
@@ -63,6 +63,7 @@ export default async function ContentPage({ params }: Props) {
   const page = await getPage(path);
   if (!page) return redirectOrNotFound(path);
   const homeStructuredData = path === '/' ? await theatreStructuredData() : undefined;
+  const faqStructuredData = faqPage(page.blocks);
 
   const Layout = page.layout === 'minimal' ? MinimalLayout : SiteLayout;
   const blocks = <RenderBlocks blocks={page.blocks} layout={page.layout} ctx={{ path }} />;
@@ -71,6 +72,7 @@ export default async function ContentPage({ params }: Props) {
       {/* which document this is, for the staff edit overlay (components/edit) */}
       <span hidden data-cms-doc={`pages/${page.id}`} />
       {homeStructuredData && <JsonLd data={homeStructuredData} />}
+      {faqStructuredData && <JsonLd data={faqStructuredData} />}
       {needsRepertoireFilter(page) ? <RepertoireFilter>{blocks}</RepertoireFilter> : blocks}
     </Layout>
   );

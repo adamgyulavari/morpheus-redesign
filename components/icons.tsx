@@ -24,6 +24,14 @@ export function ArrowLeft({ className = 'h-5 w-5' }: IconProps) {
   );
 }
 
+export function PlusIcon({ className = 'h-5 w-5 shrink-0' }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" strokeWidth={2} {...stroke} aria-hidden="true">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
+
 export function CloseIcon({ className = 'h-4 w-4' }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" strokeWidth={2.2} {...stroke} aria-hidden="true">

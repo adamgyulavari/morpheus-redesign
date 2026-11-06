@@ -1,7 +1,8 @@
 import Image from 'next/image';
 
 import Emph from '@/components/Emph';
-import { ArrowRight, CheckIcon } from '@/components/icons';
+import { ArrowRight, CheckIcon, PlusIcon } from '@/components/icons';
+import Segments from '@/components/Segments';
 import SmartLink from '@/components/SmartLink';
 import { ArrowLink, ButtonLink, CtaBand, Eyebrow, Facts, SectionHeading } from '@/components/ui';
 import VideoEmbed from '@/components/VideoEmbed';
@@ -430,6 +431,46 @@ export function SocialBand({ block, className }: BlockProps<'socialBand'>) {
       <div className="flex flex-col gap-4 border-y border-line py-8 sm:flex-row sm:items-center sm:justify-between lg:py-10">
         <p className="font-display text-[30px] leading-tight lg:text-[40px]">{block.heading}</p>
         <ButtonLink link={block.link} variant="outline" arrow className="self-start sm:self-auto" />
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Questions and answers, each in a native <details>: the answers are in the HTML (search engines read
+ * them; the page's FAQPage data comes from the same block), opening one needs no script.
+ */
+export function Faq({ block, className }: BlockProps<'faq'>) {
+  return (
+    <section
+      id={block.anchor}
+      className={`mx-auto grid max-w-[1440px] gap-8 px-5 lg:grid-cols-[5fr_7fr] lg:gap-16 lg:px-20 ${className}`}
+    >
+      <div className="flex flex-col gap-3.5 lg:gap-5">
+        {block.eyebrow && <Eyebrow>{block.eyebrow}</Eyebrow>}
+        <h2 className="font-display text-[42px] leading-[1.02] lg:text-[68px] lg:leading-none">
+          <Emph text={block.heading} />
+        </h2>
+      </div>
+      <div className="flex flex-col border-t border-line">
+        {block.items.map((item) => (
+          <details key={item.question} className="group border-b border-line">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-5 lg:py-6 [&::-webkit-details-marker]:hidden">
+              <h3 className="text-lg font-semibold leading-snug lg:text-[22px]">{item.question}</h3>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line text-teal transition-transform group-open:rotate-45">
+                <PlusIcon />
+              </span>
+            </summary>
+            <div className="flex max-w-[680px] flex-col gap-3 pb-6 pr-14 text-[15.5px] leading-relaxed text-ink2 lg:text-lg lg:leading-[28px]">
+              {item.answer.map((paragraph, position) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: the answer's paragraphs, fixed by position
+                <p key={position}>
+                  <Segments segments={paragraph} />
+                </p>
+              ))}
+            </div>
+          </details>
+        ))}
       </div>
     </section>
   );
