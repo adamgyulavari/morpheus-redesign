@@ -7,9 +7,21 @@
  * in the preview and published in the admin.
  */
 import type { MCPPluginConfig } from '@payloadcms/plugin-mcp';
+import type { Field } from 'payload';
 
 import { isAdmin } from './access';
 import { navGroup } from './nav';
+
+/**
+ * A new key's permission checkboxes start ticked (the plugin leaves them all empty): what a key may
+ * reach at all is already narrowed here, so the checkboxes are for taking something away.
+ */
+function permissionsTicked(field: Field): Field {
+  if (field.type === 'checkbox') return { ...field, defaultValue: true };
+  if (field.type === 'collapsible' || field.type === 'group')
+    return { ...field, fields: field.fields.map(permissionsTicked) };
+  return field;
+}
 
 const edit = { find: true, create: true, update: true, delete: false };
 const change = { find: true, update: true, create: false, delete: false };
@@ -48,13 +60,14 @@ export const mcpConfig: MCPPluginConfig = {
   // keys only by admins (the plugin's default lets any logged-in account, a student's too, make its own)
   overrideApiKeyCollection: (collection) => ({
     ...collection,
+    fields: collection.fields.map(permissionsTicked),
     labels: { singular: 'MCP API kulcs', plural: 'MCP API kulcsok' },
     access: { ...collection.access, create: isAdmin, read: isAdmin, update: isAdmin, delete: isAdmin },
     admin: {
       ...collection.admin,
       group: navGroup('payload-mcp-api-keys'),
       description:
-        'Kulcs egy AI-asszisztensnek (pl. Claude), hogy a weboldal tartalmát szerkessze (/api/mcp). A kulcs a létrehozója nevében és jogaival dolgozik; a jelölőnégyzetek szűkítik, mit tehet. Ne oszd meg, és töröld, ha már nem kell.',
+        'Kulcs egy AI-asszisztensnek (pl. Claude), hogy a weboldal tartalmát szerkessze (/api/mcp). A kulcs a létrehozója nevében és jogaival dolgozik; alapból mindent megtehet, amit ez a felület enged (törölni semmit), a jelölőnégyzetekkel szűkítheted. Ne oszd meg, és töröld, ha már nem kell.',
     },
   }),
   globals: {
