@@ -2895,7 +2895,7 @@ export interface Redirect {
   createdAt: string;
 }
 /**
- * Kulcs egy AI-asszisztensnek (pl. Claude), hogy a weboldal tartalmát szerkessze (/api/mcp). A kulcs a létrehozója nevében és jogaival dolgozik; a jelölőnégyzetek szűkítik, mit tehet. Ne oszd meg, és töröld, ha már nem kell.
+ * Kulcs egy AI-asszisztensnek (pl. Claude), hogy a weboldal tartalmát szerkessze (/api/mcp). A kulcs a létrehozója nevében és jogaival dolgozik; alapból mindent megtehet, amit ez a felület enged (törölni semmit), a jelölőnégyzetekkel szűkítheted. Ne oszd meg, és töröld, ha már nem kell.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-mcp-api-keys".
