@@ -1,12 +1,12 @@
 /** The logged-in person as the forms show them (name, contact, saved billing details). */
-import type { TypedUser } from 'payload';
 
+import type { User } from '@/payload-types';
 import type { Billing } from './billing';
 
-const fullName = (u: TypedUser) => [u.lastName, u.firstName].filter(Boolean).join(' ');
+const fullName = (u: User) => [u.lastName, u.firstName].filter(Boolean).join(' ');
 
 /** The saved billing details, or the defaults (own name, Hungary). */
-export function billingOf(u: TypedUser): Billing {
+export function billingOf(u: User): Billing {
   const b = u.billing;
   return {
     name: b?.name || fullName(u),
@@ -18,7 +18,7 @@ export function billingOf(u: TypedUser): Billing {
   };
 }
 
-export function checkoutMe(viewer: TypedUser | null) {
+export function checkoutMe(viewer: User | null) {
   if (!viewer) return null;
   return { name: fullName(viewer), email: viewer.email, phone: viewer.phone ?? '', billing: billingOf(viewer) };
 }

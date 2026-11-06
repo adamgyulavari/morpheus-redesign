@@ -4,7 +4,7 @@
  * reads and writes happen here, after these checks, never through the raw API.
  */
 
-import type { Payload, TypedUser, Where } from 'payload';
+import type { Payload, Where } from 'payload';
 import { cache } from 'react';
 import { applicationSettings } from '@/lib/applications/settings';
 import { type Result, say } from '@/lib/messages';
@@ -12,7 +12,7 @@ import { userIsStaffOrAdmin } from '@/payload/access';
 import { isOngoing } from '@/payload/collections/CourseGroups';
 import { relId, relIds } from '@/payload/rel';
 import { uiTexts } from '@/payload/ui-texts';
-import type { Session } from '@/payload-types';
+import type { Session, User } from '@/payload-types';
 import {
   generatedKey,
   groupsInMonth,
@@ -78,12 +78,12 @@ export async function loadSettings(payload: Payload): Promise<BookingSettings> {
 }
 
 /** May book rooms: only those staff allowed it (`users.roomBooking`) — being in a course doesn't. */
-export const mayBookRooms = (user: TypedUser | null | undefined): boolean => Boolean(user?.roomBooking);
+export const mayBookRooms = (user: User | null | undefined): boolean => Boolean(user?.roomBooking);
 
 /** Facts for the student rules, for a booking starting at `start` (excluding `except`). */
 export async function studentContext(
   payload: Payload,
-  user: TypedUser,
+  user: User,
   start: Date,
   except?: number,
 ): Promise<StudentContext> {
@@ -165,7 +165,7 @@ export type ScheduleEvent = {
  */
 export async function getRoomSchedule(
   payload: Payload,
-  viewer: TypedUser | null,
+  viewer: User | null,
   from: Date,
   to: Date,
 ): Promise<ScheduleEvent[] | null> {
@@ -247,7 +247,7 @@ export type PracticeInput = {
 
 export async function bookPractice(
   payload: Payload,
-  user: TypedUser,
+  user: User,
   input: PracticeInput,
 ): Promise<Result<{ bookingId?: number }>> {
   const t = (await uiTexts(payload)).roomRules;
@@ -289,7 +289,7 @@ export async function bookPractice(
   }
 }
 
-export async function cancelPractice(payload: Payload, user: TypedUser, bookingId: number): Promise<Result> {
+export async function cancelPractice(payload: Payload, user: User, bookingId: number): Promise<Result> {
   const t = (await uiTexts(payload)).roomRules;
   const booking = await payload.findByID({
     collection: 'roomBookings',
@@ -501,7 +501,7 @@ export async function previewFill(
 /** Creates the planned sessions — or only the ticked ones (`keys`) — with bookings where the rooms are free. No e-mails. */
 export async function applyFill(
   payload: Payload,
-  user: TypedUser,
+  user: User,
   year: number,
   month: number,
   groupIds: number[] | null,
@@ -623,7 +623,7 @@ export async function deletableGenerated(
 /** Deletes them (and their bookings) — or only the ticked ones (`ids`, still checked here). */
 export async function deleteGenerated(
   payload: Payload,
-  user: TypedUser,
+  user: User,
   year: number,
   month: number,
   groupIds: number[] | null,

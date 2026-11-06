@@ -9,9 +9,9 @@
  * so a forged hint only shows buttons that lead nowhere.
  */
 
-import { createLocalReq, getFieldsToSign, jwtSign, type Payload, type PayloadRequest, type TypedUser } from 'payload';
+import { createLocalReq, getFieldsToSign, jwtSign, type Payload, type PayloadRequest } from 'payload';
 import { addSessionToUser, generatePayloadCookie } from 'payload/shared';
-
+import type { User } from '@/payload-types';
 import { userIsStaffOrAdmin } from './access';
 
 export const SIGNED_IN_COOKIE = 'morpheus-signed-in';
@@ -40,7 +40,7 @@ export async function issueSession(payload: Payload, userId: number | string) {
     collection: 'users',
     req,
     where: { id: { equals: userId } },
-  })) as TypedUser | null;
+  })) as User | null;
   if (!user) throw new Error(`issueSession: no user ${userId}`);
   const { sid } = await addSessionToUser({ collectionConfig, payload, req, user });
   const fieldsToSign = getFieldsToSign({ collectionConfig, email: user.email, sid, user });

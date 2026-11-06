@@ -6,12 +6,12 @@
  * staff notes are never included.
  */
 import { createHmac } from 'node:crypto';
-import type { Payload, TypedUser } from 'payload';
+import type { Payload } from 'payload';
 
 import { img } from '@/lib/cms-map';
 import type { ImageRef } from '@/lib/types';
 import { relId, relIds } from '@/payload/rel';
-
+import type { User } from '@/payload-types';
 import { placeText } from './format';
 import type { SessionKind } from './labels';
 import { mayBookRooms, studentGroups } from './server';
@@ -45,7 +45,7 @@ export type OverviewPractice = {
 };
 
 /** `since`: the sessions and bookings ending after it (the calendar feed's reaches back); by default now. */
-export async function studentOverview(payload: Payload, user: TypedUser, since?: Date) {
+export async function studentOverview(payload: Payload, user: User, since?: Date) {
   const { groups, past, productions } = await studentGroups(payload, user.id);
   const groupIds = groups.map((g) => g.id);
   const productionIds = productions.map((p) => p.id);

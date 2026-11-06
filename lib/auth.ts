@@ -17,7 +17,7 @@ import { SIGNED_IN_COOKIE, signedInValue } from '@/payload/session';
 export const payloadClient = () => getPayload({ config });
 
 /**
- * The current user, or null. Once per request.
+ * The current user (an account, never an MCP API key), or null. Once per request.
  *
  * Payload trusts the session cookie only from our own site: an `Origin` on its allowlist, else a
  * `Sec-Fetch-Site` of same-origin / same-site / none. A link or redirect from elsewhere (back from
@@ -30,7 +30,8 @@ export const getCurrentUser = cache(async () => {
   const h = new Headers(await headers());
   if (!h.has('origin') && h.get('sec-fetch-site') === 'cross-site') h.set('sec-fetch-site', 'same-site');
   const { user } = await payload.auth({ headers: h });
-  return user;
+  // an MCP API key (Authorization header) is not someone's account on the site
+  return user?.collection === 'users' ? user : null;
 });
 
 /** The current user; logged-out visitors are sent to the login page and back here afterwards. */

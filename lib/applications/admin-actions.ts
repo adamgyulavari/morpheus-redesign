@@ -4,13 +4,12 @@
  * The admin's application actions (the participant panel on a workshop session, the buttons on an
  * application). Staff only.
  */
-import type { TypedUser } from 'payload';
 
 import { getCurrentUser, payloadClient } from '@/lib/auth';
 import { todayInBudapest } from '@/lib/dates';
 import { errorMessage } from '@/lib/rooms/server';
 import { userIsStaffOrAdmin } from '@/payload/access';
-
+import type { User } from '@/payload-types';
 import { type ImportResult, importGroups, parseImportFile, planGroups } from './group-import';
 import {
   type ApplicantInput,
@@ -26,7 +25,7 @@ import { showDashboard } from './show-bookings';
 type Result = { ok: true; message?: string } | { ok: false; reason: string };
 const denied = { ok: false as const, reason: 'Ehhez munkatársi jogosultság kell.' };
 
-async function staff(): Promise<TypedUser | null> {
+async function staff(): Promise<User | null> {
   const user = await getCurrentUser();
   return user && userIsStaffOrAdmin(user) ? user : null;
 }
