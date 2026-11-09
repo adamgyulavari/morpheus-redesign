@@ -86,6 +86,8 @@ export type Show = {
   registrationUrl?: string;
   /** Practical notes for the audience, verbatim lines. */
   info?: string[];
+  /** Teltház: ticked by hand for a show sold elsewhere; booked on the site, when its seats are gone. */
+  soldOut: boolean;
   /** Booked on the site (Saját foglalás): its booking link's code, a ticket's price (0: free), what is left. */
   booking?: { code: string; price: number; state: 'open' | 'full' | 'closed'; left: number; maxPerBooking: number };
 };

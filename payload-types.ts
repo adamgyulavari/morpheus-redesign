@@ -978,6 +978,10 @@ export interface Show {
    * Ingyenes, regisztrációs előadásnál a jegy helyett.
    */
   registrationUrl?: string | null;
+  /**
+   * Elfogyott a jegy: az időpont szürkén, „Teltház” jelzéssel marad a listában, és kikerül a kiemelt előadások közül. Saját foglalásnál ez magától történik, amikor elfogynak a helyek.
+   */
+  soldOut?: boolean | null;
   booking?: {
     /**
      * Az alapár a Fizetési beállításokból. 0: ingyenes, regisztrációval.
@@ -3490,6 +3494,7 @@ export interface ShowsSelect<T extends boolean = true> {
   bookingMode?: T;
   ticketUrl?: T;
   registrationUrl?: T;
+  soldOut?: T;
   booking?:
     | T
     | {

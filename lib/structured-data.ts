@@ -58,8 +58,10 @@ function offers(show: ShowWithRelations, page: string): Thing | undefined {
     };
   }
   // elsewhere: the ticketing site (its price is not known here), or a free registration form
-  if (show.ticketUrl) return { '@type': 'Offer', url: show.ticketUrl };
-  if (show.registrationUrl) return { '@type': 'Offer', url: show.registrationUrl, price: 0, priceCurrency: 'HUF' };
+  const externalAvailability = show.soldOut ? { availability: 'https://schema.org/SoldOut' } : {};
+  if (show.ticketUrl) return { '@type': 'Offer', url: show.ticketUrl, ...externalAvailability };
+  if (show.registrationUrl)
+    return { '@type': 'Offer', url: show.registrationUrl, price: 0, priceCurrency: 'HUF', ...externalAvailability };
   return undefined;
 }
 

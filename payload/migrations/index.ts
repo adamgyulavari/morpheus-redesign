@@ -52,6 +52,8 @@ import * as migration_20261104_222608_site_share_image from './20261104_222608_s
 import * as migration_20261105_225054_page_noindex from './20261105_225054_page_noindex';
 import * as migration_20261105_233548_faq_block from './20261105_233548_faq_block';
 import * as migration_20261105_233847_mcp_api_keys from './20261105_233847_mcp_api_keys';
+import * as migration_20261109_173425_show_sold_out from './20261109_173425_show_sold_out';
+import * as migration_20261109_173500_sold_out_text from './20261109_173500_sold_out_text';
 
 export const migrations = [
   {
@@ -323,5 +325,15 @@ export const migrations = [
     up: migration_20261105_233847_mcp_api_keys.up,
     down: migration_20261105_233847_mcp_api_keys.down,
     name: '20261105_233847_mcp_api_keys'
+  },
+  {
+    up: migration_20261109_173425_show_sold_out.up,
+    down: migration_20261109_173425_show_sold_out.down,
+    name: '20261109_173425_show_sold_out'
+  },
+  {
+    up: migration_20261109_173500_sold_out_text.up,
+    down: migration_20261109_173500_sold_out_text.down,
+    name: '20261109_173500_sold_out_text',
   },
 ];

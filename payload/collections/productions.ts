@@ -369,6 +369,17 @@ export const Shows: CollectionConfig = {
       ],
     },
     {
+      name: 'soldOut',
+      label: 'Teltház',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        condition: (_, siblingData) => siblingData?.bookingMode !== 'internal',
+        description:
+          'Elfogyott a jegy: az időpont szürkén, „Teltház” jelzéssel marad a listában, és kikerül a kiemelt előadások közül. Saját foglalásnál ez magától történik, amikor elfogynak a helyek.',
+      },
+    },
+    {
       name: 'booking',
       label: 'Saját foglalás',
       type: 'group',

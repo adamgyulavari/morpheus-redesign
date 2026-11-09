@@ -95,6 +95,7 @@ const SITE = {
       about: 'Az előadásról',
       info: 'Tudnivalók',
       nextShow: 'Következő előadás',
+      soldOut: 'Teltház jelzés (elfogyott jegyek)',
       onStage: 'Műsoron címke',
       upcomingCount: 'Előadások száma — {count} = szám',
       empty: 'Nincs közelgő előadás',

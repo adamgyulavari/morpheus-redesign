@@ -202,7 +202,9 @@ const findUpcomingShows = cache(async (): Promise<ShowWithRelations[]> => {
   const ids = new Set<string>();
   const booking = await bookingsOf(p, docs);
   return docs.flatMap((doc) => {
-    const show = { ...map.show(doc), booking: booking.get(doc.id) };
+    const internalBooking = booking.get(doc.id);
+    const show = { ...map.show(doc), booking: internalBooking };
+    if (internalBooking) show.soldOut = internalBooking.state === 'full';
     const production = byId.get(show.productionId);
     const venue = typeof doc.venue === 'object' ? map.venue(doc.venue) : undefined;
     if (!production || !venue) return [];
@@ -225,11 +227,11 @@ export async function getFeaturedShows(count = 5): Promise<ShowWithRelations[]> 
   return [...(await getNextShowByProduction()).values()].slice(0, count);
 }
 
-/** The next show of each production that has one, keyed by production id. */
+/** The next show with tickets left of each production that has one, keyed by production id. */
 export async function getNextShowByProduction(): Promise<Map<string, ShowWithRelations>> {
   const next = new Map<string, ShowWithRelations>();
   for (const show of await getUpcomingShows()) {
-    if (!next.has(show.productionId)) next.set(show.productionId, show);
+    if (!show.soldOut && !next.has(show.productionId)) next.set(show.productionId, show);
   }
   return next;
 }
