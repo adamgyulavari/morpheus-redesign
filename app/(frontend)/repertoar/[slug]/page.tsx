@@ -69,7 +69,8 @@ export default async function ProductionPage({ params }: Props) {
   const [ui, settings, shows] = await Promise.all([getUi(), getSiteSettings(), getShowsForProduction(p.id)]);
   const cta = await getCtaBand(settings.productionPage.ctaBand);
   const labels = ui.production;
-  const next = shows[0];
+  // the first with tickets left; when every date is sold out, the first one (marked Teltház)
+  const next = shows.find((show) => !show.soldOut) ?? shows[0];
   const video = p.videoUrl && youtubeId(p.videoUrl);
   const named = p.cast.some((c) => c.role);
   const bg = p.heroImage ?? p.gallery?.[0] ?? p.poster;

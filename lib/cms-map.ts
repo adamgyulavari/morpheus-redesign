@@ -188,6 +188,8 @@ export const show = (s: P.Show): Show => ({
   // booked on the site: never the stored external links (they come back with Külső link)
   ticketUrl: s.bookingMode === 'internal' ? undefined : opt(s.ticketUrl),
   registrationUrl: s.bookingMode === 'internal' ? undefined : opt(s.registrationUrl),
+  // booked on the site, its seats decide (lib/data.ts)
+  soldOut: s.bookingMode !== 'internal' && Boolean(s.soldOut),
   info: optArray(texts(s.info)),
 });
 

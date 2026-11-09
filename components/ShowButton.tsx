@@ -10,8 +10,8 @@ import { ArrowRight } from './icons';
 
 /**
  * A show's button wherever it is listed. Booked on the site: "Jegyek" to its checkout, or (free)
- * "Regisztráció" opening the booking dialog; "Megtelt" when the seats are gone; nothing once it is
- * closed. Otherwise its external link (Tixa, a registration form), if it has one.
+ * "Regisztráció" opening the booking dialog; nothing once it is closed. Otherwise its external link
+ * (Tixa, a registration form), if it has one. A sold-out show only says "Teltház".
  */
 export default function ShowButton({
   show,
@@ -19,16 +19,15 @@ export default function ShowButton({
   className,
 }: {
   show: ShowWithRelations;
-  ui: Pick<UiStrings, 'shows' | 'sessions' | 'showBooking'>;
+  ui: Pick<UiStrings, 'shows' | 'showBooking'>;
   /** The button's look, e.g. "btn btn-md btn-outline". */
   className: string;
 }) {
   const b = show.booking;
   const label = (text: string) => `${text} – ${show.production.title}`;
+  if (show.soldOut) return <span className={`${className} pointer-events-none opacity-60`}>{ui.shows.soldOut}</span>;
   if (b) {
     if (b.state === 'closed') return null;
-    if (b.state === 'full')
-      return <span className={`${className} pointer-events-none opacity-60`}>{ui.sessions.full}</span>;
     if (b.price > 0)
       return (
         <Link href={showCheckoutPath(b.code)} aria-label={label(ui.shows.ticket)} className={className}>
@@ -66,8 +65,8 @@ export default function ShowButton({
 }
 
 /** Does the show have a button (the lists keep its grid cell otherwise)? */
-export const hasShowButton = (s: ShowWithRelations) =>
-  s.booking ? s.booking.state !== 'closed' : Boolean(s.ticketUrl || s.registrationUrl);
+export const hasShowButton = (show: ShowWithRelations) =>
+  show.soldOut || (show.booking ? show.booking.state !== 'closed' : Boolean(show.ticketUrl || show.registrationUrl));
 
 /** "3500 Ft / jegy" (the checkout's summary). */
 export const ticketText = (price: number, ui: Pick<UiStrings, 'showBooking'>) =>

@@ -17,7 +17,7 @@ export default function ShowRow({
   details,
 }: {
   show: ShowWithRelations;
-  ui: Pick<UiStrings, 'shows' | 'sessions' | 'showBooking'>;
+  ui: Pick<UiStrings, 'shows' | 'showBooking'>;
   last: boolean;
   details?: ReactNode;
 }) {
@@ -27,7 +27,7 @@ export default function ShowRow({
       id={`eloadas-${show.id}`}
       // below 1280px: poster on the left, everything else stacked next to it;
       // from 1280px: one row — date · time · poster · title · venue · button
-      className={`scroll-mt-28 grid grid-cols-[104px_minmax(0,1fr)] content-start gap-x-4 gap-y-1.5 border-t border-line py-5 sm:grid-cols-[132px_minmax(0,1fr)] sm:gap-x-6 xl:grid-cols-[110px_60px_112px_minmax(0,1fr)_250px_180px] 2xl:grid-cols-[150px_80px_128px_minmax(0,1fr)_280px_190px] xl:items-center xl:gap-x-6 xl:gap-y-1 xl:py-5 2xl:gap-x-8 ${last ? 'border-b' : ''}`}
+      className={`scroll-mt-28 grid grid-cols-[104px_minmax(0,1fr)] content-start gap-x-4 gap-y-1.5 border-t border-line py-5 sm:grid-cols-[132px_minmax(0,1fr)] sm:gap-x-6 xl:grid-cols-[110px_60px_112px_minmax(0,1fr)_250px_180px] 2xl:grid-cols-[150px_80px_128px_minmax(0,1fr)_280px_190px] xl:items-center xl:gap-x-6 xl:gap-y-1 xl:py-5 2xl:gap-x-8 ${last ? 'border-b' : ''} ${show.soldOut ? '[&>*:not(:last-child)]:opacity-50 [&>*:not(:last-child)]:grayscale' : ''}`}
     >
       <div className="col-start-2 row-start-1 flex items-center gap-2.5 xl:col-start-auto xl:row-start-auto xl:gap-3">
         <span className="font-display text-[40px] leading-none text-rust xl:text-[64px]">{dayOfMonth(show.date)}</span>
