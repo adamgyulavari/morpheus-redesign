@@ -20,7 +20,7 @@ import {
   messageParticipants,
   participants,
 } from './server';
-import { showDashboard } from './show-bookings';
+import { giveComplimentaryTickets, showDashboard } from './show-bookings';
 
 type Result = { ok: true; message?: string } | { ok: false; reason: string };
 const denied = { ok: false as const, reason: 'Ehhez munkatársi jogosultság kell.' };
@@ -44,6 +44,15 @@ export async function addParticipantAction(sessionId: number, input: ApplicantIn
   return done(
     await addParticipant(await payloadClient(), sessionId, input, notify),
     notify ? 'Hozzáadva; a visszaigazolás elment.' : 'Hozzáadva (e-mail nem ment).',
+  );
+}
+
+/** Jelentkezések → Előadások → Tiszteletjegy. */
+export async function giveComplimentaryAction(showId: number, input: ApplicantInput, seats: number): Promise<Result> {
+  if (!(await staff())) return denied;
+  return done(
+    await giveComplimentaryTickets(await payloadClient(), { ...input, showId, seats }),
+    'Tiszteletjegy kiadva; a jegyek e-mailben elmentek.',
   );
 }
 

@@ -8,6 +8,7 @@
  *   rooms) / Elutasítás (archived).
  * - Szakmai: Interjú / Elutasítás (no e-mail) / Felvétel és csoportba helyezés.
  * - Nyitott Műhely: payment, Lemondás (an e-mail tells them); per date: add a participant, e-mail them.
+ * - Előadások (saját foglalás): the door list; Tiszteletjegy gives someone free tickets by e-mail.
  */
 import { type FormEvent, type ReactNode, useCallback, useEffect, useId, useState, useTransition } from 'react';
 
@@ -16,6 +17,7 @@ import {
   addParticipantAction,
   dashboardData,
   decideAction,
+  giveComplimentaryAction,
   messageParticipantsAction,
 } from '@/lib/applications/admin-actions';
 import { APPLICATION_STATUSES, WORKSHOP_STATUSES } from '@/lib/applications/labels';
@@ -145,7 +147,7 @@ export default function Applications() {
         <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <h2 style={{ margin: 0 }}>Előadások (saját foglalás)</h2>
           {data.shows.map((sh) => (
-            <ShowBookings key={sh.id} show={sh} />
+            <ShowBookings key={sh.id} show={sh} busy={pending} act={act} />
           ))}
         </section>
       )}
@@ -563,10 +565,31 @@ function Workshop({ w, busy, act, manage }: { w: Data['workshops'][number]; busy
   );
 }
 
-const SHOW_STATE = { free: 'Ingyenes', paid: 'Fizetve', waiting: 'Fizetésre vár' } as const;
+const SHOW_STATE = {
+  free: 'Ingyenes',
+  paid: 'Fizetve',
+  waiting: 'Fizetésre vár',
+  complimentary: 'Tiszteletjegy',
+} as const;
 
-/** One show booked on the site: its seats, then who booked how many (the door list). */
-function ShowBookings({ show }: { show: Data['shows'][number] }) {
+/** One show booked on the site: its seats, then who booked how many (the door list), and Tiszteletjegy. */
+function ShowBookings({ show, busy, act }: { show: Data['shows'][number]; busy: boolean; act: Act }) {
+  const [giving, setGiving] = useState(false);
+  const seatsLeft = Math.max(0, show.seats - show.taken);
+
+  const give = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    const value = (key: string) => String(form.get(key) ?? '').trim();
+    const guest = {
+      lastName: value('lastName'),
+      firstName: value('firstName'),
+      email: value('email'),
+      phone: value('phone'),
+    };
+    if (await act(() => giveComplimentaryAction(show.id, guest, Number(value('seats'))))) setGiving(false);
+  };
+
   return (
     <div className={s.panel} style={{ gap: 10, alignSelf: 'stretch' }}>
       <div className={s.row} style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -610,6 +633,53 @@ function ShowBookings({ show }: { show: Data['shows'][number] }) {
             ))}
           </tbody>
         </table>
+      )}
+      <div className={s.row}>
+        <button
+          type="button"
+          className={s.btn}
+          aria-pressed={giving}
+          disabled={seatsLeft === 0}
+          onClick={() => setGiving((open) => !open)}
+        >
+          Tiszteletjegy
+        </button>
+        {seatsLeft === 0 && <span className={s.muted}>Nincs szabad hely.</span>}
+      </div>
+      {giving && (
+        <form className={s.form} onSubmit={give}>
+          <div className={s.row}>
+            <label className={s.field}>
+              Vezetéknév
+              <input name="lastName" required />
+            </label>
+            <label className={s.field}>
+              Keresztnév
+              <input name="firstName" required />
+            </label>
+            <label className={s.field}>
+              E-mail
+              <input name="email" type="email" required />
+            </label>
+            <label className={s.field}>
+              Telefon (nem kötelező)
+              <input name="phone" />
+            </label>
+            <label className={s.field}>
+              Jegyek
+              <input name="seats" type="number" min={1} max={seatsLeft} defaultValue={1} required />
+            </label>
+          </div>
+          <p className={s.muted} style={{ margin: 0 }}>
+            A jegyek a férőhelyből vesznek el ({seatsLeft} szabad), és QR-kóddal e-mailben mennek ki, belépési linkkel.
+            Ha nincs még fiókja, létrehozzuk.
+          </p>
+          <div className={s.row}>
+            <button type="submit" className={`${s.btn} ${s.primary}`} disabled={busy}>
+              Kiadás és küldés
+            </button>
+          </div>
+        </form>
       )}
     </div>
   );

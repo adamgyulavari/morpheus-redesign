@@ -72,6 +72,65 @@ export async function bookFreeShow(
   return { ok: true, applicationId: booking.id };
 }
 
+/**
+ * Tiszteletjegy: staff give someone free tickets (an account is found or made, as on the site). They
+ * take seats like any booking, also while sales are paused, and the guest gets them by e-mail.
+ */
+export async function giveComplimentaryTickets(
+  payload: Payload,
+  input: ShowBookingInput,
+  now = new Date(),
+): Promise<Result<{ applicationId: number }>> {
+  const invalid = validateInput({ ...input, kind: 'show' }, null, (await uiTexts(payload)).signupErrors);
+  if (invalid) return { ok: false, reason: invalid };
+  if (!Number.isInteger(input.seats) || input.seats < 1) return { ok: false, reason: 'Legalább egy jegy kell.' };
+  const show = await payload.findByID({ collection: 'shows', id: input.showId, depth: 1, disableErrors: true });
+  if (show?.bookingMode !== 'internal') return { ok: false, reason: 'Ez az előadás nem a weboldalon foglalható.' };
+  if (showStart(show) <= now) return { ok: false, reason: 'Ez az előadás már elkezdődött.' };
+
+  const { applicant, created } = await applicantFor(payload, null, input);
+  const { totalDocs: alreadyBooked } = await payload.count({
+    collection: 'applications',
+    where: {
+      and: [
+        { user: { equals: applicant.userId } },
+        { show: { equals: show.id } },
+        { status: { in: ['held', 'registered'] } },
+      ],
+    },
+  });
+  if (alreadyBooked)
+    return { ok: false, reason: `${applicant.name} már foglalt erre az előadásra: a meglévő foglalását nyisd meg.` };
+
+  let booking: Application;
+  try {
+    booking = await payload.create({
+      collection: 'applications',
+      data: {
+        kind: 'show',
+        user: applicant.userId,
+        show: show.id,
+        seats: input.seats,
+        name: applicant.name,
+        email: applicant.email,
+        phone: applicant.phone,
+        complimentary: true,
+      },
+    });
+  } catch (err) {
+    return { ok: false, reason: errorMessage(err) };
+  }
+  await sendShowRegistered(
+    payload,
+    applicant,
+    showInfo(show, input.seats),
+    { created, loggedIn: false },
+    await ticketImages(booking),
+    'ticketComplimentary',
+  );
+  return { ok: true, applicationId: booking.id };
+}
+
 /** Jelentkezések → Előadások: the upcoming shows booked here, each with its bookings (the door list). */
 export async function showDashboard(payload: Payload, now = new Date()) {
   const { docs: shows } = await payload.find({
@@ -124,7 +183,14 @@ export async function showDashboard(payload: Payload, now = new Date()) {
         seats: b.seats ?? 1,
         /** Tickets used at the door. */
         used: (b.tickets ?? []).filter((t) => t.usedAt).length,
-        state: b.status === 'held' ? ('waiting' as const) : relId(b.order) ? ('paid' as const) : ('free' as const),
+        state:
+          b.status === 'held'
+            ? ('waiting' as const)
+            : b.complimentary
+              ? ('complimentary' as const)
+              : relId(b.order)
+                ? ('paid' as const)
+                : ('free' as const),
       })),
     };
   });
