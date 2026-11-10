@@ -270,3 +270,49 @@
     }
   }
 }
+
+/* a row's "…" menu: a small button, its links in a dropdown under it (<details>, no script) */
+.menu {
+  position: relative;
+  display: inline-block;
+}
+.menu > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 2px 10px;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 6px;
+  line-height: 1.4;
+}
+.menu > summary::-webkit-details-marker {
+  display: none;
+}
+.menu > summary:hover,
+.menu[open] > summary {
+  background: var(--theme-elevation-100);
+}
+.menuItems {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  min-width: 190px;
+  padding: 4px;
+  text-align: left;
+  white-space: nowrap;
+  background: var(--theme-elevation-50);
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+.menuItems a {
+  padding: 6px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--theme-text);
+}
+.menuItems a:hover {
+  background: var(--theme-elevation-100);
+}

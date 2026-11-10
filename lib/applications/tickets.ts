@@ -41,6 +41,8 @@ export type TicketView = {
   name: string;
   title: string;
   when: string;
+  /** The show's start (ISO): the door's button asks again when it is more than an hour away. */
+  startsAt: string;
   place?: string;
   /** valid: may be used; used: already (when); invalid: the booking was cancelled, or the show is over. */
   state: 'valid' | 'used' | 'invalid';
@@ -73,6 +75,7 @@ export async function ticketByCode(payload: Payload, code: string, now = new Dat
     name: a.name,
     title: info.title,
     when: info.when ?? '',
+    startsAt: showStart(s).toISOString(),
     place: info.place,
     state: ticket.usedAt ? 'used' : a.status === 'registered' && !over ? 'valid' : 'invalid',
     usedAt: ticket.usedAt ?? undefined,

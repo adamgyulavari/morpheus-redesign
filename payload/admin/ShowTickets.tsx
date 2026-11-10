@@ -29,6 +29,15 @@ export default function ShowTickets({ showId }: { showId: number }) {
   useEffect(() => {
     load();
   }, [load]);
+  // an open "…" menu closes on a click anywhere else
+  useEffect(() => {
+    const closeMenus = (event: MouseEvent) => {
+      for (const menu of document.querySelectorAll<HTMLDetailsElement>(`details.${s.menu}[open]`))
+        if (!menu.contains(event.target as Node)) menu.open = false;
+    };
+    document.addEventListener('click', closeMenus);
+    return () => document.removeEventListener('click', closeMenus);
+  }, []);
 
   if (show === undefined) return <p className={s.muted}>Betöltés…</p>;
   if (show === null) return <p className={s.muted}>Ez az előadás nem a weboldalon foglalható.</p>;
@@ -101,11 +110,9 @@ export default function ShowTickets({ showId }: { showId: number }) {
                     </td>
                     <td>{STATE[booking.state]}</td>
                     <td style={{ textAlign: 'right' }}>
-                      <details>
-                        <summary aria-label={`További: ${booking.name}`} style={{ cursor: 'pointer' }}>
-                          …
-                        </summary>
-                        <div className={s.muted} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <details className={s.menu}>
+                        <summary aria-label={`További: ${booking.name}`}>…</summary>
+                        <div className={s.menuItems}>
                           <a href={`/admin/collections/applications/${booking.id}`}>Szerkesztés (admin űrlap)</a>
                           {booking.orderId && <a href={`/admin/collections/orders/${booking.orderId}`}>Rendelés</a>}
                         </div>
