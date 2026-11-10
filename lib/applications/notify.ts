@@ -331,19 +331,32 @@ export async function sendStaffCancellation(
   );
 }
 
-/** A free show booking, with its tickets (paid tickets get "Jegyvásárlás: sikeres fizetés"). */
+/**
+ * A free show booking, with its tickets: booked on the site, or a tiszteletjegy given by staff
+ * (paid tickets get "Jegyvásárlás: sikeres fizetés").
+ */
 export async function sendShowRegistered(
   payload: Payload,
   a: Applicant,
   t: TargetInfo,
   account: { created: boolean; loggedIn: boolean },
   tickets: TicketImage[],
+  ics: string,
+  template: 'ticketBooked' | 'ticketComplimentary' = 'ticketBooked',
 ) {
   const texts = await emailTexts(payload);
-  const tpl = texts.template('ticketBooked');
-  await toApplicant(payload, texts, 'ticketBooked', a, t, {
-    after: [(account.created ? tpl.accountCreated : tpl.accountExisting) ?? ''].filter(Boolean),
-    login: !account.loggedIn,
-    tickets,
-  });
+  const tpl = texts.template(template);
+  await toApplicant(
+    payload,
+    texts,
+    template,
+    a,
+    t,
+    {
+      after: [(account.created ? tpl.accountCreated : tpl.accountExisting) ?? ''].filter(Boolean),
+      login: !account.loggedIn,
+      tickets,
+    },
+    ics,
+  );
 }

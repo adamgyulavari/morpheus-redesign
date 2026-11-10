@@ -46,7 +46,7 @@ export const Productions: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'group', 'byline', '_status', 'updatedAt'],
-    description: 'A darabok. Az időpontokat az „Előadás-időpontok” között adhatod meg.',
+    description: 'A darabok. Az időpontokat az „Előadások” között adhatod meg (Napi munka).',
     livePreview: { url: ({ data }) => (data?.detailPage && data.slug ? previewPath(`/repertoar/${data.slug}`) : null) },
     preview: (data) => (data?.slug ? previewPath(`/repertoar/${data.slug as string}`) : null),
   },
@@ -257,11 +257,11 @@ const requiredWhenInternal = (value: unknown, { data }: { data: unknown }) =>
 
 export const Shows: CollectionConfig = {
   slug: 'shows',
-  labels: { singular: 'Előadás-időpont', plural: 'Előadás-időpontok' },
+  labels: { singular: 'Előadás-időpont', plural: 'Előadások' },
   access: contentAccess,
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['date', 'time', 'production', 'venue', 'label'],
+    defaultColumns: ['date', 'time', 'production', 'venue', 'label', 'tickets'],
     description:
       'Az előadások időpontjai. Elöl a legkésőbbi; a múltbeli időpontok másnap automatikusan eltűnnek az oldalról. A Facebook-eseményekből a „Szinkronizálás a Facebookról” gombbal jönnek.',
     components: { beforeListTable: ['@/payload/admin/FacebookSync#FacebookSync'] },
@@ -342,7 +342,20 @@ export const Shows: CollectionConfig = {
     relationship('production', 'Előadás', 'productions', { required: true }),
     { type: 'row', fields: [date('date', 'Dátum', { required: true }), time('time', 'Kezdés', { required: true })] },
     relationship('venue', 'Helyszín', 'venues', { required: true }),
-    text('label', 'Címke', { description: 'Nem kötelező, pl. „Nyilvános főpróba”.' }),
+    {
+      ...text('label', 'Címke'),
+      admin: {
+        description: 'Nem kötelező, pl. „Nyilvános főpróba”.',
+        components: { Cell: '@/payload/admin/ShowCells#LabelCell' },
+      },
+    },
+    {
+      // the list's Jegyek column (seats taken / all → the ticket list); nothing in the form
+      name: 'tickets',
+      label: 'Jegyek',
+      type: 'ui',
+      admin: { components: { Cell: '@/payload/admin/ShowCells#TicketsCell' } },
+    },
     {
       name: 'bookingMode',
       label: 'Jegyfoglalás',

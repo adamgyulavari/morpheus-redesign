@@ -20,7 +20,7 @@ import {
   messageParticipants,
   participants,
 } from './server';
-import { showDashboard } from './show-bookings';
+import { giveComplimentaryTickets, showTicketList } from './show-bookings';
 
 type Result = { ok: true; message?: string } | { ok: false; reason: string };
 const denied = { ok: false as const, reason: 'Ehhez munkatársi jogosultság kell.' };
@@ -47,6 +47,15 @@ export async function addParticipantAction(sessionId: number, input: ApplicantIn
   );
 }
 
+/** Előadások → Jegyek: Tiszteletjegy. */
+export async function giveComplimentaryAction(showId: number, input: ApplicantInput, seats: number): Promise<Result> {
+  if (!(await staff())) return denied;
+  return done(
+    await giveComplimentaryTickets(await payloadClient(), { ...input, showId, seats }),
+    'Tiszteletjegy kiadva; a jegyek e-mailben elmentek.',
+  );
+}
+
 export async function messageParticipantsAction(sessionId: number, subject: string, message: string): Promise<Result> {
   if (!(await staff())) return denied;
   const r = await messageParticipants(await payloadClient(), sessionId, subject, message);
@@ -56,8 +65,13 @@ export async function messageParticipantsAction(sessionId: number, subject: stri
 export async function dashboardData() {
   if (!(await staff())) return null;
   const payload = await payloadClient();
-  const [d, shows] = await Promise.all([dashboard(payload), showDashboard(payload)]);
-  return { ...d, shows };
+  return dashboard(payload);
+}
+
+/** Előadások → Jegyek: one show's bookings and tickets. */
+export async function showTicketsData(showId: number) {
+  if (!(await staff())) return null;
+  return showTicketList(await payloadClient(), showId);
 }
 
 /** The dashboard dialog's one button: payment fields, then the decision (lib/applications/server decide). */

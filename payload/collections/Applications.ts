@@ -354,15 +354,33 @@ export const Applications: CollectionConfig = {
       },
     },
     {
+      // set by Előadások → Jegyek → Tiszteletjegy (lib/applications/show-bookings.ts)
+      name: 'complimentary',
+      label: 'Tiszteletjegy',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+        condition: (data) => data?.kind === 'show',
+        description: 'Munkatárs adta, ingyen. Az Előadások listában a Jegyek oszlopra kattintva adható.',
+      },
+    },
+    {
       name: 'paidOffline',
       label: 'Fizetve',
       type: 'checkbox',
       defaultValue: false,
-      admin: { position: 'sidebar', description: 'Átutalás / készpénz — ha nem online fizetett.' },
+      // a show's tickets are paid online (their order) or free: not ticked by hand
+      admin: {
+        position: 'sidebar',
+        condition: (data) => data?.kind !== 'show',
+        description: 'Átutalás / készpénz — ha nem online fizetett.',
+      },
     },
     {
       ...text('paymentNote', 'Fizetés megjegyzés', { description: 'Pl. „átutalta 10.12.”' }),
-      admin: { position: 'sidebar' },
+      admin: { position: 'sidebar', condition: (data) => data?.kind !== 'show' },
     },
     textarea('staffNotes', 'Belső megjegyzés', { description: 'Csak a munkatársak látják.' }),
   ],

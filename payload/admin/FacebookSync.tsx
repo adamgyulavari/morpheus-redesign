@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Above the Előadás-időpontok list: "Szinkronizálás a Facebookról" — the page's upcoming events
+ * Above the Előadások list: "Szinkronizálás a Facebookról" — the page's upcoming events
  * become dates (lib/facebook/sync). Says what changed, and what needs a person. Never starts by
  * itself: whether a student whose practice a show cancels is e-mailed is chosen first.
  */

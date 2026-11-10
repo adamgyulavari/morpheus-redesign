@@ -13,6 +13,8 @@ import { HeadingFeatureClient as HeadingFeatureClient_e70f5e05f09f93e00b997edb1e
 import { ParagraphFeatureClient as ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { FillMonthLink as FillMonthLink_4ce0b4c0b98a51629edb8cbcabe61672 } from '@/payload/admin/FillMonthLink'
 import { GroupImport as GroupImport_904bbb8d4b6c03d83f536a714b0ff0dd } from '@/payload/admin/GroupImport'
+import { LabelCell as LabelCell_21f9fa68161440d369c1130479826003 } from '@/payload/admin/ShowCells'
+import { TicketsCell as TicketsCell_21f9fa68161440d369c1130479826003 } from '@/payload/admin/ShowCells'
 import { BookingDefaults as BookingDefaults_6b0724eccb3891323bd3e1c4aa49db40 } from '@/payload/admin/BookingDefaults'
 import { FacebookSync as FacebookSync_c50f154f8ecb23785210e5c45ecead4f } from '@/payload/admin/FacebookSync'
 import { BlockFocus as BlockFocus_8044bd553ea8fc36f5b82d54e1ee7bbe } from '@/payload/admin/BlockFocus'
@@ -35,6 +37,7 @@ import { Theme as Theme_4c07e566a6f8006cedee5019c29a1201 } from '@/payload/admin
 import { RoomCalendarView as RoomCalendarView_3926d171d9d98eb65a012bdf532daed8 } from '@/payload/admin/views'
 import { ApplicationsView as ApplicationsView_3926d171d9d98eb65a012bdf532daed8 } from '@/payload/admin/views'
 import { BillingRunView as BillingRunView_3926d171d9d98eb65a012bdf532daed8 } from '@/payload/admin/views'
+import { ShowTicketsView as ShowTicketsView_3926d171d9d98eb65a012bdf532daed8 } from '@/payload/admin/views'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 
@@ -55,6 +58,8 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#ParagraphFeatureClient": ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@/payload/admin/FillMonthLink#FillMonthLink": FillMonthLink_4ce0b4c0b98a51629edb8cbcabe61672,
   "@/payload/admin/GroupImport#GroupImport": GroupImport_904bbb8d4b6c03d83f536a714b0ff0dd,
+  "@/payload/admin/ShowCells#LabelCell": LabelCell_21f9fa68161440d369c1130479826003,
+  "@/payload/admin/ShowCells#TicketsCell": TicketsCell_21f9fa68161440d369c1130479826003,
   "@/payload/admin/BookingDefaults#BookingDefaults": BookingDefaults_6b0724eccb3891323bd3e1c4aa49db40,
   "@/payload/admin/FacebookSync#FacebookSync": FacebookSync_c50f154f8ecb23785210e5c45ecead4f,
   "@/payload/admin/BlockFocus#BlockFocus": BlockFocus_8044bd553ea8fc36f5b82d54e1ee7bbe,
@@ -77,6 +82,7 @@ export const importMap = {
   "@/payload/admin/views#RoomCalendarView": RoomCalendarView_3926d171d9d98eb65a012bdf532daed8,
   "@/payload/admin/views#ApplicationsView": ApplicationsView_3926d171d9d98eb65a012bdf532daed8,
   "@/payload/admin/views#BillingRunView": BillingRunView_3926d171d9d98eb65a012bdf532daed8,
+  "@/payload/admin/views#ShowTicketsView": ShowTicketsView_3926d171d9d98eb65a012bdf532daed8,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24
 }

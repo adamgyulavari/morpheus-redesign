@@ -67,6 +67,7 @@ export default async function TicketPage({ params }: Props) {
         {staff && t.state === 'valid' ? (
           <TicketRedeem
             code={t.code}
+            startsAt={t.startsAt}
             labels={{ use: b.ticketUse, done: b.ticketDone, already: b.ticketUsedAlready, invalid: b.ticketInvalid }}
           />
         ) : (

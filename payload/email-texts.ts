@@ -164,6 +164,15 @@ export const EMAILS: Record<string, { label: string; templates: Record<string, T
           { name: 'accountExisting', label: 'Meglévő fiók', description: 'A levél végén.' },
         ],
       },
+      ticketComplimentary: {
+        label: 'Tiszteletjegy',
+        vars: ['keresztnev', 'cim', 'mikor', 'hol', 'jegyek'],
+        button: true,
+        extra: [
+          { name: 'accountCreated', label: 'Új fiók készült', description: 'A levél végén.' },
+          { name: 'accountExisting', label: 'Meglévő fiók', description: 'A levél végén.' },
+        ],
+      },
       ticketPaymentLink: {
         label: 'Jegyvásárlás: fizetési link',
         vars: ['keresztnev', 'cim', 'mikor', 'hol', 'jegyek', 'osszeg', 'hatarido'],

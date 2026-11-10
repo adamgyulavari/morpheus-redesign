@@ -2,11 +2,10 @@
  * Booking a free show (price 0) on the site: the seats are taken at once (no payment), under the
  * capacity lock of the Applications collection. Paid tickets go through the checkout
  * (lib/payments/checkout.ts checkoutShow). Cancelling: cancelOwn (free bookings only). The admin's
- * list of them: showDashboard.
+ * ticket list of a show: showTicketList.
  */
 import type { Payload } from 'payload';
 
-import { todayInBudapest } from '@/lib/dates';
 import { say } from '@/lib/messages';
 import { billingSettings } from '@/lib/payments/settings';
 import { errorMessage } from '@/lib/rooms/server';
@@ -19,8 +18,8 @@ import { sendShowRegistered, sendStaffNew } from './notify';
 import { canBookShow, takesPlace } from './rules';
 import { type ApplicantInput, applicantFor, type Result, validateInput } from './server';
 import { applicationSettings } from './settings';
-import { seatsTaken, showFacts, showInfo, showStart, ticketPrice } from './shows';
-import { ticketImages } from './tickets';
+import { seatsTaken, showFacts, showIcs, showInfo, showStart, ticketPrice } from './shows';
+import { ticketImages, ticketPath } from './tickets';
 
 export type ShowBookingInput = ApplicantInput & { showId: number; seats: number };
 
@@ -67,68 +66,132 @@ export async function bookFreeShow(
     info,
     { created, loggedIn: Boolean(viewer) },
     await ticketImages(booking),
+    showIcs(booking.id, s, info),
   );
   await sendStaffNew(payload, await applicationSettings(payload), booking.id, APPLICATION_KINDS.show, applicant, info);
   return { ok: true, applicationId: booking.id };
 }
 
-/** Jelentkezések → Előadások: the upcoming shows booked here, each with its bookings (the door list). */
-export async function showDashboard(payload: Payload, now = new Date()) {
-  const { docs: shows } = await payload.find({
-    collection: 'shows',
-    where: { and: [{ bookingMode: { equals: 'internal' } }, { date: { greater_than_equal: todayStart(now) } }] },
-    sort: ['date', 'time'],
-    depth: 1,
-    limit: 0,
-    pagination: false,
-  });
-  const upcoming = shows.filter((s) => showStart(s) > now);
-  if (!upcoming.length) return [];
-  const { docs: bookings } = await payload.find({
+/**
+ * Tiszteletjegy: staff give someone free tickets (an account is found or made, as on the site). They
+ * take seats like any booking, also while sales are paused, and the guest gets them by e-mail.
+ */
+export async function giveComplimentaryTickets(
+  payload: Payload,
+  input: ShowBookingInput,
+  now = new Date(),
+): Promise<Result<{ applicationId: number }>> {
+  const invalid = validateInput({ ...input, kind: 'show' }, null, (await uiTexts(payload)).signupErrors);
+  if (invalid) return { ok: false, reason: invalid };
+  if (!Number.isInteger(input.seats) || input.seats < 1) return { ok: false, reason: 'Legalább egy jegy kell.' };
+  const show = await payload.findByID({ collection: 'shows', id: input.showId, depth: 1, disableErrors: true });
+  if (show?.bookingMode !== 'internal') return { ok: false, reason: 'Ez az előadás nem a weboldalon foglalható.' };
+  if (showStart(show) <= now) return { ok: false, reason: 'Ez az előadás már elkezdődött.' };
+
+  const { applicant, created } = await applicantFor(payload, null, input);
+  const { totalDocs: alreadyBooked } = await payload.count({
     collection: 'applications',
     where: {
       and: [
-        { kind: { equals: 'show' } },
-        { show: { in: upcoming.map((s) => s.id) } },
+        { user: { equals: applicant.userId } },
+        { show: { equals: show.id } },
         { status: { in: ['held', 'registered'] } },
       ],
+    },
+  });
+  if (alreadyBooked)
+    return { ok: false, reason: `${applicant.name} már foglalt erre az előadásra: a meglévő foglalását nyisd meg.` };
+
+  let booking: Application;
+  try {
+    booking = await payload.create({
+      collection: 'applications',
+      data: {
+        kind: 'show',
+        user: applicant.userId,
+        show: show.id,
+        seats: input.seats,
+        name: applicant.name,
+        email: applicant.email,
+        phone: applicant.phone,
+        complimentary: true,
+      },
+    });
+  } catch (err) {
+    return { ok: false, reason: errorMessage(err) };
+  }
+  const info = showInfo(show, input.seats);
+  await sendShowRegistered(
+    payload,
+    applicant,
+    info,
+    { created, loggedIn: false },
+    await ticketImages(booking),
+    showIcs(booking.id, show, info),
+    'ticketComplimentary',
+  );
+  return { ok: true, applicationId: booking.id };
+}
+
+/** A booking's kind on the ticket list. */
+const bookingState = (booking: Application) =>
+  booking.status === 'held'
+    ? ('waiting' as const)
+    : booking.complimentary
+      ? ('complimentary' as const)
+      : relId(booking.order)
+        ? ('paid' as const)
+        : ('free' as const);
+
+/**
+ * Előadások → Jegyek (/admin/jegyek/<id>): one show booked on the site with its bookings (the door
+ * list), each with its tickets; null for a show booked elsewhere.
+ */
+export async function showTicketList(payload: Payload, showId: number, now = new Date()) {
+  const show = await payload.findByID({ collection: 'shows', id: showId, depth: 1, disableErrors: true });
+  if (show?.bookingMode !== 'internal') return null;
+  const { docs } = await payload.find({
+    collection: 'applications',
+    where: {
+      and: [{ kind: { equals: 'show' } }, { show: { equals: show.id } }, { status: { in: ['held', 'registered'] } }],
     },
     sort: 'createdAt',
     depth: 0,
     limit: 0,
     pagination: false,
   });
-  return upcoming.map((s) => {
-    const info = showInfo(s);
-    const mine = bookings.filter(
-      (b) =>
-        relId(b.show) === s.id &&
-        Boolean(b.status) &&
-        takesPlace(b.status as NonNullable<typeof b.status>, b.holdUntil ? new Date(b.holdUntil) : null, now),
-    );
-    return {
-      id: s.id,
-      title: info.title,
-      when: info.when ?? '',
-      place: info.place ?? '',
-      hidden: Boolean(s.hidden),
-      price: ticketPrice(s),
-      seats: s.booking?.seats ?? 0,
-      taken: mine.reduce((n, b) => n + (b.seats ?? 1), 0),
-      arrived: mine.reduce((n, b) => n + (b.tickets ?? []).filter((t) => t.usedAt).length, 0),
-      bookings: mine.map((b) => ({
-        id: b.id,
-        name: b.name,
-        email: b.email,
-        phone: b.phone ?? '',
-        seats: b.seats ?? 1,
-        /** Tickets used at the door. */
-        used: (b.tickets ?? []).filter((t) => t.usedAt).length,
-        state: b.status === 'held' ? ('waiting' as const) : relId(b.order) ? ('paid' as const) : ('free' as const),
+  const bookings = docs.filter((booking) =>
+    takesPlace(
+      booking.status as NonNullable<typeof booking.status>,
+      booking.holdUntil ? new Date(booking.holdUntil) : null,
+      now,
+    ),
+  );
+  const tickets = bookings.flatMap((booking) => booking.tickets ?? []);
+  const info = showInfo(show);
+  return {
+    id: show.id,
+    title: info.title,
+    when: info.when ?? '',
+    place: info.place ?? '',
+    hidden: Boolean(show.hidden),
+    started: showStart(show) <= now,
+    price: ticketPrice(show),
+    seats: show.booking?.seats ?? 0,
+    taken: bookings.reduce((sum, booking) => sum + (booking.seats ?? 1), 0),
+    arrived: tickets.filter((ticket) => ticket.usedAt).length,
+    bookings: bookings.map((booking) => ({
+      id: booking.id,
+      name: booking.name,
+      email: booking.email,
+      phone: booking.phone ?? '',
+      seats: booking.seats ?? 1,
+      orderId: relId(booking.order) ?? null,
+      state: bookingState(booking),
+      tickets: (booking.tickets ?? []).map((ticket) => ({
+        href: ticketPath(ticket.code),
+        used: Boolean(ticket.usedAt),
       })),
-    };
-  });
+    })),
+  };
 }
-
-/** Today's start in Budapest, as the stored days are compared (noon of the day). */
-const todayStart = (now: Date) => `${todayInBudapest(now)}T00:00:00.000Z`;

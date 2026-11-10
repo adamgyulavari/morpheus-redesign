@@ -1,5 +1,5 @@
 /**
- * "Szinkronizálás a Facebookról" (the Előadás-időpontok list): the page's upcoming events become
+ * "Szinkronizálás a Facebookról" (the Előadások list): the page's upcoming events become
  * performance dates. Each date keeps its event's id; its date, time, venue, label and ticket link
  * follow the event, the rest (Tudnivalók, registration link) is the site's. A date already entered
  * by hand (same production, same day) is taken over, not doubled. An event cancelled or gone from
