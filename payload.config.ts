@@ -108,6 +108,8 @@ export default buildConfig({
         jelentkezesek: { Component: '@/payload/admin/views#ApplicationsView', path: '/jelentkezesek' },
         // the monthly invoices: szakmai fees, kezdő instalments (lib/invoicing/run)
         szamlazas: { Component: '@/payload/admin/views#BillingRunView', path: '/szamlazas' },
+        // a show's tickets and Tiszteletjegy, from the Előadások list's Jegyek column
+        jegyek: { Component: '@/payload/admin/views#ShowTicketsView', path: '/jegyek/:show' },
       },
     },
     dateFormat: 'yyyy. MM. dd. HH:mm',

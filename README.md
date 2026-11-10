@@ -313,7 +313,7 @@ as before) or on the site (*Saját foglalás*, which needs the production's own 
   `/jegy/<code>`: staff logged in on a phone get one button, "Jegy felhasználása" (once — the
   update only touches an unused ticket, so two phones can't both let it in); anyone else sees the
   ticket and whether it is still valid (`lib/applications/tickets.ts`).
-- Staff see each date's bookings (the door list) above the *Előadások* list (Jegyek), and give
+- Staff open a date's bookings (the door list) from the *Előadások* list's Jegyek column, and give
   tiszteletjegy there (free tickets by e-mail, taking seats). The Facebook sync
   leaves a date booked here alone (its ticket link included).
 

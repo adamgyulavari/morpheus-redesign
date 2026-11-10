@@ -20,7 +20,7 @@ import {
   messageParticipants,
   participants,
 } from './server';
-import { giveComplimentaryTickets, showDashboard } from './show-bookings';
+import { giveComplimentaryTickets, showTicketList } from './show-bookings';
 
 type Result = { ok: true; message?: string } | { ok: false; reason: string };
 const denied = { ok: false as const, reason: 'Ehhez munkatársi jogosultság kell.' };
@@ -47,7 +47,7 @@ export async function addParticipantAction(sessionId: number, input: ApplicantIn
   );
 }
 
-/** Előadások → Jegyek → Tiszteletjegy. */
+/** Előadások → Jegyek: Tiszteletjegy. */
 export async function giveComplimentaryAction(showId: number, input: ApplicantInput, seats: number): Promise<Result> {
   if (!(await staff())) return denied;
   return done(
@@ -68,10 +68,10 @@ export async function dashboardData() {
   return dashboard(payload);
 }
 
-/** Above the Előadások list: the upcoming shows booked on the site, with their door lists. */
-export async function showBookingsData() {
+/** Előadások → Jegyek: one show's bookings and tickets. */
+export async function showTicketsData(showId: number) {
   if (!(await staff())) return null;
-  return showDashboard(await payloadClient());
+  return showTicketList(await payloadClient(), showId);
 }
 
 /** The dashboard dialog's one button: payment fields, then the decision (lib/applications/server decide). */

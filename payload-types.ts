@@ -495,7 +495,7 @@ export interface Application {
    */
   holdUntil?: string | null;
   /**
-   * Munkatárs adta, ingyen. Az Előadások lista tetején, a Jegyek résznél adható.
+   * Munkatárs adta, ingyen. Az Előadások listában a Jegyek oszlopra kattintva adható.
    */
   complimentary?: boolean | null;
   /**
