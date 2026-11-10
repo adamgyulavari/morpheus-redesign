@@ -46,7 +46,7 @@ export const Productions: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'group', 'byline', '_status', 'updatedAt'],
-    description: 'A darabok. Az időpontokat az „Előadás-időpontok” között adhatod meg.',
+    description: 'A darabok. Az időpontokat az „Előadások” között adhatod meg (Napi munka).',
     livePreview: { url: ({ data }) => (data?.detailPage && data.slug ? previewPath(`/repertoar/${data.slug}`) : null) },
     preview: (data) => (data?.slug ? previewPath(`/repertoar/${data.slug as string}`) : null),
   },
@@ -257,14 +257,16 @@ const requiredWhenInternal = (value: unknown, { data }: { data: unknown }) =>
 
 export const Shows: CollectionConfig = {
   slug: 'shows',
-  labels: { singular: 'Előadás-időpont', plural: 'Előadás-időpontok' },
+  labels: { singular: 'Előadás-időpont', plural: 'Előadások' },
   access: contentAccess,
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['date', 'time', 'production', 'venue', 'label'],
     description:
       'Az előadások időpontjai. Elöl a legkésőbbi; a múltbeli időpontok másnap automatikusan eltűnnek az oldalról. A Facebook-eseményekből a „Szinkronizálás a Facebookról” gombbal jönnek.',
-    components: { beforeListTable: ['@/payload/admin/FacebookSync#FacebookSync'] },
+    components: {
+      beforeListTable: ['@/payload/admin/FacebookSync#FacebookSync', '@/payload/admin/ShowBookings#ShowBookingsPanel'],
+    },
   },
   defaultSort: '-date',
   hooks: {

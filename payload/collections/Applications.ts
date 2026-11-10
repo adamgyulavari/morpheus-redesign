@@ -354,7 +354,7 @@ export const Applications: CollectionConfig = {
       },
     },
     {
-      // set by Jelentkezések → Előadások → Tiszteletjegy (lib/applications/show-bookings.ts)
+      // set by Előadások → Jegyek → Tiszteletjegy (lib/applications/show-bookings.ts)
       name: 'complimentary',
       label: 'Tiszteletjegy',
       type: 'checkbox',
@@ -363,7 +363,7 @@ export const Applications: CollectionConfig = {
         position: 'sidebar',
         readOnly: true,
         condition: (data) => data?.kind === 'show',
-        description: 'Munkatárs adta, ingyen. A Jelentkezések → Előadások oldalon adható.',
+        description: 'Munkatárs adta, ingyen. Az Előadások lista tetején, a Jegyek résznél adható.',
       },
     },
     {

@@ -483,7 +483,7 @@ export const blocks: Block[] = [
     slug: 'upcomingShows',
     lists: ['shows', 'productions', 'venues'],
     label: 'Közelgő előadások',
-    description: 'A mai naptól számított előadások, az „Előadás-időpontok” közül.',
+    description: 'A mai naptól számított előadások, az „Előadások” (Napi munka) közül.',
     fields: [
       {
         name: 'variant',

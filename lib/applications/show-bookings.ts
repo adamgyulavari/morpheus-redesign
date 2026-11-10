@@ -131,7 +131,7 @@ export async function giveComplimentaryTickets(
   return { ok: true, applicationId: booking.id };
 }
 
-/** Jelentkezések → Előadások: the upcoming shows booked here, each with its bookings (the door list). */
+/** Above the Előadások list (Jegyek): the upcoming shows booked here, each with its bookings (the door list). */
 export async function showDashboard(payload: Payload, now = new Date()) {
   const { docs: shows } = await payload.find({
     collection: 'shows',

@@ -8,7 +8,6 @@
  *   rooms) / Elutasítás (archived).
  * - Szakmai: Interjú / Elutasítás (no e-mail) / Felvétel és csoportba helyezés.
  * - Nyitott Műhely: payment, Lemondás (an e-mail tells them); per date: add a participant, e-mail them.
- * - Előadások (saját foglalás): the door list; Tiszteletjegy gives someone free tickets by e-mail.
  */
 import { type FormEvent, type ReactNode, useCallback, useEffect, useId, useState, useTransition } from 'react';
 
@@ -17,7 +16,6 @@ import {
   addParticipantAction,
   dashboardData,
   decideAction,
-  giveComplimentaryAction,
   messageParticipantsAction,
 } from '@/lib/applications/admin-actions';
 import { APPLICATION_STATUSES, WORKSHOP_STATUSES } from '@/lib/applications/labels';
@@ -142,15 +140,6 @@ export default function Applications() {
           </div>
         ))}
       </section>
-
-      {data.shows.length > 0 && (
-        <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <h2 style={{ margin: 0 }}>Előadások (saját foglalás)</h2>
-          {data.shows.map((sh) => (
-            <ShowBookings key={sh.id} show={sh} busy={pending} act={act} />
-          ))}
-        </section>
-      )}
 
       <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <h2 style={{ margin: 0 }}>Nyitott Műhely</h2>
@@ -557,126 +546,6 @@ function Workshop({ w, busy, act, manage }: { w: Data['workshops'][number]; busy
           <div className={s.row}>
             <button type="submit" className={`${s.btn} ${s.primary}`} disabled={busy || w.taken === 0}>
               Küldés
-            </button>
-          </div>
-        </form>
-      )}
-    </div>
-  );
-}
-
-const SHOW_STATE = {
-  free: 'Ingyenes',
-  paid: 'Fizetve',
-  waiting: 'Fizetésre vár',
-  complimentary: 'Tiszteletjegy',
-} as const;
-
-/** One show booked on the site: its seats, then who booked how many (the door list), and Tiszteletjegy. */
-function ShowBookings({ show, busy, act }: { show: Data['shows'][number]; busy: boolean; act: Act }) {
-  const [giving, setGiving] = useState(false);
-  const seatsLeft = Math.max(0, show.seats - show.taken);
-
-  const give = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = new FormData(e.currentTarget);
-    const value = (key: string) => String(form.get(key) ?? '').trim();
-    const guest = {
-      lastName: value('lastName'),
-      firstName: value('firstName'),
-      email: value('email'),
-      phone: value('phone'),
-    };
-    if (await act(() => giveComplimentaryAction(show.id, guest, Number(value('seats'))))) setGiving(false);
-  };
-
-  return (
-    <div className={s.panel} style={{ gap: 10, alignSelf: 'stretch' }}>
-      <div className={s.row} style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <strong>
-          {show.title} — {show.when}
-        </strong>
-        <span className={s.muted}>
-          {show.taken} / {show.seats} jegy{show.arrived ? ` · ${show.arrived} beengedve` : ''} ·{' '}
-          {show.price ? `${show.price} Ft / jegy` : 'ingyenes'}
-          {show.hidden && ' · elrejtve'}
-        </span>
-      </div>
-      {show.bookings.length === 0 ? (
-        <p className={s.muted}>Még nincs foglalás.</p>
-      ) : (
-        <table className={s.table}>
-          <thead>
-            <tr>
-              <th>Név</th>
-              <th>Elérhetőség</th>
-              <th>Jegy</th>
-              <th>Állapot</th>
-            </tr>
-          </thead>
-          <tbody>
-            {show.bookings.map((b) => (
-              <tr key={b.id}>
-                <td>
-                  <a href={`/admin/collections/applications/${b.id}`}>{b.name}</a>
-                </td>
-                <td>
-                  {b.email}
-                  <div className={s.muted}>{b.phone}</div>
-                </td>
-                <td>
-                  {b.seats}
-                  {b.used > 0 && <div className={s.muted}>{b.used} beengedve</div>}
-                </td>
-                <td>{SHOW_STATE[b.state]}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      <div className={s.row}>
-        <button
-          type="button"
-          className={s.btn}
-          aria-pressed={giving}
-          disabled={seatsLeft === 0}
-          onClick={() => setGiving((open) => !open)}
-        >
-          Tiszteletjegy
-        </button>
-        {seatsLeft === 0 && <span className={s.muted}>Nincs szabad hely.</span>}
-      </div>
-      {giving && (
-        <form className={s.form} onSubmit={give}>
-          <div className={s.row}>
-            <label className={s.field}>
-              Vezetéknév
-              <input name="lastName" required />
-            </label>
-            <label className={s.field}>
-              Keresztnév
-              <input name="firstName" required />
-            </label>
-            <label className={s.field}>
-              E-mail
-              <input name="email" type="email" required />
-            </label>
-            <label className={s.field}>
-              Telefon (nem kötelező)
-              <input name="phone" />
-            </label>
-            <label className={s.field}>
-              Jegyek
-              <input name="seats" type="number" min={1} max={seatsLeft} defaultValue={1} required />
-            </label>
-          </div>
-          <p className={s.muted} style={{ margin: 0 }}>
-            A jegyek a férőhelyből vesznek el ({seatsLeft} szabad), és QR-kóddal e-mailben mennek ki, belépési linkkel.
-            Ha nincs még fiókja, létrehozzuk.
-          </p>
-          <div className={s.row}>
-            <button type="submit" className={`${s.btn} ${s.primary}`} disabled={busy}>
-              Kiadás és küldés
             </button>
           </div>
         </form>

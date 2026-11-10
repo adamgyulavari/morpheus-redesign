@@ -47,7 +47,7 @@ export async function addParticipantAction(sessionId: number, input: ApplicantIn
   );
 }
 
-/** Jelentkezések → Előadások → Tiszteletjegy. */
+/** Előadások → Jegyek → Tiszteletjegy. */
 export async function giveComplimentaryAction(showId: number, input: ApplicantInput, seats: number): Promise<Result> {
   if (!(await staff())) return denied;
   return done(
@@ -65,8 +65,13 @@ export async function messageParticipantsAction(sessionId: number, subject: stri
 export async function dashboardData() {
   if (!(await staff())) return null;
   const payload = await payloadClient();
-  const [d, shows] = await Promise.all([dashboard(payload), showDashboard(payload)]);
-  return { ...d, shows };
+  return dashboard(payload);
+}
+
+/** Above the Előadások list: the upcoming shows booked on the site, with their door lists. */
+export async function showBookingsData() {
+  if (!(await staff())) return null;
+  return showDashboard(await payloadClient());
 }
 
 /** The dashboard dialog's one button: payment fields, then the decision (lib/applications/server decide). */

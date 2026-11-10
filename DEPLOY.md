@@ -135,7 +135,7 @@ media bucket.
 
 ### Facebook events
 
-- Előadás-időpontok → **Szinkronizálás a Facebookról** turns the page's upcoming events into dates:
+- Előadások → **Szinkronizálás a Facebookról** turns the page's upcoming events into dates:
   the production from the event's name (its title must be in it), the venue from the place's name;
   date, time, venue, label (Bemutató / Nyilvános főpróba) and ticket link follow Facebook. An
   event cancelled or deleted there hides its date (Elrejtve). Events it can't match are listed,

@@ -495,7 +495,7 @@ export interface Application {
    */
   holdUntil?: string | null;
   /**
-   * Munkatárs adta, ingyen. A Jelentkezések → Előadások oldalon adható.
+   * Munkatárs adta, ingyen. Az Előadások lista tetején, a Jegyek résznél adható.
    */
   complimentary?: boolean | null;
   /**
@@ -680,7 +680,7 @@ export interface Session {
   createdAt: string;
 }
 /**
- * A darabok. Az időpontokat az „Előadás-időpontok” között adhatod meg.
+ * A darabok. Az időpontokat az „Előadások” között adhatod meg (Napi munka).
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "productions".
