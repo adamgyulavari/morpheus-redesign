@@ -18,7 +18,7 @@ import { sendShowRegistered, sendStaffNew } from './notify';
 import { canBookShow, takesPlace } from './rules';
 import { type ApplicantInput, applicantFor, type Result, validateInput } from './server';
 import { applicationSettings } from './settings';
-import { seatsTaken, showFacts, showInfo, showStart, ticketPrice } from './shows';
+import { seatsTaken, showFacts, showIcs, showInfo, showStart, ticketPrice } from './shows';
 import { ticketImages, ticketPath } from './tickets';
 
 export type ShowBookingInput = ApplicantInput & { showId: number; seats: number };
@@ -66,6 +66,7 @@ export async function bookFreeShow(
     info,
     { created, loggedIn: Boolean(viewer) },
     await ticketImages(booking),
+    showIcs(booking.id, s, info),
   );
   await sendStaffNew(payload, await applicationSettings(payload), booking.id, APPLICATION_KINDS.show, applicant, info);
   return { ok: true, applicationId: booking.id };
@@ -119,12 +120,14 @@ export async function giveComplimentaryTickets(
   } catch (err) {
     return { ok: false, reason: errorMessage(err) };
   }
+  const info = showInfo(show, input.seats);
   await sendShowRegistered(
     payload,
     applicant,
-    showInfo(show, input.seats),
+    info,
     { created, loggedIn: false },
     await ticketImages(booking),
+    showIcs(booking.id, show, info),
     'ticketComplimentary',
   );
   return { ok: true, applicationId: booking.id };

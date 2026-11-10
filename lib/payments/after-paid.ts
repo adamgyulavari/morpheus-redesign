@@ -17,7 +17,7 @@ import {
   workshopInfo,
 } from '@/lib/applications/server';
 import { applicationSettings } from '@/lib/applications/settings';
-import { seatsTaken, showInfo, showStart } from '@/lib/applications/shows';
+import { seatsTaken, showIcs, showInfo } from '@/lib/applications/shows';
 import { ticketImages } from '@/lib/applications/tickets';
 import { formatHuf } from '@/lib/format';
 import { issueInvoice } from '@/lib/invoicing/service';
@@ -50,18 +50,10 @@ export async function afterPaid(payload: Payload, orderId: number) {
   } else if (order.kind === 'show') {
     const s = await payload.findByID({ collection: 'shows', id: relId(application.show) ?? 0, depth: 1 });
     const info = showInfo(s, application.seats ?? 1);
-    const start = showStart(s);
     await sendOrderPaid(payload, applicant, info, money, {
       loggedIn: false,
       tickets: await ticketImages(application),
-      ics: icsFile({
-        uid: `application-${application.id}@morpheus-szinmuhely.hu`,
-        start,
-        // the length isn't known: an evening's show
-        end: new Date(start.getTime() + 2 * 3_600_000),
-        summary: `${info.title} — Morpheus Színműhely`,
-        location: info.place,
-      }),
+      ics: showIcs(application.id, s, info),
     });
     const taken = (await seatsTaken(payload, [s.id])).get(s.id) ?? 0;
     await sendStaffPaid(payload, settings, applicant, info, money, `${taken} / ${s.booking?.seats ?? 0} jegy`);

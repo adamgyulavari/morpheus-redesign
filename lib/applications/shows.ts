@@ -8,6 +8,7 @@ import type { Payload, PayloadRequest } from 'payload';
 
 import { showDateLine } from '@/lib/dates';
 import { formatHuf } from '@/lib/format';
+import { icsFile } from '@/lib/rooms/ics';
 import { at } from '@/lib/rooms/time';
 import { dbOf } from '@/payload/db';
 import type { Show } from '@/payload-types';
@@ -39,6 +40,23 @@ export async function ownHeldSeats(payload: Payload, showId: number, email: stri
 
 /** The stored day (noon, Budapest) and the time: the moment it starts. */
 export const showStart = (s: Pick<Show, 'date' | 'time'>) => at(String(s.date).slice(0, 10), s.time);
+
+/** A show booking's calendar file, for its ticket e-mail (bought, free or tiszteletjegy). */
+export function showIcs(
+  applicationId: number,
+  s: Pick<Show, 'date' | 'time'>,
+  info: { title: string; place?: string },
+) {
+  const start = showStart(s);
+  return icsFile({
+    uid: `application-${applicationId}@morpheus-szinmuhely.hu`,
+    start,
+    // the length isn't known: an evening's show
+    end: new Date(start.getTime() + 2 * 3_600_000),
+    summary: `${info.title} — Morpheus Színműhely`,
+    location: info.place,
+  });
+}
 
 /** Booked on the site (and not hidden)? */
 export const bookedHere = (s: Pick<Show, 'bookingMode' | 'hidden'>) => s.bookingMode === 'internal' && !s.hidden;

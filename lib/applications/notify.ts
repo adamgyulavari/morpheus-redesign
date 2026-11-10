@@ -341,13 +341,22 @@ export async function sendShowRegistered(
   t: TargetInfo,
   account: { created: boolean; loggedIn: boolean },
   tickets: TicketImage[],
+  ics: string,
   template: 'ticketBooked' | 'ticketComplimentary' = 'ticketBooked',
 ) {
   const texts = await emailTexts(payload);
   const tpl = texts.template(template);
-  await toApplicant(payload, texts, template, a, t, {
-    after: [(account.created ? tpl.accountCreated : tpl.accountExisting) ?? ''].filter(Boolean),
-    login: !account.loggedIn,
-    tickets,
-  });
+  await toApplicant(
+    payload,
+    texts,
+    template,
+    a,
+    t,
+    {
+      after: [(account.created ? tpl.accountCreated : tpl.accountExisting) ?? ''].filter(Boolean),
+      login: !account.loggedIn,
+      tickets,
+    },
+    ics,
+  );
 }
