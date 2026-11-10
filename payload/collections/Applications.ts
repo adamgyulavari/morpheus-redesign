@@ -354,6 +354,19 @@ export const Applications: CollectionConfig = {
       },
     },
     {
+      // set by Jelentkezések → Előadások → Tiszteletjegy (lib/applications/show-bookings.ts)
+      name: 'complimentary',
+      label: 'Tiszteletjegy',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+        condition: (data) => data?.kind === 'show',
+        description: 'Munkatárs adta, ingyen. A Jelentkezések → Előadások oldalon adható.',
+      },
+    },
+    {
       name: 'paidOffline',
       label: 'Fizetve',
       type: 'checkbox',

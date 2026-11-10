@@ -495,6 +495,10 @@ export interface Application {
    */
   holdUntil?: string | null;
   /**
+   * Munkatárs adta, ingyen. A Jelentkezések → Előadások oldalon adható.
+   */
+  complimentary?: boolean | null;
+  /**
    * Átutalás / készpénz — ha nem online fizetett.
    */
   paidOffline?: boolean | null;
@@ -5102,6 +5106,7 @@ export interface ApplicationsSelect<T extends boolean = true> {
   cancelledAt?: T;
   order?: T;
   holdUntil?: T;
+  complimentary?: T;
   paidOffline?: T;
   paymentNote?: T;
   staffNotes?: T;
@@ -6055,6 +6060,30 @@ export interface EmailText {
       accountExisting?: string | null;
     };
     /**
+     * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai); {hol} — helyszín; {jegyek} — a foglalt jegyek száma.
+     */
+    ticketComplimentary: {
+      subject: string;
+      /**
+       * A levelezőben a tárgy után.
+       */
+      preheader?: string | null;
+      heading: string;
+      /**
+       * A bekezdéseket üres sor választja el. A megszólítás automatikus.
+       */
+      text: string;
+      button: string;
+      /**
+       * A levél végén.
+       */
+      accountCreated?: string | null;
+      /**
+       * A levél végén.
+       */
+      accountExisting?: string | null;
+    };
+    /**
      * Beírható: {keresztnev} — a címzett keresztneve; {cim} — mire szól (alkalom, csoport neve); {mikor} — mikor (időpont vagy a kurzus dátumai); {hol} — helyszín; {jegyek} — a foglalt jegyek száma; {osszeg} — összeg (pl. 5000 Ft); {hatarido} — meddig tartjuk a helyet / fizetési határidő.
      */
     ticketPaymentLink: {
@@ -6701,6 +6730,17 @@ export interface EmailTextsSelect<T extends boolean = true> {
     | T
     | {
         ticketBooked?:
+          | T
+          | {
+              subject?: T;
+              preheader?: T;
+              heading?: T;
+              text?: T;
+              button?: T;
+              accountCreated?: T;
+              accountExisting?: T;
+            };
+        ticketComplimentary?:
           | T
           | {
               subject?: T;

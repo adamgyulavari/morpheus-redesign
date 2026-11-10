@@ -54,6 +54,7 @@ import * as migration_20261105_233548_faq_block from './20261105_233548_faq_bloc
 import * as migration_20261105_233847_mcp_api_keys from './20261105_233847_mcp_api_keys';
 import * as migration_20261109_173425_show_sold_out from './20261109_173425_show_sold_out';
 import * as migration_20261109_173500_sold_out_text from './20261109_173500_sold_out_text';
+import * as migration_20261110_180248_complimentary_tickets from './20261110_180248_complimentary_tickets';
 
 export const migrations = [
   {
@@ -319,21 +320,26 @@ export const migrations = [
   {
     up: migration_20261105_233548_faq_block.up,
     down: migration_20261105_233548_faq_block.down,
-    name: '20261105_233548_faq_block'
+    name: '20261105_233548_faq_block',
   },
   {
     up: migration_20261105_233847_mcp_api_keys.up,
     down: migration_20261105_233847_mcp_api_keys.down,
-    name: '20261105_233847_mcp_api_keys'
+    name: '20261105_233847_mcp_api_keys',
   },
   {
     up: migration_20261109_173425_show_sold_out.up,
     down: migration_20261109_173425_show_sold_out.down,
-    name: '20261109_173425_show_sold_out'
+    name: '20261109_173425_show_sold_out',
   },
   {
     up: migration_20261109_173500_sold_out_text.up,
     down: migration_20261109_173500_sold_out_text.down,
     name: '20261109_173500_sold_out_text',
+  },
+  {
+    up: migration_20261110_180248_complimentary_tickets.up,
+    down: migration_20261110_180248_complimentary_tickets.down,
+    name: '20261110_180248_complimentary_tickets'
   },
 ];
