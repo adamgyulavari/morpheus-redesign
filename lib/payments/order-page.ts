@@ -12,6 +12,7 @@ import type { Order } from '@/payload-types';
 import { lapsed, lockOrder, orderByToken, type Result, releaseHold } from './orders';
 import { targetOf } from './target';
 import { applyPaymentUpdate } from './updates';
+import { accountPrice } from './workshop-price';
 
 export type OrderView = {
   status: Order['status'];
@@ -60,11 +61,13 @@ export async function orderStatus(payload: Payload, token: string, now = new Dat
   const application = applicationId
     ? await payload.findByID({ collection: 'applications', id: applicationId, depth: 0, disableErrors: true })
     : null;
+  // a workshop: what "Fizetés" will charge the account now (retryPayment reprices it the same way)
+  const priced = await accountPrice(payload, order);
   return {
     status: order.status,
     kind: order.kind,
-    label: order.label,
-    amountDue: order.amountDue,
+    label: priced?.label ?? order.label,
+    amountDue: priced?.amount ?? order.amountDue,
     expiresAt: order.expiresAt ?? null,
     lastFailed: Boolean(payment && ['failed', 'expired', 'canceled'].includes(payment.status)),
     lapsed: lapsed(order, now),
