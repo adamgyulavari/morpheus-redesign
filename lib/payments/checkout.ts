@@ -233,10 +233,23 @@ async function order(
 
   // back again with an unpaid order (held or lapsed): the same order, a new payment
   const again = await heldOrderOf(payload, applicant.userId, d.again);
-  if (again) return payOrder(payload, again, applicant.email, now);
+  if (again) return payOrder(payload, await repriced(payload, again, d.order), applicant.email, now);
   const replaced = d.replaces && (await heldOrderOf(payload, applicant.userId, d.replaces));
   if (replaced) await cancelOrder(payload, replaced.token);
   return placeOrder(payload, applicant, billing, holdMinutes, now, d);
+}
+
+/**
+ * An unpaid order paid again takes this checkout's price (e.g. started logged out, back logged in as
+ * a student). Nothing was paid yet; a late payment of the old amount is a mismatch staff are told about.
+ */
+async function repriced(payload: Payload, order: Order, now: NewOrder['order']): Promise<Order> {
+  if (order.amountDue === now.amount && order.label === now.label) return order;
+  return payload.update({
+    collection: 'orders',
+    id: order.id,
+    data: { label: now.label, price: now.amount, amountDue: now.amount, ...(now.plan ? { plan: now.plan } : {}) },
+  });
 }
 
 /** The person's unpaid order for this target (held, or its hold ran out), if any. */
