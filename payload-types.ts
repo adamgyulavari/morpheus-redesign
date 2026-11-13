@@ -5551,6 +5551,10 @@ export interface ApplicationSetting {
    */
   userCancelHours: number;
   /**
+   * A Hallgató szerepkörű felhasználók belépve ennyivel kevesebbet fizetnek a Nyitott Műhelyért (0: nincs kedvezmény).
+   */
+  studentDiscountPercent: number;
+  /**
    * A Teremnaptár „Hónap feltöltése” ezekkel hozza létre a Nyitott Műhely időpontjait (a nap, az idő és a terem ott még átírható).
    */
   workshopDefaults?: {
@@ -6449,6 +6453,7 @@ export interface ApplicationSettingsSelect<T extends boolean = true> {
       };
   workshopCutoffHours?: T;
   userCancelHours?: T;
+  studentDiscountPercent?: T;
   workshopDefaults?:
     | T
     | {

@@ -500,6 +500,7 @@ const ACCOUNT = {
       installments: 'Részletek — {parts} = hány, {amount} = egy részlet',
       due: 'Fizetendő',
       dueNow: 'Most fizetendő (részletnél)',
+      studentPrice: 'Nyitott Műhely: hallgatói ár (a Fizetendő alatt) — {percent} = kedvezmény %',
       terms: 'ÁSZF elfogadása — <terms>…</terms> = az ÁSZF, <cancel>…</cancel> = a lemondási feltételek linkje',
       pay: 'Fizetés gomb — {amount} = összeg',
       secure: 'Biztonságos fizetés (a szolgáltató előtt)',

@@ -334,6 +334,19 @@ export const ApplicationSettings: GlobalConfig = {
               ],
             },
             {
+              name: 'studentDiscountPercent',
+              label: 'Hallgatói kedvezmény (%)',
+              type: 'number',
+              required: true,
+              min: 0,
+              max: 100,
+              defaultValue: 50,
+              admin: {
+                description:
+                  'A Hallgató szerepkörű felhasználók belépve ennyivel kevesebbet fizetnek a Nyitott Műhelyért (0: nincs kedvezmény).',
+              },
+            },
+            {
               name: 'workshopDefaults',
               label: 'Nyitott Műhely alapértékek',
               type: 'group',

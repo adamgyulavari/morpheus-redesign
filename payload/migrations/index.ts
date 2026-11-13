@@ -55,6 +55,7 @@ import * as migration_20261105_233847_mcp_api_keys from './20261105_233847_mcp_a
 import * as migration_20261109_173425_show_sold_out from './20261109_173425_show_sold_out';
 import * as migration_20261109_173500_sold_out_text from './20261109_173500_sold_out_text';
 import * as migration_20261110_180248_complimentary_tickets from './20261110_180248_complimentary_tickets';
+import * as migration_20261113_105953_student_workshop_price from './20261113_105953_student_workshop_price';
 
 export const migrations = [
   {
@@ -341,5 +342,10 @@ export const migrations = [
     up: migration_20261110_180248_complimentary_tickets.up,
     down: migration_20261110_180248_complimentary_tickets.down,
     name: '20261110_180248_complimentary_tickets'
+  },
+  {
+    up: migration_20261113_105953_student_workshop_price.up,
+    down: migration_20261113_105953_student_workshop_price.down,
+    name: '20261113_105953_student_workshop_price',
   },
 ];
