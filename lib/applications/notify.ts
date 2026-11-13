@@ -32,6 +32,8 @@ export type TargetInfo = {
   when?: string;
   place?: string;
   price?: string;
+  /** The full price, crossed out next to `price` (a student's Nyitott Műhely). */
+  priceWas?: string;
   /** Workshop: minimum, decision time; for the sign-up e-mail. */
   minParticipants?: number;
   cutoff?: Date;
@@ -44,6 +46,10 @@ const MY_ACCOUNT = '/fiokom';
 /** The site's price format ("6000 Ft", "45 000 Ft"); undefined without a price. */
 export const huf = (n: number | null | undefined) => (n == null ? undefined : formatHuf(n));
 
+/** The info with the price paid, and the full price crossed out when that was less. */
+export const pricedAt = (t: TargetInfo, price: number, listPrice: number): TargetInfo =>
+  price < listPrice ? { ...t, price: huf(price), priceWas: huf(listPrice) } : t;
+
 export type Row = { label: string; value: string; was?: string };
 
 /** The rows about the date or course (labels: E-mailek → Közös). */
@@ -51,7 +57,7 @@ export const details = (c: Common, t: TargetInfo, extra: Row[] = []): Row[] => [
   { label: c.labelWhat, value: t.title },
   ...(t.when ? [{ label: c.labelWhen, value: t.when }] : []),
   ...(t.place ? [{ label: c.labelWhere, value: t.place }] : []),
-  ...(t.price ? [{ label: c.labelPrice, value: t.price }] : []),
+  ...(t.price ? [{ label: c.labelPrice, value: t.price, was: t.priceWas }] : []),
   ...(t.seats ? [{ label: c.labelSeats, value: String(t.seats) }] : []),
   ...extra,
 ];

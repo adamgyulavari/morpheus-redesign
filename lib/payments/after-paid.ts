@@ -5,7 +5,7 @@
  */
 import type { Payload } from 'payload';
 
-import { sendAccepted } from '@/lib/applications/notify';
+import { pricedAt, sendAccepted } from '@/lib/applications/notify';
 import {
   applicantOf,
   countText,
@@ -40,7 +40,7 @@ export async function afterPaid(payload: Payload, orderId: number) {
   const money = { price: order.price, amountDue: order.amountDue };
   if (order.kind === 'workshop') {
     const s = await payload.findByID({ collection: 'sessions', id: relId(application.session) ?? 0, depth: 0 });
-    const info = await workshopInfo(payload, s, settings);
+    const info = pricedAt(await workshopInfo(payload, s, settings), order.price, s.workshop?.price ?? 0);
     await sendOrderPaid(payload, applicant, info, money, {
       loggedIn: false,
       ics: workshopIcs(application.id, s, info),

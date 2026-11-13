@@ -27,6 +27,7 @@ import {
   showState,
   takesPlace,
   type WorkshopFacts,
+  workshopPrice,
   workshopState,
 } from './rules';
 
@@ -115,6 +116,18 @@ describe('signing up for a workshop', () => {
 
   it('not once it has started', () => {
     expect(canSignUpWorkshop(workshop({ workshopStatus: 'confirmed' }), hoursBefore(-0.1), rules).ok).toBe(false);
+  });
+});
+
+describe('the workshop price', () => {
+  it('students pay the discount less, others the full price', () => {
+    expect(workshopPrice(5000, 50, true)).toEqual({ price: 2500, listPrice: 5000, discountPercent: 50 });
+    expect(workshopPrice(5000, 50, false)).toEqual({ price: 5000, listPrice: 5000, discountPercent: 0 });
+  });
+  it('rounds to whole forints and keeps the percent between 0 and 100', () => {
+    expect(workshopPrice(3333, 50, true).price).toBe(1667);
+    expect(workshopPrice(5000, 150, true).price).toBe(0);
+    expect(workshopPrice(5000, -10, true).price).toBe(5000);
   });
 });
 

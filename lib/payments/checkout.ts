@@ -10,8 +10,8 @@ import { randomBytes } from 'node:crypto';
 import type { Payload, Where } from 'payload';
 
 import { fits } from '@/lib/applications/capacity';
-import type { Applicant, TargetInfo } from '@/lib/applications/notify';
-import { canBookShow, canSignUpWorkshop } from '@/lib/applications/rules';
+import { type Applicant, pricedAt, type TargetInfo } from '@/lib/applications/notify';
+import { canBookShow, canSignUpWorkshop, workshopPrice } from '@/lib/applications/rules';
 import {
   type ApplicantInput,
   applicantFor,
@@ -29,6 +29,7 @@ import { ownHeldSeats, seatsTaken, showFacts, showInfo, ticketPrice } from '@/li
 import { say } from '@/lib/messages';
 import { whenText } from '@/lib/rooms/format';
 import { errorMessage } from '@/lib/rooms/server';
+import { hasRole } from '@/payload/access';
 import { siteUrl } from '@/payload/email';
 import { relId } from '@/payload/rel';
 import { uiTexts } from '@/payload/ui-texts';
@@ -67,14 +68,22 @@ export async function checkout(
   const verdict = canSignUpWorkshop(workshopFacts(s, taken), now, settings);
   if (!verdict.ok) return { ok: false, reason: say(ui.signupRules, verdict) };
 
+  const { price, listPrice, discountPercent } = workshopPrice(
+    s.workshop?.price ?? 0,
+    settings.studentDiscountPercent,
+    hasRole(viewer, 'student'),
+  );
   return order(payload, viewer, input, begun, now, {
     again: { session: { equals: s.id } },
-    info: await workshopInfo(payload, s, settings),
+    info: pricedAt(await workshopInfo(payload, s, settings), price, listPrice),
     application: { kind: 'workshop', session: s.id },
     order: {
       kind: 'workshop',
-      label: `${s.displayTitle ?? 'Nyitott Műhely'} — ${whenText(s.start, s.end, 'long')}`,
-      amount: Math.max(0, Math.round(s.workshop?.price ?? 0)),
+      label: [
+        `${s.displayTitle ?? 'Nyitott Műhely'} — ${whenText(s.start, s.end, 'long')}`,
+        discountPercent ? ` (hallgatói ár, −${discountPercent}%)` : '',
+      ].join(''),
+      amount: price,
     },
   });
 }

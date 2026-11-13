@@ -144,6 +144,13 @@ export function canMove(
   return canSignUpWorkshop(to.workshop, now, r);
 }
 
+/** A Nyitott Műhely's price for this person: logged-in students pay `discountPercent` less (whole forints). */
+export function workshopPrice(listPrice: number, discountPercent: number, isStudent: boolean) {
+  const full = Math.max(0, Math.round(listPrice));
+  const percent = isStudent ? Math.min(100, Math.max(0, discountPercent)) : 0;
+  return { price: Math.round((full * (100 - percent)) / 100), listPrice: full, discountPercent: percent };
+}
+
 // ── courses ─────────────────────────────────────────────────────────────────
 
 export type CourseFacts = {

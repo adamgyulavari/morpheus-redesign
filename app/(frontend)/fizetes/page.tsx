@@ -5,7 +5,7 @@ import { accountMetadata } from '@/components/account/meta';
 import CheckoutForm from '@/components/payments/CheckoutForm';
 import CheckoutNotice from '@/components/payments/CheckoutNotice';
 import CheckoutSummary from '@/components/payments/CheckoutSummary';
-import { workshopState } from '@/lib/applications/rules';
+import { workshopPrice, workshopState } from '@/lib/applications/rules';
 import { NOBODY, takenBy, workshopFacts, workshopInfo } from '@/lib/applications/server';
 import { applicationSettings } from '@/lib/applications/settings';
 import { getCurrentUser, payloadClient } from '@/lib/auth';
@@ -17,6 +17,7 @@ import { checkoutMe } from '@/lib/payments/me';
 import { paymentProvider } from '@/lib/payments/providers';
 import { billingSettings } from '@/lib/payments/settings';
 import { sessionByCode } from '@/lib/payments/target';
+import { hasRole } from '@/payload/access';
 import type { Session } from '@/payload-types';
 
 // per visitor and per moment (places, holds), never cached
@@ -57,13 +58,19 @@ async function Body({ session: s, code }: { session: Session; code: string }) {
     return <CheckoutNotice text={t.closed} back={otherDates} />;
 
   const info = await workshopInfo(payload, s, settings);
+  const { price, listPrice, discountPercent } = workshopPrice(
+    s.workshop?.price ?? 0,
+    settings.studentDiscountPercent,
+    hasRole(viewer, 'student'),
+  );
   const needs = state.state === 'open' ? fill(ui.sessions.needed, { count: state.needed }) : ui.sessions.confirmed;
   return (
     <CheckoutForm
       kind="workshop"
       action={checkoutAction}
       hidden={{ alkalom: code }}
-      price={Math.max(0, s.workshop?.price ?? 0)}
+      price={price}
+      discount={discountPercent ? { listPrice, note: fill(t.studentPrice, { percent: discountPercent }) } : undefined}
       loginHref={`/belepes?vissza=${encodeURIComponent(checkoutPath(code))}`}
       provider={paymentProvider().brand}
       summary={
