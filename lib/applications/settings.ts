@@ -18,6 +18,8 @@ export type WorkshopDefaults = {
 
 export type ApplicationSettings = ApplicationRules & {
   notifyEmails: string[];
+  /** Nyitott Műhely: what logged-in students pay less, in percent. */
+  studentDiscountPercent: number;
   workshopDefaults: WorkshopDefaults;
 };
 
@@ -32,6 +34,7 @@ export function settingsFrom(doc: Record<string, unknown> | null | undefined): A
     workshopCutoffHours: num(doc?.workshopCutoffHours, DEFAULT_RULES.workshopCutoffHours),
     userCancelHours: num(doc?.userCancelHours, DEFAULT_RULES.userCancelHours),
     notifyEmails: emails,
+    studentDiscountPercent: Math.min(100, num(doc?.studentDiscountPercent, 50)),
     workshopDefaults: {
       weekday: Number(w.weekday) || 6,
       startTime: clock(w.startTime, '14:00'),

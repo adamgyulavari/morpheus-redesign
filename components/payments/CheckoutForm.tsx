@@ -42,6 +42,8 @@ type Props = {
   /** Tickets: `price` is one ticket's, the person picks how many (sent as `jegyek`); `loginAfter`: the "Van már fiókod?" line's end. */
   perSeat?: { max: number; label: string; loginAfter: string };
   options?: PayOption[];
+  /** A lower price for this person (a student's Nyitott Műhely): the full price crossed out, and why. */
+  discount?: { listPrice: number; note: string };
   defaultOption?: string;
   loginHref: string;
   /** The order: when (the card's heading), where, the places note (server-rendered). */
@@ -62,6 +64,7 @@ export default function CheckoutForm({
   price = 0,
   perSeat,
   options,
+  discount,
   defaultOption,
   loginHref,
   summary,
@@ -174,7 +177,11 @@ export default function CheckoutForm({
             <span className="text-[16px] font-semibold leading-none">
               {chosen && chosen.parts > 1 ? t.dueNow : t.due}
             </span>
-            <span className="font-display text-[32px] leading-none">{formatHuf(due)}</span>
+            <span className="flex flex-col items-end gap-1.5">
+              {discount && <s className="text-[15px] leading-none text-muted">{formatHuf(discount.listPrice)}</s>}
+              <span className="font-display text-[32px] leading-none">{formatHuf(due)}</span>
+              {discount && <span className="text-[13px] font-semibold leading-none text-teal">{discount.note}</span>}
+            </span>
           </div>
           <ul className="flex list-disc flex-col gap-1.5 pl-4 text-[13px] leading-snug text-muted">
             {policy.map((p) => (

@@ -17,6 +17,7 @@ import { paymentProvider } from './providers';
 import { afterOrderRefund, refundAutomatically, refundedOf, refundRows } from './refunds';
 import { sameTarget } from './target';
 import { movesForward, type ProviderStatus, paidOrLater } from './types';
+import { atPaidAmount } from './workshop-price';
 
 type Effect =
   | { type: 'paid'; orderId: number }
@@ -98,12 +99,13 @@ export async function applyPaymentUpdate(
     // only the first time a payment counts as paid does anything follow
     if (!paidOrLater(truth.status) || paidOrLater(from)) return true;
 
-    if (truth.amount !== order.amountDue) {
+    // checked against what this payment was started for: the order's price may have changed since
+    if (truth.amount !== payment.amount) {
       effects.push({
         type: 'mismatch',
         orderId: order.id,
         providerPaymentId,
-        expected: order.amountDue,
+        expected: payment.amount,
         got: truth.amount,
       });
       return true;
@@ -120,7 +122,7 @@ export async function applyPaymentUpdate(
       return true;
     }
     if (await mayKeepPlace(req, order, now)) {
-      await confirmOrder(req, order);
+      await confirmOrder(req, await atPaidAmount(req, order, truth.amount));
       effects.push({ type: 'paid', orderId: order.id });
     } else {
       await releaseHold(req, order, 'A fizetés a foglalási idő után érkezett; a hely közben betelt.');

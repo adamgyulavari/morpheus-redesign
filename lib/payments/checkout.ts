@@ -10,7 +10,7 @@ import { randomBytes } from 'node:crypto';
 import type { Payload, Where } from 'payload';
 
 import { fits } from '@/lib/applications/capacity';
-import type { Applicant, TargetInfo } from '@/lib/applications/notify';
+import { type Applicant, pricedAt, type TargetInfo } from '@/lib/applications/notify';
 import { canBookShow, canSignUpWorkshop } from '@/lib/applications/rules';
 import {
   type ApplicantInput,
@@ -27,8 +27,8 @@ import {
 import { applicationSettings } from '@/lib/applications/settings';
 import { ownHeldSeats, seatsTaken, showFacts, showInfo, ticketPrice } from '@/lib/applications/shows';
 import { say } from '@/lib/messages';
-import { whenText } from '@/lib/rooms/format';
 import { errorMessage } from '@/lib/rooms/server';
+import { hasRole } from '@/payload/access';
 import { siteUrl } from '@/payload/email';
 import { relId } from '@/payload/rel';
 import { uiTexts } from '@/payload/ui-texts';
@@ -41,6 +41,7 @@ import { confirmOrder, lapsed, lockOrder, orderByToken, queueFollowUps, type Res
 import { paymentProvider } from './providers';
 import { billingSettings } from './settings';
 import { courseTarget, targetOf } from './target';
+import { accountPrice, repriced, workshopOrder } from './workshop-price';
 
 type Started = Result<{ token: string; checkoutUrl: string | null }>;
 
@@ -67,15 +68,12 @@ export async function checkout(
   const verdict = canSignUpWorkshop(workshopFacts(s, taken), now, settings);
   if (!verdict.ok) return { ok: false, reason: say(ui.signupRules, verdict) };
 
+  const priced = workshopOrder(s, settings.studentDiscountPercent, hasRole(viewer, 'student'));
   return order(payload, viewer, input, begun, now, {
     again: { session: { equals: s.id } },
-    info: await workshopInfo(payload, s, settings),
+    info: pricedAt(await workshopInfo(payload, s, settings), priced.amount, s.workshop?.price ?? 0),
     application: { kind: 'workshop', session: s.id },
-    order: {
-      kind: 'workshop',
-      label: `${s.displayTitle ?? 'Nyitott Műhely'} — ${whenText(s.start, s.end, 'long')}`,
-      amount: Math.max(0, Math.round(s.workshop?.price ?? 0)),
-    },
+    order: { kind: 'workshop', ...priced },
   });
 }
 
@@ -222,9 +220,9 @@ async function order(
   if (viewer || created)
     await payload.update({ collection: 'users', id: applicant.userId, data: { billing } }).catch(() => {});
 
-  // back again with an unpaid order (held or lapsed): the same order, a new payment
+  // back again with an unpaid order (held or lapsed): the same order at this page's price, a new payment
   const again = await heldOrderOf(payload, applicant.userId, d.again);
-  if (again) return payOrder(payload, again, applicant.email, now);
+  if (again) return payOrder(payload, await repriced(payload, again, d.order), applicant.email, now);
   const replaced = d.replaces && (await heldOrderOf(payload, applicant.userId, d.replaces));
   if (replaced) await cancelOrder(payload, replaced.token);
   return placeOrder(payload, applicant, billing, holdMinutes, now, d);
@@ -347,7 +345,9 @@ export async function retryPayment(payload: Payload, token: string, now = new Da
   const o = await orderByToken(payload, token);
   if (o?.status !== 'pending') return { ok: false, reason: (await uiTexts(payload)).checkoutErrors.orderClosed };
   const user = await payload.findByID({ collection: 'users', id: relId(o.user) ?? 0, depth: 0 });
-  return payOrder(payload, o, user.email, now);
+  // a workshop: the account's price now (a student's, also when not logged in)
+  const priced = await accountPrice(payload, o);
+  return payOrder(payload, priced ? await repriced(payload, o, priced) : o, user.email, now);
 }
 
 /** A new provider payment for a pending order. */
