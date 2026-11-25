@@ -1,13 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="1112 0 2080 2080" style="fill-rule:evenodd;clip-rule:evenodd">
  <!-- The favicon: the header logo (public/logo.svg) -->
+ <title>Morpheus Színműhely</title>
  <defs>
   <style type="text/css">
-   <![CDATA[
     .fil2 {fill:black;fill-rule:nonzero}
     .fil3 {fill:#167779;fill-rule:nonzero}
     .fil1 {fill:url(#id0)}
     .fil0 {fill:url(#id1)}
-   ]]>
   </style>
   <linearGradient id="id0" gradientUnits="userSpaceOnUse" x1="2132.82" y1="1917.61" x2="2147.57" y2="233.36">
    <stop offset="0" style="stop-opacity:1; stop-color:#0C494A"/>
