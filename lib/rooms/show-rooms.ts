@@ -4,7 +4,7 @@
  * striking), saved with the show — by hand or by the Facebook sync. Whatever is in the way is
  * cancelled: student practice (the student gets the usual e-mail), other bookings and sessions
  * (no e-mail: the staff see them in the show's note and the sync's result, and talk to whoever
- * needs it). Moved, hidden, at another venue or deleted: the session follows or goes; otherwise
+ * needs it) — but not another show's session: then the show isn't saved, with the clash. Moved, hidden, at another venue or deleted: the session follows or goes; otherwise
  * it is left alone (its times may be changed by hand).
  */
 import type { PayloadRequest } from 'payload';
@@ -94,6 +94,8 @@ export async function placeShow(req: PayloadRequest, show: ShowDoc, previous?: S
         req,
         overrideAccess: true,
       });
+      // another show is never cancelled: saving this one is refused with the clash instead
+      if (docs[0]?.kind === 'show') continue;
       if (docs[0]) {
         req.context.silent = true;
         try {

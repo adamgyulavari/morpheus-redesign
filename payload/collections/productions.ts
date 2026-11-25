@@ -325,6 +325,7 @@ export const Shows: CollectionConfig = {
       type: 'text',
       unique: true,
       index: true,
+      hooks: { beforeDuplicate: [() => null] },
       admin: { position: 'sidebar', readOnly: true, description: 'A szinkron tölti ki.' },
     },
     {
@@ -333,10 +334,13 @@ export const Shows: CollectionConfig = {
       type: 'checkbox',
       defaultValue: false,
       index: true,
+      // a copy (Duplikálás) is saved at once, at the original's date: hidden (off the site, taking no
+      // rooms) until its date is set and this is unticked
+      hooks: { beforeDuplicate: [() => true] },
       admin: {
         position: 'sidebar',
         description:
-          'Nem jelenik meg az oldalon. A szinkron kapcsolja be, ha az esemény a Facebookon elmarad vagy törölték.',
+          'Nem jelenik meg az oldalon. A szinkron kapcsolja be, ha az esemény a Facebookon elmarad vagy törölték. A duplikált időpont elrejtve jön létre: állítsd be a dátumát, és kapcsold ki.',
       },
     },
     relationship('production', 'Előadás', 'productions', { required: true }),
@@ -436,7 +440,14 @@ export const Shows: CollectionConfig = {
       ],
     },
     // the date's public code: its booking link (/fizetes?eloadas=…), not the sequential id
-    { name: 'code', type: 'text', unique: true, index: true, admin: { hidden: true } },
+    {
+      name: 'code',
+      type: 'text',
+      unique: true,
+      index: true,
+      admin: { hidden: true },
+      hooks: { beforeDuplicate: [() => null] },
+    },
     {
       name: 'info',
       label: 'Tudnivalók',

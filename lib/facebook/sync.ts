@@ -9,6 +9,7 @@
 import type { Payload } from 'payload';
 
 import { todayInBudapest } from '@/lib/dates';
+import { errorMessage } from '@/lib/rooms/server';
 import { relId } from '@/payload/rel';
 import type { Show } from '@/payload-types';
 
@@ -94,29 +95,34 @@ export async function syncFromFacebook(payload: Payload, notify: boolean, events
       shows.find(
         (s) => !s.facebookEventId && relId(s.production) === production.id && String(s.date).slice(0, 10) === date,
       );
-    if (!target) {
-      const doc = await payload.create({
-        collection: 'shows',
-        data: { ...w, bookingMode: 'external', facebookEventId: e.id, hidden: false },
-        context,
-      });
-      result.created.push({ ...line, showId: doc.id });
-      if (doc.roomNote) result.rooms.push({ ...line, showId: doc.id, note: doc.roomNote });
-    } else if (!own || differs(target, forShow(target, w))) {
-      const doc = await payload.update({
-        collection: 'shows',
-        id: target.id,
-        data: { ...forShow(target, w), facebookEventId: e.id, hidden: false },
-        context,
-      });
-      if (doc.roomNote && doc.roomNote !== target.roomNote)
-        result.rooms.push({ ...line, showId: target.id, note: doc.roomNote });
-      result.updated.push({
-        ...line,
-        showId: target.id,
-        note: own ? undefined : 'a kézzel felvitt időpontot vettük át',
-      });
-    } else result.unchanged++;
+    // one event refused (e.g. on top of another show at our venue) doesn't stop the others
+    try {
+      if (!target) {
+        const doc = await payload.create({
+          collection: 'shows',
+          data: { ...w, bookingMode: 'external', facebookEventId: e.id, hidden: false },
+          context,
+        });
+        result.created.push({ ...line, showId: doc.id });
+        if (doc.roomNote) result.rooms.push({ ...line, showId: doc.id, note: doc.roomNote });
+      } else if (!own || differs(target, forShow(target, w))) {
+        const doc = await payload.update({
+          collection: 'shows',
+          id: target.id,
+          data: { ...forShow(target, w), facebookEventId: e.id, hidden: false },
+          context,
+        });
+        if (doc.roomNote && doc.roomNote !== target.roomNote)
+          result.rooms.push({ ...line, showId: target.id, note: doc.roomNote });
+        result.updated.push({
+          ...line,
+          showId: target.id,
+          note: own ? undefined : 'a kézzel felvitt időpontot vettük át',
+        });
+      } else result.unchanged++;
+    } catch (err) {
+      result.problems.push({ ...line, note: errorMessage(err) });
+    }
   }
 
   // gone from Facebook (deleted): its upcoming date is hidden
