@@ -956,7 +956,7 @@ export interface Show {
    */
   facebookEventId?: string | null;
   /**
-   * Nem jelenik meg az oldalon. A szinkron kapcsolja be, ha az esemény a Facebookon elmarad vagy törölték.
+   * Nem jelenik meg az oldalon. A szinkron kapcsolja be, ha az esemény a Facebookon elmarad vagy törölték. A duplikált időpont elrejtve jön létre: állítsd be a dátumát, és kapcsold ki.
    */
   hidden?: boolean | null;
   production: number | Production;

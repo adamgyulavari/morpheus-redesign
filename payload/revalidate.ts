@@ -35,6 +35,9 @@ const DATE_DEPENDENT: BlockType[] = [
   'pageHero',
 ];
 
+/** Every production page (app/(frontend)/repertoar/[slug]/page.tsx). */
+const PRODUCTION_PAGES = '/(frontend)/repertoar/[slug]';
+
 /** Also re-render every production page (they list shows and the closing CTA band). */
 const AFFECTS_PRODUCTION_PAGES = new Set(['shows', 'productions', 'venues', 'ctaBands']);
 
@@ -63,7 +66,8 @@ async function pagesWith(payload: Payload, types: BlockType[]): Promise<string[]
 
 export async function revalidatePagesWith(payload: Payload, types: BlockType[], productionPages = false) {
   for (const path of await pagesWith(payload, types)) revalidate(payload, path);
-  if (productionPages) revalidate(payload, '/repertoar/[slug]', 'page');
+  // a route pattern names the page file, route group included (Next 16): without "(frontend)" it matched nothing
+  if (productionPages) revalidate(payload, PRODUCTION_PAGES, 'page');
 }
 
 /** Everything date-dependent — run hourly by the `revalidateDates` job. */
