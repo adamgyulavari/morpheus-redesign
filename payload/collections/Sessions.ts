@@ -93,6 +93,9 @@ function edited(before: SessionDoc, after: SessionDoc): boolean {
   );
 }
 
+/** A copy of a session (Duplikálás) gets its own code and booking, and no place in the month's fill. */
+const notCopied = () => null;
+
 /**
  * What happens when: a course meeting, a rehearsal, an exam, a show. It belongs to a course group
  * or a production, and has one place — a room booking it owns, an external place, or none yet.
@@ -167,7 +170,7 @@ export const Sessions: CollectionConfig = {
     afterChange: [
       async ({ doc, req }) => {
         const s = doc as SessionDoc & { id: number };
-        const bookingId = relId(s.booking);
+        const bookingId = await ownBooking(req, s.id, relId(s.booking));
         if (s.locationType === 'room' && s.status === 'scheduled') {
           const booking = {
             kind: 'session' as const,
@@ -215,7 +218,14 @@ export const Sessions: CollectionConfig = {
   },
   fields: [
     { name: 'displayTitle', label: 'Megnevezés', type: 'text', index: true, admin: { readOnly: true, hidden: true } },
-    { name: 'code', type: 'text', unique: true, index: true, admin: { hidden: true } },
+    {
+      name: 'code',
+      type: 'text',
+      unique: true,
+      index: true,
+      admin: { hidden: true },
+      hooks: { beforeDuplicate: [notCopied] },
+    },
     text('title', 'Cím', { description: 'Üresen a csoport vagy az előadás nevéből készül.' }),
     {
       type: 'row',
@@ -260,6 +270,8 @@ export const Sessions: CollectionConfig = {
       defaultValue: 'room',
       index: true,
       options: options(LOCATION_TYPES),
+      // a copy is saved at once, at the original's time: it waits unplaced (its rooms kept) until moved
+      hooks: { beforeDuplicate: [({ value }) => (value === 'room' ? 'unplaced' : value)] },
     },
     {
       ...relationship('rooms', 'Termek', 'rooms', { hasMany: true }),
@@ -278,6 +290,7 @@ export const Sessions: CollectionConfig = {
     {
       ...relationship('show', 'Előadás-időpont', 'shows'),
       index: true,
+      hooks: { beforeDuplicate: [notCopied] },
       admin: {
         readOnly: true,
         position: 'sidebar',
@@ -287,6 +300,7 @@ export const Sessions: CollectionConfig = {
     },
     {
       ...relationship('booking', 'Teremfoglalás', 'roomBookings'),
+      hooks: { beforeDuplicate: [notCopied] },
       admin: { readOnly: true, position: 'sidebar', description: 'Automatikus: az alkalom ideje és termei szerint.' },
     },
     textarea('notes', 'Belső megjegyzés', { description: 'Csak a munkatársak látják.' }),
@@ -373,9 +387,27 @@ export const Sessions: CollectionConfig = {
       type: 'group',
       admin: { position: 'sidebar', condition: (_, s) => Boolean(s?.generatedFrom?.day) },
       fields: [
-        { ...relationship('courseGroup', 'Csoport', 'courseGroups'), index: true, admin: { readOnly: true } },
-        { name: 'entry', label: 'Órarend-sor', type: 'number', admin: { readOnly: true } },
-        { name: 'day', label: 'Eredeti nap', type: 'text', index: true, admin: { readOnly: true } },
+        {
+          ...relationship('courseGroup', 'Csoport', 'courseGroups'),
+          index: true,
+          admin: { readOnly: true },
+          hooks: { beforeDuplicate: [notCopied] },
+        },
+        {
+          name: 'entry',
+          label: 'Órarend-sor',
+          type: 'number',
+          admin: { readOnly: true },
+          hooks: { beforeDuplicate: [notCopied] },
+        },
+        {
+          name: 'day',
+          label: 'Eredeti nap',
+          type: 'text',
+          index: true,
+          admin: { readOnly: true },
+          hooks: { beforeDuplicate: [notCopied] },
+        },
       ],
     },
     {
@@ -395,8 +427,30 @@ export const Sessions: CollectionConfig = {
   ],
 };
 
+/**
+ * The linked booking if it is this session's own: one copied from another session (an older
+ * duplicate) belongs to that session and is left alone; this session then gets its own.
+ */
+async function ownBooking(req: PayloadRequest, sessionId: number, bookingId: number | null | undefined) {
+  if (!bookingId) return null;
+  const booking = await req.payload.findByID({
+    collection: 'roomBookings',
+    id: bookingId,
+    depth: 0,
+    disableErrors: true,
+    req,
+    overrideAccess: true,
+  });
+  return booking && relId(booking.session) === sessionId ? bookingId : null;
+}
+
 /** Deletes a session's booking (its own; not a "the booking was removed" event for the session). */
-async function releaseBooking(req: PayloadRequest, sessionId: number, bookingId: number, unlink = true) {
+async function releaseBooking(req: PayloadRequest, sessionId: number, linkedId: number, unlink = true) {
+  const bookingId = await ownBooking(req, sessionId, linkedId);
+  if (!bookingId) {
+    if (unlink) await req.payload.db.updateOne({ collection: 'sessions', id: sessionId, data: { booking: null }, req });
+    return;
+  }
   const previous = req.context.releasingBookingOf;
   req.context.releasingBookingOf = sessionId;
   try {
