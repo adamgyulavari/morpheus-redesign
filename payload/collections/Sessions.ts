@@ -120,6 +120,8 @@ export const Sessions: CollectionConfig = {
     beforeChange: [
       async ({ data, originalDoc, operation, req }) => {
         const before = (originalDoc ?? {}) as SessionDoc;
+        // only the hooks link a booking (directly in the db): a stale admin form can't put back an old one
+        data.booking = before.booking ?? null;
         const s = { ...before, ...(data as SessionDoc) };
         const start = new Date(s.start ?? '');
         const end = new Date(s.end ?? '');
@@ -208,13 +210,15 @@ export const Sessions: CollectionConfig = {
       // the Nyitott Műhely dates are on the public site
       ...(revalidation.afterChange ?? []),
     ],
-    afterDelete: [
-      async ({ doc, req }) => {
-        const bookingId = relId((doc as SessionDoc).booking);
-        if (bookingId) await releaseBooking(req, (doc as { id: number }).id, bookingId, false);
+    // before: once the session is gone, its booking no longer points at it (foreign key) and stays behind
+    beforeDelete: [
+      async ({ id, req }) => {
+        const session = await req.payload.findByID({ collection: 'sessions', id, depth: 0, disableErrors: true, req });
+        const bookingId = relId(session?.booking);
+        if (bookingId) await releaseBooking(req, Number(id), bookingId, false);
       },
-      ...(revalidation.afterDelete ?? []),
     ],
+    afterDelete: [...(revalidation.afterDelete ?? [])],
   },
   fields: [
     { name: 'displayTitle', label: 'Megnevezés', type: 'text', index: true, admin: { readOnly: true, hidden: true } },
