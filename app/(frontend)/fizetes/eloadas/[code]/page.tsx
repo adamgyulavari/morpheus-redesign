@@ -18,6 +18,9 @@ import { checkoutMe } from '@/lib/payments/me';
 import { paymentProvider } from '@/lib/payments/providers';
 import { billingSettings } from '@/lib/payments/settings';
 
+/** The seats left show only below this many. */
+const FEW_SEATS = 10;
+
 // per visitor and per moment (seats, holds), never cached
 export const dynamic = 'force-dynamic';
 
@@ -68,7 +71,12 @@ export default async function ShowCheckoutPage({ params }: Props) {
             <CheckoutSummary
               title={showDateLine(String(s.date).slice(0, 10), s.time)}
               lines={venue ? [venue.name] : []}
-              meta={[ticketText(price, ui), fill(ui.sessions.left, { count: String(state.left) })].join(' · ')}
+              meta={[
+                ticketText(price, ui),
+                state.left < FEW_SEATS ? fill(ui.sessions.left, { count: String(state.left) }) : '',
+              ]
+                .filter(Boolean)
+                .join(' · ')}
             />
           }
           policy={[ui.showBooking.noRefund]}

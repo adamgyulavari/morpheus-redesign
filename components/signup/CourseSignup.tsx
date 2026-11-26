@@ -39,7 +39,7 @@ export default async function CourseSignup({
 }: Props) {
   const ui = await getUi();
   const t = ui.signup;
-  const startDetails = (s: CourseStart) => [startLine(s, ui), placesLeft(s, ui)].filter(Boolean);
+  const startDetails = (s: CourseStart) => [startLine(s, ui), placesLeft(s)].filter(Boolean);
   const groupOption = (s: CourseStart) => ({ id: s.groupId, label: groupLabel(s, ui) });
   const buttonClassName = `btn btn-${size} btn-${variant} ${className}`;
   if (course.signupMode === 'external')
