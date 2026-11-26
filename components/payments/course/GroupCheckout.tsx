@@ -27,7 +27,7 @@ export default async function GroupCheckout({
 }) {
   const ui = await getUi();
   const path = courseCheckoutPath(course.slug, start.code);
-  const left = placesLeft(start, ui);
+  const left = placesLeft(start);
   return (
     <CheckoutForm
       kind="beginner"

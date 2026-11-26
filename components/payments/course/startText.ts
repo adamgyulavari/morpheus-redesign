@@ -17,6 +17,9 @@ export const startLine = (s: CourseStart, ui: Texts) =>
 export const groupLabel = (s: CourseStart, ui: Texts) =>
   fill(ui.signup.groupLabel, { title: s.title, date: startDay(s) });
 
-/** "8 szabad hely", or nothing without a limit. */
-export const placesLeft = (s: CourseStart, ui: Texts) =>
-  s.signup.left != null ? fill(ui.sessions.left, { count: s.signup.left }) : '';
+/** Below this many free places a group says it's nearly full; above it, nothing. */
+const FEW_PLACES = 5;
+
+/** "Már csak pár hely van" when fewer than 5 places are left, otherwise nothing. */
+export const placesLeft = (s: CourseStart) =>
+  s.signup.left != null && s.signup.left > 0 && s.signup.left < FEW_PLACES ? 'Már csak pár hely van' : '';

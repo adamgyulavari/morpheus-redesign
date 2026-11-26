@@ -30,7 +30,7 @@ export default async function GroupChooser({
               <span className="font-display text-[26px] leading-tight">{s.title}</span>
               <span className="text-[15px] text-ink2">{startLine(s, ui)}</span>
               <span className="text-[13px] text-muted">
-                {[s.signup.price, placesLeft(s, ui)].filter(Boolean).join(' · ')}
+                {[s.signup.price, placesLeft(s)].filter(Boolean).join(' · ')}
               </span>
             </div>
             <Link href={courseCheckoutPath(course.slug, s.code)} className="btn btn-md btn-primary">

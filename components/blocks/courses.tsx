@@ -3,6 +3,7 @@ import { Fragment } from 'react';
 
 import { ArrowRight } from '@/components/icons';
 import OfferingCard from '@/components/OfferingCard';
+import { placesLeft } from '@/components/payments/course/startText';
 import SmartLink from '@/components/SmartLink';
 import CourseSignup from '@/components/signup/CourseSignup';
 import { ButtonLink, Eyebrow, PlaceholderAvatar, SectionHeading, SectionIntro } from '@/components/ui';
@@ -126,8 +127,8 @@ export async function CourseStarts({ block, className }: BlockProps<'courseStart
                     {weekday(start.date)}
                     {start.startTime && ` · ${start.startTime}–${start.endTime}`}
                   </span>
-                  {start.signup.state === 'open' && start.signup.left != null && (
-                    <span className="text-[15px] text-ink2">{start.signup.left} szabad hely</span>
+                  {start.signup.state === 'open' && placesLeft(start) && (
+                    <span className="text-[15px] text-ink2">{placesLeft(start)}</span>
                   )}
                   {start.signup.state === 'full' && (
                     <span className="text-[15px] font-semibold text-rust-dark">Megtelt</span>
