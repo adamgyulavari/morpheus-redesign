@@ -52,7 +52,7 @@ export const RoomCalendarView = staffPage('Teremnaptár', ({ initPageResult }) =
   <RoomCalendar isAdmin={userIsAdmin(initPageResult.req.user)} />
 ));
 
-/** /admin/szamlazas: the monthly invoices — szakmai fees, kezdő instalments. */
+/** /admin/szamlazas: the monthly invoices — monthly fees, kezdő instalments. */
 export const BillingRunView = staffPage('Havi számlázás', () => <BillingRun />);
 
 /** /admin/jegyek/<show id> (path: /jegyek/:show): the show's id, from the path. */

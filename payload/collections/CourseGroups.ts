@@ -18,7 +18,7 @@ import { collectionRevalidation } from '../revalidate';
  * prices, next starts); a group may point to its catalogue entry.
  *
  * Students see only their own groups (in /fiokom and through the API), without the student list.
- * `monthlyFee` and `invoiceDay` are for the monthly billing of a later phase.
+ * `monthlyFee`: the monthly billing (lib/invoicing/run) invoices every student of a group that has one.
  */
 type Signup = NonNullable<CourseGroup['signup']>;
 
@@ -168,7 +168,11 @@ export const CourseGroups: CollectionConfig = {
           label: 'Havidíj (Ft)',
           type: 'number',
           min: 0,
-          admin: { description: 'A havi számlázáshoz (később).', condition: (data) => data?.type !== 'kezdo' },
+          admin: {
+            description:
+              'Ha meg van adva, a csoport hallgatói minden hónapban számlát kapnak (Havi számlázás), amíg a csoport nem ért véget.',
+            condition: (data) => data?.type !== 'kezdo',
+          },
         },
         {
           name: 'invoiceDay',

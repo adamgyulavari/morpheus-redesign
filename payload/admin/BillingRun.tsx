@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * /admin/szamlazas: pick a month, review who is due (szakmai havidíj, kezdő részletek), untick or
+ * /admin/szamlazas: pick a month, review who is due (havidíjak, kezdő részletek), untick or
  * change an amount, then "Számlák kiállítása" (to pay by transfer; Számlázz.hu e-mails them).
  * Below: the transfer invoices not yet paid, with "Befizetve".
  */
@@ -171,9 +171,10 @@ export default function BillingRun() {
       )}
 
       <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <h2 style={{ margin: 0 }}>Szakmai havidíj ({rows('monthly').length})</h2>
+        <h2 style={{ margin: 0 }}>Havidíj ({rows('monthly').length})</h2>
         <p className={s.muted} style={{ margin: 0 }}>
-          A hónapban futó szakmai csoportok hallgatói, a csoport havidíjával (Csoportok → Havidíj).
+          A hónapban futó, havidíjas csoportok hallgatói (a kezdő kivételével), a csoport havidíjával (Csoportok →
+          Havidíj). Kezdés nélkül már fut, befejezés nélkül folyamatos.
         </p>
         {rows('monthly').length ? (
           table(rows('monthly'))

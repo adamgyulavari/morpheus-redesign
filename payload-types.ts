@@ -257,7 +257,7 @@ export interface CourseGroup {
    */
   endDate?: string | null;
   /**
-   * A havi számlázáshoz (később).
+   * Ha meg van adva, a csoport hallgatói minden hónapban számlát kapnak (Havi számlázás), amíg a csoport nem ért véget.
    */
   monthlyFee?: number | null;
   /**
