@@ -1,6 +1,7 @@
 /**
  * Havi számlázás (/admin/szamlazas): for a month, who is due an invoice to pay by transfer —
- * - szakmai: every student of the szakmai groups running that month, at the group's Havidíj;
+ * - havidíj: every student of each group with a Havidíj that runs in the month (any type but kezdő;
+ *   no start date: already running, no end date: ongoing, e.g. a társulat);
  * - kezdő: the later instalments of a paid sign-up's payment plan, the k-th due k−1 months after
  *   the course starts (earlier ones not yet invoiced are listed too).
  * Staff review the lines (untick, change an amount), then issue. A line's key makes it once only.
@@ -56,15 +57,15 @@ export async function billingRun(payload: Payload, month: string): Promise<RunLi
   const last = todayInBudapest(new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0, 12)));
   const lines: Omit<RunLine, 'name' | 'email' | 'problem' | 'done'>[] = [];
 
-  // szakmai: the groups running in the month, with a monthly fee
+  // havidíj: the groups with a monthly fee that haven't ended before the month (kezdő pays by instalments)
   const { docs: groups } = await payload.find({
     collection: 'courseGroups',
     where: {
       and: [
-        { type: { equals: 'szakmai' } },
+        { type: { not_equals: 'kezdo' } },
         { monthlyFee: { greater_than: 0 } },
-        { startDate: { less_than_equal: last } },
-        { endDate: { greater_than_equal: first } },
+        { or: [{ startDate: { exists: false } }, { startDate: { less_than_equal: last } }] },
+        { or: [{ endDate: { exists: false } }, { endDate: { greater_than_equal: first } }] },
       ],
     },
     depth: 0,

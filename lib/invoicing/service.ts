@@ -123,7 +123,7 @@ export function buyerOf(
 /** Számlázz.hu needs a postal address on every invoice. */
 export const hasAddress = (b: InvoiceData['buyer']) => Boolean(b.zip.trim() && b.city.trim() && b.address.trim());
 
-/** One line of the monthly run (lib/invoicing/run): a szakmai month, or a kezdő instalment. */
+/** One line of the monthly run (lib/invoicing/run): a monthly fee, or a kezdő instalment. */
 export type TransferCharge = {
   key: string;
   userId: number;
